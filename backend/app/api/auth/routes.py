@@ -5,17 +5,19 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any
 
 from app.core.database.session import get_db_session
+from app.core.database.dependencies import get_db
 from app.core.security.authentication import authenticate_client, create_access_token
 from app.core.config.settings import settings
 from app.repositories.client_repository import ClientRepository
 import uuid
+
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 @router.post("/token")
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)  # Changed from get_db_session
 ) -> Dict[str, Any]:
     """
     OAuth2 compatible token login, get an access token for future requests.
@@ -43,7 +45,7 @@ async def login_for_access_token(
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_client(
     client_data: Dict[str, Any],
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)  # Changed from get_db_session
 ) -> Dict[str, Any]:
     """
     Register a new client.

@@ -1,10 +1,10 @@
-from fastapi import Depends, HTTPException, Security, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, APIKeyHeader
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from typing import Optional, Union
 
-from app.core.database.session import get_db_session
+from app.core.database.dependencies import get_db
 from app.core.security.authentication import ALGORITHM, authenticate_client_by_api_key
 from app.core.config.settings import settings
 from app.domain.client.entities import Client
@@ -16,14 +16,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 api_key_header = APIKeyHeader(name="X-API-Key")
 
 async def get_current_client(
-    db: Session = Depends(get_db_session),
-    token: str = Depends(oauth2_scheme),
-    api_key: Optional[str] = Security(api_key_header, auto_error=False)
+    db: Session = Depends(get_db),
+    token: Optional[str] = Depends(oauth2_scheme),
+    api_key: Optional[str] = Depends(api_key_header)
 ) -> Client:
     """
     Validate authentication and return the current client.
-    
-    Supports both JWT token and API key authentication.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

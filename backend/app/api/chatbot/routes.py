@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional, List
 
-from app.core.database.session import get_db_session
 from app.api.auth.dependencies import get_current_client
+from app.core.database.dependencies import get_db
 from app.domain.client.entities import Client
 from app.services.chat.chat_service import ChatService
 from app.services.knowledge.similarity_service import SimilarityService
@@ -18,7 +18,7 @@ async def send_message(
     message_data: Dict[str, Any],
     request: Request,
     current_client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)
 ):
     """Send a message to the chatbot and get a response."""
     if "message" not in message_data:
@@ -69,7 +69,7 @@ async def get_chat_history(
     session_id: str,
     limit: int = 50,
     current_client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)
 ):
     """Get chat history for a specific session."""
     # Initialize chat service

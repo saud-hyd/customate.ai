@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 
 from app.core.database.session import get_db_session
+from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.repositories.client_repository import ClientRepository, ClientSettingsRepository
 from app.domain.client.entities import Client, ClientSettings

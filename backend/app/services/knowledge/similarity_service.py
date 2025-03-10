@@ -1,4 +1,4 @@
-# backend/app/services/knowledge/similarity_service.py
+# app/services/knowledge/similarity_service.py
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,8 @@ class SimilarityService:
         client_id: str, 
         query_text: str, 
         limit: int = 5, 
-        threshold: float = 0.7
+        threshold: float = 0.7,
+        collection_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Find knowledge items similar to a query text.
@@ -29,6 +30,7 @@ class SimilarityService:
             query_text: Text to find similar items for
             limit: Maximum number of results
             threshold: Minimum similarity score
+            collection_id: Optional collection ID to restrict search
             
         Returns:
             List of similar items with metadata
@@ -42,13 +44,57 @@ class SimilarityService:
         
         # Get database session
         with get_db_session() as db:
-            # Find similar items
+            # Use the standard search method for backward compatibility
             similar_items = self.vector_repo.find_similar_items(
                 db=db,
                 query_vector=query_vector,
                 client_id=client_id,
                 limit=limit,
-                threshold=threshold
+                threshold=threshold,
+                collection_id=collection_id
             )
             
             return similar_items
+    
+    async def semantic_search(
+        self,
+        client_id: str,
+        query_text: str,
+        limit: int = 5,
+        threshold: float = 0.7,
+        collection_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Enhanced semantic search with document grouping and metadata.
+        
+        Args:
+            client_id: ID of the client
+            query_text: Text to search for
+            limit: Maximum number of results
+            threshold: Minimum similarity threshold
+            collection_id: Optional collection ID to restrict search
+            
+        Returns:
+            Dictionary with search results and metadata
+        """
+        # Generate embeddings for query text
+        query_vector = await self.llm_service.generate_embeddings(query_text)
+        
+        if not query_vector or len(query_vector) == 0:
+            logger.error("Failed to generate embedding for query text")
+            return {"results": [], "metadata": {"error": "Failed to generate embedding"}}
+        
+        # Get database session
+        with get_db_session() as db:
+            # Use enhanced semantic search
+            search_results = self.vector_repo.semantic_search(
+                db=db,
+                query_vector=query_vector,
+                client_id=client_id,
+                query_text=query_text,
+                limit=limit,
+                threshold=threshold,
+                collection_id=collection_id
+            )
+            
+            return search_results

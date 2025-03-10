@@ -5,6 +5,13 @@ import time
 from app.core.config.settings import settings
 from app.core.database.session import engine, Base
 from app.core import logger
+from app.core.middleware.client_context import ClientContextMiddleware
+from app.api.auth import routes as auth_routes
+from app.api.client import routes as client_routes
+from app.api.chatbot import routes as chatbot_routes
+from app.api.knowledge import routes as knowledge_routes
+from app.api.knowledge import document_routes
+
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -27,6 +34,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add client context middleware
+app.add_middleware(ClientContextMiddleware)
+app.include_router(auth_routes.router, prefix="/api")
+app.include_router(client_routes.router, prefix="/api")
+app.include_router(chatbot_routes.router, prefix="/api")
+app.include_router(knowledge_routes.router, prefix="/api/knowledge")
+app.include_router(document_routes.router, prefix="/api/knowledge")
+
 
 # Request logging middleware
 @app.middleware("http")

@@ -1,4 +1,4 @@
-# backend/app/services/knowledge/embedding_service.py
+# app/services/knowledge/embedding_service.py
 from typing import List, Dict, Any, Optional
 import json
 from sqlalchemy.orm import Session
