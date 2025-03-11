@@ -1,3 +1,4 @@
+# backend/main.py
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -6,12 +7,16 @@ from app.core.config.settings import settings
 from app.core.database.session import engine, Base
 from app.core import logger
 from app.core.middleware.client_context import ClientContextMiddleware
+
+# Import original routes
 from app.api.auth import routes as auth_routes
 from app.api.client import routes as client_routes
-from app.api.chatbot import routes as chatbot_routes
 from app.api.knowledge import routes as knowledge_routes
 from app.api.knowledge import document_routes
 
+# Import enhanced routes
+from app.api.chatbot import enhanced_routes as enhanced_chatbot_routes
+from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -20,7 +25,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.API_VERSION,
-    description="Multi-tenant chatbot platform API",
+    description="Multi-tenant chatbot platform API with enhanced knowledge integration",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
@@ -37,12 +42,16 @@ app.add_middleware(
 
 # Add client context middleware
 app.add_middleware(ClientContextMiddleware)
+
+# Include original routes
 app.include_router(auth_routes.router, prefix="/api")
 app.include_router(client_routes.router, prefix="/api")
-app.include_router(chatbot_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
 app.include_router(document_routes.router, prefix="/api/knowledge")
 
+# Include enhanced routes
+app.include_router(enhanced_chatbot_routes.router, prefix="/api")
+app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 
 # Request logging middleware
 @app.middleware("http")
@@ -66,10 +75,12 @@ async def log_requests(request: Request, call_next):
 # Root endpoint for health check
 @app.get("/")
 async def root():
-    return {"status": "healthy", "app_name": settings.APP_NAME, "version": settings.API_VERSION}
-
-# Include API routers here
-# This will be expanded as we implement more features
+    return {
+        "status": "healthy", 
+        "app_name": settings.APP_NAME, 
+        "version": settings.API_VERSION,
+        "features": ["enhanced_search", "knowledge_integration"]
+    }
 
 if __name__ == "__main__":
     import uvicorn

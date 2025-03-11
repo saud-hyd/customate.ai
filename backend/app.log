@@ -1290,3 +1290,947 @@ WHERE chat_sessions.id = %(pk_1)s
 2025-03-10 05:26:34 - sqlalchemy.engine.Engine - INFO - ROLLBACK
 2025-03-10 05:26:34 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 200 Process Time: 19.8140s
 2025-03-10 05:26:34 - customate - INFO - Request: POST /api/chatbot/message - Status: 200 - Process Time: 19.8170s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [generated in 0.00089s] {'name': 'clients'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.005914s ago] {'name': 'client_settings'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.008166s ago] {'name': 'subscriptions'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.01274s ago] {'name': 'knowledge_collections'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.01568s ago] {'name': 'knowledge_items'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.01784s ago] {'name': 'document_sources'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.01952s ago] {'name': 'vector_embeddings'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.02157s ago] {'name': 'chat_sessions'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.02344s ago] {'name': 'chat_messages'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.02683s ago] {'name': 'conversation_contexts'}
+2025-03-10 21:47:32 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 21:47:43 - customate - INFO - Request: GET /api/docs Client: anonymous Status: 200 Process Time: 0.0010s
+2025-03-10 21:47:43 - customate - INFO - Request: GET /api/docs - Status: 200 - Process Time: 0.0010s
+2025-03-10 21:47:43 - customate - INFO - Request: GET /api/openapi.json Client: anonymous Status: 200 Process Time: 0.0220s
+2025-03-10 21:47:43 - customate - INFO - Request: GET /api/openapi.json - Status: 200 - Process Time: 0.0250s
+2025-03-10 21:53:02 - customate - INFO - Request: GET / Client: anonymous Status: 200 Process Time: 0.0010s
+2025-03-10 21:53:02 - customate - INFO - Request: GET / - Status: 200 - Process Time: 0.0020s
+2025-03-10 21:53:02 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0030s
+2025-03-10 21:53:02 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0039s
+2025-03-10 21:53:03 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 401 Process Time: 0.0029s
+2025-03-10 21:53:03 - customate - INFO - Request: POST /api/chatbot/message - Status: 401 - Process Time: 0.0039s
+2025-03-10 22:02:36 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:02:36 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 22:02:36 - sqlalchemy.engine.Engine - INFO - [generated in 0.00115s] {'email_1': 'test@example.com', 'param_1': 1}
+2025-03-10 22:02:36 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 22:02:36 - customate - INFO - Request: POST /api/auth/register Client: anonymous Status: 400 Process Time: 0.0380s
+2025-03-10 22:02:36 - customate - INFO - Request: POST /api/auth/register - Status: 400 - Process Time: 0.0380s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [generated in 0.00076s] {'name': 'clients'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.003528s ago] {'name': 'client_settings'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.005188s ago] {'name': 'subscriptions'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.006867s ago] {'name': 'knowledge_collections'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.008354s ago] {'name': 'knowledge_items'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.00991s ago] {'name': 'document_sources'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.01146s ago] {'name': 'vector_embeddings'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.01287s ago] {'name': 'chat_sessions'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.01478s ago] {'name': 'chat_messages'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.01649s ago] {'name': 'conversation_contexts'}
+2025-03-10 22:02:37 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - [generated in 0.00135s] {'email_1': 'test@4example.com', 'param_1': 1}
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - INSERT INTO clients (client_id, name, industry, email, website, phone, api_key, active, created_at, updated_at) VALUES (%(client_id)s, %(name)s, %(industry)s, %(email)s, %(website)s, %(phone)s, %(api_key)s, %(active)s, %(created_at)s, %(updated_at)s) RETURNING clients.id
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - [generated in 0.00146s] {'client_id': '6df2217c-54ba-488e-aa24-c29d0e098da4', 'name': 'Test Client', 'industry': 'technology', 'email': 'test@4example.com', 'website': 'https://example.com', 'phone': None, 'api_key': '90b7b93d-d636-444b-bfa9-c095328be0fb', 'active': True, 'created_at': datetime.datetime(2025, 3, 10, 21, 2, 57, 83712), 'updated_at': datetime.datetime(2025, 3, 10, 21, 2, 57, 83712)}
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - SELECT clients.id, clients.client_id, clients.name, clients.industry, clients.email, clients.website, clients.phone, clients.api_key, clients.active, clients.created_at, clients.updated_at 
+FROM clients 
+WHERE clients.id = %(pk_1)s
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - [generated in 0.00130s] {'pk_1': 4}
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - INSERT INTO client_settings (client_id, primary_color, logo_url, greeting_message, enable_suggestions, enable_typing_indicator, widget_position, fallback_email, chatbot_name, updated_at) VALUES (%(client_id)s, %(primary_color)s, %(logo_url)s, %(greeting_message)s, %(enable_suggestions)s, %(enable_typing_indicator)s, %(widget_position)s, %(fallback_email)s, %(chatbot_name)s, %(updated_at)s) RETURNING client_settings.id
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - [generated in 0.00098s] {'client_id': '6df2217c-54ba-488e-aa24-c29d0e098da4', 'primary_color': '#4f46e5', 'logo_url': None, 'greeting_message': None, 'enable_suggestions': True, 'enable_typing_indicator': True, 'widget_position': 'bottom-right', 'fallback_email': None, 'chatbot_name': 'AI Assistant', 'updated_at': datetime.datetime(2025, 3, 10, 21, 2, 57, 103683)}
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - SELECT client_settings.id, client_settings.client_id, client_settings.primary_color, client_settings.logo_url, client_settings.greeting_message, client_settings.enable_suggestions, client_settings.enable_typing_indicator, client_settings.widget_position, client_settings.fallback_email, client_settings.chatbot_name, client_settings.custom_settings, client_settings.updated_at 
+FROM client_settings 
+WHERE client_settings.id = %(pk_1)s
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - [generated in 0.00080s] {'pk_1': 3}
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.id = %(pk_1)s
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - [generated in 0.00095s] {'pk_1': 4}
+2025-03-10 22:02:57 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 22:02:57 - customate - INFO - Request: POST /api/auth/register Client: anonymous Status: 201 Process Time: 0.0643s
+2025-03-10 22:02:57 - customate - INFO - Request: POST /api/auth/register - Status: 201 - Process Time: 0.0643s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [generated in 0.00063s] {'name': 'clients'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.004044s ago] {'name': 'client_settings'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.00602s ago] {'name': 'subscriptions'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.007629s ago] {'name': 'knowledge_collections'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.009002s ago] {'name': 'knowledge_items'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.01061s ago] {'name': 'document_sources'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.01186s ago] {'name': 'vector_embeddings'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.01322s ago] {'name': 'chat_sessions'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.01482s ago] {'name': 'chat_messages'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - [cached since 0.01642s ago] {'name': 'conversation_contexts'}
+2025-03-10 22:02:58 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:04:10 - customate - INFO - Request: GET / Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-10 22:04:10 - customate - INFO - Request: GET / - Status: 200 - Process Time: 0.0020s
+2025-03-10 22:04:10 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0030s
+2025-03-10 22:04:10 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0040s
+2025-03-10 22:04:10 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 401 Process Time: 0.0021s
+2025-03-10 22:04:10 - customate - INFO - Request: POST /api/chatbot/message - Status: 401 - Process Time: 0.0030s
+2025-03-10 22:05:55 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0030s
+2025-03-10 22:05:55 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0040s
+2025-03-10 22:08:49 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0028s
+2025-03-10 22:08:49 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0038s
+2025-03-10 22:17:21 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0024s
+2025-03-10 22:17:21 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0029s
+2025-03-10 22:18:18 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0020s
+2025-03-10 22:18:18 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0025s
+2025-03-10 22:19:52 - customate - INFO - Request: POST /api/auth/authenticate Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-10 22:19:52 - customate - INFO - Request: POST /api/auth/authenticate - Status: 404 - Process Time: 0.0030s
+2025-03-10 22:26:35 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:26:35 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 22:26:35 - sqlalchemy.engine.Engine - INFO - [generated in 0.00101s] {'email_1': 'test@4example.com', 'param_1': 1}
+2025-03-10 22:26:35 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 22:26:35 - customate - INFO - Request: POST /api/auth/register Client: anonymous Status: 400 Process Time: 0.0270s
+2025-03-10 22:26:35 - customate - INFO - Request: POST /api/auth/register - Status: 400 - Process Time: 0.0280s
+2025-03-10 22:28:26 - customate - INFO - Request: GET / Client: anonymous Status: 200 Process Time: 0.0010s
+2025-03-10 22:28:26 - customate - INFO - Request: GET / - Status: 200 - Process Time: 0.0020s
+2025-03-10 22:28:26 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0030s
+2025-03-10 22:28:26 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0040s
+2025-03-10 22:28:26 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 401 Process Time: 0.0020s
+2025-03-10 22:28:26 - customate - INFO - Request: POST /api/chatbot/message - Status: 401 - Process Time: 0.0039s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [generated in 0.00083s] {'name': 'clients'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.008565s ago] {'name': 'client_settings'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.01189s ago] {'name': 'subscriptions'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.01449s ago] {'name': 'knowledge_collections'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.01705s ago] {'name': 'knowledge_items'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.02256s ago] {'name': 'document_sources'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.02563s ago] {'name': 'vector_embeddings'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.02775s ago] {'name': 'chat_sessions'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.02957s ago] {'name': 'chat_messages'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - [cached since 0.03148s ago] {'name': 'conversation_contexts'}
+2025-03-10 22:32:27 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:32:33 - customate - INFO - Request: GET / Client: anonymous Status: 200 Process Time: 0.0014s
+2025-03-10 22:32:33 - customate - INFO - Request: GET / - Status: 200 - Process Time: 0.0014s
+2025-03-10 22:32:33 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0030s
+2025-03-10 22:32:33 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0040s
+2025-03-10 22:32:33 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 401 Process Time: 0.0019s
+2025-03-10 22:32:33 - customate - INFO - Request: POST /api/chatbot/message - Status: 401 - Process Time: 0.0029s
+2025-03-10 22:35:55 - customate - INFO - Request: GET /api/client Client: anonymous Status: 401 Process Time: 0.0020s
+2025-03-10 22:35:55 - customate - INFO - Request: GET /api/client - Status: 401 - Process Time: 0.0050s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [generated in 0.00073s] {'name': 'clients'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.004724s ago] {'name': 'client_settings'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.006388s ago] {'name': 'subscriptions'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.007805s ago] {'name': 'knowledge_collections'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.009152s ago] {'name': 'knowledge_items'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.01109s ago] {'name': 'document_sources'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.01319s ago] {'name': 'vector_embeddings'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.01507s ago] {'name': 'chat_sessions'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.0172s ago] {'name': 'chat_messages'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - [cached since 0.01877s ago] {'name': 'conversation_contexts'}
+2025-03-10 22:35:57 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:35:57 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 401 Process Time: 0.0030s
+2025-03-10 22:35:57 - customate - INFO - Request: POST /api/knowledge/search - Status: 401 - Process Time: 0.0039s
+2025-03-10 22:35:59 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 401 Process Time: 0.0010s
+2025-03-10 22:35:59 - customate - INFO - Request: POST /api/chatbot/message - Status: 401 - Process Time: 0.0020s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [generated in 0.00117s] {'name': 'clients'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.008706s ago] {'name': 'client_settings'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.01107s ago] {'name': 'subscriptions'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.01342s ago] {'name': 'knowledge_collections'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.01583s ago] {'name': 'knowledge_items'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.01895s ago] {'name': 'document_sources'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.02212s ago] {'name': 'vector_embeddings'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.02429s ago] {'name': 'chat_sessions'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.02695s ago] {'name': 'chat_messages'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - [cached since 0.02912s ago] {'name': 'conversation_contexts'}
+2025-03-10 22:51:25 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:52:30 - customate - INFO - Request: GET /api/client Client: anonymous Status: 401 Process Time: 0.0029s
+2025-03-10 22:52:30 - customate - INFO - Request: GET /api/client - Status: 401 - Process Time: 0.0029s
+2025-03-10 22:52:32 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 22:52:32 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0009s
+2025-03-10 22:52:35 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 401 Process Time: 0.0020s
+2025-03-10 22:52:35 - customate - INFO - Request: POST /api/chatbot/message - Status: 401 - Process Time: 0.0030s
+2025-03-10 22:55:48 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:55:48 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 22:55:48 - sqlalchemy.engine.Engine - INFO - [generated in 0.00134s] {'email_1': 'test@example.com', 'param_1': 1}
+2025-03-10 22:55:48 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 22:55:48 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 401 Process Time: 0.0279s
+2025-03-10 22:55:48 - customate - INFO - Request: POST /api/auth/token - Status: 401 - Process Time: 0.0289s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [generated in 0.00116s] {'name': 'clients'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.005279s ago] {'name': 'client_settings'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.007625s ago] {'name': 'subscriptions'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.009575s ago] {'name': 'knowledge_collections'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.01095s ago] {'name': 'knowledge_items'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.01312s ago] {'name': 'document_sources'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.01548s ago] {'name': 'vector_embeddings'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.01719s ago] {'name': 'chat_sessions'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.01868s ago] {'name': 'chat_messages'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - [cached since 0.02017s ago] {'name': 'conversation_contexts'}
+2025-03-10 22:55:50 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:55:50 - customate - INFO - Request: POST /api/knowledge/enhanced/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 22:55:50 - customate - INFO - Request: POST /api/knowledge/enhanced/search - Status: 404 - Process Time: 0.0010s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [generated in 0.00133s] {'name': 'clients'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.008106s ago] {'name': 'client_settings'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.0114s ago] {'name': 'subscriptions'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.01366s ago] {'name': 'knowledge_collections'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.01637s ago] {'name': 'knowledge_items'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.01958s ago] {'name': 'document_sources'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.0224s ago] {'name': 'vector_embeddings'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.02549s ago] {'name': 'chat_sessions'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.03445s ago] {'name': 'chat_messages'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - [cached since 0.03738s ago] {'name': 'conversation_contexts'}
+2025-03-10 22:57:32 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 22:57:39 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 22:57:39 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 22:57:39 - sqlalchemy.engine.Engine - INFO - [generated in 0.00131s] {'email_1': 'test3@example.com', 'param_1': 1}
+2025-03-10 22:57:39 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 22:57:39 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 200 Process Time: 0.0517s
+2025-03-10 22:57:39 - customate - INFO - Request: POST /api/auth/token - Status: 200 - Process Time: 0.0517s
+2025-03-10 22:57:41 - customate - INFO - Request: POST /api/knowledge/enhanced/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 22:57:41 - customate - INFO - Request: POST /api/knowledge/enhanced/search - Status: 404 - Process Time: 0.0025s
+2025-03-10 23:12:27 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:12:27 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 23:12:27 - sqlalchemy.engine.Engine - INFO - [cached since 888.1s ago] {'email_1': 'test@example.com', 'param_1': 1}
+2025-03-10 23:12:27 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 23:12:27 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 401 Process Time: 0.0085s
+2025-03-10 23:12:27 - customate - INFO - Request: POST /api/auth/token - Status: 401 - Process Time: 0.0107s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [generated in 0.00091s] {'name': 'clients'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.004776s ago] {'name': 'client_settings'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.006865s ago] {'name': 'subscriptions'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.009027s ago] {'name': 'knowledge_collections'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.01145s ago] {'name': 'knowledge_items'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.01607s ago] {'name': 'document_sources'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.01791s ago] {'name': 'vector_embeddings'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.01954s ago] {'name': 'chat_sessions'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.02162s ago] {'name': 'chat_messages'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - [cached since 0.02323s ago] {'name': 'conversation_contexts'}
+2025-03-10 23:14:51 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 23:14:59 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:14:59 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 23:14:59 - sqlalchemy.engine.Engine - INFO - [generated in 0.00153s] {'email_1': 'test3@example.com', 'param_1': 1}
+2025-03-10 23:14:59 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 23:14:59 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 200 Process Time: 0.0310s
+2025-03-10 23:14:59 - customate - INFO - Request: POST /api/auth/token - Status: 200 - Process Time: 0.0321s
+2025-03-10 23:14:59 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-10 23:14:59 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0020s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [generated in 0.00064s] {'name': 'clients'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.004098s ago] {'name': 'client_settings'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.0063s ago] {'name': 'subscriptions'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.008361s ago] {'name': 'knowledge_collections'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.01062s ago] {'name': 'knowledge_items'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.01278s ago] {'name': 'document_sources'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.01565s ago] {'name': 'vector_embeddings'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.01732s ago] {'name': 'chat_sessions'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.01916s ago] {'name': 'chat_messages'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - [cached since 0.0209s ago] {'name': 'conversation_contexts'}
+2025-03-10 23:19:52 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 23:20:20 - customate - INFO - Request: GET /api/docs Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-10 23:20:20 - customate - INFO - Request: GET /api/docs - Status: 200 - Process Time: 0.0015s
+2025-03-10 23:20:20 - customate - INFO - Request: GET /api/openapi.json Client: anonymous Status: 200 Process Time: 0.0115s
+2025-03-10 23:20:20 - customate - INFO - Request: GET /api/openapi.json - Status: 200 - Process Time: 0.0130s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [generated in 0.00093s] {'name': 'clients'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.005003s ago] {'name': 'client_settings'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.006839s ago] {'name': 'subscriptions'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.009013s ago] {'name': 'knowledge_collections'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.01131s ago] {'name': 'knowledge_items'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.0155s ago] {'name': 'document_sources'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.01807s ago] {'name': 'vector_embeddings'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.02065s ago] {'name': 'chat_sessions'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.02318s ago] {'name': 'chat_messages'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - [cached since 0.02747s ago] {'name': 'conversation_contexts'}
+2025-03-10 23:23:21 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 23:23:26 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:23:26 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 23:23:26 - sqlalchemy.engine.Engine - INFO - [generated in 0.00132s] {'email_1': 'test3@example.com', 'param_1': 1}
+2025-03-10 23:23:26 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 23:23:26 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 200 Process Time: 0.0335s
+2025-03-10 23:23:26 - customate - INFO - Request: POST /api/auth/token - Status: 200 - Process Time: 0.0335s
+2025-03-10 23:23:26 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:26 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0010s
+2025-03-10 23:23:26 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:26 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0015s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0010s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0010s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0011s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0016s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0011s
+2025-03-10 23:23:27 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0020s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0020s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0020s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0009s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:28 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0010s
+2025-03-10 23:23:29 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:29 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0012s
+2025-03-10 23:23:29 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-10 23:23:29 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0020s
+2025-03-10 23:23:29 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:29 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0027s
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0014s
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/knowledge/search Client: anonymous Status: 404 Process Time: 0.0000s
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/knowledge/search - Status: 404 - Process Time: 0.0012s
+2025-03-10 23:23:30 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:23:30 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 23:23:30 - sqlalchemy.engine.Engine - INFO - [cached since 4.435s ago] {'email_1': 'test3@example.com', 'param_1': 1}
+2025-03-10 23:23:30 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 200 Process Time: 0.0085s
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/auth/token - Status: 200 - Process Time: 0.0095s
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 403 Process Time: 0.0020s
+2025-03-10 23:23:30 - customate - INFO - Request: POST /api/chatbot/message - Status: 403 - Process Time: 0.0030s
+2025-03-10 23:26:20 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:26:20 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-10 23:26:20 - sqlalchemy.engine.Engine - INFO - [cached since 173.8s ago] {'email_1': 'test3@example.com', 'param_1': 1}
+2025-03-10 23:26:20 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 23:26:20 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 200 Process Time: 0.0113s
+2025-03-10 23:26:20 - customate - INFO - Request: POST /api/auth/token - Status: 200 - Process Time: 0.0124s
+2025-03-10 23:30:30 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:30:30 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-10 23:30:30 - sqlalchemy.engine.Engine - INFO - [generated in 0.00092s] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-10 23:30:30 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-10 23:30:30 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-10 23:30:30 - customate - ERROR - Failed to generate embedding for query text
+2025-03-10 23:30:30 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-10 23:30:30 - customate - INFO - Request: POST /api/knowledge/knowledge/search Client: anonymous Status: 200 Process Time: 0.5268s
+2025-03-10 23:30:30 - customate - INFO - Request: POST /api/knowledge/knowledge/search - Status: 200 - Process Time: 0.5268s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [generated in 0.00065s] {'name': 'clients'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.003938s ago] {'name': 'client_settings'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.005572s ago] {'name': 'subscriptions'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.007156s ago] {'name': 'knowledge_collections'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.00923s ago] {'name': 'knowledge_items'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.011s ago] {'name': 'document_sources'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.01378s ago] {'name': 'vector_embeddings'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.01994s ago] {'name': 'chat_sessions'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.02202s ago] {'name': 'chat_messages'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.02418s ago] {'name': 'conversation_contexts'}
+2025-03-10 23:42:37 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-10 23:43:12 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-10 23:43:12 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-11 00:33:44 - customate - INFO - Using mock embedding service (MOCK_EMBEDDINGS=true)
+2025-03-11 00:33:44 - customate - INFO - Using mock embedding service (MOCK_EMBEDDINGS=true)
+2025-03-11 00:33:44 - customate - INFO - Using mock embedding service (MOCK_EMBEDDINGS=true)
+2025-03-11 00:33:44 - customate - INFO - Using mock embedding service (MOCK_EMBEDDINGS=true)
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [generated in 0.00414s] {'name': 'clients'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.01866s ago] {'name': 'client_settings'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.0277s ago] {'name': 'subscriptions'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.03308s ago] {'name': 'knowledge_collections'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.04153s ago] {'name': 'knowledge_items'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.04714s ago] {'name': 'document_sources'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.05353s ago] {'name': 'vector_embeddings'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.06212s ago] {'name': 'chat_sessions'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.06712s ago] {'name': 'chat_messages'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - [cached since 0.07656s ago] {'name': 'conversation_contexts'}
+2025-03-11 01:34:55 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 01:34:55 - customate - INFO - Request: GET /api/docs Client: anonymous Status: 200 Process Time: 0.0010s
+2025-03-11 01:34:55 - customate - INFO - Request: GET /api/docs - Status: 200 - Process Time: 0.0050s
+2025-03-11 01:34:55 - customate - INFO - Request: GET /api/openapi.json Client: anonymous Status: 200 Process Time: 0.0460s
+2025-03-11 01:34:55 - customate - INFO - Request: GET /api/openapi.json - Status: 200 - Process Time: 0.0490s
+2025-03-11 01:35:30 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:35:30 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.email = %(email_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:35:30 - sqlalchemy.engine.Engine - INFO - [generated in 0.00308s] {'email_1': 'test3@example.com', 'param_1': 1}
+2025-03-11 01:35:30 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:35:30 - customate - INFO - Request: POST /api/auth/token Client: anonymous Status: 200 Process Time: 0.1379s
+2025-03-11 01:35:30 - customate - INFO - Request: POST /api/auth/token - Status: 200 - Process Time: 0.1398s
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - [generated in 0.00360s] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - INSERT INTO document_sources (document_id, client_id, filename, file_type, file_size, storage_path, status, created_at, updated_at) VALUES (%(document_id)s, %(client_id)s, %(filename)s, %(file_type)s, %(file_size)s, %(storage_path)s, %(status)s, %(created_at)s, %(updated_at)s) RETURNING document_sources.id
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - [generated in 0.00325s] {'document_id': '08fdda56-b228-4724-92c9-96ebea666cf8', 'client_id': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'filename': 'interact_ai_terms.txt', 'file_type': 'text', 'file_size': 2870, 'storage_path': 'storage\\86c0a5ef-1b7f-4688-a2d5-cc513a513308\\89cf089e-0f9b-46e8-ab63-fdf6aac7d372.txt', 'status': 'processing', 'created_at': datetime.datetime(2025, 3, 11, 0, 36, 12, 953623), 'updated_at': datetime.datetime(2025, 3, 11, 0, 36, 12, 953623)}
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - SELECT document_sources.id, document_sources.document_id, document_sources.client_id, document_sources.filename, document_sources.file_type, document_sources.file_size, document_sources.storage_path, document_sources.status, document_sources.created_at, document_sources.updated_at 
+FROM document_sources 
+WHERE document_sources.id = %(pk_1)s
+2025-03-11 01:36:12 - sqlalchemy.engine.Engine - INFO - [generated in 0.00406s] {'pk_1': 5}
+2025-03-11 01:36:13 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:36:13 - customate - INFO - Request: POST /api/knowledge/documents/upload Client: anonymous Status: 202 Process Time: 0.0998s
+2025-03-11 01:36:13 - customate - INFO - Request: POST /api/knowledge/documents/upload - Status: 202 - Process Time: 0.1068s
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - [cached since 66.18s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:37:19 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-11 01:37:19 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - [generated in 0.00279s] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - SELECT vector_embeddings.id AS vector_embeddings_id, vector_embeddings.embedding_id AS vector_embeddings_embedding_id, vector_embeddings.item_id AS vector_embeddings_item_id, vector_embeddings.vector AS vector_embeddings_vector, vector_embeddings.created_at AS vector_embeddings_created_at, knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM vector_embeddings JOIN knowledge_items ON vector_embeddings.item_id = knowledge_items.item_id JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s)
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - [generated in 0.00577s] {'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 01:37:19 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:37:19 - customate - INFO - Request: POST /api/knowledge/knowledge/search Client: anonymous Status: 200 Process Time: 0.8887s
+2025-03-11 01:37:19 - customate - INFO - Request: POST /api/knowledge/knowledge/search - Status: 200 - Process Time: 0.8947s
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - [cached since 93.73s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:37:46 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-11 01:37:46 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - [cached since 27.05s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - SELECT vector_embeddings.id AS vector_embeddings_id, vector_embeddings.embedding_id AS vector_embeddings_embedding_id, vector_embeddings.item_id AS vector_embeddings_item_id, vector_embeddings.vector AS vector_embeddings_vector, vector_embeddings.created_at AS vector_embeddings_created_at, knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM vector_embeddings JOIN knowledge_items ON vector_embeddings.item_id = knowledge_items.item_id JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s)
+2025-03-11 01:37:46 - sqlalchemy.engine.Engine - INFO - [cached since 27.03s ago] {'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-11 01:37:47 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-11 01:37:47 - sqlalchemy.engine.Engine - INFO - [cached since 27.11s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-11 01:37:47 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_items JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s) AND (knowledge_items.title ILIKE %(title_1)s OR knowledge_items.content ILIKE %(content_1)s OR knowledge_items.title ILIKE %(title_2)s OR knowledge_items.content ILIKE %(content_2)s) 
+ LIMIT %(param_1)s
+2025-03-11 01:37:47 - sqlalchemy.engine.Engine - INFO - [generated in 0.00614s] {'title_1': '%customer%', 'content_1': '%customer%', 'title_2': '%support%', 'content_2': '%support%', 'param_1': 7, 'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-11 01:37:47 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 01:37:47 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:37:47 - customate - INFO - Request: POST /api/enhanced/search Client: anonymous Status: 200 Process Time: 0.4258s
+2025-03-11 01:37:47 - customate - INFO - Request: POST /api/enhanced/search - Status: 200 - Process Time: 0.4338s
+2025-03-11 01:51:13 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:51:13 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:51:13 - sqlalchemy.engine.Engine - INFO - [cached since 900.4s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:51:13 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.collection_id = %(collection_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:51:13 - sqlalchemy.engine.Engine - INFO - [generated in 0.00648s] {'collection_id_1': 'string', 'param_1': 1}
+2025-03-11 01:51:13 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:51:13 - customate - INFO - Request: POST /api/knowledge/knowledge/documents/upload Client: anonymous Status: 404 Process Time: 0.0611s
+2025-03-11 01:51:13 - customate - INFO - Request: POST /api/knowledge/knowledge/documents/upload - Status: 404 - Process Time: 0.0628s
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - [cached since 947.6s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - INSERT INTO document_sources (document_id, client_id, filename, file_type, file_size, storage_path, status, created_at, updated_at) VALUES (%(document_id)s, %(client_id)s, %(filename)s, %(file_type)s, %(file_size)s, %(storage_path)s, %(status)s, %(created_at)s, %(updated_at)s) RETURNING document_sources.id
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - [cached since 947.6s ago] {'document_id': '516bf2a1-a890-45ac-9036-9a4bb1b16451', 'client_id': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'filename': 'interact_ai_terms.pdf', 'file_type': 'pdf', 'file_size': 3452, 'storage_path': 'storage\\86c0a5ef-1b7f-4688-a2d5-cc513a513308\\9aa14268-e60f-4948-ab78-dec53f9bdcfd.pdf', 'status': 'processing', 'created_at': datetime.datetime(2025, 3, 11, 0, 52, 0, 551895), 'updated_at': datetime.datetime(2025, 3, 11, 0, 52, 0, 551895)}
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - SELECT document_sources.id, document_sources.document_id, document_sources.client_id, document_sources.filename, document_sources.file_type, document_sources.file_size, document_sources.storage_path, document_sources.status, document_sources.created_at, document_sources.updated_at 
+FROM document_sources 
+WHERE document_sources.id = %(pk_1)s
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - [cached since 947.6s ago] {'pk_1': 6}
+2025-03-11 01:52:00 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:52:00 - customate - INFO - Request: POST /api/knowledge/documents/upload Client: anonymous Status: 202 Process Time: 0.0958s
+2025-03-11 01:52:00 - customate - INFO - Request: POST /api/knowledge/documents/upload - Status: 202 - Process Time: 0.0983s
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - [cached since 1077s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - SELECT document_sources.id AS document_sources_id, document_sources.document_id AS document_sources_document_id, document_sources.client_id AS document_sources_client_id, document_sources.filename AS document_sources_filename, document_sources.file_type AS document_sources_file_type, document_sources.file_size AS document_sources_file_size, document_sources.storage_path AS document_sources_storage_path, document_sources.status AS document_sources_status, document_sources.created_at AS document_sources_created_at, document_sources.updated_at AS document_sources_updated_at 
+FROM document_sources 
+WHERE document_sources.document_id = %(document_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - [generated in 0.00807s] {'document_id_1': '516bf2a1-a890-45ac-9036-9a4bb1b16451', 'param_1': 1}
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE knowledge_items.source_document_id = %(source_document_id_1)s
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - [generated in 0.00344s] {'source_document_id_1': '516bf2a1-a890-45ac-9036-9a4bb1b16451'}
+2025-03-11 01:54:10 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:54:10 - customate - INFO - Request: GET /api/knowledge/documents/516bf2a1-a890-45ac-9036-9a4bb1b16451 Client: anonymous Status: 200 Process Time: 0.0630s
+2025-03-11 01:54:10 - customate - INFO - Request: GET /api/knowledge/documents/516bf2a1-a890-45ac-9036-9a4bb1b16451 - Status: 200 - Process Time: 0.0650s
+2025-03-11 01:54:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:54:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:54:45 - sqlalchemy.engine.Engine - INFO - [cached since 1112s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:54:45 - sqlalchemy.engine.Engine - INFO - SELECT document_sources.id AS document_sources_id, document_sources.document_id AS document_sources_document_id, document_sources.client_id AS document_sources_client_id, document_sources.filename AS document_sources_filename, document_sources.file_type AS document_sources_file_type, document_sources.file_size AS document_sources_file_size, document_sources.storage_path AS document_sources_storage_path, document_sources.status AS document_sources_status, document_sources.created_at AS document_sources_created_at, document_sources.updated_at AS document_sources_updated_at 
+FROM document_sources 
+WHERE document_sources.document_id = %(document_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:54:45 - sqlalchemy.engine.Engine - INFO - [cached since 34.88s ago] {'document_id_1': 'stats', 'param_1': 1}
+2025-03-11 01:54:45 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:54:45 - customate - INFO - Request: GET /api/knowledge/documents/stats Client: anonymous Status: 404 Process Time: 0.0321s
+2025-03-11 01:54:45 - customate - INFO - Request: GET /api/knowledge/documents/stats - Status: 404 - Process Time: 0.0341s
+2025-03-11 01:55:15 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 422 Process Time: 0.0030s
+2025-03-11 01:55:15 - customate - INFO - Request: POST /api/chatbot/message - Status: 422 - Process Time: 0.0061s
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - [cached since 1172s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 01:55:45 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-11 01:55:45 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - [cached since 1106s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - SELECT vector_embeddings.id AS vector_embeddings_id, vector_embeddings.embedding_id AS vector_embeddings_embedding_id, vector_embeddings.item_id AS vector_embeddings_item_id, vector_embeddings.vector AS vector_embeddings_vector, vector_embeddings.created_at AS vector_embeddings_created_at, knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM vector_embeddings JOIN knowledge_items ON vector_embeddings.item_id = knowledge_items.item_id JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s)
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - [cached since 1106s ago] {'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 01:55:45 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 01:55:45 - customate - INFO - Request: POST /api/enhanced/search Client: anonymous Status: 200 Process Time: 0.6086s
+2025-03-11 01:55:45 - customate - INFO - Request: POST /api/enhanced/search - Status: 200 - Process Time: 0.6136s
+2025-03-11 02:00:16 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:00:16 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:00:16 - sqlalchemy.engine.Engine - INFO - [cached since 1443s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 02:00:16 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 02:00:16 - customate - INFO - Request: POST /api/knowledge/knowledge/collections Client: anonymous Status: 400 Process Time: 0.0203s
+2025-03-11 02:00:16 - customate - INFO - Request: POST /api/knowledge/knowledge/collections - Status: 400 - Process Time: 0.0223s
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - [cached since 1519s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - INSERT INTO knowledge_collections (collection_id, client_id, name, description, type, created_at, updated_at) VALUES (%(collection_id)s, %(client_id)s, %(name)s, %(description)s, %(type)s, %(created_at)s, %(updated_at)s) RETURNING knowledge_collections.id
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - [generated in 0.00547s] {'collection_id': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'client_id': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'name': 'customer_support_info', 'description': None, 'type': 'text', 'created_at': datetime.datetime(2025, 3, 11, 1, 1, 31, 886287), 'updated_at': datetime.datetime(2025, 3, 11, 1, 1, 31, 886287)}
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id, knowledge_collections.collection_id, knowledge_collections.client_id, knowledge_collections.name, knowledge_collections.description, knowledge_collections.type, knowledge_collections.created_at, knowledge_collections.updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.id = %(pk_1)s
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - [generated in 0.00778s] {'pk_1': 4}
+2025-03-11 02:01:31 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 02:01:31 - customate - INFO - Request: POST /api/knowledge/knowledge/collections Client: anonymous Status: 201 Process Time: 0.0842s
+2025-03-11 02:01:31 - customate - INFO - Request: POST /api/knowledge/knowledge/collections - Status: 201 - Process Time: 0.0882s
+2025-03-11 02:03:58 - customate - INFO - Request: POST /api/knowledge/knowledge/collections Client: anonymous Status: 422 Process Time: 0.0060s
+2025-03-11 02:03:58 - customate - INFO - Request: POST /api/knowledge/knowledge/collections - Status: 422 - Process Time: 0.0090s
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - [cached since 1694s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - INSERT INTO knowledge_collections (collection_id, client_id, name, description, type, created_at, updated_at) VALUES (%(collection_id)s, %(client_id)s, %(name)s, %(description)s, %(type)s, %(created_at)s, %(updated_at)s) RETURNING knowledge_collections.id
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - [cached since 174.6s ago] {'collection_id': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'client_id': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'name': 'test_knowledge', 'description': 'Knowledge items for testing search', 'type': 'text', 'created_at': datetime.datetime(2025, 3, 11, 1, 4, 26, 523125), 'updated_at': datetime.datetime(2025, 3, 11, 1, 4, 26, 523125)}
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id, knowledge_collections.collection_id, knowledge_collections.client_id, knowledge_collections.name, knowledge_collections.description, knowledge_collections.type, knowledge_collections.created_at, knowledge_collections.updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.id = %(pk_1)s
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - [cached since 174.6s ago] {'pk_1': 5}
+2025-03-11 02:04:26 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 02:04:26 - customate - INFO - Request: POST /api/knowledge/knowledge/collections Client: anonymous Status: 201 Process Time: 0.0608s
+2025-03-11 02:04:26 - customate - INFO - Request: POST /api/knowledge/knowledge/collections - Status: 201 - Process Time: 0.0618s
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - [cached since 1768s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.collection_id = %(collection_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - [cached since 867.2s ago] {'collection_id_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'param_1': 1}
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - INSERT INTO knowledge_items (item_id, collection_id, title, content, source_document_id, created_at, updated_at) VALUES (%(item_id)s, %(collection_id)s, %(title)s, %(content)s, %(source_document_id)s, %(created_at)s, %(updated_at)s) RETURNING knowledge_items.id
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - [generated in 0.00404s] {'item_id': '9c100b50-0650-46ce-943c-f8d6dda13d59', 'collection_id': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'title': 'Customer Support Information', 'content': 'Our customer support is available 24/7. Contact us at support@example.com or call 555-123-4567.', 'source_document_id': None, 'created_at': datetime.datetime(2025, 3, 11, 1, 5, 40, 611685), 'updated_at': datetime.datetime(2025, 3, 11, 1, 5, 40, 611685)}
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id, knowledge_items.item_id, knowledge_items.collection_id, knowledge_items.title, knowledge_items.content, knowledge_items.item_metadata, knowledge_items.source_document_id, knowledge_items.created_at, knowledge_items.updated_at 
+FROM knowledge_items 
+WHERE knowledge_items.id = %(pk_1)s
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - [generated in 0.00439s] {'pk_1': 4}
+2025-03-11 02:05:40 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 02:05:40 - customate - INFO - Request: POST /api/knowledge/knowledge/collections/d09dfec9-ef31-4939-9da3-45753eb3758d/items Client: anonymous Status: 201 Process Time: 0.0787s
+2025-03-11 02:05:40 - customate - INFO - Request: POST /api/knowledge/knowledge/collections/d09dfec9-ef31-4939-9da3-45753eb3758d/items - Status: 201 - Process Time: 0.0817s
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - [cached since 1824s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_sessions (session_id, client_id, user_id, ip_address, user_agent, referrer, created_at, updated_at) VALUES (%(session_id)s, %(client_id)s, %(user_id)s, %(ip_address)s, %(user_agent)s, %(referrer)s, %(created_at)s, %(updated_at)s) RETURNING chat_sessions.id
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - [generated in 0.00581s] {'session_id': 'fd11c94f-8221-46cc-a13f-1203d3ca7838', 'client_id': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'user_id': None, 'ip_address': '127.0.0.1', 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 'referrer': 'http://localhost:8000/api/docs', 'created_at': datetime.datetime(2025, 3, 11, 1, 6, 36, 926731), 'updated_at': datetime.datetime(2025, 3, 11, 1, 6, 36, 926731)}
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id, chat_sessions.session_id, chat_sessions.client_id, chat_sessions.user_id, chat_sessions.ip_address, chat_sessions.user_agent, chat_sessions.referrer, chat_sessions.created_at, chat_sessions.updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - [generated in 0.00338s] {'pk_1': 2}
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - INSERT INTO conversation_contexts (context_id, session_id, context_data, created_at, updated_at) VALUES (%(context_id)s, %(session_id)s, %(context_data)s, %(created_at)s, %(updated_at)s) RETURNING conversation_contexts.id
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - [generated in 0.00443s] {'context_id': '42902325-479a-4456-b762-63ca64347f2b', 'session_id': 'fd11c94f-8221-46cc-a13f-1203d3ca7838', 'context_data': '{"session_id": "fd11c94f-8221-46cc-a13f-1203d3ca7838", "history": [], "entities": {}, "intent_history": [], "summary": ""}', 'created_at': datetime.datetime(2025, 3, 11, 1, 6, 36, 971639), 'updated_at': datetime.datetime(2025, 3, 11, 1, 6, 36, 971639)}
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id, conversation_contexts.context_id, conversation_contexts.session_id, conversation_contexts.context_data, conversation_contexts.created_at, conversation_contexts.updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.id = %(pk_1)s
+2025-03-11 02:06:36 - sqlalchemy.engine.Engine - INFO - [generated in 0.00364s] {'pk_1': 2}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [generated in 0.00317s] {'pk_1': 2}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [generated in 0.00339s] {'message_id': '06d7f082-9e40-4bed-a96b-2bddcfdd4854', 'session_id': 'fd11c94f-8221-46cc-a13f-1203d3ca7838', 'role': 'user', 'content': 'How do I contact support?', 'created_at': datetime.datetime(2025, 3, 11, 1, 6, 37, 30543)}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [generated in 0.00882s] {'pk_1': 3}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [cached since 0.0655s ago] {'pk_1': 2}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [generated in 0.00441s] {'session_id_1': 'fd11c94f-8221-46cc-a13f-1203d3ca7838', 'param_1': 1}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [generated in 0.00534s] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-11 02:06:37 - customate - INFO - No specific implementation for industry 'technology', using default
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:06:37 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-11 02:06:37 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [cached since 1758s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT vector_embeddings.id AS vector_embeddings_id, vector_embeddings.embedding_id AS vector_embeddings_embedding_id, vector_embeddings.item_id AS vector_embeddings_item_id, vector_embeddings.vector AS vector_embeddings_vector, vector_embeddings.created_at AS vector_embeddings_created_at, knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM vector_embeddings JOIN knowledge_items ON vector_embeddings.item_id = knowledge_items.item_id JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s, %(collection_id_1_2)s, %(collection_id_1_3)s)
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [cached since 1757s ago] {'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'collection_id_1_2': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'collection_id_1_3': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [cached since 1758s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_items JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s, %(collection_id_1_2)s, %(collection_id_1_3)s) AND (knowledge_items.title ILIKE %(title_1)s OR knowledge_items.content ILIKE %(content_1)s OR knowledge_items.title ILIKE %(title_2)s OR knowledge_items.content ILIKE %(content_2)s) 
+ LIMIT %(param_1)s
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - [cached since 1730s ago] {'title_1': '%contact%', 'content_1': '%contact%', 'title_2': '%support%', 'content_2': '%support%', 'param_1': 7, 'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'collection_id_1_2': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'collection_id_1_3': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-11 02:06:37 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:06:38 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [cached since 11.75s ago] {'message_id': '35b3da83-99a7-43a0-a7a7-c5270e4c8855', 'session_id': 'fd11c94f-8221-46cc-a13f-1203d3ca7838', 'role': 'assistant', 'content': 'You can reach our customer support team 24/7 via email at **support@example.com** or by calling **555-123-4567**. Let us know how we can assist you!', 'created_at': datetime.datetime(2025, 3, 11, 1, 6, 48, 770355)}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [cached since 11.75s ago] {'pk_1': 4}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [cached since 11.81s ago] {'pk_1': 2}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [cached since 11.75s ago] {'session_id_1': 'fd11c94f-8221-46cc-a13f-1203d3ca7838', 'param_1': 1}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [cached since 11.76s ago] {'session_id_1': 'fd11c94f-8221-46cc-a13f-1203d3ca7838', 'param_1': 1}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id, conversation_contexts.context_id, conversation_contexts.session_id, conversation_contexts.context_data, conversation_contexts.created_at, conversation_contexts.updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.id = %(pk_1)s
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [cached since 11.93s ago] {'pk_1': 2}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id AS chat_messages_id, chat_messages.message_id AS chat_messages_message_id, chat_messages.session_id AS chat_messages_session_id, chat_messages.role AS chat_messages_role, chat_messages.content AS chat_messages_content, chat_messages.message_metadata AS chat_messages_message_metadata, chat_messages.created_at AS chat_messages_created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [generated in 0.00586s] {'pk_1': 4}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - [cached since 11.95s ago] {'pk_1': 2}
+2025-03-11 02:06:48 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-11 02:06:48 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 200 Process Time: 12.1010s
+2025-03-11 02:06:48 - customate - INFO - Request: POST /api/chatbot/message - Status: 200 - Process Time: 12.1030s
+2025-03-11 02:10:12 - customate - INFO - Request: POST /api/knowledge/collections Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-11 02:10:12 - customate - INFO - Request: POST /api/knowledge/collections - Status: 404 - Process Time: 0.0030s

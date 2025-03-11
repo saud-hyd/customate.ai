@@ -1,17 +1,20 @@
+# app/services/llm/deepseek_service.py
 import httpx
 from typing import Dict, Any, List, Optional
+import os
 
 from app.services.llm.llm_service import LLMService
 from app.core.config.settings import settings
 from app.core import logger
 
 class DeepSeekService(LLMService):
-    """DeepSeek LLM service implementation."""
+    """DeepSeek LLM service implementation with mock fallback."""
     
     def __init__(self):
         self.api_key = settings.DEEPSEEK_API_KEY
         self.api_base_url = "https://api.deepseek.com/v1"  # Replace with actual API URL
         self.model = "deepseek-chat"  # Replace with actual model name
+        self._mock_service = None  # Lazy-loaded mock service
         
         # Verify API key is set
         if not self.api_key:
@@ -82,7 +85,7 @@ class DeepSeekService(LLMService):
     
     async def generate_embeddings(self, text: str) -> List[float]:
         """
-        Generate embeddings for text using DeepSeek API.
+        Generate embeddings for text using DeepSeek API with fallback to mock service.
         
         Args:
             text: The text to generate embeddings for
@@ -90,33 +93,45 @@ class DeepSeekService(LLMService):
         Returns:
             Vector embeddings as a list of floats
         """
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.api_base_url}/embeddings",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": "deepseek-embedding",  # Use embedding model
-                        "input": text
-                    },
-                    timeout=30.0,
-                )
-                
-                if response.status_code != 200:
-                    logger.error(f"DeepSeek embedding API error: {response.status_code} - {response.text}")
-                    return []
-                
-                result = response.json()
-                embeddings = result["data"][0]["embedding"]
-                
-                return embeddings
-                
-        except Exception as e:
-            logger.exception(f"Error calling DeepSeek embedding API: {str(e)}")
-            return []
+        # Try DeepSeek API first (unless MOCK_EMBEDDINGS=true in environment)
+        if not os.environ.get("MOCK_EMBEDDINGS", "").lower() == "true":
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{self.api_base_url}/embeddings",
+                        headers={
+                            "Authorization": f"Bearer {self.api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": "deepseek-embedding",  # Use embedding model
+                            "input": text
+                        },
+                        timeout=30.0,
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        embeddings = result["data"][0]["embedding"]
+                        return embeddings
+                    else:
+                        logger.error(f"DeepSeek embedding API error: {response.status_code} - {response.text}")
+                    
+            except Exception as e:
+                logger.warning(f"Error calling DeepSeek embedding API: {str(e)}, using mock service")
+        else:
+            logger.info("Using mock embedding service (MOCK_EMBEDDINGS=true)")
+            
+        # Fallback to mock service
+        mock_service = self._get_mock_service()
+        return await mock_service.generate_embeddings(text)
+    
+    def _get_mock_service(self):
+        """Lazy-load the mock service."""
+        if self._mock_service is None:
+            from app.services.llm.mock_embedding_service import MockEmbeddingService
+            self._mock_service = MockEmbeddingService()
+        return self._mock_service
     
     def _build_system_prompt(
         self, 

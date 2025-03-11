@@ -39,16 +39,7 @@ class ChatService:
         self, client_id: str, session_id: str, user_message: str, user_info: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        Process a user message and generate a response.
-        
-        Args:
-            client_id: ID of the client
-            session_id: ID of the chat session
-            user_message: The user's message text
-            user_info: Additional user information for context
-            
-        Returns:
-            Response with assistant message and session info
+        Process a user message with enhanced knowledge integration.
         """
         # Get or create session
         session = self._get_or_create_session(client_id, session_id, user_info)
@@ -59,22 +50,47 @@ class ChatService:
         # Get conversation context
         context = self.context_manager.get_context(self.db, session.session_id)
         
-        # Get industry-specific service
-        industry_service = self.industry_factory.get_industry_service(client_id)
+        # Check if this is a follow-up question
+        is_followup = self._is_followup_question(user_message, context)
         
-        # Get relevant knowledge base items
-        relevant_knowledge = await self.similarity_service.find_similar(
-            client_id, user_message, limit=5
+        # Get industry-specific processing
+        industry_service = self.industry_factory.get_industry_service(client_id)
+        industry_context = industry_service.process_message(user_message, context)
+        
+        # Adjust search parameters for follow-up questions
+        hybrid_ratio = 0.8 if is_followup else 0.7  # More vector weight for follow-ups
+        limit = 3 if is_followup else 5  # Fewer, more focused results for follow-ups
+        collection_id = None
+        
+        # For follow-ups, try to focus on same collections as previous messages
+        if is_followup and "context_updates" in context and "knowledge_references" in context["context_updates"]:
+            recent_refs = context["context_updates"]["knowledge_references"]
+            if recent_refs and len(recent_refs) == 1:
+                # If only one collection was used, filter to just that collection
+                collection_id = recent_refs[0].get("collection_id")
+        
+        # Get relevant knowledge base items with hybrid search
+        knowledge_results = await self.similarity_service.hybrid_search(
+            client_id=client_id,
+            query_text=user_message,
+            limit=limit,
+            collection_id=collection_id,
+            hybrid_ratio=hybrid_ratio
         )
         
-        # Apply industry-specific processing
-        industry_context = industry_service.process_message(user_message, context)
+        # Process and enhance knowledge for LLM
+        knowledge_items = self._enhance_knowledge_context(
+            knowledge_results.get("results", []),
+            user_message,
+            context,
+            is_followup
+        )
         
         # Generate response using LLM
         llm_response = await self.llm_service.generate_response(
             user_message=user_message,
             conversation_history=self.context_manager.format_history(context),
-            knowledge_context=relevant_knowledge,
+            knowledge_context=knowledge_items,
             industry_context=industry_context
         )
         
@@ -87,10 +103,10 @@ class ChatService:
             session.session_id,
             user_message,
             llm_response["content"],
-            llm_response.get("context_updates", {})
+            context.get("context_updates", {})
         )
         
-        # Return response
+        # Return response with knowledge usage info
         return {
             "message": {
                 "id": assistant_msg.message_id,
@@ -98,8 +114,9 @@ class ChatService:
                 "created_at": assistant_msg.created_at.isoformat(),
             },
             "session_id": session.session_id,
+            "knowledge_used": len(knowledge_items) > 0,
         }
-    
+            
     def _get_or_create_session(
         self, client_id: str, session_id: Optional[str], user_info: Dict[str, Any] = None
     ) -> ChatSession:
@@ -152,3 +169,107 @@ class ChatService:
             }
             for msg in messages
         ]
+    
+    def _is_followup_question(self, message: str, context: Dict[str, Any]) -> bool:
+        """
+        Determine if a message is likely a follow-up question.
+        
+        Args:
+            message: User message
+            context: Conversation context
+            
+        Returns:
+            Boolean indicating if this is likely a follow-up
+        """
+        # Check for explicit references or pronouns
+        followup_indicators = [
+            "what about", "how about", "tell me more", "explain further",
+            "why", "how", "what does that mean", "can you explain", 
+            "it", "this", "that", "these", "those"
+        ]
+        
+        message_lower = message.lower()
+        has_indicator = any(indicator in message_lower for indicator in followup_indicators)
+        
+        # Short questions are often follow-ups
+        is_short = len(message.split()) <= 5
+        
+        # Context must have history to be a follow-up
+        has_history = "history" in context and len(context["history"]) >= 2
+        
+        return (has_indicator or is_short) and has_history
+
+    def _enhance_knowledge_context(
+        self, 
+        knowledge_items: List[Dict[str, Any]], 
+        user_message: str,
+        context: Dict[str, Any],
+        is_followup: bool
+    ) -> List[Dict[str, Any]]:
+        """
+        Enhance knowledge items with context awareness and relevance signals.
+        
+        Args:
+            knowledge_items: Raw knowledge items
+            user_message: User's message
+            context: Conversation context
+            is_followup: Whether this is a follow-up question
+            
+        Returns:
+            Enhanced knowledge items
+        """
+        if not knowledge_items:
+            return []
+        
+        # Track context references for later
+        knowledge_refs = []
+        
+        # Format for LLM consumption
+        enhanced_items = []
+        
+        for item in knowledge_items:
+            # Create reference for context tracking
+            ref = {
+                "item_id": item["item_id"],
+                "collection_id": item["collection_id"],
+                "collection_name": item.get("collection_name", "Unknown"),
+                "title": item["title"],
+                "score": item.get("similarity", item.get("hybrid_score", 0)),
+            }
+            knowledge_refs.append(ref)
+            
+            # Get confidence level based on score
+            confidence = "high" if ref["score"] > 0.8 else "medium" if ref["score"] > 0.6 else "low"
+            
+            # Format for LLM
+            formatted_item = {
+                "title": item["title"],
+                "content": item["content"],
+                "source": f"{item.get('collection_name', 'Knowledge Base')}",
+                "relevance": confidence
+            }
+            enhanced_items.append(formatted_item)
+        
+        # Add follow-up context if applicable
+        if is_followup and "history" in context:
+            # Get most recent assistant message
+            recent_messages = [msg for msg in context["history"] if msg["role"] == "assistant"]
+            
+            if recent_messages:
+                latest_message = recent_messages[-1]["content"]
+                # Add context from previous response
+                enhanced_items.append({
+                    "title": "Previous Context",
+                    "content": f"This appears to be a follow-up question. From your previous response: '{latest_message[:150]}...'",
+                    "source": "Conversation History",
+                    "relevance": "context"
+                })
+        
+        # Add reference to context updates
+        if "context_updates" not in context:
+            context["context_updates"] = {}
+        
+        context["context_updates"]["knowledge_references"] = knowledge_refs
+        
+        return enhanced_items
+                
