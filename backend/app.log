@@ -2785,3 +2785,79 @@ WHERE subscription_usage.client_id = %(client_id_1)s AND subscription_usage.mont
 2025-03-12 01:41:23 - sqlalchemy.engine.Engine - INFO - ROLLBACK
 2025-03-12 01:41:23 - customate - INFO - Request: GET /api/analytics/subscription/limits Client: anonymous Status: 200 Process Time: 0.0329s
 2025-03-12 01:41:23 - customate - INFO - Request: GET /api/analytics/subscription/limits - Status: 200 - Process Time: 0.0349s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [generated in 0.00106s] {'name': 'clients'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.005795s ago] {'name': 'client_settings'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.007707s ago] {'name': 'subscriptions'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.01026s ago] {'name': 'knowledge_collections'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.01284s ago] {'name': 'knowledge_items'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.01485s ago] {'name': 'document_sources'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.01943s ago] {'name': 'vector_embeddings'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.02267s ago] {'name': 'chat_sessions'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.02471s ago] {'name': 'chat_messages'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.02668s ago] {'name': 'conversation_contexts'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.02845s ago] {'name': 'api_usage_logs'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.03096s ago] {'name': 'chat_metrics'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.035s ago] {'name': 'knowledge_metrics'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.03727s ago] {'name': 'subscription_usage'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - [cached since 0.0392s ago] {'name': 'daily_stats'}
+2025-03-12 03:17:41 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select pg_catalog.version()
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select current_schema()
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - show standard_conforming_strings
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [raw sql] {}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [generated in 0.00143s] {'name': 'clients'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.008225s ago] {'name': 'client_settings'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.01589s ago] {'name': 'subscriptions'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.02068s ago] {'name': 'knowledge_collections'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.02378s ago] {'name': 'knowledge_items'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.02792s ago] {'name': 'document_sources'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.03431s ago] {'name': 'vector_embeddings'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.03745s ago] {'name': 'chat_sessions'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.04039s ago] {'name': 'chat_messages'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.0459s ago] {'name': 'conversation_contexts'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.0505s ago] {'name': 'api_usage_logs'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.05354s ago] {'name': 'chat_metrics'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.05701s ago] {'name': 'knowledge_metrics'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.06019s ago] {'name': 'subscription_usage'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where pg_catalog.pg_table_is_visible(c.oid) and relname=%(name)s
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - [cached since 0.06275s ago] {'name': 'daily_stats'}
+2025-03-12 05:51:08 - sqlalchemy.engine.Engine - INFO - COMMIT
