@@ -7,16 +7,16 @@ from app.core.config.settings import settings
 from app.core.database.session import engine, Base
 from app.core import logger
 from app.core.middleware.client_context import ClientContextMiddleware
+from app.core.middleware.analytics_middleware import AnalyticsMiddleware
 
-# Import original routes
+# Import routes
 from app.api.auth import routes as auth_routes
 from app.api.client import routes as client_routes
 from app.api.knowledge import routes as knowledge_routes
 from app.api.knowledge import document_routes
-
-# Import enhanced routes
-from app.api.chatbot import enhanced_routes as enhanced_chatbot_routes
+from app.api.chatbot import enhanced_routes as chatbot_routes
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
+from app.api.analytics import routes as analytics_routes
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -25,7 +25,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.API_VERSION,
-    description="Multi-tenant chatbot platform API with enhanced knowledge integration",
+    description="Multi-tenant chatbot platform API with knowledge integration and analytics",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
@@ -34,24 +34,24 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update this with specific domains in production
+    allow_origins=["*"],  # Update with specific domains in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Add client context middleware
-app.add_middleware(ClientContextMiddleware)
+# Add middleware (order matters)
+app.add_middleware(ClientContextMiddleware)  # Must be before AnalyticsMiddleware
+app.add_middleware(AnalyticsMiddleware)
 
-# Include original routes
+# Include routes
 app.include_router(auth_routes.router, prefix="/api")
 app.include_router(client_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
 app.include_router(document_routes.router, prefix="/api/knowledge")
-
-# Include enhanced routes
-app.include_router(enhanced_chatbot_routes.router, prefix="/api")
+app.include_router(chatbot_routes.router, prefix="/api")
 app.include_router(enhanced_knowledge_routes.router, prefix="/api")
+app.include_router(analytics_routes.router, prefix="/api")  # Add analytics routes
 
 # Request logging middleware
 @app.middleware("http")
@@ -79,7 +79,18 @@ async def root():
         "status": "healthy", 
         "app_name": settings.APP_NAME, 
         "version": settings.API_VERSION,
-        "features": ["enhanced_search", "knowledge_integration"]
+        "features": ["enhanced_search", "knowledge_integration", "analytics"]
+    }
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "components": {
+            "api": "up",
+            "database": "up"
+        }
     }
 
 if __name__ == "__main__":
