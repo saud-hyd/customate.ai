@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 
-from app.core.database.session import get_db_session
 from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.repositories.client_repository import ClientRepository, ClientSettingsRepository
@@ -13,7 +12,7 @@ router = APIRouter(prefix="/client", tags=["client"])
 @router.get("", response_model=Dict[str, Any])
 async def get_client_info(
     current_client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)
 ):
     """Get information about the current client."""
     client_repo = ClientRepository()
@@ -54,7 +53,7 @@ async def get_client_info(
 async def update_client_settings(
     settings_data: Dict[str, Any],
     current_client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db)
 ):
     """Update client settings."""
     settings_repo = ClientSettingsRepository()

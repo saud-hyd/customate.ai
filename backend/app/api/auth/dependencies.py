@@ -1,55 +1,40 @@
+# backend/app/api/auth/dependencies.py
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, APIKeyHeader
-from jose import jwt, JWTError
+from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
-from typing import Optional, Union
+import logging
 
 from app.core.database.dependencies import get_db
-from app.core.security.authentication import ALGORITHM, authenticate_client_by_api_key
-from app.core.config.settings import settings
-from app.domain.client.entities import Client
+from app.repositories.client_repository import ClientRepository
 
-# OAuth2 scheme for JWT tokens
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
-
-# API key scheme
-api_key_header = APIKeyHeader(name="X-API-Key")
+# Create a simple API key header - no OAuth fallback for now
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+logger = logging.getLogger("customate")
 
 async def get_current_client(
     db: Session = Depends(get_db),
-    token: Optional[str] = Depends(oauth2_scheme),
-    api_key: Optional[str] = Depends(api_key_header)
-) -> Client:
-    """
-    Validate authentication and return the current client.
-    """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    api_key: str = Depends(api_key_header)
+):
+    """Simple API key authentication."""
+    logger.info(f"Auth attempt with API key: {api_key[:10] if api_key else 'None'}")
     
-    # Try API key authentication first
-    if api_key:
-        client = authenticate_client_by_api_key(db, api_key)
-        if client:
-            return client
+    if not api_key:
+        logger.error("No API key provided")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
     
-    # Then try JWT token authentication
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
-        client_id: str = payload.get("sub")
-        if client_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-        
-    # Get client from database
-    from app.repositories.client_repository import ClientRepository
+    # Directly query the client
     client_repo = ClientRepository()
-    client = client_repo.get_by_client_id(db, client_id)
+    client = client_repo.get_by_api_key(db, api_key)
     
-    if client is None:
-        raise credentials_exception
-        
-    return client
+    if client and client.active:
+        logger.info(f"Successfully authenticated client: {client.client_id}")
+        return client
+    
+    logger.error(f"Invalid API key or client not active")
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated"
+    )

@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children }) => {
   }
   
   // Redirect to login if not authenticated
-  if (!isAuthenticated()) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
   
@@ -49,7 +49,7 @@ const GuestRoute = ({ children }) => {
   }
   
   // Redirect to dashboard if already authenticated
-  if (isAuthenticated()) {
+  if (isAuthenticated) {
     return <Navigate to="/dashboard" />;
   }
   

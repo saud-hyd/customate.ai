@@ -18,6 +18,10 @@ from app.api.chatbot import enhanced_routes as chatbot_routes
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("uvicorn")
+logger.setLevel(logging.DEBUG)
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
