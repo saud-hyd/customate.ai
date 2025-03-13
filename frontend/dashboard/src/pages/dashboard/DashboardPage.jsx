@@ -1,46 +1,55 @@
+// frontend/dashboard/src/pages/dashboard/DashboardPage.jsx
 import React, { useState, useEffect } from 'react';
 import analyticsService from '../../services/analyticsService';
 import knowledgeService from '../../services/knowledgeService';
+import dashboardService from '../../services/dashboardService';
 import useAuth from '../../hooks/useAuth';
+import ErrorHandler from '../../components/common/ErrorHandler';
 
 import {
   UsersIcon,
   ChatBubbleLeftRightIcon,
   DocumentTextIcon,
-  MagnifyingGlassIcon,
-  ExclamationTriangleIcon
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 
 const DashboardPage = () => {
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const [overview, setOverview] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [documentsStats, setDocumentsStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        // Get all required data in parallel
-        const [overviewData, subscriptionLimits, documentsData] = await Promise.all([
-          analyticsService.getDashboardOverview(),
-          analyticsService.checkSubscriptionLimits(),
-          knowledgeService.getDocumentStats()
-        ]);
-        
-        setOverview(overviewData);
-        setSubscriptionStatus(subscriptionLimits);
-        setDocumentsStats(documentsData);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get all required data in parallel
+      const [overviewData, subscriptionLimits, documentsData] = await Promise.all([
+        analyticsService.getDashboardOverview().catch(() => null),
+        analyticsService.checkSubscriptionLimits().catch(() => null),
+        knowledgeService.getDocumentStats().catch(() => null)
+      ]);
+      
+      if (overviewData) setOverview(overviewData);
+      if (subscriptionLimits) setSubscriptionStatus(subscriptionLimits);
+      if (documentsData) setDocumentsStats(documentsData);
+      
+      // If all requests failed, show error
+      if (!overviewData && !subscriptionLimits && !documentsData) {
         setError('Failed to load dashboard data. Please try again later.');
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -55,76 +64,78 @@ const DashboardPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 m-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <ExclamationTriangleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-3">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Default values for stats when data is not available
+  const defaultStats = {
+    users: 0,
+    messages: 0, 
+    knowledge_items: 0,
+    searches: 0
+  };
 
-  // Stats cards data
+  // Get stats with fallbacks
   const stats = [
     {
       name: 'Users Today',
-      value: overview?.today?.users || 0,
+      value: overview?.today?.users || defaultStats.users,
       change: overview?.changes?.users || 0,
       icon: UsersIcon,
       color: 'bg-green-500'
     },
     {
       name: 'Messages Today',
-      value: overview?.today?.messages || 0,
+      value: overview?.today?.messages || defaultStats.messages,
       change: overview?.changes?.messages || 0,
       icon: ChatBubbleLeftRightIcon,
       color: 'bg-blue-500'
     },
     {
       name: 'Knowledge Items',
-      value: documentsStats?.knowledge_items?.total || 0,
+      value: documentsStats?.knowledge_items?.total || defaultStats.knowledge_items,
       change: null,
       icon: DocumentTextIcon,
       color: 'bg-purple-500'
     },
     {
       name: 'Searches Today',
-      value: overview?.today?.searches || 0,
+      value: overview?.today?.searches || defaultStats.searches,
       change: overview?.changes?.searches || 0,
       icon: MagnifyingGlassIcon,
       color: 'bg-orange-500'
     },
   ];
 
-  // Subscription usage
+  // Default subscription data
+  const defaultSubscription = {
+    limits: {
+      messages: { used: 0, limit: 100, percentage: 0, exceeded: false },
+      users: { active: 0, limit: 10, percentage: 0, exceeded: false },
+      storage: { used_bytes: 0, limit_bytes: 1048576, percentage: 0, exceeded: false }
+    }
+  };
+
+  // Subscription usage with fallbacks
   const subscriptionLimits = [
     {
       name: 'Messages',
       value: subscriptionStatus?.limits?.messages?.percentage || 0,
       used: subscriptionStatus?.limits?.messages?.used || 0,
-      limit: subscriptionStatus?.limits?.messages?.limit || 0,
-      color: subscriptionStatus?.limits?.messages?.exceeded ? 'text-red-600' : 'text-green-600'
+      limit: subscriptionStatus?.limits?.messages?.limit || defaultSubscription.limits.messages.limit,
+      color: (subscriptionStatus?.limits?.messages?.exceeded || defaultSubscription.limits.messages.exceeded) ? 'text-red-600' : 'text-green-600'
     },
     {
       name: 'Active Users',
       value: subscriptionStatus?.limits?.users?.percentage || 0,
       used: subscriptionStatus?.limits?.users?.active || 0,
-      limit: subscriptionStatus?.limits?.users?.limit || 0,
-      color: subscriptionStatus?.limits?.users?.exceeded ? 'text-red-600' : 'text-green-600'
+      limit: subscriptionStatus?.limits?.users?.limit || defaultSubscription.limits.users.limit,
+      color: (subscriptionStatus?.limits?.users?.exceeded || defaultSubscription.limits.users.exceeded) ? 'text-red-600' : 'text-green-600'
     },
     {
       name: 'Storage',
       value: subscriptionStatus?.limits?.storage?.percentage || 0,
-      used: Math.round(subscriptionStatus?.limits?.storage?.used_bytes / (1024 * 1024)) || 0,
-      limit: Math.round(subscriptionStatus?.limits?.storage?.limit_bytes / (1024 * 1024)) || 0,
+      used: Math.round((subscriptionStatus?.limits?.storage?.used_bytes || 0) / (1024 * 1024)),
+      limit: Math.round((subscriptionStatus?.limits?.storage?.limit_bytes || defaultSubscription.limits.storage.limit_bytes) / (1024 * 1024)),
       unit: 'MB',
-      color: subscriptionStatus?.limits?.storage?.exceeded ? 'text-red-600' : 'text-green-600'
+      color: (subscriptionStatus?.limits?.storage?.exceeded || defaultSubscription.limits.storage.exceeded) ? 'text-red-600' : 'text-green-600'
     },
   ];
 
@@ -132,11 +143,14 @@ const DashboardPage = () => {
     <div className="space-y-6">
       {/* Page header */}
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {currentUser?.name || 'User'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name || 'User'}</h1>
         <p className="mt-1 text-sm text-gray-500">
           Here's what's happening with your chatbot today.
         </p>
       </div>
+
+      {/* Error message */}
+      {error && <ErrorHandler message={error} onRetry={fetchDashboardData} />}
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

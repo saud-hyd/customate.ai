@@ -1,3 +1,4 @@
+// frontend/dashboard/src/components/layout/Sidebar.jsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
@@ -13,9 +14,9 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
-  const { currentUser, logout } = useAuth();
+  const { user, logout } = useAuth();
 
-  // Navigation items
+  // Navigation items with fixed paths
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon },
@@ -68,6 +69,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       ? 'bg-primary-800 text-white' 
                       : 'text-white hover:bg-primary-600 hover:text-white'}
                   `}
+                  end={item.href === '/dashboard'}
                 >
                   <item.icon className="mr-4 h-6 w-6 flex-shrink-0" aria-hidden="true" />
                   {item.name}
@@ -82,12 +84,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               <div>
                 <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary-500">
                   <span className="text-lg font-medium leading-none text-white">
-                    {currentUser?.name?.charAt(0) || 'U'}
+                    {user?.name?.charAt(0) || 'U'}
                   </span>
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-base font-medium text-white">{currentUser?.name || 'User'}</p>
+                <p className="text-base font-medium text-white">{user?.name || 'User'}</p>
                 <button 
                   onClick={logout}
                   className="text-sm font-medium text-primary-300 hover:text-white"
@@ -124,6 +126,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         ? 'bg-primary-800 text-white' 
                         : 'text-white hover:bg-primary-600 hover:text-white'}
                     `}
+                    end={item.href === '/dashboard'}
                   >
                     <item.icon className="mr-3 h-6 w-6 flex-shrink-0" aria-hidden="true" />
                     {item.name}
@@ -138,12 +141,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <div>
                   <div className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-primary-500">
                     <span className="text-lg font-medium leading-none text-white">
-                      {currentUser?.name?.charAt(0) || 'U'}
+                      {user?.name?.charAt(0) || 'U'}
                     </span>
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-white">{currentUser?.name || 'User'}</p>
+                  <p className="text-sm font-medium text-white">{user?.name || 'User'}</p>
                   <button 
                     onClick={logout}
                     className="text-xs font-medium text-primary-300 hover:text-white"

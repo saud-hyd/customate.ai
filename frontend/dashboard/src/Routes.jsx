@@ -1,3 +1,4 @@
+// frontend/dashboard/src/Routes.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
@@ -9,6 +10,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import ChatPage from './pages/chat/ChatPage';
 import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
 import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
@@ -79,22 +81,22 @@ const AppRoutes = () => {
       
       {/* Dashboard routes */}
       <Route 
-        path="/dashboard" 
+        path="/" 
         element={
           <ProtectedRoute>
             <DashboardLayout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="chat" element={<ChatPage />} />
         <Route path="knowledge" element={<KnowledgeListPage />} />
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        {/* Redirect root to dashboard */}
+        <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>
-      
-      {/* Redirect from root to dashboard or login */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       
       {/* Catch all unmatched routes */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
