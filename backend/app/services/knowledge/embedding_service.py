@@ -1,5 +1,5 @@
 # app/services/knowledge/embedding_service.py
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import json
 from sqlalchemy.orm import Session
 

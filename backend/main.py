@@ -52,7 +52,7 @@ app.add_middleware(AnalyticsMiddleware)
 app.include_router(auth_routes.router, prefix="/api")
 app.include_router(client_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
-app.include_router(document_routes.router, prefix="/api/knowledge")
+app.include_router(document_routes.router, prefix="/api/knowledge/documents")
 app.include_router(chatbot_routes.router, prefix="/api")
 app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")  # Add analytics routes

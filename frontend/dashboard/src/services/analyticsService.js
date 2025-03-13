@@ -1,43 +1,55 @@
+// src/services/analyticsService.js
 import api from './api';
 
+/**
+ * Service for fetching analytics data from the API
+ * Provides methods to access various analytics endpoints
+ */
 const analyticsService = {
-  // Get dashboard overview
-  async getDashboardOverview(days = 30) {
-    const response = await api.get(`/analytics/dashboard?days=${days}`);
+  // Get dashboard overview analytics
+  async getDashboardOverview() {
+    const response = await api.get('/analytics/dashboard');
     return response.data;
   },
   
-  // Get chat performance metrics
+  // Get chat performance report
   async getChatPerformance(days = 30) {
-    const response = await api.get(`/analytics/chat?days=${days}`);
+    const response = await api.get('/analytics/chat-performance', {
+      params: { days }
+    });
     return response.data;
   },
   
-  // Get knowledge usage metrics
+  // Get knowledge usage report
   async getKnowledgeUsage(days = 30, collectionId = null) {
-    let url = `/analytics/knowledge?days=${days}`;
-    if (collectionId) {
-      url += `&collection_id=${collectionId}`;
-    }
-    const response = await api.get(url);
+    const params = { days };
+    if (collectionId) params.collection_id = collectionId;
+    
+    const response = await api.get('/analytics/knowledge-usage', { params });
     return response.data;
   },
   
-  // Get subscription usage data
+  // Get subscription usage report
   async getSubscriptionUsage(months = 6) {
-    const response = await api.get(`/analytics/subscription?months=${months}`);
+    const response = await api.get('/analytics/subscription-usage', {
+      params: { months }
+    });
     return response.data;
   },
   
-  // Get API usage statistics
+  // Get API usage report
   async getApiUsage(days = 30) {
-    const response = await api.get(`/analytics/api-usage?days=${days}`);
+    const response = await api.get('/analytics/api-usage', {
+      params: { days }
+    });
     return response.data;
   },
   
-  // Check subscription limits
-  async checkSubscriptionLimits() {
-    const response = await api.get('/analytics/subscription/limits');
+  // Get user activity report
+  async getUserActivity(days = 30) {
+    const response = await api.get('/analytics/user-activity', {
+      params: { days }
+    });
     return response.data;
   }
 };

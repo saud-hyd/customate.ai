@@ -1,51 +1,44 @@
-// frontend/dashboard/src/services/chatbotService.js
+// src/services/chatService.js
 import api from './api';
 
 const chatbotService = {
-  // Send message to chatbot API
-  async sendMessage(message, sessionId = null) {
-    try {
-      const payload = {
-        message,
-        session_id: sessionId
-      };
-      
-      const response = await api.post('/chatbot/message', payload);
-      return response.data;
-    } catch (error) {
-      console.error('Error sending message to chatbot:', error);
-      throw error;
-    }
+  // Get all conversations
+  async getConversations() {
+    const response = await api.get('/chat/conversations');
+    return response.data;
   },
   
-  // Get chat history for a session
-  async getChatHistory(sessionId, limit = 50) {
-    try {
-      const response = await api.get(`/chatbot/history/${sessionId}?limit=${limit}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching chat history:', error);
-      throw error;
-    }
+  // Create a new conversation
+  async createConversation(data) {
+    const response = await api.post('/chat/conversations', data);
+    return response.data;
   },
   
-  // Get chatbot settings
-  async getChatbotSettings() {
-    try {
-      const response = await api.get('/client');
-      return response.data.settings;
-    } catch (error) {
-      console.error('Error fetching chatbot settings:', error);
-      // Return default settings if API call fails
-      return {
-        primary_color: '#4f46e5',
-        chatbot_name: 'AI Assistant',
-        greeting_message: 'Hello! How can I help you today?',
-        enable_suggestions: true,
-        enable_typing_indicator: true,
-        widget_position: 'bottom-right'
-      };
-    }
+  // Get messages for a conversation
+  async getMessages(conversationId) {
+    const response = await api.get(`/chat/conversations/${conversationId}/messages`);
+    return response.data;
+  },
+  
+  // Send a message
+  async sendMessage(conversationId, content) {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages`, {
+      content
+    });
+    return response.data;
+  },
+  
+  // Delete a conversation
+  async deleteConversation(conversationId) {
+    await api.delete(`/chat/conversations/${conversationId}`);
+  },
+  
+  // Get analytics for conversations
+  async getChatAnalytics(timeRange = 'month') {
+    const response = await api.get('/chat/analytics', {
+      params: { timeRange }
+    });
+    return response.data;
   }
 };
 

@@ -15,6 +15,7 @@ import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
 import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import TestChatbotPage from './pages/TestChatbotPage';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -24,7 +25,7 @@ const ProtectedRoute = ({ children }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -45,7 +46,7 @@ const GuestRoute = ({ children }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -89,11 +90,12 @@ const AppRoutes = () => {
         }
       >
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="chat" element={<ChatPage />} />
+        <Route path="conversations" element={<ChatPage />} />
         <Route path="knowledge" element={<KnowledgeListPage />} />
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="test" element={<TestChatbotPage />} />
         {/* Redirect root to dashboard */}
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>

@@ -11,6 +11,7 @@ from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.repositories.knowledge_repository import DocumentSourceRepository
 from app.services.storage.document_service import DocumentService
+from app.services.storage.document_processor import DocumentProcessor
 from app.services.knowledge.embedding_service import EmbeddingService
 from app.services.llm.deepseek_service import DeepSeekService
 from app.core import logger
@@ -63,10 +64,39 @@ async def upload_document(
         # Save document
         document = await document_service.save_document(db, file, current_client.client_id)
         
-        # Process document in background with proper session handling
+        # Define background processing task
         async def process_document_task():
-            # Background processing implementation remains the same...
-            pass
+            try:
+                # Create a new database session for the background task
+                async_db = SessionLocal()
+                try:
+                    # Initialize necessary services
+                    llm_service = DeepSeekService()
+                    embedding_service = EmbeddingService(llm_service)
+                    document_processor = DocumentProcessor(document_service, embedding_service)
+                    
+                    # Process the document
+                    result = await document_processor.process_document(
+                        async_db, 
+                        file, 
+                        current_client.client_id,
+                        collection_id
+                    )
+                    
+                    logger.info(f"Document processed successfully: {result}")
+                finally:
+                    async_db.close()
+            except Exception as e:
+                logger.exception(f"Error processing document in background task: {str(e)}")
+                # Update document status to failed
+                try:
+                    error_db = SessionLocal()
+                    try:
+                        document_service.update_document_status(error_db, document.document_id, "failed")
+                    finally:
+                        error_db.close()
+                except Exception as update_error:
+                    logger.exception(f"Error updating document status: {str(update_error)}")
         
         # Add task to background tasks
         background_tasks.add_task(process_document_task)

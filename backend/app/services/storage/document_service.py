@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 import aiofiles
 import PyPDF2
 import docx
+import asyncio
 
 from app.core.config.settings import settings
 from app.domain.knowledge.entities import DocumentSource
