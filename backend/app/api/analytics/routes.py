@@ -3,6 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+import logging
+from app.domain.analytics.entities import ChatMetrics, KnowledgeMetrics
+
+logger = logging.getLogger(__name__)
 
 from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
@@ -241,3 +245,113 @@ async def check_subscription_limits(
     result = usage_tracker.check_subscription_limits(db, current_client.client_id)
     
     return result
+
+@router.get("/performance", response_model=Dict[str, Any])
+async def get_performance_metrics(
+    days: int = Query(30, description="Number of days to include in report"),
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """
+    Get detailed performance metrics for chatbot and search operations.
+    
+    Provides response times, token usage, and efficiency metrics for
+    monitoring system performance.
+    """
+    reporting_service = ReportingService()
+    
+    # Track this API request
+    usage_tracker = UsageTracker()
+    usage_tracker.track_api_request(
+        db=db,
+        client_id=current_client.client_id,
+        endpoint="/analytics/performance",
+        method="GET",
+        status_code=200,
+        response_time_ms=0
+    )
+    
+    # Calculate date range
+    end_date = datetime.utcnow().strftime("%Y-%m-%d")
+    start_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
+    
+    try:
+        # Get chat metrics for performance analysis
+        chat_metrics = db.query(ChatMetrics).filter(
+            ChatMetrics.client_id == current_client.client_id,
+            ChatMetrics.date >= start_date,
+            ChatMetrics.date <= end_date
+        ).order_by(ChatMetrics.date).all()
+        
+        # Get knowledge metrics for search performance
+        knowledge_metrics = db.query(KnowledgeMetrics).filter(
+            KnowledgeMetrics.client_id == current_client.client_id,
+            KnowledgeMetrics.date >= start_date,
+            KnowledgeMetrics.date <= end_date
+        ).order_by(KnowledgeMetrics.date).all()
+        
+        # Extract and aggregate performance data
+        response_times = []
+        token_usage = []
+        search_performance = []
+        
+        for metric in chat_metrics:
+            # Response time data
+            response_times.append({
+                "date": metric.date,
+                "average_ms": metric.average_response_time_ms,
+                "total_messages": metric.total_messages
+            })
+            
+            # Token usage data (if available)
+            if metric.stats_metadata and "total_tokens" in metric.stats_metadata:
+                token_usage.append({
+                    "date": metric.date,
+                    "total_tokens": metric.stats_metadata.get("total_tokens", 0),
+                    "prompt_tokens": metric.stats_metadata.get("prompt_tokens", 0),
+                    "completion_tokens": metric.stats_metadata.get("completion_tokens", 0)
+                })
+        
+        for metric in knowledge_metrics:
+            # Search performance data
+            if metric.stats_metadata:
+                search_performance.append({
+                    "date": metric.date,
+                    "avg_response_time_ms": metric.stats_metadata.get("avg_response_time_ms", 0),
+                    "vector_searches": metric.stats_metadata.get("vector_searches", 0),
+                    "keyword_searches": metric.stats_metadata.get("keyword_searches", 0),
+                    "hybrid_searches": metric.stats_metadata.get("hybrid_searches", 0),
+                    "zero_results_searches": metric.stats_metadata.get("zero_results_searches", 0)
+                })
+        
+        # Calculate performance summaries
+        avg_response_time = sum(m.average_response_time_ms for m in chat_metrics if m.average_response_time_ms) / len([m for m in chat_metrics if m.average_response_time_ms]) if chat_metrics else None
+        
+        total_tokens = sum(metric.stats_metadata.get("total_tokens", 0) for metric in chat_metrics if metric.stats_metadata and "total_tokens" in metric.stats_metadata)
+        
+        avg_search_time = sum(metric.stats_metadata.get("avg_response_time_ms", 0) for metric in knowledge_metrics if metric.stats_metadata and "avg_response_time_ms" in metric.stats_metadata) / len([m for m in knowledge_metrics if m.stats_metadata and "avg_response_time_ms" in m.stats_metadata]) if knowledge_metrics else None
+        
+        return {
+            "summary": {
+                "avg_response_time_ms": avg_response_time,
+                "total_tokens_used": total_tokens,
+                "avg_search_time_ms": avg_search_time,
+                "total_searches": sum(m.search_count for m in knowledge_metrics) if knowledge_metrics else 0,
+                "total_messages": sum(m.total_messages for m in chat_metrics) if chat_metrics else 0
+            },
+            "response_times": response_times,
+            "token_usage": token_usage,
+            "search_performance": search_performance,
+            "time_period": {
+                "start_date": start_date,
+                "end_date": end_date,
+                "days": days
+            }
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error generating performance metrics: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate performance metrics"
+        )

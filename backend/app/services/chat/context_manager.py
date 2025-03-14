@@ -16,7 +16,7 @@ class ContextManager:
     - Providing formatted history for LLM
     """
     
-    def __init__(self, max_history_length: int = 10):
+    def __init__(self, max_history_length: int = 4):
         self.max_history_length = max_history_length
         self.context_repo = ConversationContextRepository()
     

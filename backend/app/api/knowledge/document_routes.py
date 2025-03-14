@@ -15,7 +15,7 @@ from app.services.storage.document_processor import DocumentProcessor
 from app.services.knowledge.embedding_service import EmbeddingService
 from app.services.llm.deepseek_service import DeepSeekService
 from app.core import logger
-from app.repositories.knowledge_repository import KnowledgeItemRepository, KnowledgeCollectionRepository
+from app.repositories.knowledge_repository import KnowledgeItemRepository, KnowledgeCollectionRepository, KnowledgeItem
 from app.core.database.session import SessionLocal
 
 # Create router without prefix - this will be added in main.py
@@ -234,15 +234,24 @@ async def get_documents(
         for doc in documents
     ]
 
+# backend/app/api/knowledge/document_routes.py
+
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_document_stats(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
     """Get document statistics for the current client."""
-    repo = DocumentSourceRepository()
-    stats = repo.get_document_statistics(db, current_client.client_id)
-    return stats
+    try:
+        repo = DocumentSourceRepository()
+        stats = repo.get_document_statistics(db, current_client.client_id)
+        return stats
+    except Exception as e:
+        logger.exception(f"Error getting document stats: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving document statistics: {str(e)}"
+        )
 
 @router.get("/{document_id}", response_model=Dict[str, Any])
 async def get_document(

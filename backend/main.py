@@ -59,6 +59,7 @@ app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")  # Add analytics routes
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
 
+
 # Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

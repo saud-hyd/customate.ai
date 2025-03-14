@@ -147,8 +147,8 @@ class DocumentProcessor:
     def _chunk_text(
         self, 
         text: str, 
-        max_chunk_size: int = 1000, 
-        overlap: int = 100
+        max_chunk_size: int = 500, 
+        overlap: int = 50
     ) -> List[str]:
         """
         Split text into chunks with optional overlap.

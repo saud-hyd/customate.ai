@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional, List
+import time
 
 from app.api.auth.dependencies import get_current_client
 from app.core.database.dependencies import get_db
@@ -10,6 +11,7 @@ from app.services.knowledge.similarity_service import SimilarityService
 from app.services.llm.deepseek_service import DeepSeekService
 from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
+from app.services.analytics.usage_tracker import UsageTracker
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
@@ -21,6 +23,8 @@ async def send_message(
     db: Session = Depends(get_db)
 ):
     """Send a message to the chatbot and get a response."""
+    start_time = time.time()
+    
     if "message" not in message_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -60,6 +64,15 @@ async def send_message(
         session_id=session_id,
         user_message=user_message,
         user_info=user_info
+    )
+    
+    usage_tracker = UsageTracker()
+    usage_tracker.track_chat_interaction(
+        db=db,
+        client_id=current_client.client_id,
+        session_id=session_id,
+        response_time_ms=int((time.time() - start_time) * 1000),  # Calculate response time
+        used_knowledge=len(response.get("knowledge_used", [])) > 0  # Track if knowledge was used
     )
     
     return response

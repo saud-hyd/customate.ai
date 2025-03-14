@@ -82,7 +82,7 @@ const knowledgeService = {
   // Get document stats
   async getDocumentStats() {
     // Keep the correct path format for documents
-    const response = await api.get('/api/knowledge/documents/stats');
+    const response = await api.get('/api/knowledge/knowledge/documents/stats');
     return response.data;
   },
   

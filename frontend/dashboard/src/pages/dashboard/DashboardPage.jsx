@@ -1,23 +1,30 @@
+// frontend/dashboard/src/pages/dashboard/DashboardPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Chart, registerables } from 'chart.js';
-import knowledgeService from '../../services/knowledgeService';
-import chatService from '../../services/chatService';
-
-// Register Chart.js components
-Chart.register(...registerables);
+import { Chart } from 'chart.js/auto';
+import analyticsService from '../../services/analyticsService';
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState({
-    totalSessions: 0,
-    totalMessages: 0,
-    knowledgeUsage: 0,
-    responseTimes: []
+  const [dashboardData, setDashboardData] = useState({
+    today: {
+      sessions: 0,
+      messages: 0,
+      searches: 0,
+      users: 0,
+      knowledge_usage_ratio: 0
+    },
+    monthly: {
+      total_sessions: 0,
+      total_messages: 0,
+      total_searches: 0,
+      avg_knowledge_usage_ratio: 0
+    },
+    time_series: []
   });
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Use refs to store chart instances
+  // Chart references
   const conversationChartRef = useRef(null);
   const knowledgeChartRef = useRef(null);
   const chartInstancesRef = useRef({
@@ -25,13 +32,11 @@ const DashboardPage = () => {
     knowledgeChart: null
   });
 
-  // Fetch dashboard data on component mount
   useEffect(() => {
     fetchDashboardData();
     
-    // Cleanup function to destroy charts when component unmounts
+    // Cleanup charts when component unmounts
     return () => {
-      // Destroy chart instances to prevent memory leaks
       if (chartInstancesRef.current.conversationChart) {
         chartInstancesRef.current.conversationChart.destroy();
       }
@@ -41,29 +46,32 @@ const DashboardPage = () => {
     };
   }, []);
 
-  // Initialize charts when data is available
+  // Update charts when data changes
   useEffect(() => {
     if (!loading && !error) {
       initializeCharts();
     }
-  }, [stats, loading, error]);
+  }, [dashboardData, loading, error]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Fetch analytics data
-      // This is a placeholder - replace with your actual API calls
-      const chatStats = await chatService.getStats();
-      const knowledgeStats = await knowledgeService.getDocumentStats();
+      // Fetch dashboard overview data
+      const overviewData = await analyticsService.getDashboardOverview();
       
-      // Update state with fetched data
-      setStats({
-        totalSessions: chatStats?.totalSessions || 0,
-        totalMessages: chatStats?.totalMessages || 0,
-        knowledgeUsage: chatStats?.knowledgeUsage || 0,
-        responseTimes: chatStats?.responseTimes || []
+      // Fetch chat performance data for trends
+      const chatData = await analyticsService.getChatPerformance(30);
+      
+      // Fetch knowledge usage data
+      const knowledgeData = await analyticsService.getKnowledgeUsage(30);
+      
+      // Combine all data
+      setDashboardData({
+        ...overviewData,
+        chatTrends: chatData.time_series || [],
+        knowledgeUsage: knowledgeData
       });
       
     } catch (err) {
@@ -75,7 +83,7 @@ const DashboardPage = () => {
   };
 
   const initializeCharts = () => {
-    // Always destroy previous chart instances before creating new ones
+    // Destroy existing charts to prevent memory leaks
     if (chartInstancesRef.current.conversationChart) {
       chartInstancesRef.current.conversationChart.destroy();
     }
@@ -83,19 +91,27 @@ const DashboardPage = () => {
       chartInstancesRef.current.knowledgeChart.destroy();
     }
     
-    // Get canvas contexts
+    // Get contexts for charts
     const conversationCtx = conversationChartRef.current?.getContext('2d');
     const knowledgeCtx = knowledgeChartRef.current?.getContext('2d');
     
-    if (conversationCtx) {
+    if (conversationCtx && dashboardData.chatTrends) {
+      // Format data for conversation trends chart
+      const labels = dashboardData.chatTrends.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+      });
+      
+      const data = dashboardData.chatTrends.map(item => item.total_sessions || 0);
+      
       // Create conversation chart
       chartInstancesRef.current.conversationChart = new Chart(conversationCtx, {
         type: 'line',
         data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+          labels: labels,
           datasets: [{
             label: 'Conversations',
-            data: [12, 19, 3, 5, 2, 3, 7],
+            data: data,
             borderColor: '#4f46e5',
             backgroundColor: 'rgba(79, 70, 229, 0.1)',
             tension: 0.3,
@@ -117,12 +133,14 @@ const DashboardPage = () => {
     
     if (knowledgeCtx) {
       // Create knowledge usage chart
+      const knowledgeRatio = dashboardData.monthly?.avg_knowledge_usage_ratio || 0;
+      
       chartInstancesRef.current.knowledgeChart = new Chart(knowledgeCtx, {
         type: 'doughnut',
         data: {
           labels: ['With Knowledge', 'Without Knowledge'],
           datasets: [{
-            data: [stats.knowledgeUsage, 100 - stats.knowledgeUsage],
+            data: [knowledgeRatio, 100 - knowledgeRatio],
             backgroundColor: ['#4f46e5', '#e5e7eb'],
             borderWidth: 0
           }]
@@ -175,17 +193,19 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white shadow-sm rounded-lg p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-2">Total Conversations</h2>
-          <p className="text-3xl font-bold text-primary-600">{stats.totalSessions}</p>
+          <p className="text-3xl font-bold text-primary-600">{dashboardData.monthly?.total_sessions || 0}</p>
         </div>
         
         <div className="bg-white shadow-sm rounded-lg p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-2">Total Messages</h2>
-          <p className="text-3xl font-bold text-primary-600">{stats.totalMessages}</p>
+          <p className="text-3xl font-bold text-primary-600">{dashboardData.monthly?.total_messages || 0}</p>
         </div>
         
         <div className="bg-white shadow-sm rounded-lg p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-2">Knowledge Usage</h2>
-          <p className="text-3xl font-bold text-primary-600">{stats.knowledgeUsage}%</p>
+          <p className="text-3xl font-bold text-primary-600">
+            {Math.round(dashboardData.monthly?.avg_knowledge_usage_ratio || 0)}%
+          </p>
         </div>
       </div>
 

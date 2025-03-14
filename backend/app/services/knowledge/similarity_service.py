@@ -25,8 +25,8 @@ class SimilarityService:
         self, 
         client_id: str, 
         query_text: str, 
-        limit: int = 5, 
-        threshold: float = 0.7,
+        limit: int = 3, 
+        threshold: float = 0.75,
         collection_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """

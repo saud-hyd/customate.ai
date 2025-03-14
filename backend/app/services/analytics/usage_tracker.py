@@ -1,5 +1,5 @@
 # backend/app/services/analytics/usage_tracker.py
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List, Set
 from sqlalchemy.orm import Session
 import json
@@ -363,7 +363,185 @@ class UsageTracker:
         except Exception as e:
             logger.error(f"Error updating active users: {str(e)}")
     
-# Update the _update_daily_stats method in the UsageTracker class
+    def track_response_performance(
+        self,
+        db: Session,
+        client_id: str,
+        session_id: str,
+        response_time_ms: int,
+        token_count: int,
+        knowledge_used: bool,
+        prompt_tokens: int = 0,
+        completion_tokens: int = 0
+    ) -> None:
+        """
+        Track detailed performance metrics for chatbot responses.
+        
+        Args:
+            db: Database session
+            client_id: Client ID
+            session_id: Chat session ID
+            response_time_ms: Response generation time in milliseconds
+            token_count: Total token count for the interaction
+            knowledge_used: Whether knowledge base was used
+            prompt_tokens: Number of tokens in the prompt
+            completion_tokens: Number of tokens in the completion
+        """
+        try:
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            
+            # Update chat metrics for today
+            existing = self.chat_metrics_repo.get_by_date(db, client_id, today)
+            
+            if existing:
+                # Calculate averages with current values
+                total_messages = existing.total_messages + 1
+                knowledge_usage = existing.knowledge_usage_count + (1 if knowledge_used else 0)
+                
+                # Calculate new average response time
+                if existing.average_response_time_ms:
+                    avg_response_time = (
+                        (existing.average_response_time_ms * existing.total_messages) + response_time_ms
+                    ) / total_messages
+                else:
+                    avg_response_time = response_time_ms
+                
+                # Update metrics including token counts
+                updated_metadata = existing.stats_metadata or {}
+                updated_metadata.update({
+                    "total_tokens": (updated_metadata.get("total_tokens", 0) or 0) + token_count,
+                    "prompt_tokens": (updated_metadata.get("prompt_tokens", 0) or 0) + prompt_tokens,
+                    "completion_tokens": (updated_metadata.get("completion_tokens", 0) or 0) + completion_tokens,
+                    "interactions_with_knowledge": (updated_metadata.get("interactions_with_knowledge", 0) or 0) + (1 if knowledge_used else 0)
+                })
+                
+                self.chat_metrics_repo.update(db, db_obj=existing, obj_in={
+                    "total_messages": total_messages,
+                    "average_response_time_ms": avg_response_time,
+                    "knowledge_usage_count": knowledge_usage,
+                    "stats_metadata": updated_metadata,
+                    "timestamp": datetime.utcnow()
+                })
+            else:
+                # Create new metrics record
+                metadata = {
+                    "total_tokens": token_count,
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "interactions_with_knowledge": 1 if knowledge_used else 0
+                }
+                
+                self.chat_metrics_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "session_id": session_id,
+                    "total_messages": 1,
+                    "average_response_time_ms": response_time_ms,
+                    "knowledge_usage_count": 1 if knowledge_used else 0,
+                    "stats_metadata": metadata,
+                    "timestamp": datetime.utcnow(),
+                    "date": today
+                })
+        
+        except Exception as e:
+            logger.error(f"Error tracking response performance: {str(e)}")
+
+    def track_search_performance(
+        self,
+        db: Session,
+        client_id: str,
+        query: str,
+        results_count: int,
+        response_time_ms: int,
+        search_type: str = "hybrid",
+        collection_id: Optional[str] = None,
+        relevance_scores: Optional[List[float]] = None
+    ) -> None:
+        """
+        Track search performance metrics.
+        
+        Args:
+            db: Database session
+            client_id: Client ID
+            query: Search query text
+            results_count: Number of results returned
+            response_time_ms: Response time in milliseconds
+            search_type: Type of search (vector, keyword, hybrid)
+            collection_id: Optional collection ID
+            relevance_scores: Optional list of relevance scores
+        """
+        try:
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            
+            # Calculate average relevance if scores provided
+            avg_relevance = None
+            if relevance_scores and len(relevance_scores) > 0:
+                avg_relevance = sum(relevance_scores) / len(relevance_scores)
+            
+            # Update knowledge metrics for today with performance data
+            existing = self.knowledge_metrics_repo.get_by_date(db, client_id, today, collection_id)
+            
+            if existing:
+                # Update existing metrics with performance data
+                search_count = existing.search_count + 1
+                
+                # Calculate new average relevance
+                if avg_relevance:
+                    if existing.average_relevance_score:
+                        new_avg_relevance = (
+                            (existing.average_relevance_score * existing.search_count) + avg_relevance
+                        ) / search_count
+                    else:
+                        new_avg_relevance = avg_relevance
+                else:
+                    new_avg_relevance = existing.average_relevance_score
+                
+                # Update with search performance stats
+                stats_metadata = existing.stats_metadata or {}
+                stats_metadata.update({
+                    f"{search_type}_searches": (stats_metadata.get(f"{search_type}_searches", 0) or 0) + 1,
+                    "total_response_time_ms": (stats_metadata.get("total_response_time_ms", 0) or 0) + response_time_ms,
+                    "avg_response_time_ms": ((stats_metadata.get("total_response_time_ms", 0) or 0) + response_time_ms) / search_count,
+                    "zero_results_searches": (stats_metadata.get("zero_results_searches", 0) or 0) + (1 if results_count == 0 else 0),
+                    "query_lengths": stats_metadata.get("query_lengths", []) + [len(query)]
+                })
+                
+                self.knowledge_metrics_repo.update(db, db_obj=existing, obj_in={
+                    "search_count": search_count,
+                    "average_relevance_score": new_avg_relevance,
+                    "stats_metadata": stats_metadata
+                })
+            else:
+                # Create new metrics with performance data
+                stats_metadata = {
+                    f"{search_type}_searches": 1,
+                    "total_response_time_ms": response_time_ms,
+                    "avg_response_time_ms": response_time_ms,
+                    "zero_results_searches": 1 if results_count == 0 else 0,
+                    "query_lengths": [len(query)]
+                }
+                
+                self.knowledge_metrics_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "collection_id": collection_id,
+                    "search_count": 1,
+                    "average_relevance_score": avg_relevance,
+                    "items_count": 0,  # Will be updated separately
+                    "document_count": 0,  # Will be updated separately
+                    "stats_metadata": stats_metadata,
+                    "date": today
+                })
+            
+            # Update daily stats
+            daily_stats = self.daily_stats_repo.get_by_date(db, client_id, today)
+            if daily_stats:
+                self.daily_stats_repo.update(db, db_obj=daily_stats, obj_in={
+                    "total_searches": daily_stats.total_searches + 1
+                })
+            
+        except Exception as e:
+            logger.error(f"Error tracking search performance: {str(e)}")
+    
+    # Update the _update_daily_stats method in the UsageTracker class
     def _update_daily_stats(self, db: Session, client_id: str) -> None:
         """Update or create daily statistics aggregates."""
         try:

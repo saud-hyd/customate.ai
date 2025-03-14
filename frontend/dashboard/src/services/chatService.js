@@ -48,7 +48,7 @@ const chatService = {
   // Get chat stats (for dashboard)
   async getStats() {
     try {
-      const response = await api.get('/api/analytics/chat-performance');
+      const response = await api.get('/api/analytics/chat');
       return response.data;
     } catch (error) {
       console.error('Error fetching chat stats:', error);

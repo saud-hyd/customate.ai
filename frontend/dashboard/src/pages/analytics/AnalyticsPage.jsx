@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import analyticsService from '../../services/analyticsService';
 import { Line, Bar } from 'react-chartjs-2';
+
+import SubscriptionUsage from '../../components/analytics/SubscriptionUsage';
+import MessageStats from '../../components/analytics/MessageStats';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -203,6 +206,9 @@ const AnalyticsPage = () => {
           {/* Chat Analytics Tab */}
           {activeTab === 'chat' && chatData && (
             <div className="space-y-6">
+              {/* New Message Stats Component */}
+              <MessageStats />
+              
               {/* Summary metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -332,6 +338,9 @@ const AnalyticsPage = () => {
           {/* Subscription Analytics Tab */}
           {activeTab === 'subscription' && subscriptionData && (
             <div className="space-y-6">
+              {/* New Subscription Usage Component */}
+              <SubscriptionUsage />
+              
               {/* Current usage */}
               <div className="bg-white p-4 rounded-lg border">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Current Usage</h3>

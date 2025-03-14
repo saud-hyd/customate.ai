@@ -79,7 +79,7 @@ class EnhancedChatService:
             client_id=client_id,
             query_text=user_message,
             filters=search_params.get("filters"),
-            limit=search_params.get("limit", 5),
+            limit=search_params.get("limit", 3),
             hybrid_ratio=search_params.get("hybrid_ratio", 0.7),
         )
         

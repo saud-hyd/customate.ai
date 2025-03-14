@@ -1,8 +1,13 @@
 # app/repositories/knowledge_repository.py
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import func, desc, and_, or_
+import logging
+
 
 from app.domain.knowledge.entities import KnowledgeCollection, KnowledgeItem, VectorEmbedding, DocumentSource
+
+logger = logging.getLogger(__name__)
 from app.repositories.base_repository import BaseRepository
 
 class KnowledgeCollectionRepository(BaseRepository[KnowledgeCollection, dict, dict]):
@@ -90,57 +95,71 @@ class DocumentSourceRepository(BaseRepository[DocumentSource, dict, dict]):
         return db.query(DocumentSource).filter(
             DocumentSource.status == "processing"
         ).limit(limit).all()
-        
+    
     def get_document_statistics(self, db: Session, client_id: str) -> dict:
         """Get document statistics for a client."""
-        # Get total documents
-        total_docs = db.query(self.model).filter(
-            self.model.client_id == client_id
-        ).count()
-        
-        # Get documents by status
-        status_counts = {}
-        statuses = ["processed", "processing", "failed"]
-        
-        for status in statuses:
-            count = db.query(self.model).filter(
-                self.model.client_id == client_id,
-                self.model.status == status
+        try:
+            # Import needed for SQL functions
+            from sqlalchemy import func
+            
+            # Get total documents
+            total_docs = db.query(self.model).filter(
+                self.model.client_id == client_id
             ).count()
-            status_counts[status] = count
-        
-        # Get document types
-        type_counts = {}
-        file_types = db.query(self.model.file_type, 
-                              db.func.count(self.model.id).label('count')
-                             ).filter(
-            self.model.client_id == client_id
-        ).group_by(self.model.file_type).all()
-        
-        for file_type, count in file_types:
-            type_counts[file_type] = count
-        
-        # Get total storage size
-        total_size = db.query(db.func.sum(self.model.file_size)).filter(
-            self.model.client_id == client_id
-        ).scalar() or 0
-        
-        return {
-            "total_documents": total_docs,
-            "by_status": status_counts,
-            "by_type": type_counts,
-            "total_size_bytes": total_size,
-            "total_size_mb": round(total_size / (1024 * 1024), 2)
-        }
-
-    def get_recent_documents(self, db: Session, client_id: str, limit: int = 5) -> List[DocumentSource]:
-        """Get most recently uploaded documents."""
-        return db.query(self.model).filter(
-            self.model.client_id == client_id
-        ).order_by(self.model.created_at.desc()).limit(limit).all()
-
-    def get_document_knowledge_items(self, db: Session, document_id: str) -> List[KnowledgeItem]:
-        """Get all knowledge items extracted from a document."""
-        return db.query(KnowledgeItem).filter(
-            KnowledgeItem.source_document_id == document_id
-        ).all()
+            
+            # Handle the case where there are no documents
+            if total_docs == 0:
+                return {
+                    "total_documents": 0,
+                    "by_status": {"processed": 0, "processing": 0, "failed": 0},
+                    "by_type": {},
+                    "total_size_bytes": 0,
+                    "total_size_mb": 0
+                }
+            
+            # Get documents by status
+            status_counts = {}
+            statuses = ["processed", "processing", "failed"]
+            
+            for status in statuses:
+                count = db.query(self.model).filter(
+                    self.model.client_id == client_id,
+                    self.model.status == status
+                ).count()
+                status_counts[status] = count
+            
+            # Get document types
+            type_counts = {}
+            file_types = db.query(self.model.file_type, 
+                                func.count(self.model.id).label('count')
+                                ).filter(
+                self.model.client_id == client_id
+            ).group_by(self.model.file_type).all()
+            
+            for file_type, count in file_types:
+                if file_type:  # Handle potential None values
+                    type_counts[file_type] = count
+            
+            # Get total storage size
+            total_size = db.query(func.sum(self.model.file_size)).filter(
+                self.model.client_id == client_id
+            ).scalar() or 0
+            
+            return {
+                "total_documents": total_docs,
+                "by_status": status_counts,
+                "by_type": type_counts,
+                "total_size_bytes": total_size,
+                "total_size_mb": round(total_size / (1024 * 1024), 2) if total_size > 0 else 0
+            }
+            
+        except Exception as e:
+            logger.exception(f"Error in get_document_statistics: {str(e)}")
+            # Return default values for a graceful fallback
+            return {
+                "total_documents": 0,
+                "by_status": {"processed": 0, "processing": 0, "failed": 0},
+                "by_type": {},
+                "total_size_bytes": 0,
+                "total_size_mb": 0
+            }
