@@ -29344,3 +29344,793 @@ WHERE knowledge_items.collection_id = %(collection_id_1)s
 2025-03-14 01:25:38 - sqlalchemy.engine.Engine - INFO - [cached since 42.78s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
 2025-03-14 01:25:38 - sqlalchemy.engine.Engine - INFO - ROLLBACK
 2025-03-14 01:25:38 - customate - INFO - Request: GET /api/knowledge/knowledge/collections/33b7975c-96f5-4e72-9f6c-49ede752dc96/items Client: anonymous Status: 200 Process Time: 0.0210s
+2025-03-14 01:35:02 - customate - INFO - Request: OPTIONS /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0029s
+2025-03-14 01:35:02 - customate - INFO - Request: OPTIONS /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-14 01:35:02 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.5s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:02 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:02 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0317s
+2025-03-14 01:35:02 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.5s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:02 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - [cached since 606.4s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:35:02 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:02 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0281s
+2025-03-14 01:35:09 - customate - INFO - Request: OPTIONS /api/client Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-14 01:35:09 - customate - INFO - Request: OPTIONS /api/client Client: anonymous Status: 200 Process Time: 0.0010s
+2025-03-14 01:35:09 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:09 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT client_settings.id AS client_settings_id, client_settings.client_id AS client_settings_client_id, client_settings.primary_color AS client_settings_primary_color, client_settings.logo_url AS client_settings_logo_url, client_settings.greeting_message AS client_settings_greeting_message, client_settings.enable_suggestions AS client_settings_enable_suggestions, client_settings.enable_typing_indicator AS client_settings_enable_typing_indicator, client_settings.widget_position AS client_settings_widget_position, client_settings.fallback_email AS client_settings_fallback_email, client_settings.chatbot_name AS client_settings_chatbot_name, client_settings.custom_settings AS client_settings_custom_settings, client_settings.updated_at AS client_settings_updated_at 
+FROM client_settings 
+WHERE client_settings.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:09 - customate - INFO - Request: GET /api/client Client: anonymous Status: 200 Process Time: 0.0250s
+2025-03-14 01:35:09 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614.1s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:09 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614.1s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT client_settings.id AS client_settings_id, client_settings.client_id AS client_settings_client_id, client_settings.primary_color AS client_settings_primary_color, client_settings.logo_url AS client_settings_logo_url, client_settings.greeting_message AS client_settings_greeting_message, client_settings.enable_suggestions AS client_settings_enable_suggestions, client_settings.enable_typing_indicator AS client_settings_enable_typing_indicator, client_settings.widget_position AS client_settings_widget_position, client_settings.fallback_email AS client_settings_fallback_email, client_settings.chatbot_name AS client_settings_chatbot_name, client_settings.custom_settings AS client_settings_custom_settings, client_settings.updated_at AS client_settings_updated_at 
+FROM client_settings 
+WHERE client_settings.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:09 - customate - INFO - Request: GET /api/client Client: anonymous Status: 200 Process Time: 0.0211s
+2025-03-14 01:35:09 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614.1s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:09 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:09 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0368s
+2025-03-14 01:35:09 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614.1s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:09 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - [cached since 614s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:35:09 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:09 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0333s
+2025-03-14 01:35:24 - customate - INFO - Request: OPTIONS /api/chatbot/message Client: anonymous Status: 200 Process Time: 0.0003s
+2025-03-14 01:35:24 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [cached since 628.4s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:24 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_sessions (session_id, client_id, user_id, ip_address, user_agent, referrer, created_at, updated_at) VALUES (%(session_id)s, %(client_id)s, %(user_id)s, %(ip_address)s, %(user_agent)s, %(referrer)s, %(created_at)s, %(updated_at)s) RETURNING chat_sessions.id
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00145s] {'session_id': '8430123e-958e-4865-8a4b-6872987567ce', 'client_id': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'user_id': None, 'ip_address': '127.0.0.1', 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 'referrer': 'http://localhost:3000/', 'created_at': datetime.datetime(2025, 3, 14, 0, 35, 24, 102216), 'updated_at': datetime.datetime(2025, 3, 14, 0, 35, 24, 102216)}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id, chat_sessions.session_id, chat_sessions.client_id, chat_sessions.user_id, chat_sessions.ip_address, chat_sessions.user_agent, chat_sessions.referrer, chat_sessions.created_at, chat_sessions.updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00266s] {'pk_1': 7}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - INSERT INTO conversation_contexts (context_id, session_id, context_data, created_at, updated_at) VALUES (%(context_id)s, %(session_id)s, %(context_data)s, %(created_at)s, %(updated_at)s) RETURNING conversation_contexts.id
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00133s] {'context_id': 'e075c9fd-90d6-4a7e-927c-015500673eac', 'session_id': '8430123e-958e-4865-8a4b-6872987567ce', 'context_data': '{"session_id": "8430123e-958e-4865-8a4b-6872987567ce", "history": [], "entities": {}, "intent_history": [], "summary": ""}', 'created_at': datetime.datetime(2025, 3, 14, 0, 35, 24, 121044), 'updated_at': datetime.datetime(2025, 3, 14, 0, 35, 24, 121044)}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id, conversation_contexts.context_id, conversation_contexts.session_id, conversation_contexts.context_data, conversation_contexts.created_at, conversation_contexts.updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.id = %(pk_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00312s] {'pk_1': 7}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00107s] {'pk_1': 7}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00094s] {'message_id': 'b6ea0a10-fe39-4a41-89ea-b2844f9dccb3', 'session_id': '8430123e-958e-4865-8a4b-6872987567ce', 'role': 'user', 'content': 'hi', 'created_at': datetime.datetime(2025, 3, 14, 0, 35, 24, 142284)}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00101s] {'pk_1': 13}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [cached since 0.01971s ago] {'pk_1': 7}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00094s] {'session_id_1': '8430123e-958e-4865-8a4b-6872987567ce', 'param_1': 1}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [cached since 628.5s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:35:24 - customate - INFO - No specific implementation for industry 'technology', using default
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:35:24 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-14 01:35:24 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [cached since 628.9s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - SELECT vector_embeddings.id AS vector_embeddings_id, vector_embeddings.embedding_id AS vector_embeddings_embedding_id, vector_embeddings.item_id AS vector_embeddings_item_id, vector_embeddings.vector AS vector_embeddings_vector, vector_embeddings.created_at AS vector_embeddings_created_at, knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM vector_embeddings JOIN knowledge_items ON vector_embeddings.item_id = knowledge_items.item_id JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s, %(collection_id_1_2)s, %(collection_id_1_3)s, %(collection_id_1_4)s)
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - [generated in 0.00153s] {'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'collection_id_1_2': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'collection_id_1_3': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'collection_id_1_4': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:35:24 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:35:25 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - [cached since 12.3s ago] {'pk_1': 14}
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - [cached since 12.32s ago] {'pk_1': 7}
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - [cached since 12.3s ago] {'session_id_1': '8430123e-958e-4865-8a4b-6872987567ce', 'param_1': 1}
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - [cached since 12.3s ago] {'session_id_1': '8430123e-958e-4865-8a4b-6872987567ce', 'param_1': 1}
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id, conversation_contexts.context_id, conversation_contexts.session_id, conversation_contexts.context_data, conversation_contexts.created_at, conversation_contexts.updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.id = %(pk_1)s
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - [cached since 12.34s ago] {'pk_1': 7}
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id AS chat_messages_id, chat_messages.message_id AS chat_messages_message_id, chat_messages.session_id AS chat_messages_session_id, chat_messages.role AS chat_messages_role, chat_messages.content AS chat_messages_content, chat_messages.message_metadata AS chat_messages_message_metadata, chat_messages.created_at AS chat_messages_created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - [generated in 0.00118s] {'pk_1': 14}
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - [cached since 12.34s ago] {'pk_1': 7}
+2025-03-14 01:35:36 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:36 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 200 Process Time: 12.3976s
+2025-03-14 01:35:45 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.8s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:45 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:45 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0239s
+2025-03-14 01:35:45 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.8s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:45 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.8s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.8s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.8s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.8s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.8s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:45 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0287s
+2025-03-14 01:35:45 - customate - INFO - Request: OPTIONS /api/knowledge/knowledge/collections/33b7975c-96f5-4e72-9f6c-49ede752dc96/items Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-14 01:35:45 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.9s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:45 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.collection_id = %(collection_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'param_1': 1}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE knowledge_items.collection_id = %(collection_id_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:45 - customate - INFO - Request: GET /api/knowledge/knowledge/collections/33b7975c-96f5-4e72-9f6c-49ede752dc96/items Client: anonymous Status: 200 Process Time: 0.0183s
+2025-03-14 01:35:45 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.9s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:35:45 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.collection_id = %(collection_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'param_1': 1}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE knowledge_items.collection_id = %(collection_id_1)s
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - [cached since 649.7s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:35:45 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:35:45 - customate - INFO - Request: GET /api/knowledge/knowledge/collections/33b7975c-96f5-4e72-9f6c-49ede752dc96/items Client: anonymous Status: 200 Process Time: 0.0168s
+2025-03-14 01:36:00 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - [cached since 664.5s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:00 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - [cached since 664.5s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - SELECT client_settings.id AS client_settings_id, client_settings.client_id AS client_settings_client_id, client_settings.primary_color AS client_settings_primary_color, client_settings.logo_url AS client_settings_logo_url, client_settings.greeting_message AS client_settings_greeting_message, client_settings.enable_suggestions AS client_settings_enable_suggestions, client_settings.enable_typing_indicator AS client_settings_enable_typing_indicator, client_settings.widget_position AS client_settings_widget_position, client_settings.fallback_email AS client_settings_fallback_email, client_settings.chatbot_name AS client_settings_chatbot_name, client_settings.custom_settings AS client_settings_custom_settings, client_settings.updated_at AS client_settings_updated_at 
+FROM client_settings 
+WHERE client_settings.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - [cached since 664.5s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:00 - customate - INFO - Request: GET /api/client Client: anonymous Status: 200 Process Time: 0.0250s
+2025-03-14 01:36:00 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - [cached since 664.6s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:00 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - [cached since 664.6s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - SELECT client_settings.id AS client_settings_id, client_settings.client_id AS client_settings_client_id, client_settings.primary_color AS client_settings_primary_color, client_settings.logo_url AS client_settings_logo_url, client_settings.greeting_message AS client_settings_greeting_message, client_settings.enable_suggestions AS client_settings_enable_suggestions, client_settings.enable_typing_indicator AS client_settings_enable_typing_indicator, client_settings.widget_position AS client_settings_widget_position, client_settings.fallback_email AS client_settings_fallback_email, client_settings.chatbot_name AS client_settings_chatbot_name, client_settings.custom_settings AS client_settings_custom_settings, client_settings.updated_at AS client_settings_updated_at 
+FROM client_settings 
+WHERE client_settings.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - [cached since 664.6s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:36:00 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:00 - customate - INFO - Request: OPTIONS /api/analytics/chat-performance Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-14 01:36:00 - customate - INFO - Request: GET /api/client Client: anonymous Status: 200 Process Time: 0.0266s
+2025-03-14 01:36:00 - customate - INFO - Request: OPTIONS /api/analytics/chat-performance Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-14 01:36:00 - customate - INFO - Request: GET /api/analytics/chat-performance Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-14 01:36:00 - customate - INFO - Request: GET /api/analytics/chat-performance Client: anonymous Status: 404 Process Time: 0.0020s
+2025-03-14 01:36:00 - customate - INFO - Request: OPTIONS /api/knowledge/documents/stats Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-14 01:36:00 - customate - INFO - Request: OPTIONS /api/knowledge/documents/stats Client: anonymous Status: 200 Process Time: 0.0000s
+2025-03-14 01:36:00 - customate - INFO - Request: GET /api/knowledge/documents/stats Client: anonymous Status: 404 Process Time: 0.0024s
+2025-03-14 01:36:00 - customate - INFO - Request: GET /api/knowledge/documents/stats Client: anonymous Status: 404 Process Time: 0.0010s
+2025-03-14 01:36:02 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.9s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:02 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:02 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0343s
+2025-03-14 01:36:02 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 667s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:02 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.9s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.9s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.9s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.9s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.9s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:02 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 667s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:02 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.collection_id = %(collection_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'param_1': 1}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE knowledge_items.collection_id = %(collection_id_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:36:02 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0414s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:02 - customate - INFO - Request: GET /api/knowledge/knowledge/collections/33b7975c-96f5-4e72-9f6c-49ede752dc96/items Client: anonymous Status: 200 Process Time: 0.0213s
+2025-03-14 01:36:02 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 667s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:02 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.collection_id = %(collection_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'param_1': 1}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE knowledge_items.collection_id = %(collection_id_1)s
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - [cached since 666.8s ago] {'collection_id_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:36:02 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:02 - customate - INFO - Request: GET /api/knowledge/knowledge/collections/33b7975c-96f5-4e72-9f6c-49ede752dc96/items Client: anonymous Status: 200 Process Time: 0.0176s
+2025-03-14 01:36:05 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.6s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:05 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.5s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.5s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.5s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.5s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.5s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:05 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0399s
+2025-03-14 01:36:05 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.7s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:05 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.6s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.6s ago] {'param_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.6s ago] {'param_1': '98f241d3-cb98-4b35-af02-1940e7af1edd'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.6s ago] {'param_1': 'd09dfec9-ef31-4939-9da3-45753eb3758d'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at 
+FROM knowledge_items 
+WHERE %(param_1)s = knowledge_items.collection_id
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - [cached since 669.6s ago] {'param_1': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:36:05 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:05 - customate - INFO - Request: GET /api/knowledge/knowledge/collections Client: anonymous Status: 200 Process Time: 0.0281s
+2025-03-14 01:36:25 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 689.6s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:36:25 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_sessions (session_id, client_id, user_id, ip_address, user_agent, referrer, created_at, updated_at) VALUES (%(session_id)s, %(client_id)s, %(user_id)s, %(ip_address)s, %(user_agent)s, %(referrer)s, %(created_at)s, %(updated_at)s) RETURNING chat_sessions.id
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.2s ago] {'session_id': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'client_id': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'user_id': None, 'ip_address': '127.0.0.1', 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36', 'referrer': 'http://localhost:3000/', 'created_at': datetime.datetime(2025, 3, 14, 0, 36, 25, 298739), 'updated_at': datetime.datetime(2025, 3, 14, 0, 36, 25, 298739)}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id, chat_sessions.session_id, chat_sessions.client_id, chat_sessions.user_id, chat_sessions.ip_address, chat_sessions.user_agent, chat_sessions.referrer, chat_sessions.created_at, chat_sessions.updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.2s ago] {'pk_1': 8}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - INSERT INTO conversation_contexts (context_id, session_id, context_data, created_at, updated_at) VALUES (%(context_id)s, %(session_id)s, %(context_data)s, %(created_at)s, %(updated_at)s) RETURNING conversation_contexts.id
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.2s ago] {'context_id': 'f83fcd1b-c829-4552-b3af-5ba941c554e5', 'session_id': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'context_data': '{"session_id": "0b8d8adb-fd48-42ed-8b3d-a2952078243e", "history": [], "entities": {}, "intent_history": [], "summary": ""}', 'created_at': datetime.datetime(2025, 3, 14, 0, 36, 25, 321066), 'updated_at': datetime.datetime(2025, 3, 14, 0, 36, 25, 321066)}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id, conversation_contexts.context_id, conversation_contexts.session_id, conversation_contexts.context_data, conversation_contexts.created_at, conversation_contexts.updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.id = %(pk_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.2s ago] {'pk_1': 8}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.2s ago] {'pk_1': 8}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.2s ago] {'message_id': '8c37e883-a374-4718-91e5-46c24b82b344', 'session_id': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'role': 'user', 'content': 'what is eligible age to use interact.ai services', 'created_at': datetime.datetime(2025, 3, 14, 0, 36, 25, 336976)}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.19s ago] {'pk_1': 15}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.21s ago] {'pk_1': 8}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 61.19s ago] {'session_id_1': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'param_1': 1}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 689.6s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:36:25 - customate - INFO - No specific implementation for industry 'technology', using default
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:36:25 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-14 01:36:25 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 689.8s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT vector_embeddings.id AS vector_embeddings_id, vector_embeddings.embedding_id AS vector_embeddings_embedding_id, vector_embeddings.item_id AS vector_embeddings_item_id, vector_embeddings.vector AS vector_embeddings_vector, vector_embeddings.created_at AS vector_embeddings_created_at, knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM vector_embeddings JOIN knowledge_items ON vector_embeddings.item_id = knowledge_items.item_id JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s, %(collection_id_1_2)s, %(collection_id_1_3)s, %(collection_id_1_4)s)
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 60.82s ago] {'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'collection_id_1_2': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'collection_id_1_3': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'collection_id_1_4': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [cached since 689.8s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_items JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s, %(collection_id_1_2)s, %(collection_id_1_3)s, %(collection_id_1_4)s) AND (knowledge_items.title ILIKE %(title_1)s OR knowledge_items.content ILIKE %(content_1)s OR knowledge_items.title ILIKE %(title_2)s OR knowledge_items.content ILIKE %(content_2)s OR knowledge_items.title ILIKE %(title_3)s OR knowledge_items.content ILIKE %(content_3)s OR knowledge_items.title ILIKE %(title_4)s OR knowledge_items.content ILIKE %(content_4)s OR knowledge_items.title ILIKE %(title_5)s OR knowledge_items.content ILIKE %(content_5)s) 
+ LIMIT %(param_1)s
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - [generated in 0.00119s] {'title_1': '%eligible%', 'content_1': '%eligible%', 'title_2': '%age%', 'content_2': '%age%', 'title_3': '%use%', 'content_3': '%use%', 'title_4': '%interact%', 'content_4': '%interact%', 'title_5': '%services%', 'content_5': '%services%', 'param_1': 7, 'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'collection_id_1_2': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'collection_id_1_3': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'collection_id_1_4': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:36:25 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:36:26 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 71.55s ago] {'message_id': '0c596675-a58a-47b2-9a00-95a9f7f628e8', 'session_id': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'role': 'assistant', 'content': 'To use Interact.ai services, you must be at least **18 years old**. This is outlined in our Terms of Service under Section 1.1 Eligibility. If you have further questions, feel free to reach out!', 'created_at': datetime.datetime(2025, 3, 14, 0, 36, 35, 689888)}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 71.55s ago] {'pk_1': 16}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 71.57s ago] {'pk_1': 8}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 71.55s ago] {'session_id_1': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'param_1': 1}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 71.55s ago] {'session_id_1': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'param_1': 1}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id, conversation_contexts.context_id, conversation_contexts.session_id, conversation_contexts.context_data, conversation_contexts.created_at, conversation_contexts.updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.id = %(pk_1)s
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 71.59s ago] {'pk_1': 8}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id AS chat_messages_id, chat_messages.message_id AS chat_messages_message_id, chat_messages.session_id AS chat_messages_session_id, chat_messages.role AS chat_messages_role, chat_messages.content AS chat_messages_content, chat_messages.message_metadata AS chat_messages_message_metadata, chat_messages.created_at AS chat_messages_created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 59.25s ago] {'pk_1': 16}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - [cached since 71.58s ago] {'pk_1': 8}
+2025-03-14 01:36:35 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:36:35 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 200 Process Time: 10.4395s
+2025-03-14 01:37:45 - customate - INFO - Auth attempt with API key: 12b9d3d5-1
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.api_key = %(api_key_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - [cached since 770.1s ago] {'api_key_1': '12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50', 'param_1': 1}
+2025-03-14 01:37:45 - customate - INFO - Successfully authenticated client: 86c0a5ef-1b7f-4688-a2d5-cc513a513308
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - [generated in 0.00078s] {'session_id_1': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'param_1': 1}
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - [cached since 141.7s ago] {'message_id': '28b3087d-12df-433a-88c3-cc40ab6c7300', 'session_id': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'role': 'user', 'content': 'what are the basic terms to use your service', 'created_at': datetime.datetime(2025, 3, 14, 0, 37, 45, 858826)}
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - [cached since 141.7s ago] {'pk_1': 17}
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - [cached since 141.7s ago] {'pk_1': 8}
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - [cached since 141.7s ago] {'session_id_1': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'param_1': 1}
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - SELECT clients.id AS clients_id, clients.client_id AS clients_client_id, clients.name AS clients_name, clients.industry AS clients_industry, clients.email AS clients_email, clients.website AS clients_website, clients.phone AS clients_phone, clients.api_key AS clients_api_key, clients.active AS clients_active, clients.created_at AS clients_created_at, clients.updated_at AS clients_updated_at 
+FROM clients 
+WHERE clients.client_id = %(client_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - [cached since 770.2s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308', 'param_1': 1}
+2025-03-14 01:37:45 - customate - INFO - No specific implementation for industry 'technology', using default
+2025-03-14 01:37:45 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:37:46 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/embeddings "HTTP/1.1 404 Not Found"
+2025-03-14 01:37:46 - customate - ERROR - DeepSeek embedding API error: 404 - {
+  "error_msg": "Not Found. Please check the configuration."
+}
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - [cached since 770.3s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - SELECT vector_embeddings.id AS vector_embeddings_id, vector_embeddings.embedding_id AS vector_embeddings_embedding_id, vector_embeddings.item_id AS vector_embeddings_item_id, vector_embeddings.vector AS vector_embeddings_vector, vector_embeddings.created_at AS vector_embeddings_created_at, knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM vector_embeddings JOIN knowledge_items ON vector_embeddings.item_id = knowledge_items.item_id JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s, %(collection_id_1_2)s, %(collection_id_1_3)s, %(collection_id_1_4)s)
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - [cached since 141.3s ago] {'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'collection_id_1_2': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'collection_id_1_3': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'collection_id_1_4': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_collections 
+WHERE knowledge_collections.client_id = %(client_id_1)s
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - [cached since 770.3s ago] {'client_id_1': '86c0a5ef-1b7f-4688-a2d5-cc513a513308'}
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - SELECT knowledge_items.id AS knowledge_items_id, knowledge_items.item_id AS knowledge_items_item_id, knowledge_items.collection_id AS knowledge_items_collection_id, knowledge_items.title AS knowledge_items_title, knowledge_items.content AS knowledge_items_content, knowledge_items.item_metadata AS knowledge_items_item_metadata, knowledge_items.source_document_id AS knowledge_items_source_document_id, knowledge_items.created_at AS knowledge_items_created_at, knowledge_items.updated_at AS knowledge_items_updated_at, knowledge_collections.id AS knowledge_collections_id, knowledge_collections.collection_id AS knowledge_collections_collection_id, knowledge_collections.client_id AS knowledge_collections_client_id, knowledge_collections.name AS knowledge_collections_name, knowledge_collections.description AS knowledge_collections_description, knowledge_collections.type AS knowledge_collections_type, knowledge_collections.created_at AS knowledge_collections_created_at, knowledge_collections.updated_at AS knowledge_collections_updated_at 
+FROM knowledge_items JOIN knowledge_collections ON knowledge_items.collection_id = knowledge_collections.collection_id 
+WHERE knowledge_items.collection_id IN (%(collection_id_1_1)s, %(collection_id_1_2)s, %(collection_id_1_3)s, %(collection_id_1_4)s) AND (knowledge_items.title ILIKE %(title_1)s OR knowledge_items.content ILIKE %(content_1)s OR knowledge_items.title ILIKE %(title_2)s OR knowledge_items.content ILIKE %(content_2)s OR knowledge_items.title ILIKE %(title_3)s OR knowledge_items.content ILIKE %(content_3)s OR knowledge_items.title ILIKE %(title_4)s OR knowledge_items.content ILIKE %(content_4)s OR knowledge_items.title ILIKE %(title_5)s OR knowledge_items.content ILIKE %(content_5)s) 
+ LIMIT %(param_1)s
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - [cached since 80.52s ago] {'title_1': '%basic%', 'content_1': '%basic%', 'title_2': '%terms%', 'content_2': '%terms%', 'title_3': '%use%', 'content_3': '%use%', 'title_4': '%your%', 'content_4': '%your%', 'title_5': '%service%', 'content_5': '%service%', 'param_1': 7, 'collection_id_1_1': '33b7975c-96f5-4e72-9f6c-49ede752dc96', 'collection_id_1_2': '98f241d3-cb98-4b35-af02-1940e7af1edd', 'collection_id_1_3': 'd09dfec9-ef31-4939-9da3-45753eb3758d', 'collection_id_1_4': 'e9e27191-55ca-4954-a4db-c80128a71de7'}
+2025-03-14 01:37:46 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:37:46 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - INSERT INTO chat_messages (message_id, session_id, role, content, created_at) VALUES (%(message_id)s, %(session_id)s, %(role)s, %(content)s, %(created_at)s) RETURNING chat_messages.id
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 164.7s ago] {'message_id': 'b3c18907-36af-46fd-ac75-a3d1d96cae4e', 'session_id': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'role': 'assistant', 'content': "To use Interact.ai's services, here are the basic terms you need to know:\n\n1. **Eligibility**: You must be at least 18 years old to use our Service ... (1235 characters truncated) ... f Service](interact_ai_terms.pdf) and [Privacy Policy](interact_ai_terms.pdf). If you have any questions, feel free to contact us at [email address].", 'created_at': datetime.datetime(2025, 3, 14, 0, 38, 8, 875101)}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id, chat_messages.message_id, chat_messages.session_id, chat_messages.role, chat_messages.content, chat_messages.message_metadata, chat_messages.created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 164.7s ago] {'pk_1': 18}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 164.8s ago] {'pk_1': 8}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 164.7s ago] {'session_id_1': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'param_1': 1}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id AS conversation_contexts_id, conversation_contexts.context_id AS conversation_contexts_context_id, conversation_contexts.session_id AS conversation_contexts_session_id, conversation_contexts.context_data AS conversation_contexts_context_data, conversation_contexts.created_at AS conversation_contexts_created_at, conversation_contexts.updated_at AS conversation_contexts_updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.session_id = %(session_id_1)s 
+ LIMIT %(param_1)s
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 164.7s ago] {'session_id_1': '0b8d8adb-fd48-42ed-8b3d-a2952078243e', 'param_1': 1}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - COMMIT
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - SELECT conversation_contexts.id, conversation_contexts.context_id, conversation_contexts.session_id, conversation_contexts.context_data, conversation_contexts.created_at, conversation_contexts.updated_at 
+FROM conversation_contexts 
+WHERE conversation_contexts.id = %(pk_1)s
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 164.8s ago] {'pk_1': 8}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - SELECT chat_messages.id AS chat_messages_id, chat_messages.message_id AS chat_messages_message_id, chat_messages.session_id AS chat_messages_session_id, chat_messages.role AS chat_messages_role, chat_messages.content AS chat_messages_content, chat_messages.message_metadata AS chat_messages_message_metadata, chat_messages.created_at AS chat_messages_created_at 
+FROM chat_messages 
+WHERE chat_messages.id = %(pk_1)s
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 152.4s ago] {'pk_1': 18}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - SELECT chat_sessions.id AS chat_sessions_id, chat_sessions.session_id AS chat_sessions_session_id, chat_sessions.client_id AS chat_sessions_client_id, chat_sessions.user_id AS chat_sessions_user_id, chat_sessions.ip_address AS chat_sessions_ip_address, chat_sessions.user_agent AS chat_sessions_user_agent, chat_sessions.referrer AS chat_sessions_referrer, chat_sessions.created_at AS chat_sessions_created_at, chat_sessions.updated_at AS chat_sessions_updated_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = %(pk_1)s
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - [cached since 164.8s ago] {'pk_1': 8}
+2025-03-14 01:38:08 - sqlalchemy.engine.Engine - INFO - ROLLBACK
+2025-03-14 01:38:08 - customate - INFO - Request: POST /api/chatbot/message Client: anonymous Status: 200 Process Time: 23.0617s
