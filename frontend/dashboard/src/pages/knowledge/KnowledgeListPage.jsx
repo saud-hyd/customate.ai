@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import knowledgeService from '../../services/knowledgeService';
 import DocumentUploader from '../../components/knowledge/DocumentUploader';
+
+import {
+  DocumentIcon,
+  DocumentTextIcon,
+  FolderIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline';
 
 const KnowledgeListPage = () => {
   const [activeTab, setActiveTab] = useState('faqs');
   const [collections, setCollections] = useState([]);
   const [activeCollection, setActiveCollection] = useState(null);
   const [items, setItems] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -28,6 +39,13 @@ const KnowledgeListPage = () => {
       setItems([]);
     }
   }, [activeCollection]);
+
+  // Fetch documents when documents tab is active
+  useEffect(() => {
+    if (activeTab === 'documents') {
+      fetchDocuments();
+    }
+  }, [activeTab]);
 
   const fetchCollections = async () => {
     try {
@@ -57,6 +75,20 @@ const KnowledgeListPage = () => {
     } catch (err) {
       console.error('Error fetching collection items:', err);
       setError('Failed to load knowledge items. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await knowledgeService.getDocuments();
+      setDocuments(data);
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+      setError('Failed to load documents. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -99,9 +131,31 @@ const KnowledgeListPage = () => {
     }
   };
 
+  const handleDeleteDocument = async (documentId) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await knowledgeService.deleteDocument(documentId);
+      // Refresh the documents list
+      await fetchDocuments();
+    } catch (err) {
+      console.error('Error deleting document:', err);
+      setError('Failed to delete document. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUploadComplete = async () => {
     setIsUploadModalOpen(false);
     await fetchCollections();
+    
+    if (activeTab === 'documents') {
+      await fetchDocuments();
+    }
     
     if (activeCollection) {
       await fetchCollectionItems(activeCollection.collection_id);
@@ -109,7 +163,7 @@ const KnowledgeListPage = () => {
   };
 
   return (
-    <section className="mb-12">
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Knowledge Base</h2>
         <div className="flex space-x-3">
@@ -118,7 +172,7 @@ const KnowledgeListPage = () => {
             onClick={() => setIsNewCollectionModalOpen(true)}
             className="btn btn-outline flex items-center"
           >
-            <i className="fas fa-folder-plus mr-2"></i>
+            <FolderIcon className="h-5 w-5 mr-2" />
             New Collection
           </button>
           <button
@@ -126,7 +180,7 @@ const KnowledgeListPage = () => {
             onClick={() => setIsUploadModalOpen(true)}
             className="btn btn-outline flex items-center"
           >
-            <i className="fas fa-file-upload mr-2"></i>
+            <DocumentIcon className="h-5 w-5 mr-2" />
             Upload Document
           </button>
           <button
@@ -135,7 +189,7 @@ const KnowledgeListPage = () => {
             disabled={!activeCollection}
             className="btn btn-primary flex items-center"
           >
-            <i className="fas fa-plus mr-2"></i>
+            <PlusIcon className="h-5 w-5 mr-2" />
             New Item
           </button>
         </div>
@@ -152,7 +206,7 @@ const KnowledgeListPage = () => {
             }`}
             onClick={() => setActiveTab('faqs')}
           >
-            <i className="fas fa-question-circle mr-2"></i> FAQs
+            FAQs
           </button>
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
@@ -162,7 +216,7 @@ const KnowledgeListPage = () => {
             }`}
             onClick={() => setActiveTab('documents')}
           >
-            <i className="fas fa-file-alt mr-2"></i> Documents
+            Documents
           </button>
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
@@ -172,145 +226,250 @@ const KnowledgeListPage = () => {
             }`}
             onClick={() => setActiveTab('training')}
           >
-            <i className="fas fa-brain mr-2"></i> Training
+            Training
           </button>
         </nav>
       </div>
       
-      {/* Main content with sidebar layout */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Collections sidebar */}
-        <div className="w-full md:w-64 bg-white shadow-sm rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900">Collections</h2>
-            <button
-              onClick={fetchCollections}
-              className="p-1 rounded-full text-gray-400 hover:text-gray-500"
-            >
-              <i className="fas fa-sync-alt"></i>
-            </button>
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
           </div>
-          
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {loading && collections.length === 0 ? (
-            <div className="py-4 text-center text-gray-500">
-              <div className="spinner mx-auto"></div>
-              <p className="mt-2 text-sm">Loading collections...</p>
-            </div>
-          ) : collections.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">
-              <i className="fas fa-folder text-4xl mb-2"></i>
-              <p className="mt-2 text-sm">No collections yet</p>
-              <button
-                onClick={() => setIsNewCollectionModalOpen(true)}
-                className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
-              >
-                Create your first collection
-              </button>
-            </div>
-          ) : (
-            <ul className="space-y-1">
-              {collections.map((collection) => (
-                <li key={collection.collection_id}>
-                  <button
-                    onClick={() => setActiveCollection(collection)}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeCollection?.collection_id === collection.collection_id
-                        ? 'bg-indigo-100 text-indigo-700'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <i className="fas fa-folder mr-3"></i>
-                    <span className="truncate">{collection.name}</span>
-                    <span className="ml-auto text-xs text-gray-500">{collection.item_count}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
+      )}
 
-        {/* Knowledge items */}
-        <div className="flex-1 bg-white shadow-sm rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              {activeCollection ? activeCollection.name : 'Select a Collection'}
-            </h2>
-            
-            {/* Search box */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i className="fas fa-search text-gray-400"></i>
-              </div>
-              <input
-                type="text"
-                placeholder="Search items..."
-                className="pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-          </div>
-          
-          {activeCollection && (
-            <p className="text-sm text-gray-600 mb-4">
-              {activeCollection.description || `All items in the ${activeCollection.name} collection.`}
-            </p>
-          )}
-          
-          {loading && activeCollection && items.length === 0 ? (
-            <div className="py-4 text-center text-gray-500">
-              <div className="spinner mx-auto"></div>
-              <p className="mt-2 text-sm">Loading items...</p>
-            </div>
-          ) : !activeCollection ? (
-            <div className="py-8 text-center text-gray-500">
-              <i className="fas fa-file-alt text-4xl mb-2"></i>
-              <p className="mt-2 text-sm">Select a collection to view items</p>
-            </div>
-          ) : items.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">
-              <i className="fas fa-file-alt text-4xl mb-2"></i>
-              <p className="mt-2 text-sm">No items in this collection</p>
+      {/* FAQs and Collections View */}
+      {activeTab === 'faqs' && (
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Collections sidebar */}
+          <div className="w-full md:w-64 bg-white shadow-sm rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium text-gray-900">Collections</h2>
               <button
-                onClick={() => setIsNewItemModalOpen(true)}
-                className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                onClick={fetchCollections}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-500"
               >
-                Add your first item
+                <ArrowPathIcon className="h-5 w-5" />
               </button>
             </div>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {items.map((item) => (
-                <li key={item.item_id} className="py-4">
-                  <div className="flex items-start">
-                    <i className="fas fa-file-alt text-gray-400 mt-1 mr-3"></i>
-                    <div className="flex-1">
-                      <h3 className="text-base font-medium text-gray-900">{item.title}</h3>
-                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">{item.content}</p>
-                      <div className="mt-2 flex items-center text-xs text-gray-500">
-                        <span>Created: {new Date(item.created_at).toLocaleDateString()}</span>
-                        <span className="mx-2">•</span>
-                        <span>Updated: {new Date(item.updated_at).toLocaleDateString()}</span>
+            
+            {loading && collections.length === 0 ? (
+              <div className="py-4 text-center text-gray-500">
+                <div className="spinner mx-auto"></div>
+                <p className="mt-2 text-sm">Loading collections...</p>
+              </div>
+            ) : collections.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                <FolderIcon className="h-12 w-12 mx-auto text-gray-400" />
+                <p className="mt-2 text-sm">No collections yet</p>
+                <button
+                  onClick={() => setIsNewCollectionModalOpen(true)}
+                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                >
+                  Create your first collection
+                </button>
+              </div>
+            ) : (
+              <ul className="space-y-1">
+                {collections.map((collection) => (
+                  <li key={collection.collection_id}>
+                    <button
+                      onClick={() => setActiveCollection(collection)}
+                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                        activeCollection?.collection_id === collection.collection_id
+                          ? 'bg-indigo-100 text-indigo-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <FolderIcon className="h-5 w-5 mr-3 text-gray-400" />
+                      <span className="truncate">{collection.name}</span>
+                      <span className="ml-auto text-xs text-gray-500">{collection.item_count || 0}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Knowledge items */}
+          <div className="flex-1 bg-white shadow-sm rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium text-gray-900">
+                {activeCollection ? activeCollection.name : 'Select a Collection'}
+              </h2>
+              
+              {/* Search box */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search items..."
+                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            
+            {activeCollection && (
+              <p className="text-sm text-gray-600 mb-4">
+                {activeCollection.description || `All items in the ${activeCollection.name} collection.`}
+              </p>
+            )}
+            
+            {loading && activeCollection && items.length === 0 ? (
+              <div className="py-4 text-center text-gray-500">
+                <div className="spinner mx-auto"></div>
+                <p className="mt-2 text-sm">Loading items...</p>
+              </div>
+            ) : !activeCollection ? (
+              <div className="py-8 text-center text-gray-500">
+                <DocumentTextIcon className="h-12 w-12 mx-auto text-gray-400" />
+                <p className="mt-2 text-sm">Select a collection to view items</p>
+              </div>
+            ) : items.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                <DocumentTextIcon className="h-12 w-12 mx-auto text-gray-400" />
+                <p className="mt-2 text-sm">No items in this collection</p>
+                <button
+                  onClick={() => setIsNewItemModalOpen(true)}
+                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                >
+                  Add your first item
+                </button>
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {items.map((item) => (
+                  <li key={item.item_id} className="py-4">
+                    <div className="flex items-start">
+                      <DocumentTextIcon className="h-5 w-5 text-gray-400 mt-1 mr-3" />
+                      <div className="flex-1">
+                        <h3 className="text-base font-medium text-gray-900">{item.title}</h3>
+                        <p className="mt-1 text-sm text-gray-600 line-clamp-2">{item.content}</p>
+                        <div className="mt-2 flex items-center text-xs text-gray-500">
+                          <span>Created: {new Date(item.created_at).toLocaleDateString()}</span>
+                          <span className="mx-2">•</span>
+                          <span>Updated: {new Date(item.updated_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="ml-3">
+                        <Link to={`/dashboard/knowledge/${item.item_id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Edit</Link>
                       </div>
                     </div>
-                    <div className="ml-3">
-                      <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Edit</button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Documents Tab View */}
+      {activeTab === 'documents' && (
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Uploaded Documents</h3>
+            <div className="flex space-x-2">
+              <button
+                onClick={fetchDocuments}
+                className="p-2 rounded-full text-gray-400 hover:text-gray-500"
+                title="Refresh document list"
+              >
+                <ArrowPathIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setIsUploadModalOpen(true)}
+                className="btn btn-primary flex items-center"
+              >
+                <DocumentIcon className="h-5 w-5 mr-1" />
+                Upload New Document
+              </button>
+            </div>
+          </div>
+          
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">
+              <div className="spinner mx-auto"></div>
+              <p className="mt-2 text-sm">Loading documents...</p>
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="py-12 text-center text-gray-500">
+              <DocumentIcon className="h-12 w-12 mx-auto text-gray-400" />
+              <p className="mt-2 text-sm">No documents uploaded yet</p>
+              <button
+                onClick={() => setIsUploadModalOpen(true)}
+                className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+              >
+                Upload your first document
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploaded</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {documents.map((doc) => (
+                    <tr key={doc.document_id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <DocumentIcon className="h-5 w-5 text-gray-400 mr-3" />
+                          <span className="font-medium text-gray-900">{doc.filename}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          doc.status === 'processed' ? 'bg-green-100 text-green-800' : 
+                          doc.status === 'failed' ? 'bg-red-100 text-red-800' : 
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {doc.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {Math.round(doc.file_size / 1024)} KB
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(doc.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleDeleteDocument(doc.document_id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete document"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* Training Tab (Placeholder) */}
+      {activeTab === 'training' && (
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Training Management</h3>
+          <p className="text-gray-600">This feature is coming soon.</p>
+        </div>
+      )}
 
       {/* New Collection Modal */}
       {isNewCollectionModalOpen && (
@@ -441,13 +600,13 @@ const KnowledgeListPage = () => {
             
             <DocumentUploader 
               collections={collections} 
-              onUploadComplete={handleUploadComplete} 
+              onUploadComplete={handleUploadComplete}
               onCancel={() => setIsUploadModalOpen(false)}
             />
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 

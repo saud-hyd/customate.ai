@@ -52,12 +52,17 @@ class DocumentProcessor:
         Returns:
             Dictionary with processing results
         """
+        document = None
         try:
             # 1. Save the file
             document = await self.document_service.save_document(db, file, client_id)
+            logger.info(f"Document saved: {document.document_id}")
             
             # 2. Extract text from document
             text_content = await self.document_service.extract_text(document.storage_path, document.file_type)
+            if not text_content:
+                logger.warning(f"No text content extracted from document {document.document_id}")
+                text_content = "No content could be extracted from this document."
             
             # 3. Get or create knowledge collection
             collection = None
@@ -73,6 +78,8 @@ class DocumentProcessor:
                     "description": f"Knowledge collection from {file.filename}",
                     "type": "document"
                 })
+            
+            logger.info(f"Using collection: {collection.collection_id} for document {document.document_id}")
             
             # 4. Chunk content and create knowledge items
             chunks = self._chunk_text(text_content)
@@ -95,6 +102,8 @@ class DocumentProcessor:
                 item = self.item_repo.create(db, obj_in=item_data)
                 created_items.append(item)
             
+            logger.info(f"Created {len(created_items)} items for document {document.document_id}")
+            
             # 5. Generate embeddings for all items
             embedding_tasks = []
             for item in created_items:
@@ -104,16 +113,20 @@ class DocumentProcessor:
             
             # Process embeddings concurrently
             embedding_results = await asyncio.gather(*embedding_tasks)
+            successful_embeddings = sum(1 for result in embedding_results if result)
+            
+            logger.info(f"Generated {successful_embeddings} embeddings for document {document.document_id}")
             
             # Mark document as processed
             self.document_service.update_document_status(db, document.document_id, "processed")
+            logger.info(f"Document {document.document_id} marked as processed")
             
             # Return processing results
             return {
                 "document_id": document.document_id,
                 "collection_id": collection.collection_id,
                 "items_created": len(created_items),
-                "embeddings_created": sum(1 for result in embedding_results if result),
+                "embeddings_created": successful_embeddings,
                 "status": "processed"
             }
             
@@ -122,7 +135,11 @@ class DocumentProcessor:
             
             # Mark document as failed if it was created
             if document and hasattr(document, 'document_id'):
-                self.document_service.update_document_status(db, document.document_id, "failed")
+                try:
+                    self.document_service.update_document_status(db, document.document_id, "failed")
+                    logger.info(f"Document {document.document_id} marked as failed due to exception")
+                except Exception as update_error:
+                    logger.exception(f"Error updating document status to failed: {str(update_error)}")
                 
             # Re-raise the exception
             raise
