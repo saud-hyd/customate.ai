@@ -17,6 +17,7 @@ from app.services.llm.deepseek_service import DeepSeekService
 from app.core import logger
 from app.repositories.knowledge_repository import KnowledgeItemRepository, KnowledgeCollectionRepository, KnowledgeItem
 from app.core.database.session import SessionLocal
+from app.services.analytics.usage_tracker import UsageTracker
 
 # Create router without prefix - this will be added in main.py
 router = APIRouter()
@@ -146,6 +147,16 @@ async def upload_document(
                     doc_service.update_document_status(async_db, doc_id, "processed")
                     logger.info(f"Document {doc_id} processed successfully")
                     
+                    # Update analytics after document processing
+                    try:
+                        usage_tracker = UsageTracker()
+                        usage_tracker.update_knowledge_counts(async_db, client_id)
+                        usage_tracker._update_storage_usage(async_db, client_id)
+                        usage_tracker._update_daily_stats(async_db, client_id)
+                        logger.info(f"Successfully updated analytics after document processing for client {client_id}")
+                    except Exception as tracking_error:
+                        logger.error(f"Error updating analytics after document processing: {str(tracking_error)}", exc_info=True)
+                    
                 except Exception as inner_error:
                     logger.exception(f"Error in document processing: {str(inner_error)}")
                     # Update status to failed
@@ -173,6 +184,16 @@ async def upload_document(
         
         # Add task to background tasks
         background_tasks.add_task(process_document_task)
+        
+        # Add tracking for document upload
+        try:
+            usage_tracker = UsageTracker()
+            usage_tracker.update_knowledge_counts(db, current_client.client_id)
+            usage_tracker._update_storage_usage(db, current_client.client_id)
+            usage_tracker._update_daily_stats(db, current_client.client_id)
+            logger.info(f"Successfully tracked document upload for client {current_client.client_id}")
+        except Exception as e:
+            logger.error(f"Error tracking document upload: {str(e)}", exc_info=True)
         
         return {
             "document_id": document.document_id,
@@ -233,8 +254,6 @@ async def get_documents(
         }
         for doc in documents
     ]
-
-# backend/app/api/knowledge/document_routes.py
 
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_document_stats(

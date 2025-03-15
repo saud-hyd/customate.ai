@@ -51,6 +51,32 @@ const analyticsService = {
       console.error('Error fetching subscription usage:', error);
       throw error;
     }
+  },
+  
+  // Get API usage report
+  async getApiUsage(days = 30) {
+    try {
+      const response = await api.get('/api/analytics/api-usage', {
+        params: { days }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching API usage:', error);
+      throw error;
+    }
+  },
+  
+  // Reset and reinitialize analytics data
+  async resetAnalytics() {
+    try {
+      const response = await api.post('/api/analytics/reset');
+      return response.data;
+    } catch (error) {
+      console.error('Error resetting analytics data:', error);
+      // Don't throw the error, just log it - this helps keep the app running
+      // even if the reset fails
+      return { success: false };
+    }
   }
 };
 

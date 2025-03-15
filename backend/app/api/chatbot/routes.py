@@ -12,6 +12,7 @@ from app.services.llm.deepseek_service import DeepSeekService
 from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
+from app.core import logger
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
@@ -66,14 +67,24 @@ async def send_message(
         user_info=user_info
     )
     
+    # Fixed tracking code
     usage_tracker = UsageTracker()
-    usage_tracker.track_chat_interaction(
-        db=db,
-        client_id=current_client.client_id,
-        session_id=session_id,
-        response_time_ms=int((time.time() - start_time) * 1000),  # Calculate response time
-        used_knowledge=len(response.get("knowledge_used", [])) > 0  # Track if knowledge was used
-    )
+    try:
+        # Pass the actual session_id from the response
+        usage_tracker.track_chat_interaction(
+            db=db,
+            client_id=current_client.client_id,
+            session_id=response.get("session_id", session_id),
+            response_time_ms=int((time.time() - start_time) * 1000),
+            used_knowledge=response.get("knowledge_used", False)  # Boolean value
+        )
+        
+        # Also update daily stats explicitly to ensure they're calculated
+        usage_tracker._update_daily_stats(db, current_client.client_id)
+        
+        logger.info(f"Successfully tracked chat interaction for client {current_client.client_id}")
+    except Exception as e:
+        logger.error(f"Error tracking chat interaction: {str(e)}", exc_info=True)
     
     return response
 

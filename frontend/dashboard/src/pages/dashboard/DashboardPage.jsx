@@ -23,6 +23,7 @@ const DashboardPage = () => {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(null);
   
   // Chart references
   const conversationChartRef = useRef(null);
@@ -33,10 +34,19 @@ const DashboardPage = () => {
   });
 
   useEffect(() => {
+    // Initial data fetch
     fetchDashboardData();
     
-    // Cleanup charts when component unmounts
+    // Set up auto-refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      console.log('Auto-refreshing dashboard data...');
+      fetchDashboardData();
+    }, 30000);
+    
+    // Cleanup charts and interval when component unmounts
     return () => {
+      clearInterval(refreshInterval);
+      
       if (chartInstancesRef.current.conversationChart) {
         chartInstancesRef.current.conversationChart.destroy();
       }
@@ -58,14 +68,30 @@ const DashboardPage = () => {
       setLoading(true);
       setError(null);
       
+      // Occasionally reset analytics to ensure data is up-to-date
+      // This is a temporary fix until we identify the root cause
+      if (!lastRefresh || (new Date() - lastRefresh) > 5 * 60 * 1000) { // Every 5 minutes
+        console.log('Resetting analytics data...');
+        await analyticsService.resetAnalytics();
+      }
+      
       // Fetch dashboard overview data
+      console.log('Fetching dashboard overview...');
       const overviewData = await analyticsService.getDashboardOverview();
+      console.log('Dashboard overview data:', overviewData);
       
       // Fetch chat performance data for trends
+      console.log('Fetching chat performance...');
       const chatData = await analyticsService.getChatPerformance(30);
+      console.log('Chat performance data:', chatData);
       
       // Fetch knowledge usage data
+      console.log('Fetching knowledge usage...');
       const knowledgeData = await analyticsService.getKnowledgeUsage(30);
+      console.log('Knowledge usage data:', knowledgeData);
+      
+      // Update last refresh timestamp
+      setLastRefresh(new Date());
       
       // Combine all data
       setDashboardData({
@@ -76,7 +102,7 @@ const DashboardPage = () => {
       
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data. Please try again later.');
+      setError(`Failed to load dashboard data: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -158,7 +184,7 @@ const DashboardPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !dashboardData.monthly?.total_sessions) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
@@ -171,12 +197,35 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
+      {/* Page header with refresh button */}
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Overview of your chatbot performance and knowledge base usage.
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Overview of your chatbot performance and knowledge base usage.
+            </p>
+          </div>
+          <button
+            onClick={fetchDashboardData}
+            className="flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="animate-spin h-4 w-4 mr-1 border-b-2 border-gray-500 rounded-full"></div>
+            ) : (
+              <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            )}
+            Refresh
+          </button>
+        </div>
+        {lastRefresh && (
+          <p className="mt-2 text-xs text-gray-500">
+            Last updated: {lastRefresh.toLocaleTimeString()}
+          </p>
+        )}
       </div>
 
       {error && (
@@ -225,6 +274,27 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
+      
+      {/* Debug Information */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Debug Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p><strong>Last fetched:</strong> {lastRefresh ? lastRefresh.toISOString() : 'Never'}</p>
+              <p><strong>Monthly Sessions:</strong> {dashboardData.monthly?.total_sessions || 0}</p>
+              <p><strong>Monthly Messages:</strong> {dashboardData.monthly?.total_messages || 0}</p>
+              <p><strong>Knowledge Usage:</strong> {dashboardData.monthly?.avg_knowledge_usage_ratio || 0}%</p>
+            </div>
+            <div>
+              <p><strong>Chat Trends Count:</strong> {dashboardData.chatTrends?.length || 0}</p>
+              <p><strong>Today's Sessions:</strong> {dashboardData.today?.sessions || 0}</p>
+              <p><strong>Today's Messages:</strong> {dashboardData.today?.messages || 0}</p>
+              <p><strong>API Status:</strong> {error ? 'Error' : 'OK'}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

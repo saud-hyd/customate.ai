@@ -625,6 +625,52 @@ class UsageTracker:
         except Exception as e:
             logger.error(f"Error updating daily stats: {str(e)}")
                         
+    # Add this method to backend/app/services/analytics/usage_tracker.py
+    def initialize_client_analytics(self, db: Session, client_id: str) -> None:
+        """Initialize analytics data for a new client."""
+        try:
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            
+            # Initialize daily stats
+            daily_stats = self.daily_stats_repo.get_by_date(db, client_id, today)
+            if not daily_stats:
+                self.daily_stats_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "date": today,
+                    "total_sessions": 0,
+                    "total_messages": 0,
+                    "total_searches": 0,
+                    "total_users": 0,
+                    "average_response_time_ms": 0,
+                    "knowledge_usage_ratio": 0,
+                    "stats_metadata": {}
+                })
+            
+            # Initialize subscription usage
+            from app.repositories.client_repository import SubscriptionRepository
+            sub_repo = SubscriptionRepository()
+            subscription = sub_repo.get_active_subscription(db, client_id)
+            
+            if subscription:
+                usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+                if not usage:
+                    self.subscription_usage_repo.create(db, obj_in={
+                        "client_id": client_id,
+                        "subscription_id": subscription.id,
+                        "month_year": current_month,
+                        "messages_used": 0,
+                        "messages_limit": subscription.message_limit,
+                        "active_users": 0,
+                        "active_users_limit": subscription.user_limit,
+                        "storage_used_bytes": 0,
+                        "storage_limit_bytes": 100 * 1024 * 1024  # 100MB default
+                    })
+            
+            logger.info(f"Successfully initialized analytics for client {client_id}")
+        except Exception as e:
+            logger.error(f"Error initializing analytics: {str(e)}", exc_info=True)
+    
     def check_subscription_limits(self, db: Session, client_id: str) -> Dict[str, Any]:
         """
         Check if client has exceeded subscription limits.

@@ -355,3 +355,34 @@ async def get_performance_metrics(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate performance metrics"
         )
+        
+@router.post("/reset", response_model=Dict[str, Any])
+async def reset_analytics(
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """
+    Reset and reinitialize analytics data for debugging.
+    """
+    usage_tracker = UsageTracker()
+    
+    try:
+        # Initialize analytics
+        usage_tracker.initialize_client_analytics(db, current_client.client_id)
+        
+        # Force update counts from existing data
+        usage_tracker.update_knowledge_counts(db, current_client.client_id)
+        usage_tracker._update_storage_usage(db, current_client.client_id)
+        usage_tracker._update_active_users(db, current_client.client_id)
+        usage_tracker._update_daily_stats(db, current_client.client_id)
+        
+        return {
+            "success": True,
+            "message": "Analytics data has been reset and reinitialized"
+        }
+    except Exception as e:
+        logger.exception(f"Error resetting analytics: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error resetting analytics: {str(e)}"
+        )
