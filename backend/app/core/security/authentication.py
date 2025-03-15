@@ -1,5 +1,3 @@
-# Path: backend/app/core/security/authentication.py
-
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
@@ -36,19 +34,24 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 
 def authenticate_client(db: Session, email: str, password: str) -> Optional[Client]:
     """Authenticate a client by email and password (API key)."""
+    logger.debug(f"Authenticating client with email: {email}")
+    
     client_repo = ClientRepository()
     client = client_repo.get_by_email(db, email)
     
     if not client:
+        logger.warning(f"No client found with email: {email}")
         return None
     
-    # Simple direct comparison with the API key as password
+    # Direct comparison with the API key as password
     if client.api_key == password:
+        logger.info(f"Authentication successful for client: {client.client_id}")
         return client
+    else:
+        logger.warning(f"Invalid password for client: {client.client_id}")
     
     return None
 
-# backend/app/core/security/authentication.py
 def authenticate_client_by_api_key(db: Session, api_key: str) -> Optional[Client]:
     """Authenticate a client by API key."""
     if not api_key:

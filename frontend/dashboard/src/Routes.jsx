@@ -16,6 +16,7 @@ import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import TestChatbotPage from './pages/TestChatbotPage';
+import ConversationsPage from './pages/chat/ConversationsPage';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -90,7 +91,8 @@ const AppRoutes = () => {
         }
       >
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="conversations" element={<ChatPage />} />
+        <Route path="conversations" element={<ConversationsPage />} />
+        <Route path="chat" element={<ChatPage />} />
         <Route path="knowledge" element={<KnowledgeListPage />} />
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
@@ -100,7 +102,6 @@ const AppRoutes = () => {
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>
       
-      {/* Catch all unmatched routes */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

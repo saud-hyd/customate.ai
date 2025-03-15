@@ -1,201 +1,160 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import useAuth from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import authService from '../../services/authService';
 
-const RegisterPage = () => {
+const RegisterForm = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // Form validation schema
-  const validationSchema = Yup.object({
-    name: Yup.string().required('Company name is required'),
-    email: Yup.string().email('Invalid email address').required('Email is required'),
-    industry: Yup.string().required('Industry is required'),
-    website: Yup.string().url('Invalid URL format').nullable(),
-    phone: Yup.string().nullable(),
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    industry: 'e-commerce',
+    website: '',
+    password: ''
   });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
-  // Formik form handling
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      email: '',
-      industry: 'ecommerce',
-      website: '',
-      phone: '',
-    },
-    validationSchema,
-    onSubmit: async (values) => {
-      try {
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
-        
-        const result = await register(values);
-        setSuccess(`Registration successful! Your API key is: ${result.api_key}`);
-        
-        // Navigate to login after a short delay
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
-      } catch (err) {
-        console.error('Registration error:', err);
-        setError(err.response?.data?.detail || 'Registration failed. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    },
-  });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+    
+    // Clear error when field is updated
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: null
+      });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      // Call the registration service
+      const response = await authService.register(formData);
+      console.log('Registration successful:', response);
+      
+      // Redirect to login page
+      navigate('/login', { state: { message: 'Registration successful! Please login with your credentials.' } });
+    } catch (error) {
+      console.error('Registration error:', error);
+      setSubmitError('Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full mx-auto">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Create Your Account</h2>
+      
+      {submitError && (
+        <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700">
+          <p>{submitError}</p>
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Register for Customate.ai</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-              sign in to your existing account
-            </Link>
-          </p>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Company Name
+          </label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+            placeholder="Your company name"
+          />
         </div>
         
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+            placeholder="you@example.com"
+          />
+        </div>
         
-        {success && (
-          <div className="bg-green-50 border-l-4 border-green-500 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-green-700">{success}</p>
-                <p className="text-sm text-green-700 mt-2">Redirecting to login page...</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <div>
+          <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
+            Industry
+          </label>
+          <select
+            id="industry"
+            name="industry"
+            value={formData.industry}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+          >
+            <option value="e-commerce">E-commerce</option>
+            <option value="saas">SaaS</option>
+            <option value="healthcare">Healthcare</option>
+            <option value="finance">Finance</option>
+            <option value="education">Education</option>
+            <option value="retail">Retail</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
         
-        <form className="mt-8 space-y-6" onSubmit={formik.handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="name" className="sr-only">Company Name</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="organization"
-                required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  formik.touched.name && formik.errors.name 
-                    ? 'border-red-300' 
-                    : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
-                placeholder="Company Name"
-                {...formik.getFieldProps('name')}
-              />
-              {formik.touched.name && formik.errors.name ? (
-                <div className="text-red-600 text-xs mt-1">{formik.errors.name}</div>
-              ) : null}
-            </div>
-            
-            <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  formik.touched.email && formik.errors.email 
-                    ? 'border-red-300' 
-                    : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
-                placeholder="Email address"
-                {...formik.getFieldProps('email')}
-              />
-              {formik.touched.email && formik.errors.email ? (
-                <div className="text-red-600 text-xs mt-1">{formik.errors.email}</div>
-              ) : null}
-            </div>
-            
-            <div>
-              <label htmlFor="industry" className="sr-only">Industry</label>
-              <select
-                id="industry"
-                name="industry"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                {...formik.getFieldProps('industry')}
-              >
-                <option value="ecommerce">E-commerce</option>
-                <option value="saas">SaaS</option>
-                <option value="technology">Technology</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="education">Education</option>
-                <option value="finance">Finance</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            
-            <div>
-              <label htmlFor="website" className="sr-only">Website</label>
-              <input
-                id="website"
-                name="website"
-                type="text"
-                autoComplete="url"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  formik.touched.website && formik.errors.website 
-                    ? 'border-red-300' 
-                    : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
-                placeholder="Website (optional)"
-                {...formik.getFieldProps('website')}
-              />
-              {formik.touched.website && formik.errors.website ? (
-                <div className="text-red-600 text-xs mt-1">{formik.errors.website}</div>
-              ) : null}
-            </div>
-            
-            <div>
-              <label htmlFor="phone" className="sr-only">Phone Number</label>
-              <input
-                id="phone"
-                name="phone"
-                type="text"
-                autoComplete="tel"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Phone Number (optional)"
-                {...formik.getFieldProps('phone')}
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-            >
-              {loading ? 'Registering...' : 'Register'}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div>
+          <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
+            Website (Optional)
+          </label>
+          <input
+            id="website"
+            name="website"
+            type="text"
+            value={formData.website}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+            placeholder="https://example.com"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+            placeholder="Create a secure password"
+          />
+        </div>
+        
+        <div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md"
+          >
+            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default RegisterPage;
+export default RegisterForm;

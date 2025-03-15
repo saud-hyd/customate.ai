@@ -27,38 +27,60 @@ const chatService = {
     }
   },
   
-  // Get conversation history
+  // Get conversation history (messages) for a specific session
   async getMessages(sessionId) {
-    const response = await api.get(`/api/chatbot/history/${sessionId}`);
-    return response.data;
-  },
-  
-  // Get all conversations
-  async getConversations() {
-    const response = await api.get('/api/chatbot/sessions');
-    return response.data;
-  },
-  
-  // Create a new conversation
-  async createConversation(data) {
-    const response = await api.post('/api/chatbot/sessions', data);
-    return response.data;
-  },
-  
-  // Get chat stats (for dashboard)
-  async getStats() {
     try {
-      const response = await api.get('/api/analytics/chat');
+      const response = await api.get(`/api/chatbot/history/${sessionId}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching chat stats:', error);
-      // Return default values if endpoint doesn't exist yet
-      return {
-        totalSessions: 0,
-        totalMessages: 0,
-        knowledgeUsage: 0,
-        responseTimes: []
-      };
+      console.error('Error fetching conversation messages:', error);
+      throw error;
+    }
+  },
+  
+  // Get all conversations/sessions for the current client
+  async getConversations() {
+    try {
+      const response = await api.get('/api/chatbot/sessions');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      throw error;
+    }
+  },
+  
+  // Create a new conversation session
+  async createConversation(data) {
+    try {
+      const response = await api.post('/api/chatbot/sessions', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      throw error;
+    }
+  },
+  
+  // Delete a conversation session
+  async deleteConversation(sessionId) {
+    try {
+      await api.delete(`/api/chatbot/sessions/${sessionId}`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      throw error;
+    }
+  },
+  
+  // Get chat analytics data
+  async getChatAnalytics(timeRange = 30) {
+    try {
+      const response = await api.get('/api/analytics/chat', {
+        params: { days: timeRange }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching chat analytics:', error);
+      throw error;
     }
   }
 };

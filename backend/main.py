@@ -8,6 +8,7 @@ from app.core.database.session import engine, Base
 from app.core import logger
 from app.core.middleware.client_context import ClientContextMiddleware
 from app.core.middleware.analytics_middleware import AnalyticsMiddleware
+from app.api.debug import analytics_debug
 
 # Import routes
 from app.api.auth import routes as auth_routes
@@ -15,6 +16,7 @@ from app.api.client import routes as client_routes
 from app.api.knowledge import routes as knowledge_routes
 from app.api.knowledge import document_routes
 from app.api.chatbot import enhanced_routes as chatbot_routes
+from app.api.chatbot import session_routes  # Import session routes for conversation history
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
 from app.api.knowledge import collection_routes
@@ -55,10 +57,11 @@ app.include_router(client_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
 app.include_router(document_routes.router, prefix="/api/knowledge/knowledge/documents")
 app.include_router(chatbot_routes.router, prefix="/api")
+app.include_router(session_routes.router, prefix="/api")  # Include session routes for conversation history
 app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")  # Add analytics routes
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
-
+app.include_router(analytics_debug.router, prefix="/api")
 
 # Request logging middleware
 @app.middleware("http")
@@ -86,7 +89,7 @@ async def root():
         "status": "healthy", 
         "app_name": settings.APP_NAME, 
         "version": settings.API_VERSION,
-        "features": ["enhanced_search", "knowledge_integration", "analytics"]
+        "features": ["enhanced_search", "knowledge_integration", "analytics", "conversation_history"]
     }
 
 # Health check endpoint
