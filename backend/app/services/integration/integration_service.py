@@ -58,42 +58,60 @@ class IntegrationService:
         ]
     
     def get_client_integrations(self, db: Session, client_id: str) -> List[Dict[str, Any]]:
-        """Get all integrations for a client."""
-        integrations = self.integration_repo.get_by_client_id(db, client_id)
-        
-        result = []
-        for integration in integrations:
-            # Get latest sync record if available
-            latest_sync = self.sync_repo.get_latest_by_integration_id(db, integration.integration_id)
+        """Get all integrations for a client with improved error handling."""
+        try:
+            logger.info(f"Fetching integrations for client {client_id}")
+            integrations = self.integration_repo.get_by_client_id(db, client_id)
             
-            # Format integration data
-            integration_data = {
-                "integration_id": integration.integration_id,
-                "provider": integration.provider,
-                "name": integration.name,
-                "status": integration.status,
-                "is_active": integration.is_active,
-                "created_at": integration.created_at.isoformat(),
-                "last_sync": integration.last_sync.isoformat() if integration.last_sync else None,
-                "config": integration.config
-            }
+            result = []
+            for integration in integrations:
+                try:
+                    # Get latest sync record if available
+                    latest_sync = self.sync_repo.get_latest_by_integration_id(db, integration.integration_id)
+                    
+                    # Format integration data with safe conversion
+                    integration_data = {
+                        "integration_id": integration.integration_id,
+                        "provider": integration.provider,
+                        "name": integration.name,
+                        "status": integration.status,
+                        "is_active": integration.is_active,
+                        "endpoint_url": integration.endpoint_url,  # Make sure this field exists
+                        "created_at": integration.created_at.isoformat() if integration.created_at else None,
+                        "last_sync": integration.last_sync.isoformat() if integration.last_sync else None,
+                        "config": integration.config if hasattr(integration, 'config') else {}
+                    }
+                    
+                    # Add sync information if available
+                    if latest_sync:
+                        integration_data["latest_sync"] = {
+                            "sync_id": latest_sync.sync_id,
+                            "status": latest_sync.status,
+                            "start_time": latest_sync.start_time.isoformat() if latest_sync.start_time else None,
+                            "end_time": latest_sync.end_time.isoformat() if latest_sync.end_time else None,
+                            "items_processed": latest_sync.items_processed,
+                            "items_created": latest_sync.items_created,
+                            "items_updated": latest_sync.items_updated,
+                            "items_failed": latest_sync.items_failed
+                        }
+                    
+                    result.append(integration_data)
+                except Exception as e:
+                    logger.exception(f"Error processing integration {integration.integration_id}: {str(e)}")
+                    # Add a minimal version to not break the entire response
+                    result.append({
+                        "integration_id": integration.integration_id,
+                        "provider": getattr(integration, 'provider', 'unknown'),
+                        "name": getattr(integration, 'name', 'Error processing integration'),
+                        "status": "error",
+                        "error_message": str(e)
+                    })
             
-            # Add sync information if available
-            if latest_sync:
-                integration_data["latest_sync"] = {
-                    "sync_id": latest_sync.sync_id,
-                    "status": latest_sync.status,
-                    "start_time": latest_sync.start_time.isoformat(),
-                    "end_time": latest_sync.end_time.isoformat() if latest_sync.end_time else None,
-                    "items_processed": latest_sync.items_processed,
-                    "items_created": latest_sync.items_created,
-                    "items_updated": latest_sync.items_updated,
-                    "items_failed": latest_sync.items_failed
-                }
-            
-            result.append(integration_data)
-        
-        return result
+            return result
+        except Exception as e:
+            logger.exception(f"Error in get_client_integrations: {str(e)}")
+            # Return empty list instead of raising exception to prevent 500 errors
+            return []
     
     def create_integration(
         self,
