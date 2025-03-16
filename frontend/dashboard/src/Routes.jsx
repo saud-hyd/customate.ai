@@ -1,4 +1,4 @@
-// frontend/dashboard/src/Routes.jsx
+// frontend/dashboard/src/Routes.jsx - updated with IntegrationsPage
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
@@ -17,6 +17,7 @@ import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import TestChatbotPage from './pages/TestChatbotPage';
 import ConversationsPage from './pages/chat/ConversationsPage';
+import IntegrationsPage from './pages/integrations/IntegrationsPage'; // Add this import
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -96,6 +97,7 @@ const AppRoutes = () => {
         <Route path="knowledge" element={<KnowledgeListPage />} />
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="integrations" element={<IntegrationsPage />} /> {/* Add this line */}
         <Route path="settings" element={<SettingsPage />} />
         <Route path="test" element={<TestChatbotPage />} />
         {/* Redirect root to dashboard */}

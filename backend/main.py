@@ -1,4 +1,6 @@
-# backend/main.py
+# backend/main.py - Update to include integration routes
+
+# Keep existing imports and add the new one
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -16,10 +18,11 @@ from app.api.client import routes as client_routes
 from app.api.knowledge import routes as knowledge_routes
 from app.api.knowledge import document_routes
 from app.api.chatbot import enhanced_routes as chatbot_routes
-from app.api.chatbot import session_routes  # Import session routes for conversation history
+from app.api.chatbot import session_routes
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
 from app.api.knowledge import collection_routes
+from app.api.integration import routes as integration_routes  # Add this import
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -41,7 +44,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update with specific domains in production
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -57,11 +60,12 @@ app.include_router(client_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
 app.include_router(document_routes.router, prefix="/api/knowledge/knowledge/documents")
 app.include_router(chatbot_routes.router, prefix="/api")
-app.include_router(session_routes.router, prefix="/api")  # Include session routes for conversation history
+app.include_router(session_routes.router, prefix="/api")
 app.include_router(enhanced_knowledge_routes.router, prefix="/api")
-app.include_router(analytics_routes.router, prefix="/api")  # Add analytics routes
+app.include_router(analytics_routes.router, prefix="/api")
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
 app.include_router(analytics_debug.router, prefix="/api")
+app.include_router(integration_routes.router, prefix="/api")  # Add this line
 
 # Request logging middleware
 @app.middleware("http")
@@ -89,7 +93,7 @@ async def root():
         "status": "healthy", 
         "app_name": settings.APP_NAME, 
         "version": settings.API_VERSION,
-        "features": ["enhanced_search", "knowledge_integration", "analytics", "conversation_history"]
+        "features": ["enhanced_search", "knowledge_integration", "analytics", "conversation_history", "external_integrations"]  # Updated features list
     }
 
 # Health check endpoint

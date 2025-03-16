@@ -1,4 +1,4 @@
-# Example: C:\customate.ai\backend\app\domain\client\entities.py
+# backend/app/domain/client/entities.py - Add integration relationship
 from datetime import datetime
 import uuid
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Integer, JSON
@@ -30,6 +30,7 @@ class Client(Base):
     # Relationships
     settings = relationship("ClientSettings", back_populates="client", uselist=False, cascade="all, delete-orphan")
     subscriptions = relationship("Subscription", back_populates="client", cascade="all, delete-orphan")
+    integrations = relationship("Integration", back_populates="client", cascade="all, delete-orphan")  # Add this line
     
     def __repr__(self):
         return f"<Client {self.name}>"

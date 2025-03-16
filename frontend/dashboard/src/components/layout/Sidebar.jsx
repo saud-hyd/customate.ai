@@ -3,24 +3,26 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 
-// Import icons (assuming use of heroicons)
+// Import icons (using heroicons)
 import { 
   XMarkIcon,
   HomeIcon, 
   ChatBubbleLeftRightIcon, 
   DocumentTextIcon, 
   ChartBarIcon, 
-  Cog6ToothIcon 
+  Cog6ToothIcon,
+  PuzzlePieceIcon // New icon for Integrations
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const { user, logout } = useAuth();
 
-  // Navigation items with fixed paths
+  // Navigation items with fixed paths - updated with integrations
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon },
     { name: 'Knowledge Base', href: '/knowledge', icon: DocumentTextIcon },
+    { name: 'Integrations', href: '/integrations', icon: PuzzlePieceIcon }, // Add this line
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
   ];

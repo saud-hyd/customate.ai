@@ -1,34 +1,40 @@
-# app/services/chat/enhanced_chat_service.py
-from typing import List, Dict, Any, Optional
+# backend/app/services/chat/enhanced_chat_service.py
+from typing import Dict, Any, List, Optional, Tuple
+import time
+import uuid
+import json
+import logging
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
-from app.domain.chat.entities import ChatSession, ChatMessage, ConversationContext
 from app.repositories.chat_repository import ChatSessionRepository, ChatMessageRepository
-from app.services.knowledge.enhanced_search_service import EnhancedSearchService
-from app.services.llm.llm_service import LLMService
-from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
+from app.services.knowledge.enhanced_search_service import EnhancedSearchService
+from app.services.llm.deepseek_service import DeepSeekService
+from app.services.industry.industry_factory import IndustryFactory
+from app.repositories.integration_repository import IntegrationRepository
+from app.services.integration.integration_service import IntegrationService
 from app.core import logger
 
 class EnhancedChatService:
     """
-    Enhanced service for handling chat interactions with improved knowledge integration.
+    Enhanced chat service that integrates with external services.
     
-    This service:
-    1. Processes incoming user messages with more context awareness
-    2. Uses hybrid search for better knowledge retrieval
-    3. Improves knowledge integration in responses
-    4. Tracks knowledge usage in conversation context
-    5. Provides better handling of follow-up questions
+    This service extends the base chat functionality with:
+    - External integration data retrieval
+    - Intelligent context management
+    - Industry-specific behaviors
+    - Advanced knowledge retrieval
     """
     
     def __init__(
         self,
         db: Session,
         search_service: EnhancedSearchService,
-        llm_service: LLMService,
+        llm_service: DeepSeekService,
         industry_factory: IndustryFactory,
-        context_manager: ContextManager,
+        context_manager: ContextManager
     ):
         self.db = db
         self.search_service = search_service
@@ -37,284 +43,339 @@ class EnhancedChatService:
         self.context_manager = context_manager
         self.session_repo = ChatSessionRepository()
         self.message_repo = ChatMessageRepository()
+        self.integration_repo = IntegrationRepository()
+        self.integration_service = IntegrationService()
     
     async def process_message(
-        self, client_id: str, session_id: str, user_message: str, user_info: Dict[str, Any] = None
+        self,
+        client_id: str,
+        user_message: str,
+        session_id: Optional[str] = None,
+        user_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Process a user message and generate a response with enhanced knowledge integration.
+        Process a user message and generate a response.
         
         Args:
-            client_id: ID of the client
-            session_id: ID of the chat session
-            user_message: The user's message text
-            user_info: Additional user information for context
+            client_id: Client ID
+            user_message: User message text
+            session_id: Optional session ID for continuing conversations
+            user_info: Optional user information
             
         Returns:
-            Response with assistant message and session info
+            Response data including the assistant's message
         """
-        # Get or create session
-        session = self._get_or_create_session(client_id, session_id, user_info)
+        start_time = time.time()
         
-        # Save user message
-        user_msg = self._save_message(session.session_id, "user", user_message)
+        # Get or create session
+        if session_id:
+            # Continue existing session
+            session = self.session_repo.get_by_session_id(self.db, session_id)
+            if not session or session.client_id != client_id:
+                # Create new session if not found or not owned by this client
+                session = self._create_session(client_id, user_info)
+                session_id = session.session_id
+        else:
+            # Create new session
+            session = self._create_session(client_id, user_info)
+            session_id = session.session_id
+        
+        # Get industry-specific customizer
+        industry_customizer = self.industry_factory.get_industry_service(client_id)
+        
+        # Add user message to database
+        user_message_db = self.message_repo.create(self.db, obj_in={
+            "session_id": session_id,
+            "role": "user",
+            "content": user_message,
+            "created_at": datetime.utcnow()
+        })
         
         # Get conversation context
-        context = self.context_manager.get_context(self.db, session.session_id)
+        context = self.context_manager.get_context(self.db, session_id)
         
-        # Get industry-specific service
-        industry_service = self.industry_factory.get_industry_service(client_id)
+        # Extract intent and entities from user message
+        intent, entities = industry_customizer.extract_intent_entities(user_message)
         
-        # Apply industry-specific processing
-        industry_context = industry_service.process_message(user_message, context)
+        # Check if we need to fetch external data
+        integration_data = None
+        integration_used = False
+        if self._should_use_integration(intent, entities, user_message):
+            integration_data = self._fetch_integration_data(client_id, intent, entities, user_message)
+            integration_used = integration_data is not None
         
-        # Determine if this is a follow-up question
-        is_followup = self._is_followup_question(user_message, context)
-        
-        # Get knowledge search parameters based on context
-        search_params = self._get_search_parameters(user_message, context, is_followup)
-        
-        # Perform enhanced knowledge retrieval
-        knowledge_results = await self.search_service.hybrid_search(
-            client_id=client_id,
-            query_text=user_message,
-            filters=search_params.get("filters"),
-            limit=search_params.get("limit", 3),
-            hybrid_ratio=search_params.get("hybrid_ratio", 0.7),
-        )
-        
-        # Process and format knowledge for the LLM
-        knowledge_context = self._format_knowledge_for_llm(
-            knowledge_results, 
-            context,
-            is_followup
-        )
-        
-        # Generate response using LLM with enhanced context
-        llm_response = await self.llm_service.generate_response(
-            user_message=user_message,
-            conversation_history=self.context_manager.format_history(context),
-            knowledge_context=knowledge_context.get("formatted_knowledge"),
-            industry_context=industry_context
-        )
-        
-        # Save assistant message
-        assistant_msg = self._save_message(session.session_id, "assistant", llm_response["content"])
-        
-        # Update context with knowledge references
-        context_updates = llm_response.get("context_updates", {})
-        
-        # Add knowledge references to context
-        if knowledge_context.get("knowledge_refs"):
-            context_updates["knowledge_references"] = knowledge_context.get("knowledge_refs")
-        
-        # Update context
-        self.context_manager.update_context(
-            self.db,
-            session.session_id,
+        # Search for relevant knowledge
+        search_results = await self.search_service.hybrid_search(
+            client_id, 
             user_message,
-            llm_response["content"],
-            context_updates
+            limit=5
+        )
+
+        # Get the actual results list from the search_results dictionary
+        results_list = search_results.get("results", [])
+
+        # Determine if we should use knowledge in response
+        knowledge_used = len(results_list) > 0 and self._should_use_knowledge(user_message, results_list)
+
+        # Prepare knowledge context
+        knowledge_context = ""
+        if knowledge_used:
+            knowledge_context = "RELEVANT KNOWLEDGE:\n"
+            for i, result in enumerate(results_list, 1):
+                knowledge_context += f"{i}. {result['content']}\n"
+                
+        # Prepare integration context
+        integration_context = ""
+        if integration_used and integration_data:
+            integration_context = "EXTERNAL DATA:\n"
+            for i, item in enumerate(integration_data, 1):
+                # Format based on data structure - this is a simple example
+                if isinstance(item, dict):
+                    integration_context += f"{i}. "
+                    for key, value in item.items():
+                        integration_context += f"{key}: {value}, "
+                    integration_context = integration_context.rstrip(", ") + "\n"
+                else:
+                    integration_context += f"{i}. {str(item)}\n"
+        
+        # Build prompt
+        prompt = self._build_prompt(
+            user_message, 
+            context,
+            knowledge_context if knowledge_used else "",
+            integration_context if integration_used else "",
+            industry_customizer
         )
         
-        # Return response
+        # Generate response
+        response_text = await self.llm_service.generate_response(prompt)
+        
+        # Process response with industry customizer
+        final_response = industry_customizer.process_response(response_text, user_message, intent)
+        
+        # Add assistant message to database
+        assistant_message = self.message_repo.create(self.db, obj_in={
+            "session_id": session_id,
+            "role": "assistant",
+            "content": final_response,
+            "message_metadata": {
+                "knowledge_used": knowledge_used,
+                "integration_used": integration_used,
+                "intent": intent,
+                "entities": entities,
+                "response_time_ms": int((time.time() - start_time) * 1000)
+            },
+            "created_at": datetime.utcnow()
+        })
+        
+        # Update conversation context
+        self.context_manager.update_context(
+            self.db, 
+            session_id, 
+            user_message, 
+            final_response,
+            knowledge_used=knowledge_used,
+            integration_used=integration_used
+        )
+        
+        # Format response
         return {
             "message": {
-                "id": assistant_msg.message_id,
-                "content": assistant_msg.content,
-                "created_at": assistant_msg.created_at.isoformat(),
+                "content": final_response,
+                "role": "assistant",
+                "id": assistant_message.message_id,
+                "created_at": assistant_message.created_at.isoformat()
             },
-            "session_id": session.session_id,
-            "knowledge_used": len(knowledge_context.get("knowledge_refs", [])) > 0,
+            "user_message_id": user_message_db.message_id,
+            "session_id": session_id,
+            "knowledge_used": knowledge_used,
+            "integration_used": integration_used,
+            "intent": intent,
+            "entities": entities
         }
     
-    def _get_or_create_session(
-        self, client_id: str, session_id: Optional[str], user_info: Dict[str, Any] = None
-    ) -> ChatSession:
-        """Get existing session or create a new one."""
-        if session_id:
-            session = self.session_repo.get_by_session_id(self.db, session_id)
-            if session and session.client_id == client_id:
-                return session
+    def get_chat_history(
+        self,
+        client_id: str,
+        session_id: str,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """
+        Get chat history for a session.
         
-        # Create new session
+        Args:
+            client_id: Client ID
+            session_id: Session ID
+            limit: Maximum number of messages to return
+            
+        Returns:
+            List of messages
+        """
+        # Get session
+        session = self.session_repo.get_by_session_id(self.db, session_id)
+        if not session or session.client_id != client_id:
+            return []
+        
+        # Get messages
+        messages = self.message_repo.get_by_session_id(self.db, session_id, limit)
+        
+        # Format messages
+        return [
+            {
+                "id": message.message_id,
+                "role": message.role,
+                "content": message.content,
+                "created_at": message.created_at.isoformat(),
+                "metadata": message.message_metadata
+            }
+            for message in messages
+        ]
+    
+    def _create_session(
+        self,
+        client_id: str,
+        user_info: Optional[Dict[str, Any]] = None
+    ) -> Any:
+        """Create a new chat session."""
         session_data = {
             "client_id": client_id,
             "user_id": user_info.get("user_id") if user_info else None,
             "ip_address": user_info.get("ip_address") if user_info else None,
             "user_agent": user_info.get("user_agent") if user_info else None,
             "referrer": user_info.get("referrer") if user_info else None,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
         }
         
-        session = self.session_repo.create(self.db, obj_in=session_data)
-        
-        # Initialize context
-        self.context_manager.initialize_context(self.db, session.session_id)
-        
-        return session
+        return self.session_repo.create(self.db, obj_in=session_data)
     
-    def _save_message(self, session_id: str, role: str, content: str) -> ChatMessage:
-        """Save a message to the database."""
-        message_data = {
-            "session_id": session_id,
-            "role": role,
-            "content": content,
-        }
+    def _should_use_knowledge(self, user_message: str, search_results: List[Dict[str, Any]]) -> bool:
+        """Determine if knowledge should be used for this message."""
+        # Simple heuristic: if there are search results with high enough scores, use them
+        if not search_results:
+            return False
         
-        return self.message_repo.create(self.db, obj_in=message_data)
+        # Check if top result has a high score
+        if search_results[0]["score"] > 0.7:
+            return True
+        
+        # Check if question seems like it needs factual information
+        question_words = ["what", "how", "when", "where", "who", "which", "why"]
+        if any(user_message.lower().startswith(word) for word in question_words):
+            return True
+        
+        return False
     
-    def _is_followup_question(self, message: str, context: Dict[str, Any]) -> bool:
-        """
-        Determine if the current message is a follow-up question based on
-        conversation context and message content.
-        """
-        # Check for explicit references to previous context
-        followup_indicators = [
-            "what about", "how about", "tell me more", "explain further",
-            "why", "how", "what does that mean", "can you explain", 
-            "what is", "who is", "when", "where"
-        ]
-        
-        message_lower = message.lower()
-        
-        # Check for pronouns that might indicate a follow-up
-        has_pronouns = any(pronoun in message_lower.split() for pronoun in 
-                           ["it", "this", "that", "these", "those", "they", "them"])
-        
-        # Check for explicit follow-up indicators
-        has_indicators = any(indicator in message_lower for indicator in followup_indicators)
-        
-        # Check message length - short messages are often follow-ups
-        is_short_message = len(message.split()) <= 5
-        
-        # Check if previous knowledge was referenced
-        has_prev_knowledge = "knowledge_references" in context and len(context["knowledge_references"]) > 0
-        
-        # Combine signals
-        is_followup = (has_pronouns or has_indicators or is_short_message) and has_prev_knowledge
-        
-        return is_followup
-    
-    def _get_search_parameters(
-        self, message: str, context: Dict[str, Any], is_followup: bool
-    ) -> Dict[str, Any]:
-        """
-        Determine appropriate search parameters based on message and context.
-        Adjusts search behavior for follow-up questions.
-        """
-        # Default parameters
-        params = {
-            "limit": 5,
-            "hybrid_ratio": 0.7,  # Favor vector search by default
-            "filters": {}
-        }
-        
-        # For follow-up questions, we want to search within the same context
-        if is_followup and "knowledge_references" in context:
-            recent_refs = context["knowledge_references"][-3:]  # Last 3 references
-            
-            # Extract collection IDs
-            collection_ids = list(set(ref.get("collection_id") for ref in recent_refs if "collection_id" in ref))
-            
-            if collection_ids:
-                # If we have multiple collections, don't filter by collection
-                # If we have just one, use it as a filter
-                if len(collection_ids) == 1:
-                    params["filters"]["collection_id"] = collection_ids[0]
-                
-                # For follow-ups, we want more precision in the results
-                params["hybrid_ratio"] = 0.8  # Even stronger vector preference
-                params["limit"] = 3  # Fewer, more focused results
-        
-        # Adjust parameters based on message length
-        msg_length = len(message.split())
-        if msg_length <= 3:
-            # Very short queries work better with keyword search
-            params["hybrid_ratio"] = 0.4  # More weight to keyword search
-        elif msg_length >= 15:
-            # Longer queries work better with vector search
-            params["hybrid_ratio"] = 0.8  # More weight to vector search
-            params["limit"] = 7  # More results for complex queries
-        
-        return params
-    
-    def _format_knowledge_for_llm(
+    def _should_use_integration(
         self, 
-        knowledge_results: Dict[str, Any], 
-        context: Dict[str, Any],
-        is_followup: bool
-    ) -> Dict[str, Any]:
-        """
-        Format knowledge results for the LLM prompt.
-        Handles context tracking and follow-up question adjustments.
-        """
-        results = knowledge_results.get("results", [])
-        
-        if not results:
-            return {"formatted_knowledge": [], "knowledge_refs": []}
-        
-        # Track references for context
-        knowledge_refs = []
-        
-        # Format knowledge items for LLM
-        formatted_knowledge = []
-        
-        for item in results:
-            # Create reference for context tracking
-            ref = {
-                "item_id": item["item_id"],
-                "collection_id": item["collection_id"],
-                "collection_name": item.get("collection_name", "Unknown"),
-                "title": item["title"],
-                "score": item.get("hybrid_score", 0),
-            }
-            knowledge_refs.append(ref)
-            
-            # Format for LLM prompt
-            formatted_item = {
-                "title": item["title"],
-                "content": item["content"],
-                "source": f"{item.get('collection_name', 'Knowledge Base')}",
-                "relevance": "high" if item.get("hybrid_score", 0) > 0.7 else "medium"
-            }
-            formatted_knowledge.append(formatted_item)
-        
-        # For follow-up questions, provide context from previous knowledge
-        if is_followup and "knowledge_references" in context:
-            prev_knowledge = context["knowledge_references"][-2:]  # Last 2 references
-            
-            # Add a note about this being a follow-up
-            if formatted_knowledge:
-                formatted_knowledge[0]["note"] = "This is a follow-up question. Previous context may be relevant."
-            
-            # Add previous context indicator
-            if prev_knowledge:
-                formatted_knowledge.append({
-                    "title": "Previous Context",
-                    "content": "The user's question appears to be a follow-up to previously discussed information.",
-                    "source": "Conversation History",
-                    "relevance": "context"
-                })
-        
-        return {
-            "formatted_knowledge": formatted_knowledge,
-            "knowledge_refs": knowledge_refs
-        }
-    
-    def get_chat_history(self, client_id: str, session_id: str, limit: int = 50) -> List[Dict[str, Any]]:
-        """Get chat history for a specific session."""
-        session = self.session_repo.get_by_session_id(self.db, session_id)
-        if not session or session.client_id != client_id:
-            return []
-        
-        messages = self.message_repo.get_by_session_id(self.db, session_id, limit=limit)
-        
-        return [
-            {
-                "id": msg.message_id,
-                "role": msg.role,
-                "content": msg.content,
-                "created_at": msg.created_at.isoformat(),
-            }
-            for msg in messages
+        intent: str, 
+        entities: List[str],
+        user_message: str
+    ) -> bool:
+        """Determine if external integration data should be used."""
+        # Check for intents that would benefit from integration data
+        integration_intents = [
+            "order_status", "product_inquiry", "feature_inquiry",
+            "pricing_question", "account_management", "technical_issue"
         ]
+        
+        if intent in integration_intents:
+            return True
+        
+        # Check for specific entity types that would benefit from integration data
+        entity_indicator_words = ["order", "ticket", "product", "issue", "account", "subscription"]
+        if any(entity in user_message.lower() for entity in entity_indicator_words):
+            return True
+        
+        # Check for direct questions about external data
+        data_questions = [
+            "show me", "can you find", "look up", "search for", "get me", "find"
+        ]
+        if any(phrase in user_message.lower() for phrase in data_questions):
+            return True
+        
+        return False
+    
+    def _fetch_integration_data(
+        self, 
+        client_id: str, 
+        intent: str,
+        entities: List[str],
+        user_message: str
+    ) -> Optional[List[Dict[str, Any]]]:
+        """
+        Fetch relevant data from integrated external services.
+        
+        Args:
+            client_id: Client ID
+            intent: Identified intent
+            entities: Extracted entities
+            user_message: Original user message
+            
+        Returns:
+            List of data items or None if no relevant data found
+        """
+        try:
+            # Get active integrations for the client
+            integrations = self.integration_repo.get_active_by_client_id(self.db, client_id)
+            
+            if not integrations:
+                return None
+            
+            # Map intents to provider and resource type
+            intent_mapping = {
+                "order_status": {"shopify": "orders"},
+                "product_inquiry": {"shopify": "products"},
+                "feature_inquiry": {"zendesk": "tickets"},
+                "pricing_question": {"salesforce": "opportunities"},
+                "account_management": {"zendesk": "users", "salesforce": "contacts"},
+                "technical_issue": {"zendesk": "tickets"}
+            }
+            
+            # Determine which integration to use based on intent
+            target_providers = intent_mapping.get(intent, {})
+            
+            # If no specific mapping, try to infer from message
+            if not target_providers:
+                if "ticket" in user_message.lower() or "issue" in user_message.lower():
+                    target_providers = {"zendesk": "tickets"}
+                elif "product" in user_message.lower() or "item" in user_message.lower():
+                    target_providers = {"shopify": "products"}
+                elif "order" in user_message.lower() or "purchase" in user_message.lower():
+                    target_providers = {"shopify": "orders"}
+                elif "contact" in user_message.lower() or "customer" in user_message.lower():
+                    target_providers = {"salesforce": "contacts"}
+            
+            # If we still don't know what to query, return None
+            if not target_providers:
+                return None
+            
+            # Find available integrations matching target providers
+            available_integrations = []
+            for provider, resource_type in target_providers.items():
+                for integration in integrations:
+                    if integration.provider == provider:
+                        available_integrations.append((integration, resource_type))
+            
+            if not available_integrations:
+                return None
+            
+            # Query the first available integration
+            integration, resource_type = available_integrations[0]
+            
+            # Extract query based on entities and user message
+            query = None
+            if entities:
+                query = " ".join(entities)
+            
+            # Get data from integration
+            return self.integration_service.get_data(
+                integration,
+                resource_type,
+                query=query,
+                filters=None
+            )
+            
+        except Exception as e:
+            logger.error(f"Error fetching integration data: {str(e)}")
+            return None

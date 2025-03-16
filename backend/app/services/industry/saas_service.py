@@ -120,6 +120,20 @@ class SaaSService(BaseIndustryService):
         
         return entities
     
+    def extract_intent_entities(self, message: str) -> tuple:
+        """
+        Extract both intent and entities from a message.
+        
+        Args:
+            message: The user's message
+            
+        Returns:
+            Tuple of (intent, entities)
+        """
+        intent = classify_intent(message, domain="saas")
+        entities = self.extract_entities(message)
+        return intent, entities    
+    
     def _get_instructions(self, intent: str) -> str:
         """Get specific instructions based on detected intent."""
         if intent == "feature_inquiry":
