@@ -1,7 +1,6 @@
-// frontend/dashboard/src/components/ChatInterface.jsx
-
+// Ensure the component is properly handling the streaming messages
 import React, { useState, useEffect, useRef } from 'react';
-import chatService from '../services/chatService';
+import chatService from '../../services/chatService';
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
@@ -22,7 +21,7 @@ const ChatInterface = () => {
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     
     if (!input.trim()) return;
     
@@ -33,20 +32,21 @@ const ChatInterface = () => {
       id: `temp-${Date.now()}`,
     };
     
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-    setInput('');
+    setMessages(prev => [...prev, userMessage]);
     
     // Create a placeholder for the bot's response
+    const tempBotMessageId = `temp-bot-${Date.now()}`;
     const tempBotMessage = {
       role: 'assistant',
       content: '',
-      id: `temp-bot-${Date.now()}`,
+      id: tempBotMessageId,
       isStreaming: true,
     };
     
-    setMessages((prevMessages) => [...prevMessages, tempBotMessage]);
+    setMessages(prev => [...prev, tempBotMessage]);
     setIsLoading(true);
-
+    setInput(''); // Clear input after sending
+    
     try {
       // Cancel any existing stream
       if (cancelStreamRef.current) {
@@ -54,17 +54,21 @@ const ChatInterface = () => {
         cancelStreamRef.current = null;
       }
       
+      // Store the message for reference
+      const sentMessage = input;
+      
       // Create a streaming response
       cancelStreamRef.current = chatService.sendMessageStreaming(
-        input,
+        sentMessage,
         sessionId,
         // On chunk received
         (chunk, messageId, isComplete) => {
-          setMessages((prevMessages) => {
-            // Find the bot message placeholder
-            const updatedMessages = [...prevMessages];
+          setMessages(prev => {
+            // Find the bot message placeholder by ID or by being the last assistant message
+            const updatedMessages = [...prev];
             const botMessageIndex = updatedMessages.findIndex(
-              (msg) => msg.role === 'assistant' && msg.isStreaming
+              msg => msg.id === tempBotMessageId || 
+                    (msg.role === 'assistant' && msg.isStreaming)
             );
             
             if (botMessageIndex !== -1) {
@@ -73,39 +77,44 @@ const ChatInterface = () => {
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
                   content: chunk,
-                  id: messageId,
+                  id: messageId || tempBotMessageId,
                   isStreaming: false,
                 };
               } else {
-                // Append to existing content
+                // Set the content (not append - the backend sends cumulative text)
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
-                  content: updatedMessages[botMessageIndex].content + chunk,
-                  id: messageId,
+                  content: chunk,
+                  id: messageId || tempBotMessageId,
                 };
               }
             }
             
             return updatedMessages;
           });
+          
+          // Scroll to bottom with each new chunk
+          setTimeout(scrollToBottom, 50);
         },
         // On done
         (response) => {
           setIsLoading(false);
-          setSessionId(response.session_id);
+          if (response && response.session_id) {
+            setSessionId(response.session_id);
+          }
           
           // Make sure we have the final message
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages];
+          setMessages(prev => {
+            const updatedMessages = [...prev];
             const botMessageIndex = updatedMessages.findIndex(
-              (msg) => msg.role === 'assistant' && msg.isStreaming
+              msg => msg.id === tempBotMessageId || 
+                    (msg.role === 'assistant' && msg.isStreaming)
             );
             
             if (botMessageIndex !== -1) {
               updatedMessages[botMessageIndex] = {
                 ...updatedMessages[botMessageIndex],
-                content: response.message.content,
-                id: response.message.id,
+                id: response?.message?.id || tempBotMessageId,
                 isStreaming: false,
               };
             }
@@ -121,10 +130,11 @@ const ChatInterface = () => {
           setIsLoading(false);
           
           // Update the bot message with error
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages];
+          setMessages(prev => {
+            const updatedMessages = [...prev];
             const botMessageIndex = updatedMessages.findIndex(
-              (msg) => msg.role === 'assistant' && msg.isStreaming
+              msg => msg.id === tempBotMessageId || 
+                    (msg.role === 'assistant' && msg.isStreaming)
             );
             
             if (botMessageIndex !== -1) {
@@ -147,10 +157,11 @@ const ChatInterface = () => {
       setIsLoading(false);
       
       // Update the bot message with error
-      setMessages((prevMessages) => {
-        const updatedMessages = [...prevMessages];
+      setMessages(prev => {
+        const updatedMessages = [...prev];
         const botMessageIndex = updatedMessages.findIndex(
-          (msg) => msg.role === 'assistant' && msg.isStreaming
+          msg => msg.id === tempBotMessageId || 
+                (msg.role === 'assistant' && msg.isStreaming)
         );
         
         if (botMessageIndex !== -1) {
@@ -167,12 +178,14 @@ const ChatInterface = () => {
     }
   };
 
-  // Handle input change
-  const handleInputChange = (e) => {
-    setInput(e.target.value);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
-  // Message component
+  // Message component with blinking cursor for streaming
   const Message = ({ message }) => {
     const isUser = message.role === 'user';
     
@@ -184,8 +197,10 @@ const ChatInterface = () => {
           } ${message.isError ? 'bg-red-100 text-red-800' : ''} 
             rounded-lg py-2 px-4 max-w-[80%]`}
         >
-          {message.content}
-          {message.isStreaming && <span className="ml-1 animate-pulse">▌</span>}
+          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          {message.isStreaming && (
+            <span className="ml-1 inline-block h-4 w-[1px] bg-current animate-pulse">▌</span>
+          )}
         </div>
       </div>
     );
@@ -200,7 +215,7 @@ const ChatInterface = () => {
           </div>
         ) : (
           messages.map((message, index) => (
-            <Message key={`${message.id}-${index}`} message={message} />
+            <Message key={`${message.id || index}-${index}`} message={message} />
           ))
         )}
         <div ref={messagesEndRef} />
@@ -211,7 +226,8 @@ const ChatInterface = () => {
           <input
             type="text"
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
             disabled={isLoading}
             placeholder="Type your message..."
             className="flex-1 px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -65,100 +65,140 @@ class ChatService {
    * @returns {function} Function to cancel the stream
    */
   sendMessageStreaming(message, sessionId = null, onChunk, onDone, onError) {
-    // Create EventSource for Server-Sent Events
-    const source = new EventSource(
-      `${API_URL}/chatbot/message/stream?api_key=${encodeURIComponent(this.apiKey)}`,
-      {
-        withCredentials: true,
-      }
-    );
-
-    // Make the request data
+    // Create request data
     const requestData = {
       message,
       session_id: sessionId,
     };
-
-    // Create a flag to track if we're done
-    let isComplete = false;
-    let messageId = null;
-    let fullMessage = '';
-
-    // Setup event handlers
-    source.onopen = () => {
-      // Send the message data
-      fetch(`${API_URL}/chatbot/message/stream`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(requestData),
-      }).catch((err) => {
-        source.close();
-        onError(err);
-      });
-    };
-
-    source.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        // Handle different message types
-        switch (data.type) {
-          case 'info':
-            // Store session info
-            sessionId = data.session_id;
-            break;
-            
-          case 'chunk':
-            // Process text chunk
-            if (!messageId) {
-              messageId = data.message_id;
+    
+    // Use fetch with ReadableStream API instead of EventSource
+    // This is more compatible with POST requests that need streaming responses
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    // Start the fetch request
+    fetch(`${API_URL}/chatbot/message/stream`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(requestData),
+      signal: signal
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      // Get the readable stream from the response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let messageId = null;
+      let fullMessage = '';
+      
+      // Process the stream
+      function processStream() {
+        return reader.read().then(({ done, value }) => {
+          if (done) {
+            // Process any remaining data in buffer
+            if (buffer) {
+              try {
+                // Handle any remaining event data
+                const lines = buffer.split('\n\n');
+                lines.forEach(line => {
+                  if (line.startsWith('data: ')) {
+                    const eventData = line.substring(6);
+                    if (eventData && eventData !== '[DONE]') {
+                      const data = JSON.parse(eventData);
+                      
+                      // Handle different message types
+                      if (data.type === 'info') {
+                        sessionId = data.session_id;
+                      } else if (data.type === 'chunk') {
+                        if (!messageId) messageId = data.message_id;
+                        fullMessage += data.content;
+                        onChunk(data.content, messageId);
+                      } else if (data.type === 'complete') {
+                        fullMessage = data.content;
+                        onChunk(data.content, messageId, true);
+                      } else if (data.type === 'done') {
+                        onDone({
+                          message: data.message,
+                          session_id: sessionId,
+                        });
+                      }
+                    }
+                  }
+                });
+              } catch (e) {
+                console.error('Error parsing final SSE chunk:', e);
+              }
             }
-            fullMessage += data.content;
-            onChunk(data.content, messageId);
-            break;
-            
-          case 'complete':
-            // If we received a complete message (usually after processing)
-            fullMessage = data.content;
-            onChunk(data.content, messageId, true);
-            break;
-            
-          case 'done':
-            // Streaming is complete
-            isComplete = true;
-            onDone({
-              message: data.message,
-              session_id: sessionId,
-            });
-            source.close();
-            break;
-            
-          case 'error':
-            // Handle error
-            onError(new Error(data.error || 'Unknown error'));
-            source.close();
-            break;
-            
-          default:
-            console.warn('Unknown message type:', data.type);
-        }
-      } catch (err) {
-        console.error('Error parsing SSE message:', err);
-        onError(err);
+            return;
+          }
+          
+          // Decode the incoming chunk and add to buffer
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+          
+          // Process complete events in buffer
+          const lines = buffer.split('\n\n');
+          // Keep the last (potentially incomplete) line in the buffer
+          buffer = lines.pop() || '';
+          
+          // Process each complete SSE event
+          lines.forEach(line => {
+            if (line.startsWith('data: ')) {
+              const eventData = line.substring(6);
+              if (eventData && eventData !== '[DONE]') {
+                try {
+                  const data = JSON.parse(eventData);
+                  
+                  // Handle different message types
+                  if (data.type === 'info') {
+                    sessionId = data.session_id;
+                  } else if (data.type === 'chunk') {
+                    if (!messageId) messageId = data.message_id;
+                    fullMessage += data.content;
+                    onChunk(data.content, messageId);
+                  } else if (data.type === 'complete') {
+                    fullMessage = data.content;
+                    onChunk(data.content, messageId, true);
+                  } else if (data.type === 'done') {
+                    onDone({
+                      message: data.message,
+                      session_id: sessionId,
+                    });
+                  } else if (data.type === 'error') {
+                    onError(new Error(data.error || 'Unknown error'));
+                  }
+                } catch (e) {
+                  console.error('Error parsing SSE chunk:', e);
+                }
+              }
+            }
+          });
+          
+          // Continue reading the stream
+          return processStream();
+        }).catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error('Stream reading error:', err);
+            onError(err);
+          }
+        });
       }
-    };
-
-    source.onerror = (err) => {
-      console.error('SSE error:', err);
-      if (!isComplete) {
-        onError(err);
-      }
-      source.close();
-    };
-
-    // Return a function to close the connection
+      
+      // Start processing the stream
+      return processStream();
+    })
+    .catch(err => {
+      console.error('Fetch error:', err);
+      onError(err);
+    });
+    
+    // Return a function to abort the fetch request
     return () => {
-      source.close();
+      controller.abort();
     };
   }
 

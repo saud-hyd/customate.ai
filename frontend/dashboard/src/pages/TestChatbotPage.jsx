@@ -66,7 +66,7 @@ const TestChatbotPage = () => {
     }
   };
   
-  // Keep existing send message functionality with backend connection
+// Update the handleSendMessage function to use streaming
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     
@@ -81,29 +81,99 @@ const TestChatbotPage = () => {
     };
     
     setMessages(prev => [...prev, userMessage]);
+    
+    // Create a placeholder for bot's streaming response
+    const botPlaceholder = {
+      role: 'bot',
+      content: '',
+      timestamp: timeString,
+      isStreaming: true
+    };
+    
+    setMessages(prev => [...prev, botPlaceholder]);
     setInputValue('');
     setIsTyping(true);
     
     try {
-      // Make API call to chatbot service
-      const response = await chatService.sendMessage(sessionId, inputValue, selectedCollection?.collection_id);
+      // Use streaming API instead of regular sendMessage
+      let fullContent = '';
+      const messageToSend = inputValue; // Capture the input value before reset
       
-      // Update session ID if it's a new conversation
-      if (!sessionId && response.session_id) {
-        setSessionId(response.session_id);
-      }
-      
-      // Add bot response
-      const botMessage = {
-        role: 'bot',
-        content: response.message.content,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        knowledgeUsed: response.knowledge_used || false
-      };
-      
-      setMessages(prev => [...prev, botMessage]);
+      // Create and begin the stream
+      chatService.sendMessageStreaming(
+        messageToSend,
+        sessionId,
+        // On chunk
+        (chunk) => {
+          fullContent += chunk;
+          setMessages(prev => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            
+            if (lastIndex >= 0 && updated[lastIndex].role === 'bot' && updated[lastIndex].isStreaming) {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                content: fullContent
+              };
+            }
+            
+            return updated;
+          });
+        },
+        // On done
+        (response) => {
+          setIsTyping(false);
+          
+          // Update session ID if it's a new conversation
+          if (!sessionId && response.session_id) {
+            setSessionId(response.session_id);
+          }
+          
+          // Finalize the message
+          setMessages(prev => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            
+            if (lastIndex >= 0 && updated[lastIndex].role === 'bot' && updated[lastIndex].isStreaming) {
+              updated[lastIndex] = {
+                role: 'bot',
+                content: fullContent,
+                timestamp: timeString,
+                knowledgeUsed: response.knowledge_used || false,
+                isStreaming: false
+              };
+            }
+            
+            return updated;
+          });
+        },
+        // On error
+        (err) => {
+          console.error('Error streaming message:', err);
+          setIsTyping(false);
+          
+          // Add error message
+          setMessages(prev => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            
+            if (lastIndex >= 0 && updated[lastIndex].role === 'bot' && updated[lastIndex].isStreaming) {
+              updated[lastIndex] = {
+                role: 'bot',
+                content: "I'm sorry, I encountered an error while processing your request. Please try again.",
+                timestamp: timeString,
+                isError: true,
+                isStreaming: false
+              };
+            }
+            
+            return updated;
+          });
+        }
+      );
     } catch (err) {
       console.error('Error sending message:', err);
+      setIsTyping(false);
       
       // Add error message
       setMessages(prev => [...prev, {
@@ -112,28 +182,26 @@ const TestChatbotPage = () => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isError: true
       }]);
-    } finally {
-      setIsTyping(false);
     }
   };
-  
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
-  };
-  
-  const handleResetChat = () => {
-    setSessionId('');
-    setMessages([
-      {
-        role: 'bot',
-        content: "Hi there! I'm your Customate.AI assistant. How can I help you today?",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        knowledgeUsed: false
+    
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter') {
+        handleSendMessage();
       }
-    ]);
-  };
+    };
+    
+    const handleResetChat = () => {
+      setSessionId('');
+      setMessages([
+        {
+          role: 'bot',
+          content: "Hi there! I'm your Customate.AI assistant. How can I help you today?",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          knowledgeUsed: false
+        }
+      ]);
+    };
   
   const handleSuggestedQuestion = (question) => {
     setInputValue(question);

@@ -1,88 +1,248 @@
 // frontend/dashboard/src/services/chatService.js
-import api from './api';
+import axios from 'axios';
 
-const chatService = {
-  // Send a message and get a response
-  async sendMessage(sessionId, message, collectionId = null) {
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+class ChatService {
+  constructor() {
+    this.apiKey = localStorage.getItem('apiKey');
+  }
+
+  /**
+   * Set the API key for authentication
+   * @param {string} apiKey - The API key to use for API calls
+   */
+  setApiKey(apiKey) {
+    this.apiKey = apiKey;
+    localStorage.setItem('apiKey', apiKey);
+  }
+
+  /**
+   * Get the headers for API requests
+   * @returns {Object} Headers with authorization
+   */
+  getHeaders() {
+    return {
+      'X-API-Key': this.apiKey || localStorage.getItem('apiKey'),
+      'Content-Type': 'application/json',
+    };
+  }
+
+  /**
+   * Send a message to the chatbot and get a response
+   * @param {string} message - The user's message
+   * @param {string} sessionId - Optional session ID for continuing a conversation
+   * @returns {Promise<Object>} Response from the chatbot
+   */
+  async sendMessage(message, sessionId = null) {
     try {
-      const requestData = {
-        message: message
-      };
-      
-      // Add session ID if provided (for continuing conversations)
-      if (sessionId) {
-        requestData.session_id = sessionId;
-      }
-      
-      // Add collection ID if provided (for targeted knowledge searches)
-      if (collectionId) {
-        requestData.collection_id = collectionId;
-      }
-      
-      const response = await api.post('/api/chatbot/message', requestData);
+      const response = await axios.post(
+        `${API_URL}/chatbot/message`,
+        {
+          message,
+          session_id: sessionId,
+        },
+        {
+          headers: this.getHeaders(),
+        }
+      );
       return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
     }
-  },
-  
-  // Get conversation history (messages) for a specific session
-  async getMessages(sessionId) {
+  }
+
+  /**
+   * Send a message and get a streaming response
+   * @param {string} message - The user's message
+   * @param {string} sessionId - Optional session ID for continuing a conversation
+   * @param {function} onChunk - Callback for each response chunk
+   * @param {function} onDone - Callback when streaming is complete
+   * @param {function} onError - Callback for errors
+   * @returns {function} Function to cancel the stream
+   */
+  sendMessageStreaming(message, sessionId = null, onChunk, onDone, onError) {
+    // Ensure error callback exists
+    const handleError = typeof onError === 'function' ? onError : (err) => {
+      console.error('Streaming error:', err);
+    };
+
+    // Create request data
+    const requestData = {
+      message,
+      session_id: sessionId,
+    };
+    
+    // Use fetch with ReadableStream API
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    // Get headers (include API key)
+    const headers = this.getHeaders();
+    
+    // Start the fetch request
+    fetch(`${API_URL}/chatbot/message/stream`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(requestData),
+      signal: signal
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      // Get the readable stream from the response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let messageId = null;
+      let fullMessage = '';
+      
+      // Process the stream
+      function processStream() {
+        return reader.read().then(({ done, value }) => {
+          if (done) {
+            // Process any remaining data in buffer
+            if (buffer) {
+              try {
+                // Handle any remaining event data
+                const lines = buffer.split('\n\n');
+                lines.forEach(line => {
+                  if (line.startsWith('data: ')) {
+                    const eventData = line.substring(6);
+                    if (eventData && eventData !== '[DONE]') {
+                      const data = JSON.parse(eventData);
+                      
+                      // Handle different message types
+                      if (data.type === 'info') {
+                        sessionId = data.session_id;
+                      } else if (data.type === 'chunk') {
+                        if (!messageId) messageId = data.message_id;
+                        fullMessage = data.content; // For cumulative content from backend
+                        if (typeof onChunk === 'function') {
+                          onChunk(data.content, messageId);
+                        }
+                      } else if (data.type === 'complete') {
+                        fullMessage = data.content;
+                        if (typeof onChunk === 'function') {
+                          onChunk(data.content, messageId, true);
+                        }
+                      } else if (data.type === 'done') {
+                        if (typeof onDone === 'function') {
+                          onDone({
+                            message: data.message,
+                            session_id: sessionId,
+                          });
+                        }
+                      }
+                    }
+                  }
+                });
+              } catch (e) {
+                console.error('Error parsing final SSE chunk:', e);
+              }
+            }
+            
+            // Ensure onDone gets called even if no done message received
+            if (typeof onDone === 'function') {
+              onDone({
+                message: { content: fullMessage, id: messageId },
+                session_id: sessionId,
+              });
+            }
+            return;
+          }
+          
+          // Decode the incoming chunk and add to buffer
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+          
+          // Process complete events in buffer
+          const lines = buffer.split('\n\n');
+          // Keep the last (potentially incomplete) line in the buffer
+          buffer = lines.pop() || '';
+          
+          // Process each complete SSE event
+          lines.forEach(line => {
+            if (line.startsWith('data: ')) {
+              const eventData = line.substring(6);
+              if (eventData && eventData !== '[DONE]') {
+                try {
+                  const data = JSON.parse(eventData);
+                  
+                  // Handle different message types
+                  if (data.type === 'info') {
+                    sessionId = data.session_id;
+                  } else if (data.type === 'chunk') {
+                    if (!messageId) messageId = data.message_id;
+                    fullMessage = data.content; // For cumulative content
+                    if (typeof onChunk === 'function') {
+                      onChunk(data.content, messageId);
+                    }
+                  } else if (data.type === 'complete') {
+                    fullMessage = data.content;
+                    if (typeof onChunk === 'function') {
+                      onChunk(data.content, messageId, true);
+                    }
+                  } else if (data.type === 'done') {
+                    if (typeof onDone === 'function') {
+                      onDone({
+                        message: data.message,
+                        session_id: sessionId,
+                      });
+                    }
+                  } else if (data.type === 'error') {
+                    handleError(new Error(data.error || 'Unknown error'));
+                  }
+                } catch (e) {
+                  console.error('Error parsing SSE chunk:', e);
+                }
+              }
+            }
+          });
+          
+          // Continue reading the stream
+          return processStream();
+        }).catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error('Stream reading error:', err);
+            handleError(err);
+          }
+        });
+      }
+      
+      // Start processing the stream
+      return processStream();
+    })
+    .catch(err => {
+      console.error('Fetch error:', err);
+      handleError(err);
+    });
+    
+    // Return a function to abort the fetch request
+    return () => {
+      controller.abort();
+    };
+  }
+
+  /**
+   * Get chat history for a session
+   * @param {string} sessionId - The session ID
+   * @returns {Promise<Array>} Chat history messages
+   */
+  async getChatHistory(sessionId) {
     try {
-      const response = await api.get(`/api/chatbot/history/${sessionId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching conversation messages:', error);
-      throw error;
-    }
-  },
-  
-  // Get all conversations/sessions for the current client
-  async getConversations() {
-    try {
-      const response = await api.get('/api/chatbot/sessions');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-      throw error;
-    }
-  },
-  
-  // Create a new conversation session
-  async createConversation(data) {
-    try {
-      const response = await api.post('/api/chatbot/sessions', data);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-      throw error;
-    }
-  },
-  
-  // Delete a conversation session
-  async deleteConversation(sessionId) {
-    try {
-      await api.delete(`/api/chatbot/sessions/${sessionId}`);
-      return true;
-    } catch (error) {
-      console.error('Error deleting conversation:', error);
-      throw error;
-    }
-  },
-  
-  // Get chat analytics data
-  async getChatAnalytics(timeRange = 30) {
-    try {
-      const response = await api.get('/api/analytics/chat', {
-        params: { days: timeRange }
+      const response = await axios.get(`${API_URL}/chatbot/history/${sessionId}`, {
+        headers: this.getHeaders(),
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching chat analytics:', error);
+      console.error('Error getting chat history:', error);
       throw error;
     }
   }
-};
+}
 
-export default chatService;
+export default new ChatService();
