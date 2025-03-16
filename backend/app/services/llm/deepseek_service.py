@@ -1,7 +1,9 @@
 # app/services/llm/deepseek_service.py
 import httpx
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, AsyncGenerator
 import os
+import json
+import asyncio
 
 from app.services.llm.llm_service import LLMService
 from app.core.config.settings import settings
@@ -170,3 +172,108 @@ class DeepSeekService(LLMService):
         messages.append({"role": "user", "content": current_message})
         
         return messages
+    
+    # backend/app/services/llm/deepseek_service.py
+# Add streaming support to the generate_response method
+
+async def generate_response_stream(
+    self,
+    user_message: str,
+    conversation_history: List[Dict[str, str]],
+    knowledge_context: Optional[List[Dict[str, Any]]] = None,
+    industry_context: Optional[Dict[str, Any]] = None,
+) -> AsyncGenerator[str, None]:
+    """
+    Generate a streaming response from DeepSeek LLM.
+    
+    Args:
+        user_message: The user's message
+        conversation_history: Previous conversation messages
+        knowledge_context: Relevant knowledge base items
+        industry_context: Industry-specific context
+        
+    Yields:
+        Chunks of the generated response as they're received
+    """
+    # Construct system prompt with knowledge context
+    system_prompt = self._build_system_prompt(knowledge_context, industry_context)
+    
+    # Format messages for API
+    messages = self._format_messages(system_prompt, conversation_history, user_message)
+    
+    # Make API request with streaming
+    try:
+        async with httpx.AsyncClient() as client:
+            async with client.stream(
+                "POST",
+                f"{self.api_base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "max_tokens": 1024,
+                    "stream": True,  # Enable streaming
+                },
+                timeout=60.0,
+            ) as response:
+                # Check response status
+                if response.status_code != 200:
+                    error_text = await response.text()
+                    logger.error(f"DeepSeek API error: {response.status_code} - {error_text}")
+                    yield "I apologize, but I'm having trouble generating a response right now. Please try again later."
+                    return
+                
+                # Stream the response chunks
+                buffer = ""
+                async for chunk in response.aiter_text():
+                    # Skip empty chunks
+                    if not chunk.strip():
+                        continue
+                    
+                    # Process the chunk
+                    try:
+                        # Chunks are prefixed with "data: " and are JSON
+                        if chunk.startswith("data: "):
+                            data = chunk[6:]  # Remove "data: " prefix
+                            if data.strip() == "[DONE]":
+                                break
+                            
+                            # Parse JSON data
+                            chunk_data = json.loads(data)
+                            if "choices" in chunk_data and len(chunk_data["choices"]) > 0:
+                                delta = chunk_data["choices"][0].get("delta", {})
+                                content = delta.get("content", "")
+                                if content:
+                                    buffer += content
+                                    yield content
+                    except json.JSONDecodeError:
+                        logger.warning(f"Failed to parse JSON from chunk: {chunk}")
+                    except Exception as e:
+                        logger.error(f"Error processing chunk: {str(e)}")
+                
+                # If we received a partial sentence, add a period for completion
+                if buffer and not buffer.rstrip().endswith((".", "!", "?")):
+                    yield "."
+                    
+    except Exception as e:
+        logger.exception(f"Error in streaming response: {str(e)}")
+        yield "I apologize, but I'm having trouble generating a response right now. Please try again later."
+
+# If you're using a mock service for development/testing, add a similar method:
+
+class MockStreamingService:
+    """Mock service that simulates streaming responses."""
+    
+    async def generate_response_stream(self, text: str) -> AsyncGenerator[str, None]:
+        """Generate a mock streaming response."""
+        # Split the text into words
+        words = text.split()
+        
+        # Yield each word with a small delay to simulate typing
+        for word in words:
+            await asyncio.sleep(0.1)  # 100ms delay between words
+            yield word + " "

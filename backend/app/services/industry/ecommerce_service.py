@@ -135,3 +135,19 @@ class EcommerceService(BaseIndustryService):
                 "Respond helpfully to the user's query. If they're asking about products, "
                 "orders, shipping, or returns, provide relevant information."
             )
+            
+    def process_response(self, response_text: str, user_message: str, intent: str) -> str:
+        """Process the LLM response based on e-commerce specific needs."""
+        if intent == "product_inquiry":
+            if "recommend" not in response_text.lower() and "suggestion" not in response_text.lower():
+                response_text += "\n\nYou might also be interested in our related products or bestsellers in this category."
+        
+        elif intent == "order_status" and "tracking" in user_message.lower():
+            if "tracking" in response_text.lower() and "link" not in response_text.lower():
+                response_text += "\n\nYou can also track your order directly on our website by entering your order number in the tracking section."
+        
+        elif intent == "return_request":
+            if "policy" not in response_text.lower():
+                response_text += "\n\nPlease remember that items must be returned within 30 days of purchase in their original packaging to be eligible for a full refund."
+        
+        return response_text     

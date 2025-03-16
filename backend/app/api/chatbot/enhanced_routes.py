@@ -1,8 +1,11 @@
 # app/api/chatbot/enhanced_routes.py
 import time
 from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional, List
+import json
+import asyncio
 
 from app.api.auth.dependencies import get_current_client
 from app.core.database.dependencies import get_db
@@ -13,6 +16,7 @@ from app.services.llm.deepseek_service import DeepSeekService
 from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
+from app.core import logger
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
@@ -110,3 +114,101 @@ async def get_chat_history(
     )
     
     return history
+
+@router.post("/message/stream")
+async def send_message_stream(
+    message_data: Dict[str, Any],
+    request: Request,
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Send a message to the chatbot and get a streaming response."""
+    start_time = time.time()
+    
+    if "message" not in message_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Message field is required"
+        )
+    
+    # Extract data from request
+    user_message = message_data["message"]
+    session_id = message_data.get("session_id")
+    
+    # Collect user info for analytics
+    user_info = {
+        "user_id": message_data.get("user_id"),
+        "ip_address": request.client.host if request.client else None,
+        "user_agent": request.headers.get("user-agent"),
+        "referrer": request.headers.get("referer"),
+    }
+    
+    # Initialize services
+    llm_service = DeepSeekService()
+    search_service = EnhancedSearchService(llm_service)
+    industry_factory = IndustryFactory()
+    context_manager = ContextManager()
+    
+    # Create enhanced chat service
+    chat_service = EnhancedChatService(
+        db=db,
+        search_service=search_service,
+        llm_service=llm_service,
+        industry_factory=industry_factory,
+        context_manager=context_manager,
+    )
+    
+    async def stream_response():
+        """Generate the streaming response."""
+        session_id_value = None
+        knowledge_used = False
+        integration_used = False
+        
+        try:
+            async for chunk in chat_service.process_message_stream(
+                client_id=current_client.client_id,
+                session_id=session_id,
+                user_message=user_message,
+                user_info=user_info
+            ):
+                # Extract session_id from info message
+                if chunk.get("type") == "info":
+                    session_id_value = chunk.get("session_id")
+                    knowledge_used = chunk.get("knowledge_used", False)
+                    integration_used = chunk.get("integration_used", False)
+                
+                # Convert chunk to SSE format (Server-Sent Events)
+                yield f"data: {json.dumps(chunk)}\n\n"
+                
+                # Small delay to simulate natural typing speed (optional)
+                if chunk.get("type") == "chunk":
+                    await asyncio.sleep(0.01)  # 10ms delay
+            
+            # Track the completed chat interaction
+            if session_id_value:
+                usage_tracker = UsageTracker()
+                usage_tracker.track_chat_interaction(
+                    db=db,
+                    client_id=current_client.client_id,
+                    session_id=session_id_value,
+                    response_time_ms=int((time.time() - start_time) * 1000),
+                    used_knowledge=knowledge_used
+                )
+        except Exception as e:
+            logger.error(f"Error in streaming chat: {str(e)}", exc_info=True)
+            # Send error message in stream
+            error_message = {
+                "type": "error",
+                "error": str(e)
+            }
+            yield f"data: {json.dumps(error_message)}\n\n"
+    
+    # Return a streaming response with text/event-stream content type
+    return StreamingResponse(
+        stream_response(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )

@@ -40,3 +40,4 @@ ENV/
 
 storage/
 storage/*
+app.log

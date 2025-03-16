@@ -172,3 +172,16 @@ class SaaSService(BaseIndustryService):
                 "Be concise but informative, and focus on providing the most relevant "
                 "information to address their specific question."
             )
+                
+    def process_response(self, response_text: str, user_message: str, intent: str) -> str:
+        """Process the LLM response based on SaaS-specific needs."""
+        # Add SaaS-specific enhancements if needed
+        if intent == "pricing_question" and "pricing" in response_text.lower():
+            if "contact sales" in response_text.lower() and "enterprise" in response_text.lower():
+                response_text += "\n\nYou can reach our sales team at sales@example.com or schedule a demo on our website."
+        
+        elif intent == "feature_inquiry":
+            if "demo" not in response_text.lower() and "trial" not in response_text.lower():
+                response_text += "\n\nWould you like to see a demo of this feature or start a free trial to explore it yourself?"
+        
+        return response_text            

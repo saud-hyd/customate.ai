@@ -1,5 +1,5 @@
 # backend/app/services/chat/enhanced_chat_service.py
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, AsyncGenerator
 import time
 import uuid
 import json
@@ -118,37 +118,45 @@ class EnhancedChatService:
         knowledge_used = len(results_list) > 0 and self._should_use_knowledge(user_message, results_list)
 
         # Prepare knowledge context
-        knowledge_context = ""
+        knowledge_context = []
         if knowledge_used:
-            knowledge_context = "RELEVANT KNOWLEDGE:\n"
-            for i, result in enumerate(results_list, 1):
-                knowledge_context += f"{i}. {result['content']}\n"
-                
-        # Prepare integration context
-        integration_context = ""
+            for result in results_list:
+                knowledge_context.append({
+                    "title": result["title"],
+                    "content": result["content"],
+                    "source": result.get("collection_name", "Knowledge Base"),
+                    "relevance": "high" if result.get("hybrid_score", 0) > 0.8 else "medium"
+                })
+                    
+        # Prepare integration context string
+        integration_context_str = ""
         if integration_used and integration_data:
-            integration_context = "EXTERNAL DATA:\n"
+            integration_context_str = "EXTERNAL DATA:\n"
             for i, item in enumerate(integration_data, 1):
                 # Format based on data structure - this is a simple example
                 if isinstance(item, dict):
-                    integration_context += f"{i}. "
+                    integration_context_str += f"{i}. "
                     for key, value in item.items():
-                        integration_context += f"{key}: {value}, "
-                    integration_context = integration_context.rstrip(", ") + "\n"
+                        integration_context_str += f"{key}: {value}, "
+                    integration_context_str = integration_context_str.rstrip(", ") + "\n"
                 else:
-                    integration_context += f"{i}. {str(item)}\n"
+                    integration_context_str += f"{i}. {str(item)}\n"
         
-        # Build prompt
-        prompt = self._build_prompt(
-            user_message, 
-            context,
-            knowledge_context if knowledge_used else "",
-            integration_context if integration_used else "",
-            industry_customizer
+        # Format history for the LLM
+        conversation_history = []
+        if "history" in context and context["history"]:
+            conversation_history = context["history"][-8:]  # Last 8 messages for context
+        
+        # Generate response using LLM with all required parameters
+        llm_response = await self.llm_service.generate_response(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            knowledge_context=knowledge_context if knowledge_used else None,
+            industry_context={"intent": intent, "industry": industry_customizer.__class__.__name__}
         )
         
-        # Generate response
-        response_text = await self.llm_service.generate_response(prompt)
+        # Get the response content from the LLM response object
+        response_text = llm_response.get("content", "I'm sorry, I couldn't generate a response at this time.")
         
         # Process response with industry customizer
         final_response = industry_customizer.process_response(response_text, user_message, intent)
@@ -174,8 +182,7 @@ class EnhancedChatService:
             session_id, 
             user_message, 
             final_response,
-            knowledge_used=knowledge_used,
-            integration_used=integration_used
+            {"knowledge_used": knowledge_used, "integration_used": integration_used}
         )
         
         # Format response
@@ -231,6 +238,59 @@ class EnhancedChatService:
             for message in messages
         ]
     
+    def _build_prompt(
+        self, 
+        user_message: str, 
+        context: Dict[str, Any],
+        knowledge_context: str = "",
+        integration_context: str = "",
+        industry_customizer = None
+    ) -> str:
+        """
+        Build a prompt for the LLM based on available context.
+        
+        Args:
+            user_message: The user's message
+            context: Conversation context
+            knowledge_context: Context from knowledge base (if any)
+            integration_context: Context from integrations (if any)
+            industry_customizer: Industry-specific customizer
+            
+        Returns:
+            Formatted prompt string
+        """
+        # Get industry-specific prompt
+        if industry_customizer:
+            base_prompt = industry_customizer.get_prompting_strategy().get("system_prompt", 
+                "You are a helpful AI assistant for customer support.")
+        else:
+            base_prompt = "You are a helpful AI assistant for customer support."
+        
+        # Add context information
+        prompt = f"{base_prompt}\n\n"
+        
+        # Add conversation history
+        if "history" in context and context["history"]:
+            prompt += "PREVIOUS CONVERSATION:\n"
+            for message in context["history"][-4:]:  # Last 4 messages for brevity
+                role = "User" if message["role"] == "user" else "Assistant"
+                prompt += f"{role}: {message['content']}\n"
+            prompt += "\n"
+        
+        # Add knowledge context if available
+        if knowledge_context:
+            prompt += f"{knowledge_context}\n\n"
+        
+        # Add integration context if available
+        if integration_context:
+            prompt += f"{integration_context}\n\n"
+        
+        # Add the current user message
+        prompt += f"User: {user_message}\n"
+        prompt += "Assistant: "
+        
+        return prompt
+    
     def _create_session(
         self,
         client_id: str,
@@ -256,7 +316,7 @@ class EnhancedChatService:
             return False
         
         # Check if top result has a high score
-        if search_results[0]["score"] > 0.7:
+        if search_results[0].get("hybrid_score", 0) > 0.7 or search_results[0].get("similarity", 0) > 0.7:
             return True
         
         # Check if question seems like it needs factual information
@@ -366,7 +426,11 @@ class EnhancedChatService:
             # Extract query based on entities and user message
             query = None
             if entities:
-                query = " ".join(entities)
+                # Convert entities list to string for query
+                if isinstance(entities, list):
+                    query = " ".join(entities)
+                else:
+                    query = str(entities)
             
             # Get data from integration
             return self.integration_service.get_data(
@@ -379,3 +443,171 @@ class EnhancedChatService:
         except Exception as e:
             logger.error(f"Error fetching integration data: {str(e)}")
             return None
+        
+# backend/app/services/chat/enhanced_chat_service.py
+# Add streaming method to the EnhancedChatService class
+
+    async def process_message_stream(
+        self,
+        client_id: str,
+        user_message: str,
+        session_id: Optional[str] = None,
+        user_info: Optional[Dict[str, Any]] = None
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        """
+        Process a user message and generate a streaming response.
+        
+        Args:
+            client_id: Client ID
+            user_message: User message text
+            session_id: Optional session ID for continuing conversations
+            user_info: Optional user information
+            
+        Yields:
+            Response chunks as they are generated
+        """
+        start_time = time.time()
+        
+        # Get or create session
+        if session_id:
+            # Continue existing session
+            session = self.session_repo.get_by_session_id(self.db, session_id)
+            if not session or session.client_id != client_id:
+                # Create new session if not found or not owned by this client
+                session = self._create_session(client_id, user_info)
+                session_id = session.session_id
+        else:
+            # Create new session
+            session = self._create_session(client_id, user_info)
+            session_id = session.session_id
+        
+        # Get industry-specific customizer
+        industry_customizer = self.industry_factory.get_industry_service(client_id)
+        
+        # Add user message to database
+        user_message_db = self.message_repo.create(self.db, obj_in={
+            "session_id": session_id,
+            "role": "user",
+            "content": user_message,
+            "created_at": datetime.utcnow()
+        })
+        
+        # Get conversation context
+        context = self.context_manager.get_context(self.db, session_id)
+        
+        # Extract intent and entities from user message
+        intent, entities = industry_customizer.extract_intent_entities(user_message)
+        
+        # Check if we need to fetch external data
+        integration_data = None
+        integration_used = False
+        if self._should_use_integration(intent, entities, user_message):
+            integration_data = self._fetch_integration_data(client_id, intent, entities, user_message)
+            integration_used = integration_data is not None
+        
+        # Search for relevant knowledge
+        search_results = await self.search_service.hybrid_search(
+            client_id, 
+            user_message,
+            limit=5
+        )
+
+        # Get the actual results list from the search_results dictionary
+        results_list = search_results.get("results", [])
+
+        # Determine if we should use knowledge in response
+        knowledge_used = len(results_list) > 0 and self._should_use_knowledge(user_message, results_list)
+
+        # Prepare knowledge context
+        knowledge_context = []
+        if knowledge_used:
+            for result in results_list:
+                knowledge_context.append({
+                    "title": result["title"],
+                    "content": result["content"],
+                    "source": result.get("collection_name", "Knowledge Base"),
+                    "relevance": "high" if result.get("hybrid_score", 0) > 0.8 else "medium"
+                })
+        
+        # Format history for the LLM
+        conversation_history = []
+        if "history" in context and context["history"]:
+            conversation_history = context["history"][-8:]  # Last 8 messages for context
+        
+        # First yield is the info about the response
+        yield {
+            "type": "info",
+            "session_id": session_id,
+            "user_message_id": user_message_db.message_id,
+            "knowledge_used": knowledge_used,
+            "integration_used": integration_used,
+            "intent": intent,
+            "entities": entities
+        }
+        
+        # Generate message ID for the streaming response
+        message_id = str(uuid.uuid4())
+        
+        # Generate response using LLM with streaming
+        full_response = ""
+        async for content_chunk in self.llm_service.generate_response_stream(
+            user_message=user_message,
+            conversation_history=conversation_history,
+            knowledge_context=knowledge_context if knowledge_used else None,
+            industry_context={"intent": intent, "industry": industry_customizer.__class__.__name__}
+        ):
+            full_response += content_chunk
+            
+            # Yield each chunk
+            yield {
+                "type": "chunk",
+                "content": content_chunk,
+                "message_id": message_id
+            }
+        
+        # Process the complete response with industry customizer
+        final_response = industry_customizer.process_response(full_response, user_message, intent)
+        
+        # If the industry customizer modified the response, yield the final complete version
+        if final_response != full_response:
+            yield {
+                "type": "complete",
+                "content": final_response,
+                "message_id": message_id
+            }
+        
+        # Add assistant message to database
+        assistant_message = self.message_repo.create(self.db, obj_in={
+            "session_id": session_id,
+            "role": "assistant",
+            "content": final_response,
+            "message_id": message_id,
+            "message_metadata": {
+                "knowledge_used": knowledge_used,
+                "integration_used": integration_used,
+                "intent": intent,
+                "entities": entities,
+                "response_time_ms": int((time.time() - start_time) * 1000)
+            },
+            "created_at": datetime.utcnow()
+        })
+        
+        # Update conversation context
+        self.context_manager.update_context(
+            self.db, 
+            session_id, 
+            user_message, 
+            final_response,
+            {"knowledge_used": knowledge_used, "integration_used": integration_used}
+        )
+        
+        # Yield final message with complete message info
+        yield {
+            "type": "done",
+            "message": {
+                "content": final_response,
+                "role": "assistant",
+                "id": message_id,
+                "created_at": datetime.utcnow().isoformat()
+            }
+        }        
