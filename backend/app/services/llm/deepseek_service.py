@@ -135,13 +135,22 @@ class DeepSeekService(LLMService):
             self._mock_service = MockEmbeddingService()
         return self._mock_service
     
+# Add this to your system prompt construction method
     def _build_system_prompt(
         self, 
         knowledge_context: Optional[List[Dict[str, Any]]],
         industry_context: Optional[Dict[str, Any]]
     ) -> str:
-        """Build the system prompt with context information."""
-        base_prompt = "You are a helpful AI assistant for customer support."
+        """Build the system prompt with context information and formatting instructions."""
+        base_prompt = """You are a helpful AI assistant for customer support.
+        
+    Format your responses with proper Markdown:
+    - Use **bold text** for important information, headings, or key points
+    - Create proper lists with bullet points when listing items or steps
+    - Use proper line breaks for readability
+    - When presenting structured information like product features or pricing details, use clear formatting with headings and lists
+    - For numerical lists, use proper numbered formatting
+    """
         
         if knowledge_context:
             knowledge_text = "\n\nRelevant information:\n" + "\n".join([
