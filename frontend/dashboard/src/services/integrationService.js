@@ -6,21 +6,34 @@ const integrationService = {
    * Get all integrations for the current client
    * @returns {Promise<Array>} List of integrations
    */
+// Enhanced error handling for integration service
   async getIntegrations() {
     try {
+      console.log('Fetching integrations...');
       const response = await api.get('/api/integration');
+      console.log('Integrations response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching integrations:', error);
-      throw error;
+      // Check for specific error types
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Server responded with error:', error.response.status, error.response.data);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error setting up request:', error.message);
+      }
+      
+      // Return empty array instead of throwing to prevent UI errors
+      return [];
     }
   },
 
-  /**
-   * Get available integration providers
-   * @returns {Promise<Array>} List of available providers
-   */
-  async getAvailableProviders() {
+   async getAvailableProviders() {
     try {
       const response = await api.get('/api/integration/providers');
       return response.data;

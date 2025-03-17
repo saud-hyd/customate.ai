@@ -29,6 +29,69 @@ class ChatService {
   }
 
   /**
+   * Get conversation sessions list
+   * @param {number} limit - Maximum number of conversations to retrieve
+   * @param {number} skip - Number of conversations to skip (for pagination)
+   * @returns {Promise<Array>} List of conversation sessions
+   */
+  async getConversations(limit = 100, skip = 0) {
+    try {
+      const response = await axios.get(
+        `${API_URL}/chatbot/sessions`,
+        {
+          headers: this.getHeaders(),
+          params: { limit, skip }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new conversation
+   * @param {Object} data - Conversation data (e.g., title)
+   * @returns {Promise<Object>} Created conversation session
+   */
+  async createConversation(data) {
+    try {
+      const response = await axios.post(
+        `${API_URL}/chatbot/sessions`,
+        data,
+        {
+          headers: this.getHeaders()
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a conversation
+   * @param {string} sessionId - Session ID to delete
+   * @returns {Promise<void>} Deletion result
+   */
+  async deleteConversation(sessionId) {
+    try {
+      await axios.delete(
+        `${API_URL}/chatbot/sessions/${sessionId}`,
+        {
+          headers: this.getHeaders()
+        }
+      );
+      return true;
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Send a message to the chatbot and get a response
    * @param {string} message - The user's message
    * @param {string} sessionId - Optional session ID for continuing a conversation
@@ -232,7 +295,7 @@ class ChatService {
    * @param {string} sessionId - The session ID
    * @returns {Promise<Array>} Chat history messages
    */
-  async getChatHistory(sessionId) {
+  async getMessages(sessionId) {
     try {
       const response = await axios.get(`${API_URL}/chatbot/history/${sessionId}`, {
         headers: this.getHeaders(),

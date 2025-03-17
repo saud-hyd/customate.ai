@@ -11,107 +11,77 @@ from app.services.integration.providers.provider_factory import ProviderFactory
 from app.services.integration.auth_manager import IntegrationAuthManager
 from app.core import logger
 
+logger = logging.getLogger(__name__)    
+
 class IntegrationService:
-    """
-    Service for managing integrations with external services.
-    
-    This service:
-    1. Manages integration configurations
-    2. Provides unified access to different provider types
-    3. Handles authentication and refresh
-    4. Coordinates data synchronization
-    """
+    """Service for managing external integrations."""
     
     def __init__(self):
-        self.integration_repo = IntegrationRepository()
+        self.repo = IntegrationRepository()
         self.sync_repo = IntegrationSyncRepository()
         self.provider_factory = ProviderFactory()
-        self.auth_manager = IntegrationAuthManager()
-    
+        
     def get_available_integrations(self) -> List[Dict[str, Any]]:
-        """Get a list of available integration providers."""
+        """Get list of available integration providers."""
+        # Predefined list of supported integrations
         return [
             {
                 "id": "zendesk",
                 "name": "Zendesk",
-                "description": "Customer support and ticketing system",
-                "icon": "zendesk_icon",
-                "auth_type": "oauth2",
+                "description": "Customer service and engagement platform",
                 "resource_types": ["tickets", "users", "organizations"]
             },
             {
                 "id": "shopify",
                 "name": "Shopify",
                 "description": "E-commerce platform",
-                "icon": "shopify_icon",
-                "auth_type": "api_key",
                 "resource_types": ["products", "orders", "customers"]
             },
             {
                 "id": "salesforce",
                 "name": "Salesforce",
                 "description": "CRM platform",
-                "icon": "salesforce_icon",
-                "auth_type": "oauth2",
                 "resource_types": ["contacts", "accounts", "opportunities"]
             }
         ]
     
-    def get_client_integrations(self, db: Session, client_id: str) -> List[Dict[str, Any]]:
-        """Get all integrations for a client with improved error handling."""
-        try:
-            logger.info(f"Fetching integrations for client {client_id}")
-            integrations = self.integration_repo.get_by_client_id(db, client_id)
+    def get_client_integrations(
+        self, db: Session, client_id: str
+    ) -> List[Dict[str, Any]]:
+        """Get all integrations for a client."""
+        integrations = self.repo.get_by_client_id(db, client_id)
+        
+        # Convert to dict and add latest sync info if available
+        result = []
+        for integration in integrations:
+            integration_dict = {
+                "integration_id": integration.integration_id,
+                "provider": integration.provider,
+                "name": integration.name,
+                "status": integration.status,
+                "status_message": integration.status_message,
+                "endpoint_url": integration.endpoint_url,
+                "is_active": integration.is_active,
+                "last_sync": integration.last_sync,
+                "created_at": integration.created_at,
+                "updated_at": integration.updated_at
+            }
             
-            result = []
-            for integration in integrations:
-                try:
-                    # Get latest sync record if available
-                    latest_sync = self.sync_repo.get_latest_by_integration_id(db, integration.integration_id)
-                    
-                    # Format integration data with safe conversion
-                    integration_data = {
-                        "integration_id": integration.integration_id,
-                        "provider": integration.provider,
-                        "name": integration.name,
-                        "status": integration.status,
-                        "is_active": integration.is_active,
-                        "endpoint_url": integration.endpoint_url,  # Make sure this field exists
-                        "created_at": integration.created_at.isoformat() if integration.created_at else None,
-                        "last_sync": integration.last_sync.isoformat() if integration.last_sync else None,
-                        "config": integration.config if hasattr(integration, 'config') else {}
-                    }
-                    
-                    # Add sync information if available
-                    if latest_sync:
-                        integration_data["latest_sync"] = {
-                            "sync_id": latest_sync.sync_id,
-                            "status": latest_sync.status,
-                            "start_time": latest_sync.start_time.isoformat() if latest_sync.start_time else None,
-                            "end_time": latest_sync.end_time.isoformat() if latest_sync.end_time else None,
-                            "items_processed": latest_sync.items_processed,
-                            "items_created": latest_sync.items_created,
-                            "items_updated": latest_sync.items_updated,
-                            "items_failed": latest_sync.items_failed
-                        }
-                    
-                    result.append(integration_data)
-                except Exception as e:
-                    logger.exception(f"Error processing integration {integration.integration_id}: {str(e)}")
-                    # Add a minimal version to not break the entire response
-                    result.append({
-                        "integration_id": integration.integration_id,
-                        "provider": getattr(integration, 'provider', 'unknown'),
-                        "name": getattr(integration, 'name', 'Error processing integration'),
-                        "status": "error",
-                        "error_message": str(e)
-                    })
+            # Get latest sync
+            latest_sync = self.sync_repo.get_latest_by_integration_id(db, integration.integration_id)
+            if latest_sync:
+                integration_dict["latest_sync"] = {
+                    "status": latest_sync.status,
+                    "start_time": latest_sync.start_time,
+                    "end_time": latest_sync.end_time,
+                    "items_processed": latest_sync.items_processed,
+                    "items_created": latest_sync.items_created,
+                    "items_updated": latest_sync.items_updated
+                }
             
-            return result
-        except Exception as e:
-            logger.exception(f"Error in get_client_integrations: {str(e)}")
-            # Return empty list instead of raising exception to prevent 500 errors
-            return []
+            result.append(integration_dict)
+            
+        return result
     
     def create_integration(
         self,
@@ -124,51 +94,47 @@ class IntegrationService:
         api_secret: Optional[str] = None,
         config: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """Create a new integration for a client."""
-        # Check if provider is supported
-        available_providers = [p["id"] for p in self.get_available_integrations()]
-        if provider not in available_providers:
-            raise ValueError(f"Unsupported provider: {provider}")
-        
-        # Check for existing integrations with same provider
-        existing = self.integration_repo.get_by_provider(db, client_id, provider)
+        """Create a new integration."""
+        # Check if integration already exists for this client and provider
+        existing = self.repo.get_by_provider(db, client_id, provider)
         if existing:
-            raise ValueError(f"An integration with provider '{provider}' already exists")
+            raise ValueError(f"Integration with provider {provider} already exists for this client")
         
-        # Prepare secure credentials (this would be encrypted in production)
-        credentials = {}
-        if api_key:
-            credentials["api_key"] = api_key
-        if api_secret:
-            credentials["api_secret"] = api_secret
+        # Store credentials in config instead of credentials column
+        if config is None:
+            config = {}
+            
+        # Add credentials to config
+        if api_key or api_secret:
+            config["credentials"] = {}
+            if api_key:
+                config["credentials"]["api_key"] = api_key
+            if api_secret:
+                config["credentials"]["api_secret"] = api_secret
         
-        # Create integration object
+        # Create integration
         integration_data = {
-            "integration_id": str(uuid.uuid4()),
             "client_id": client_id,
             "provider": provider,
             "name": name,
             "status": "configured",
-            "credentials": credentials,
             "endpoint_url": api_endpoint,
-            "config": config or {},
-            "is_active": True,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
+            "config": config,
+            "is_active": True
         }
         
-        integration = self.integration_repo.create(db, obj_in=integration_data)
+        integration = self.repo.create(db, obj_in=integration_data)
         
-        # Format response
+        # Convert to dict
         return {
             "integration_id": integration.integration_id,
             "provider": integration.provider,
             "name": integration.name,
             "status": integration.status,
             "endpoint_url": integration.endpoint_url,
-            "config": integration.config,
             "is_active": integration.is_active,
-            "created_at": integration.created_at.isoformat()
+            "created_at": integration.created_at,
+            "updated_at": integration.updated_at
         }
     
     def update_integration(
@@ -179,12 +145,12 @@ class IntegrationService:
     ) -> Dict[str, Any]:
         """Update an existing integration."""
         # Get existing integration
-        integration = self.integration_repo.get_by_integration_id(db, integration_id)
+        integration = self.repo.get_by_integration_id(db, integration_id)
         if not integration:
             raise ValueError(f"Integration not found: {integration_id}")
         
         # Update integration
-        updated_integration = self.integration_repo.update(db, db_obj=integration, obj_in=update_data)
+        updated_integration = self.repo.update(db, db_obj=integration, obj_in=update_data)
         
         # Format response
         return {
@@ -201,19 +167,19 @@ class IntegrationService:
     def delete_integration(self, db: Session, integration_id: str) -> bool:
         """Delete an integration."""
         # Get existing integration
-        integration = self.integration_repo.get_by_integration_id(db, integration_id)
+        integration = self.repo.get_by_integration_id(db, integration_id)
         if not integration:
             raise ValueError(f"Integration not found: {integration_id}")
         
         # Delete integration
-        self.integration_repo.delete(db, id=integration.id)
+        self.repo.delete(db, id=integration.id)
         
         return True
     
     def test_connection(self, db: Session, integration_id: str) -> Dict[str, Any]:
         """Test connection to an integration provider."""
         # Get integration
-        integration = self.integration_repo.get_by_integration_id(db, integration_id)
+        integration = self.repo.get_by_integration_id(db, integration_id)
         if not integration:
             raise ValueError(f"Integration not found: {integration_id}")
         
@@ -222,20 +188,23 @@ class IntegrationService:
         
         # Test connection
         try:
+            # Extract credentials from config
+            credentials = integration.config.get("credentials", {}) if integration.config else {}
+            
             result = provider.test_connection(
                 integration.endpoint_url,
-                integration.credentials,
+                credentials,
                 integration.config
             )
             
             # Update integration status
             if result["success"]:
-                self.integration_repo.update_status(
+                self.repo.update_status(
                     db, integration_id, "connected", 
                     status_message="Connection successful"
                 )
             else:
-                self.integration_repo.update_status(
+                self.repo.update_status(
                     db, integration_id, "error", 
                     status_message=result.get("message", "Connection failed")
                 )
@@ -245,7 +214,7 @@ class IntegrationService:
             logger.exception(f"Error testing connection for integration {integration_id}: {str(e)}")
             
             # Update integration status
-            self.integration_repo.update_status(
+            self.repo.update_status(
                 db, integration_id, "error", 
                 status_message=f"Connection error: {str(e)}"
             )
@@ -258,7 +227,7 @@ class IntegrationService:
     def start_sync(self, db: Session, integration_id: str) -> Dict[str, Any]:
         """Start a synchronization process for an integration."""
         # Get integration
-        integration = self.integration_repo.get_by_integration_id(db, integration_id)
+        integration = self.repo.get_by_integration_id(db, integration_id)
         if not integration:
             raise ValueError(f"Integration not found: {integration_id}")
         
@@ -277,7 +246,7 @@ class IntegrationService:
         sync = self.sync_repo.create(db, obj_in=sync_data)
         
         # Update integration last_sync time
-        self.integration_repo.update_last_sync(db, integration_id)
+        self.repo.update_last_sync(db, integration_id)
         
         # Start sync process in background (this would be a proper background task in production)
         # For now, we'll simulate a successful sync
@@ -302,12 +271,12 @@ class IntegrationService:
     def disconnect_integration(self, db: Session, integration_id: str) -> Dict[str, Any]:
         """Disconnect an integration."""
         # Get integration
-        integration = self.integration_repo.get_by_integration_id(db, integration_id)
+        integration = self.repo.get_by_integration_id(db, integration_id)
         if not integration:
             raise ValueError(f"Integration not found: {integration_id}")
         
         # Deactivate integration
-        self.integration_repo.deactivate(db, integration_id)
+        self.repo.deactivate(db, integration_id)
         
         return {
             "integration_id": integration_id,
@@ -339,7 +308,7 @@ class IntegrationService:
             List of data items
         """
         # Get active integration for this provider
-        integration = self.integration_repo.get_by_provider(db, client_id, provider)
+        integration = self.repo.get_by_provider(db, client_id, provider)
         if not integration or not integration.is_active:
             logger.warning(f"No active integration found for provider {provider} and client {client_id}")
             return []
@@ -368,11 +337,14 @@ class IntegrationService:
         # Get provider implementation
         provider = self.provider_factory.get_provider(integration.provider)
         
+        # Extract credentials from config
+        credentials = integration.config.get("credentials", {}) if integration.config else {}
+        
         # Fetch data
         try:
             return provider.get_data(
                 integration.endpoint_url,
-                integration.credentials,
+                credentials,
                 resource_type,
                 query,
                 filters,
