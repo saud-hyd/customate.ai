@@ -1,0 +1,127 @@
+/* Theme variations for the Customate.ai widget */
+
+/* Default theme - the base styles are already in widget.css */
+
+/* Dark theme */
+.customate-widget.theme-dark {
+    --customate-background: #1f2937;
+    --customate-secondary-background: #111827;
+    --customate-text-color: #f3f4f6;
+    --customate-text-light: #ffffff;
+    --customate-border-color: #374151;
+    --customate-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .customate-widget.theme-dark .customate-message-bubble.assistant {
+    background-color: #2d3748;
+    border-color: #4b5563;
+  }
+  
+  .customate-widget.theme-dark .customate-typing-indicator {
+    background-color: #2d3748;
+    border-color: #4b5563;
+  }
+  
+  .customate-widget.theme-dark .customate-suggestions-container {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+  
+  .customate-widget.theme-dark .customate-suggestion-button {
+    background-color: #2d3748;
+    border-color: #4b5563;
+    color: #f3f4f6;
+  }
+  
+  .customate-widget.theme-dark .customate-suggestion-button:hover {
+    background-color: #4b5563;
+    border-color: var(--customate-primary-color, #4f46e5);
+  }
+  
+  .customate-widget.theme-dark .customate-input-container {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+  
+  .customate-widget.theme-dark .customate-message-input {
+    background-color: #2d3748;
+    border-color: #4b5563;
+    color: #f3f4f6;
+  }
+  
+  /* Clean/Minimal theme */
+  .customate-widget.theme-minimal {
+    --customate-border-color: #f0f0f0;
+    --customate-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+  }
+  
+  .customate-widget.theme-minimal .customate-widget-header {
+    background-color: var(--customate-background, #ffffff);
+    color: var(--customate-primary-color, #4f46e5);
+    border-bottom: 1px solid var(--customate-border-color, #f0f0f0);
+    border-radius: 0;
+  }
+  
+  .customate-widget.theme-minimal .customate-widget-control-button {
+    color: var(--customate-primary-color, #4f46e5);
+  }
+  
+  .customate-widget.theme-minimal .customate-message-bubble.user {
+    background-color: var(--customate-primary-light, #eef2ff);
+    color: var(--customate-text-color, #333333);
+    border: 1px solid var(--customate-primary-color, #4f46e5);
+  }
+  
+  .customate-widget.theme-minimal .customate-message-bubble.assistant {
+    background-color: #f9fafb;
+  }
+  
+  /* Rounded theme */
+  .customate-widget.theme-rounded {
+    border-radius: 24px;
+  }
+  
+  .customate-widget.theme-rounded .customate-widget-header {
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .customate-widget.theme-rounded .customate-input-container {
+    border-radius: 0 0 24px 24px;
+  }
+  
+  .customate-widget.theme-rounded .customate-message-bubble {
+    border-radius: 24px;
+  }
+  
+  .customate-widget.theme-rounded .customate-message-bubble.user {
+    border-bottom-right-radius: 8px;
+  }
+  
+  .customate-widget.theme-rounded .customate-message-bubble.assistant {
+    border-bottom-left-radius: 8px;
+  }
+  
+  /* Corporate theme */
+  .customate-widget.theme-corporate {
+    --customate-primary-color: #0f5e99;
+    --customate-primary-dark: #0a4872;
+    --customate-primary-light: #e0f2fe;
+    --customate-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .customate-widget.theme-corporate .customate-widget-header {
+    background-color: #f8fafc;
+    border-bottom: 2px solid var(--customate-primary-color, #0f5e99);
+    color: var(--customate-primary-color, #0f5e99);
+  }
+  
+  .customate-widget.theme-corporate .customate-widget-control-button {
+    color: var(--customate-primary-color, #0f5e99);
+  }
+  
+  .customate-widget.theme-corporate .customate-message-bubble.user {
+    background-color: #e0f2fe;
+    color: #0f5e99;
+    border: 1px solid #0f5e99;
+  }

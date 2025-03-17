@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customate.ai Chat Widget Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .demo-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #4f46e5;
+    }
+    .config-section {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+    .config-option {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #4338ca;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1>Customate.ai Widget Demo</h1>
+    <p>This page demonstrates how the Customate.ai chat widget can be embedded in your website. You can configure various options below:</p>
+    
+    <div class="config-section">
+      <h2>Widget Configuration</h2>
+      
+      <div class="config-option">
+        <label for="api-key">API Key:</label>
+        <input type="text" id="api-key" placeholder="Enter your API key">
+      </div>
+      
+      <div class="config-option">
+        <label for="primary-color">Primary Color:</label>
+        <input type="color" id="primary-color" value="#4f46e5">
+      </div>
+      
+      <div class="config-option">
+        <label for="position">Widget Position:</label>
+        <select id="position">
+          <option value="bottom-right">Bottom Right</option>
+          <option value="bottom-left">Bottom Left</option>
+          <option value="top-right">Top Right</option>
+          <option value="top-left">Top Left</option>
+        </select>
+      </div>
+      
+      <div class="config-option">
+        <label for="greeting">Custom Greeting:</label>
+        <input type="text" id="greeting" placeholder="Hello! How can I help you today?">
+      </div>
+      
+      <button id="apply-config">Apply Configuration</button>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <h2>Embed Code</h2>
+      <pre style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto;">
+&lt;script src="https://widget.customate.ai/widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  CustomateWidget.init({
+    apiKey: 'YOUR_API_KEY',
+    primaryColor: '#4f46e5',
+    position: 'bottom-right',
+    greeting: 'Hello! How can I help you today?'
+  });
+&lt;/script&gt;
+      </pre>
+    </div>
+  </div>
+  
+  <!-- The widget will be automatically injected here by the widget.js script -->
+  
+  <script>
+    // Apply configuration when button is clicked
+    document.getElementById('apply-config').addEventListener('click', function() {
+      const config = {
+        apiKey: document.getElementById('api-key').value,
+        primaryColor: document.getElementById('primary-color').value,
+        position: document.getElementById('position').value,
+        greeting: document.getElementById('greeting').value
+      };
+      
+      // Remove existing widget if any
+      const existingWidget = document.querySelector('.customate-widget-container');
+      if (existingWidget) {
+        existingWidget.remove();
+      }
+      
+      // Initialize widget with new config
+      CustomateWidget.init(config);
+    });
+  </script>
+</body>
+</html>
