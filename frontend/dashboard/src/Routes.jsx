@@ -1,4 +1,4 @@
-// frontend/dashboard/src/Routes.jsx - updated with IntegrationsPage
+// frontend/dashboard/src/Routes.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
@@ -11,13 +11,16 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ChatPage from './pages/chat/ChatPage';
-import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
-import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import TestChatbotPage from './pages/TestChatbotPage';
 import ConversationsPage from './pages/chat/ConversationsPage';
-import IntegrationsPage from './pages/integrations/IntegrationsPage'; // Add this import
+import IntegrationsPage from './pages/integrations/IntegrationsPage';
+
+// Enhanced Knowledge pages
+import EnhancedKnowledgeListPage from './pages/knowledge/EnhancedKnowledgeListPage';
+import EnhancedDocumentListPage from './pages/knowledge/EnhancedDocumentListPage';
+import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -94,12 +97,17 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="conversations" element={<ConversationsPage />} />
         <Route path="chat" element={<ChatPage />} />
-        <Route path="knowledge" element={<KnowledgeListPage />} />
+        
+        {/* Enhanced Knowledge Routes */}
+        <Route path="knowledge" element={<EnhancedKnowledgeListPage />} />
+        <Route path="knowledge/documents" element={<EnhancedDocumentListPage />} />
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
+        
         <Route path="analytics" element={<AnalyticsPage />} />
-        <Route path="integrations" element={<IntegrationsPage />} /> {/* Add this line */}
+        <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="test" element={<TestChatbotPage />} />
+        
         {/* Redirect root to dashboard */}
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>

@@ -29,7 +29,7 @@ class ChatService {
   }
 
   /**
-   * Get conversation sessions list
+   * Get conversation sessions list (newest first)
    * @param {number} limit - Maximum number of conversations to retrieve
    * @param {number} skip - Number of conversations to skip (for pagination)
    * @returns {Promise<Array>} List of conversation sessions
@@ -43,7 +43,16 @@ class ChatService {
           params: { limit, skip }
         }
       );
-      return response.data;
+      
+      // Sort conversations by created_at or updated_at in descending order (newest first)
+      const sortedData = response.data.sort((a, b) => {
+        // Preferring updated_at for sorting if available, fallback to created_at
+        const dateA = new Date(a.updated_at || a.created_at);
+        const dateB = new Date(b.updated_at || b.created_at);
+        return dateB - dateA; // Descending order (newest first)
+      });
+      
+      return sortedData;
     } catch (error) {
       console.error('Error fetching conversations:', error);
       throw error;
