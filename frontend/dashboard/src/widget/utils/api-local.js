@@ -1,4 +1,3 @@
-// widget/src/utils/api.js
 import { getConfig } from '../config';
 import { trackEvent } from './analytics';
 import { getSessionId } from './storage';
@@ -11,10 +10,10 @@ import { getSessionId } from './storage';
  */
 const apiFetch = async (endpoint, options = {}) => {
   const config = getConfig();
-  // Make sure we use the correct base URL - local for development, production for production
-  const baseUrl = config.apiUrl || 'http://localhost:8000';
+  // Change this line to use localhost instead of api.customate.ai
+  const baseUrl = 'http://localhost:8000'; // Your backend port
   
-  console.log(`Making API request to: ${baseUrl}${endpoint}`);
+  console.log(`Making request to: ${baseUrl}${endpoint}`);
   
   // Ensure headers object exists
   if (!options.headers) {
@@ -22,7 +21,7 @@ const apiFetch = async (endpoint, options = {}) => {
   }
   
   // Add API key authentication
-  options.headers['X-API-Key'] = config.apiKey;
+  options.headers['X-API-Key'] = "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50";
   
   // Add content type if not specified and method is not GET
   if (!options.headers['Content-Type'] && options.method && options.method !== 'GET') {
@@ -43,42 +42,28 @@ const apiFetch = async (endpoint, options = {}) => {
     // Calculate response time
     const responseTime = Date.now() - startTime;
     
-    // Track API call for analytics
-    trackEvent('api_call', {
-      endpoint,
-      status: response.status,
-      response_time_ms: responseTime
-    });
+    // Track API call for analytics (disabled for local testing)
+    // trackEvent('api_call', {
+    //   endpoint,
+    //   status: response.status,
+    //   response_time_ms: responseTime
+    // });
     
     // Handle non-2xx responses
     if (!response.ok) {
       console.error(`API error: ${response.status} for ${baseUrl}${endpoint}`);
       
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `API error: ${response.status}`);
-      } catch (parseError) {
-        throw new Error(`API error: ${response.status}`);
-      }
+      // Return mock data for testing
+      return getMockResponse(endpoint);
     }
     
     // Parse and return JSON response
     return await response.json();
   } catch (error) {
-    // Track error for analytics
-    trackEvent('api_error', {
-      endpoint,
-      error: error.message
-    });
-    
     console.error(`API Error (${endpoint}):`, error);
     
-    // For development, provide mock data if the API is not available
-    if (process.env.NODE_ENV === 'development') {
-      return getMockResponse(endpoint);
-    }
-    
-    throw error;
+    // Return mock data for development
+    return getMockResponse(endpoint);
   }
 };
 
@@ -93,7 +78,7 @@ function getMockResponse(endpoint) {
       session_id: 'mock-session-123',
       message: {
         id: 'mock-msg-' + Date.now(),
-        content: "This is a mock response. Configure your backend URL correctly to see real responses.",
+        content: "This is a mock response since your backend isn't connected. Configure your backend URL correctly to see real responses.",
         created_at: new Date().toISOString()
       },
       knowledge_used: false
@@ -102,16 +87,6 @@ function getMockResponse(endpoint) {
   
   if (endpoint.includes('/chatbot/history')) {
     return [];
-  }
-  
-  if (endpoint.includes('/widget/settings')) {
-    return {
-      primary_color: "#4f46e5",
-      chatbot_name: "AI Assistant",
-      widget_position: "bottom-right",
-      show_typing_indicator: true,
-      enable_suggestions: true,
-    };
   }
   
   return { success: true };
@@ -147,7 +122,7 @@ export const getHistory = async (sessionId) => {
 export const getWidgetConfig = async () => {
   const config = getConfig();
   
-  return apiFetch('/api/widget/settings', {
+  return apiFetch('/api/widget/config', {
     method: 'GET',
     headers: {
       'X-API-Key': config.apiKey

@@ -22,7 +22,9 @@ from app.api.chatbot import session_routes
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
 from app.api.knowledge import collection_routes
-from app.api.integration import routes as integration_routes  # Add this import
+from app.api.integration import routes as integration_routes  
+from app.api.widget import router as widget_router  
+
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -68,6 +70,7 @@ app.include_router(analytics_routes.router, prefix="/api")
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
 app.include_router(analytics_debug.router, prefix="/api")
 app.include_router(integration_routes.router, prefix="/api")  # Add this line
+app.include_router(widget_router, prefix="/api")  
 
 # Request logging middleware
 @app.middleware("http")

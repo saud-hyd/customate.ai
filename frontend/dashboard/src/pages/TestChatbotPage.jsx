@@ -1,7 +1,7 @@
 // frontend/dashboard/src/pages/TestChatbotPage.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import chatService from '../services/chatService';
+import React, { useState, useEffect } from 'react';
 import knowledgeService from '../services/knowledgeService';
+import WidgetComponent from '../widget/components/WidgetComponent';
 import { 
   SwatchIcon, 
   Cog6ToothIcon,
@@ -13,25 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const TestChatbotPage = () => {
-  // Chat state - keeping existing backend functionality
-  const [messages, setMessages] = useState([
-    {
-      role: 'bot',
-      content: "Hi there! I'm your Customate.AI assistant. How can I help you today?",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      knowledgeUsed: false
-    }
-  ]);
-  const [sessionId, setSessionId] = useState('');
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [error, setError] = useState(null);
-  const [collections, setCollections] = useState([]);
-  const [selectedCollection, setSelectedCollection] = useState(null);
-  const [showCollectionDropdown, setShowCollectionDropdown] = useState(false);
-  const messagesEndRef = useRef(null);
-  
-  // New UI state
+  // State
   const [activeSettingsTab, setActiveSettingsTab] = useState('appearance');
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatSettings, setChatSettings] = useState({
@@ -39,22 +21,22 @@ const TestChatbotPage = () => {
     chatbotName: 'Customate.AI Assistant',
     widgetPosition: 'bottom-right',
     showTypingIndicator: true,
-    enableSuggestions: true
+    enableSuggestions: true,
+    apiKey: "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50", // Use your API key
+    apiUrl: 'http://localhost:8000', // Use your backend URL
+    // Initial message to show
+    greeting: "Hi there! I'm your Customate.AI assistant. How can I help you today?"
   });
+  
+  const [collections, setCollections] = useState([]);
+  const [selectedCollection, setSelectedCollection] = useState(null);
+  const [showCollectionDropdown, setShowCollectionDropdown] = useState(false);
+  const [error, setError] = useState(null);
   
   // Fetch collections on component mount
   useEffect(() => {
     fetchCollections();
   }, []);
-  
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-  
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
   
   const fetchCollections = async () => {
     try {
@@ -66,185 +48,62 @@ const TestChatbotPage = () => {
     }
   };
   
-// Update the handleSendMessage function to use streaming
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-    
-    // Add user message
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const userMessage = {
-      role: 'user',
-      content: inputValue,
-      timestamp: timeString
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Create a placeholder for bot's streaming response
-    const botPlaceholder = {
-      role: 'bot',
-      content: '',
-      timestamp: timeString,
-      isStreaming: true
-    };
-    
-    setMessages(prev => [...prev, botPlaceholder]);
-    setInputValue('');
-    setIsTyping(true);
-    
-    try {
-      // Use streaming API instead of regular sendMessage
-      let fullContent = '';
-      const messageToSend = inputValue; // Capture the input value before reset
-      
-      // Create and begin the stream
-      chatService.sendMessageStreaming(
-        messageToSend,
-        sessionId,
-        // On chunk
-        (chunk) => {
-          fullContent += chunk;
-          setMessages(prev => {
-            const updated = [...prev];
-            const lastIndex = updated.length - 1;
-            
-            if (lastIndex >= 0 && updated[lastIndex].role === 'bot' && updated[lastIndex].isStreaming) {
-              updated[lastIndex] = {
-                ...updated[lastIndex],
-                content: fullContent
-              };
-            }
-            
-            return updated;
-          });
-        },
-        // On done
-        (response) => {
-          setIsTyping(false);
-          
-          // Update session ID if it's a new conversation
-          if (!sessionId && response.session_id) {
-            setSessionId(response.session_id);
-          }
-          
-          // Finalize the message
-          setMessages(prev => {
-            const updated = [...prev];
-            const lastIndex = updated.length - 1;
-            
-            if (lastIndex >= 0 && updated[lastIndex].role === 'bot' && updated[lastIndex].isStreaming) {
-              updated[lastIndex] = {
-                role: 'bot',
-                content: fullContent,
-                timestamp: timeString,
-                knowledgeUsed: response.knowledge_used || false,
-                isStreaming: false
-              };
-            }
-            
-            return updated;
-          });
-        },
-        // On error
-        (err) => {
-          console.error('Error streaming message:', err);
-          setIsTyping(false);
-          
-          // Add error message
-          setMessages(prev => {
-            const updated = [...prev];
-            const lastIndex = updated.length - 1;
-            
-            if (lastIndex >= 0 && updated[lastIndex].role === 'bot' && updated[lastIndex].isStreaming) {
-              updated[lastIndex] = {
-                role: 'bot',
-                content: "I'm sorry, I encountered an error while processing your request. Please try again.",
-                timestamp: timeString,
-                isError: true,
-                isStreaming: false
-              };
-            }
-            
-            return updated;
-          });
-        }
-      );
-    } catch (err) {
-      console.error('Error sending message:', err);
-      setIsTyping(false);
-      
-      // Add error message
-      setMessages(prev => [...prev, {
-        role: 'bot',
-        content: "I'm sorry, I encountered an error while processing your request. Please try again.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isError: true
-      }]);
-    }
-  };
-    
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter') {
-        handleSendMessage();
-      }
-    };
-    
-    const handleResetChat = () => {
-      setSessionId('');
-      setMessages([
-        {
-          role: 'bot',
-          content: "Hi there! I'm your Customate.AI assistant. How can I help you today?",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          knowledgeUsed: false
-        }
-      ]);
-    };
-  
-  const handleSuggestedQuestion = (question) => {
-    setInputValue(question);
-    setTimeout(() => {
-      handleSendMessage();
-    }, 100);
-  };
-  
   const handleSelectCollection = (collection) => {
     setSelectedCollection(collection);
     setShowCollectionDropdown(false);
+    
+    // Update widget settings with collection
+    if (collection) {
+      setChatSettings(prev => ({
+        ...prev,
+        selectedCollection: collection.collection_id,
+        customData: {
+          ...prev.customData,
+          collectionId: collection.collection_id
+        }
+      }));
+    } else {
+      // Remove collection selection
+      setChatSettings(prev => {
+        const newSettings = {...prev};
+        delete newSettings.selectedCollection;
+        delete newSettings.customData?.collectionId;
+        return newSettings;
+      });
+    }
   };
   
-  // New function to handle settings changes
+  // Function to handle settings changes
   const handleSettingChange = (setting, value) => {
     setChatSettings(prev => ({
       ...prev,
       [setting]: value
     }));
   };
-
-  // Get position style based on widget position setting
-  const getPositionStyle = () => {
-    switch(chatSettings.widgetPosition) {
-      case 'bottom-right':
-        return { bottom: '20px', right: '20px' };
-      case 'bottom-left':
-        return { bottom: '20px', left: '20px' };
-      case 'top-right':
-        return { top: '20px', right: '20px' };
-      case 'top-left':
-        return { top: '20px', left: '20px' };
-      default:
-        return { bottom: '20px', right: '20px' };
-    }
+  
+  // Reset chat
+  const handleResetChat = () => {
+    setChatSettings(prev => ({
+      ...prev,
+      resetSession: true, // Signal to widget to reset session
+    }));
+    
+    // Remove the flag after a short delay
+    setTimeout(() => {
+      setChatSettings(prev => {
+        const newSettings = {...prev};
+        delete newSettings.resetSession;
+        return newSettings;
+      });
+    }, 100);
   };
-
+  
   return (
     <div className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Test Your Chatbot</h2>
         <div className="flex space-x-3">
-          {/* Collection selector dropdown from the original */}
+          {/* Collection selector dropdown */}
           <div className="relative">
             <button 
               onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
@@ -470,24 +329,6 @@ const TestChatbotPage = () => {
                   </div>
                 </div>
                 
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Session Information</h4>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Session ID:</span>
-                      <span className="text-sm font-mono">{sessionId || 'Not started'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Knowledge Source:</span>
-                      <span className="text-sm">{selectedCollection ? selectedCollection.name : 'All collections'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Messages:</span>
-                      <span className="text-sm">{messages.length}</span>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Installation Code</h3>
                   <pre className="bg-gray-100 p-3 text-xs text-gray-800 rounded overflow-x-auto">
@@ -500,10 +341,26 @@ const TestChatbotPage = () => {
     t.parentNode.insertBefore(a,t)
   })(window,document,'script','https://cdn.customate.ai/widget.js','cw');
   
-  cw('init', 'YOUR_API_KEY_HERE');
+  cw('init', '${chatSettings.apiKey}');
 </script>`}
                   </pre>
-                  <button className="mt-2 text-sm text-indigo-600 hover:text-indigo-500">
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(`<script>
+  (function(c,u,s,t,o,m,a,t,e){
+    c['CustomateWidget']=o;
+    c[o]=c[o]||function(){(c[o].q=c[o].q||[]).push(arguments)};
+    c[o].l=1*new Date();a=u.createElement(s);
+    t=u.getElementsByTagName(s)[0];a.async=1;a.src=t;
+    t.parentNode.insertBefore(a,t)
+  })(window,document,'script','https://cdn.customate.ai/widget.js','cw');
+  
+  cw('init', '${chatSettings.apiKey}');
+</script>`);
+                      alert('Code copied to clipboard!');
+                    }}
+                    className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                  >
                     Copy to clipboard
                   </button>
                 </div>
@@ -543,166 +400,10 @@ const TestChatbotPage = () => {
               </div>
             </div>
             
-            {/* Chatbot widget button */}
-            <button
-              onClick={() => setIsChatOpen(!isChatOpen)}
-              className="absolute w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white"
-              style={{
-                backgroundColor: chatSettings.primaryColor,
-                ...getPositionStyle()
-              }}
-            >
-              {isChatOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-                </svg>
-              )}
-            </button>
-            
-            {/* Chatbot window */}
-            {isChatOpen && (
-              <div 
-                className="absolute w-[320px] bg-white rounded-lg shadow-xl flex flex-col"
-                style={{
-                  height: '450px',
-                  ...getPositionStyle(),
-                  top: chatSettings.widgetPosition.startsWith('top') ? '70px' : 'auto',
-                  bottom: chatSettings.widgetPosition.startsWith('bottom') ? '70px' : 'auto'
-                }}
-              >
-                {/* Chat header */}
-                <div 
-                  className="px-4 py-3 rounded-t-lg flex items-center"
-                  style={{ backgroundColor: chatSettings.primaryColor }}
-                >
-                  <div className="bg-white rounded-full w-8 h-8 flex items-center justify-center mr-2">
-                    <span style={{ color: chatSettings.primaryColor }}>AI</span>
-                  </div>
-                  <div>
-                    <p className="text-white font-medium text-sm">{chatSettings.chatbotName}</p>
-                    <p className="text-white opacity-75 text-xs">
-                      {sessionId ? `Session: ${sessionId.substring(0, 8)}...` : 'New Conversation'}
-                    </p>
-                  </div>
-                  {selectedCollection && (
-                    <div className="ml-auto bg-white bg-opacity-20 text-white text-xs px-2 py-0.5 rounded-full">
-                      {selectedCollection.name}
-                    </div>
-                  )}
-                  <button 
-                    className="ml-2 text-white opacity-80 hover:opacity-100"
-                    onClick={() => setIsChatOpen(false)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                {/* Chat messages */}
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-                  {messages.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-3`}
-                    >
-                      <div 
-                        className={`max-w-[75%] p-3 rounded-lg ${
-                          msg.role === 'user' 
-                            ? 'rounded-br-none text-white ml-auto' 
-                            : msg.isError
-                              ? 'rounded-bl-none bg-red-100 text-red-800'
-                              : 'rounded-bl-none bg-gray-200 text-gray-800'
-                        }`}
-                        style={msg.role === 'user' ? { backgroundColor: chatSettings.primaryColor } : {}}
-                      >
-                        <p className="text-sm">{msg.content}</p>
-                        <div className="flex justify-between items-center mt-1">
-                          <p className="text-xs opacity-75">{msg.timestamp}</p>
-                          
-                          {/* Knowledge badge */}
-                          {msg.role === 'bot' && msg.knowledgeUsed && (
-                            <span className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded-full ml-2">
-                              KB
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {isTyping && chatSettings.showTypingIndicator && (
-                    <div className="flex justify-start mb-3">
-                      <div className="bg-gray-200 p-3 rounded-lg rounded-bl-none text-gray-800">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                          <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div ref={messagesEndRef} />
-                </div>
-                
-                {/* Chat input area */}
-                <div className="p-3 border-t border-gray-200">
-                  {chatSettings.enableSuggestions && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <button
-                        onClick={() => handleSuggestedQuestion("What can you tell me about your product features?")}
-                        className="bg-gray-100 text-gray-800 rounded-full px-3 py-1 text-xs hover:bg-gray-200"
-                      >
-                        Product features
-                      </button>
-                      <button
-                        onClick={() => handleSuggestedQuestion("Explain your pricing tiers")}
-                        className="bg-gray-100 text-gray-800 rounded-full px-3 py-1 text-xs hover:bg-gray-200"
-                      >
-                        Pricing tiers
-                      </button>
-                      <button
-                        onClick={() => handleSuggestedQuestion("How does knowledge integration work?")}
-                        className="bg-gray-100 text-gray-800 rounded-full px-3 py-1 text-xs hover:bg-gray-200"
-                      >
-                        Knowledge integration
-                      </button>
-                    </div>
-                  )}
-                  
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                      disabled={isTyping}
-                    />
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={!inputValue.trim() || isTyping}
-                      className="text-white p-2 rounded-full w-9 h-9 flex items-center justify-center disabled:opacity-50"
-                      style={{ backgroundColor: chatSettings.primaryColor }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  <div className="text-center mt-2">
-                    <span className="text-xs text-gray-500">Powered by Customate.AI</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Real widget integration */}
+            <div className="absolute" style={{ right: '0', bottom: '0', zIndex: 100 }}>
+              <WidgetComponent config={chatSettings} />
+            </div>
           </div>
         </div>
       </div>
