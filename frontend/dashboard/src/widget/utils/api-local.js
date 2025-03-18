@@ -1,3 +1,4 @@
+// frontend/dashboard/src/widget/utils/api-local.js
 import { getConfig } from '../config';
 import { trackEvent } from './analytics';
 import { getSessionId } from './storage';
@@ -21,7 +22,7 @@ const apiFetch = async (endpoint, options = {}) => {
   }
   
   // Add API key authentication
-  options.headers['X-API-Key'] = "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50";
+  options.headers['X-API-Key'] = config.apiKey || "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50";
   
   // Add content type if not specified and method is not GET
   if (!options.headers['Content-Type'] && options.method && options.method !== 'GET') {
@@ -122,7 +123,7 @@ export const getHistory = async (sessionId) => {
 export const getWidgetConfig = async () => {
   const config = getConfig();
   
-  return apiFetch('/api/widget/config', {
+  return apiFetch('/api/widget/settings', {
     method: 'GET',
     headers: {
       'X-API-Key': config.apiKey

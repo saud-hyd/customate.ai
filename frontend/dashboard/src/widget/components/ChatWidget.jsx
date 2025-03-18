@@ -1,3 +1,4 @@
+// frontend/dashboard/src/widget/components/ChatWidget.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import ChatHeader from './ChatHeader';
 import ChatMessages from './ChatMessages';
@@ -5,7 +6,13 @@ import ChatInput from './ChatInput';
 import ChatSuggestions from './ChatSuggestions';
 import { getConfig, generateCssVariables } from '../config';
 import { sendMessage, getHistory } from '../utils/api-local';
-import { getSessionId, saveSessionId } from '../utils/storage';
+import { 
+  getSessionId, 
+  saveSessionId, 
+  clearSession, 
+  updateLastActivity, 
+  hasSessionExpired 
+} from '../utils/storage';
 import { trackEvent } from '../utils/analytics';
 
 const ChatWidget = () => {
@@ -21,6 +28,7 @@ const ChatWidget = () => {
   // References
   const widgetRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const activityTimeoutRef = useRef(null);
   
   // Get config
   const config = getConfig();
@@ -37,26 +45,118 @@ const ChatWidget = () => {
     window.addEventListener('customate-widget-open', handleOpen);
     window.addEventListener('customate-widget-close', handleClose);
     
-    // Load session ID from storage
-    const existingSessionId = getSessionId();
-    if (existingSessionId) {
-      setSession({ id: existingSessionId });
-      
-      // Load chat history
-      loadChatHistory(existingSessionId);
+    // Add page visibility change listener to check for inactivity
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Check for page load/refresh - always start a fresh chat on page refresh if configured
+    const isPageRefresh = !sessionStorage.getItem('widgetSessionActive');
+    sessionStorage.setItem('widgetSessionActive', 'true');
+    
+    if (isPageRefresh && config.resetOnPageRefresh) {
+      clearSession();
+      addWelcomeMessage();
+    } else {
+      // Load session ID from storage
+      const existingSessionId = getSessionId();
+      if (existingSessionId) {
+        setSession({ id: existingSessionId });
+        // Load chat history
+        loadChatHistory(existingSessionId);
+      } else {
+        // Add welcome message if no history
+        addWelcomeMessage();
+      }
     }
+    
+    // Set up activity tracking
+    startActivityTracking();
     
     return () => {
       // Clean up event listeners
       window.removeEventListener('customate-widget-open', handleOpen);
       window.removeEventListener('customate-widget-close', handleClose);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopActivityTracking();
+      // Clear session storage flag
+      sessionStorage.removeItem('widgetSessionActive');
     };
   }, []);
+  
+  // Make sure typing indicator is visible when messages are loading
+  useEffect(() => {
+    if (isLoading) {
+      setShowTypingIndicator(true);
+    }
+  }, [isLoading]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  // Check for reset session in config
+  useEffect(() => {
+    if (config.resetSession) {
+      // Clear messages and reset session
+      clearSession();
+      setMessages([]);
+      setSession(null);
+      addWelcomeMessage();
+    }
+  }, [config.resetSession]);
+  
+  // Handle page visibility changes
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      // Check if session expired while page was hidden
+      if (hasSessionExpired()) {
+        clearSession();
+        setSession(null);
+        setMessages([]);
+        addWelcomeMessage();
+      }
+    }
+  };
+  
+  // Track user activity
+  const startActivityTracking = () => {
+    // Update activity timestamp on user interaction
+    const updateUserActivity = () => {
+      if (session?.id) {
+        updateLastActivity();
+      }
+    };
+    
+    // Add event listeners for user activity
+    document.addEventListener('mousedown', updateUserActivity);
+    document.addEventListener('keypress', updateUserActivity);
+    document.addEventListener('scroll', updateUserActivity);
+    document.addEventListener('touchstart', updateUserActivity);
+    
+    // Set up periodic check for session expiration
+    activityTimeoutRef.current = setInterval(() => {
+      if (session?.id && hasSessionExpired()) {
+        clearSession();
+        setSession(null);
+        setMessages([]);
+        addWelcomeMessage();
+      }
+    }, 60000); // Check every minute
+  };
+  
+  const stopActivityTracking = () => {
+    // Remove event listeners
+    const updateUserActivity = () => {};
+    document.removeEventListener('mousedown', updateUserActivity);
+    document.removeEventListener('keypress', updateUserActivity);
+    document.removeEventListener('scroll', updateUserActivity);
+    document.removeEventListener('touchstart', updateUserActivity);
+    
+    // Clear timeout
+    if (activityTimeoutRef.current) {
+      clearInterval(activityTimeoutRef.current);
+    }
+  };
   
   // Load chat history
   const loadChatHistory = async (sessionId) => {
@@ -135,15 +235,18 @@ const ChatWidget = () => {
     setMessages(prev => [...prev, userMessage]);
     
     // Show typing indicator
-    if (config.enableTypingIndicator) {
+    if (config.enableTypingIndicator !== false) {
       setShowTypingIndicator(true);
     }
+    
+    setIsLoading(true);
     
     try {
       // Send message to backend
       const response = await sendMessage({
         message: text,
-        session_id: session?.id || null
+        session_id: session?.id || null,
+        collection_id: config.customData?.collectionId
       });
       
       // If we get a new session ID, save it
@@ -154,13 +257,15 @@ const ChatWidget = () => {
       
       // Hide typing indicator
       setShowTypingIndicator(false);
+      setIsLoading(false);
       
       // Add response to messages
       const assistantMessage = {
         id: response.message.id || `assistant-${Date.now()}`,
         content: response.message.content,
         role: 'assistant',
-        timestamp: response.message.created_at || new Date().toISOString()
+        timestamp: response.message.created_at || new Date().toISOString(),
+        knowledge_used: response.knowledge_used
       };
       
       setMessages(prev => [...prev, assistantMessage]);
@@ -177,9 +282,13 @@ const ChatWidget = () => {
         knowledge_used: response.knowledge_used || false,
         session_id: response.session_id
       });
+      
+      // Update last activity
+      updateLastActivity();
     } catch (err) {
       // Hide typing indicator
       setShowTypingIndicator(false);
+      setIsLoading(false);
       
       // Add error message
       const errorMessage = {
@@ -229,7 +338,7 @@ const ChatWidget = () => {
       {isOpen && (
         <div className="customate-widget-container">
           <ChatHeader 
-            title={config.title || 'Chat with us'} 
+            title={config.title || config.chatbotName || 'Chat with us'} 
             onClose={handleClose} 
           />
           
@@ -240,10 +349,11 @@ const ChatWidget = () => {
             messagesEndRef={messagesEndRef}
           />
           
-          {suggestions.length > 0 && config.enableSuggestions && (
+          {suggestions.length > 0 && config.enableSuggestions !== false && (
             <ChatSuggestions 
               suggestions={suggestions} 
-              onSuggestionClick={handleSuggestionClick} 
+              onSuggestionClick={handleSuggestionClick}
+              primaryColor={config.primaryColor}
             />
           )}
           

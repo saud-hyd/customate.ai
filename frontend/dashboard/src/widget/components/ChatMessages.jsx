@@ -1,3 +1,4 @@
+// frontend/dashboard/src/widget/components/ChatMessages.jsx
 import React from 'react';
 import ChatBubble from './ChatBubble';
 import TypingIndicator from './TypingIndicator';

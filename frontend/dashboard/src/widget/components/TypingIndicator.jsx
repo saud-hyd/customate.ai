@@ -1,3 +1,4 @@
+// frontend/dashboard/src/widget/components/TypingIndicator.jsx
 import React from 'react';
 
 /**

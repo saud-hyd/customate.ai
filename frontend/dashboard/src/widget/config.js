@@ -1,7 +1,31 @@
-import { getWidgetConfig } from './utils/api';
+// frontend/dashboard/src/widget/config.js
 
 // Singleton config object
-let widgetConfig = {};
+let widgetConfig = {
+  apiKey: 'demo-api-key',  // Default API key for testing
+  apiUrl: 'http://localhost:8000',  // Point to local development server
+  position: 'bottom-right',
+  primaryColor: '#4f46e5',
+  greeting: 'Hello! How can I help you today?',
+  title: 'Chat with us',
+  enableTypingIndicator: true,
+  enableSuggestions: true,
+  showInitiallyOpen: false,
+  autoInitialize: true,
+  height: '500px',
+  width: '350px',
+  maxWidth: '420px',
+  hideOnMobile: false,
+  mobileBreakpoint: 768,
+  zIndex: 999999,
+  disableAnimations: false,
+  userId: null,
+  customData: {},
+  // Session management options
+  resetOnPageRefresh: true,
+  sessionTimeout: 30, // Session timeout in minutes
+};
+
 let configLoaded = false;
 
 /**
@@ -9,7 +33,7 @@ let configLoaded = false;
  * @param {Object} config - Complete configuration object
  */
 export const setConfig = (config) => {
-  widgetConfig = { ...config };
+  widgetConfig = { ...widgetConfig, ...config };
 };
 
 /**
@@ -18,45 +42,6 @@ export const setConfig = (config) => {
  */
 export const getConfig = () => {
   return { ...widgetConfig };
-};
-
-/**
- * Load configuration from the server
- * @param {string} apiKey - API key for authentication
- * @returns {Promise<Object>} - Fetched configuration
- */
-export const loadConfig = async (apiKey) => {
-  if (!apiKey) {
-    console.error('API key is required to load configuration');
-    return null;
-  }
-  
-  try {
-    const serverConfig = await getWidgetConfig();
-    
-    // Merge server configuration with existing configuration
-    const mergedConfig = {
-      ...widgetConfig,
-      primaryColor: serverConfig.primary_color || widgetConfig.primaryColor,
-      chatbotName: serverConfig.chatbot_name || widgetConfig.chatbotName,
-      widgetPosition: serverConfig.widget_position || widgetConfig.widgetPosition,
-      enableTypingIndicator: serverConfig.show_typing_indicator !== undefined 
-        ? serverConfig.show_typing_indicator 
-        : widgetConfig.enableTypingIndicator,
-      enableSuggestions: serverConfig.enable_suggestions !== undefined
-        ? serverConfig.enable_suggestions
-        : widgetConfig.enableSuggestions
-    };
-    
-    // Set the merged configuration
-    setConfig(mergedConfig);
-    configLoaded = true;
-    
-    return mergedConfig;
-  } catch (error) {
-    console.error('Failed to load widget configuration:', error);
-    return null;
-  }
 };
 
 /**
@@ -121,6 +106,13 @@ const validateConfig = (config) => {
   if (typeof validated.mobileBreakpoint !== 'number') {
     validated.mobileBreakpoint = parseInt(validated.mobileBreakpoint, 10) || 768;
   }
+  
+  // Ensure sessionTimeout is a number and within reasonable limits
+  if (typeof validated.sessionTimeout !== 'number' || validated.sessionTimeout < 1) {
+    validated.sessionTimeout = 30; // Default to 30 minutes
+  } else if (validated.sessionTimeout > 1440) {
+    validated.sessionTimeout = 1440; // Max 24 hours
+  }
 
   // Boolean values
   validated.enableTypingIndicator = Boolean(validated.enableTypingIndicator);
@@ -129,6 +121,7 @@ const validateConfig = (config) => {
   validated.autoInitialize = Boolean(validated.autoInitialize);
   validated.hideOnMobile = Boolean(validated.hideOnMobile);
   validated.disableAnimations = Boolean(validated.disableAnimations);
+  validated.resetOnPageRefresh = Boolean(validated.resetOnPageRefresh);
 
   return validated;
 };
@@ -155,8 +148,6 @@ export const generateCssVariables = () => {
     '--customate-widget-max-width': config.maxWidth || '420px',
   };
 };
-
-// darkenColor and lightenColor functions remain the same
 
 /**
  * Helper function to darken a hex color
@@ -225,16 +216,16 @@ const lightenColor = (color, amount) => {
 };
 
 /**
- * Load configuration from server
+ * Load configuration from server directly
  * @param {string} apiKey - API key for authentication
  * @returns {Promise<Object>} - Loaded configuration or null on error
  */
 export const loadConfigFromServer = async (apiKey) => {
   try {
     const config = getConfig();
-    const baseUrl = config.apiUrl || 'https://api.customate.ai';
+    const baseUrl = config.apiUrl || 'http://localhost:8000';
     
-    const response = await fetch(`${baseUrl}/api/widget/config`, {
+    const response = await fetch(`${baseUrl}/api/widget/settings`, {
       method: 'GET',
       headers: {
         'X-API-Key': apiKey || config.apiKey,
@@ -255,7 +246,10 @@ export const loadConfigFromServer = async (apiKey) => {
       greeting: configData.greeting_message,
       position: configData.widget_position,
       enableTypingIndicator: configData.show_typing_indicator,
-      enableSuggestions: configData.enable_suggestions
+      enableSuggestions: configData.enable_suggestions,
+      sessionTimeout: configData.session_timeout || 30,
+      resetOnPageRefresh: configData.reset_on_page_refresh !== undefined ? 
+        configData.reset_on_page_refresh : true
     };
     
     // Filter out undefined values
@@ -268,6 +262,7 @@ export const loadConfigFromServer = async (apiKey) => {
     
     // Update the configuration
     setConfig(mergeConfig(getConfig(), filteredConfig));
+    configLoaded = true;
     
     return filteredConfig;
   } catch (error) {

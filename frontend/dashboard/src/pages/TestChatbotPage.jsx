@@ -1,6 +1,8 @@
 // frontend/dashboard/src/pages/TestChatbotPage.jsx
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import knowledgeService from '../services/knowledgeService';
+import clientService from '../services/clientService';
 import WidgetComponent from '../widget/components/WidgetComponent';
 import { 
   SwatchIcon, 
@@ -9,7 +11,8 @@ import {
   DocumentTextIcon,
   ArrowPathIcon,
   ChevronDownIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 
 const TestChatbotPage = () => {
@@ -22,8 +25,10 @@ const TestChatbotPage = () => {
     widgetPosition: 'bottom-right',
     showTypingIndicator: true,
     enableSuggestions: true,
-    apiKey: "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50", // Use your API key
-    apiUrl: 'http://localhost:8000', // Use your backend URL
+    resetOnPageRefresh: true,
+    sessionTimeout: 30,
+    apiKey: "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50", // Default API key (will be replaced)
+    apiUrl: 'http://localhost:8000', // Backend URL
     // Initial message to show
     greeting: "Hi there! I'm your Customate.AI assistant. How can I help you today?"
   });
@@ -31,11 +36,14 @@ const TestChatbotPage = () => {
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [showCollectionDropdown, setShowCollectionDropdown] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   
-  // Fetch collections on component mount
+  // Fetch collections and settings on component mount
   useEffect(() => {
     fetchCollections();
+    fetchCurrentSettings();
+    fetchClientApiKey();
   }, []);
   
   const fetchCollections = async () => {
@@ -45,6 +53,41 @@ const TestChatbotPage = () => {
     } catch (err) {
       console.error('Error fetching collections:', err);
       setError('Failed to load knowledge collections');
+    }
+  };
+  
+  const fetchCurrentSettings = async () => {
+    try {
+      const settings = await clientService.getSettings();
+      setChatSettings(prev => ({
+        ...prev,
+        primaryColor: settings.primary_color || prev.primaryColor,
+        chatbotName: settings.chatbot_name || prev.chatbotName,
+        widgetPosition: settings.widget_position || prev.widgetPosition,
+        showTypingIndicator: settings.show_typing_indicator !== undefined ? settings.show_typing_indicator : prev.showTypingIndicator,
+        enableSuggestions: settings.enable_suggestions !== undefined ? settings.enable_suggestions : prev.enableSuggestions,
+        greeting: settings.greeting_message || prev.greeting,
+        resetOnPageRefresh: settings.reset_on_page_refresh !== undefined ? settings.reset_on_page_refresh : prev.resetOnPageRefresh,
+        sessionTimeout: settings.session_timeout || prev.sessionTimeout
+      }));
+    } catch (err) {
+      console.error('Error fetching current settings:', err);
+      // Continue with default settings
+    }
+  };
+  
+  const fetchClientApiKey = async () => {
+    try {
+      // Get the client's real API key
+      const clientInfo = await clientService.getClientInfo();
+      
+      setChatSettings(prev => ({
+        ...prev,
+        apiKey: clientInfo.api_key // Use the real API key
+      }));
+    } catch (err) {
+      console.error('Error fetching client API key:', err);
+      // Continue with default key if there's an error
     }
   };
   
@@ -79,6 +122,33 @@ const TestChatbotPage = () => {
       ...prev,
       [setting]: value
     }));
+  };
+  
+  // Save settings
+  const handleSaveSettings = async () => {
+    try {
+      setIsSaving(true);
+      
+      const settingsToSave = {
+        primary_color: chatSettings.primaryColor,
+        chatbot_name: chatSettings.chatbotName,
+        widget_position: chatSettings.widgetPosition,
+        show_typing_indicator: chatSettings.showTypingIndicator,
+        enable_suggestions: chatSettings.enableSuggestions,
+        greeting_message: chatSettings.greeting,
+        reset_on_page_refresh: chatSettings.resetOnPageRefresh,
+        session_timeout: chatSettings.sessionTimeout
+      };
+      
+      await clientService.updateWidgetSettings(settingsToSave);
+      
+      toast.success('Chatbot settings saved successfully!');
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      toast.error('Failed to save chatbot settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   // Reset chat
@@ -144,6 +214,17 @@ const TestChatbotPage = () => {
           >
             <ArrowPathIcon className="h-5 w-5 mr-2" />
             Reset Chat
+          </button>
+          
+          <button 
+            onClick={handleSaveSettings}
+            disabled={isSaving}
+            className={`${
+              isSaving ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
+            } text-white px-4 py-2 rounded-md flex items-center`}
+          >
+            <Cog6ToothIcon className="h-5 w-5 mr-2" />
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -243,6 +324,19 @@ const TestChatbotPage = () => {
                     <option value="top-left">Top Left</option>
                   </select>
                 </div>
+                
+                <div>
+                  <label htmlFor="greeting" className="block text-sm font-medium text-gray-700 mb-1">
+                    Greeting Message
+                  </label>
+                  <textarea
+                    id="greeting"
+                    value={chatSettings.greeting}
+                    onChange={(e) => handleSettingChange('greeting', e.target.value)}
+                    rows={3}
+                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm w-full"
+                  />
+                </div>
               </div>
             )}
             
@@ -273,6 +367,38 @@ const TestChatbotPage = () => {
                   <label htmlFor="enableSuggestions" className="ml-2 block text-sm text-gray-900">
                     Enable suggested responses
                   </label>
+                </div>
+                
+                {/* Session behavior settings */}
+                <div className="flex items-center mt-4">
+                  <input
+                    id="resetOnPageRefresh"
+                    type="checkbox"
+                    checked={chatSettings.resetOnPageRefresh}
+                    onChange={(e) => handleSettingChange('resetOnPageRefresh', e.target.checked)}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="resetOnPageRefresh" className="ml-2 block text-sm text-gray-900">
+                    Start a fresh chat on page refresh
+                  </label>
+                </div>
+
+                <div className="mt-4">
+                  <label htmlFor="sessionTimeout" className="block text-sm font-medium text-gray-700 mb-1">
+                    Session Timeout (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    id="sessionTimeout"
+                    min="1"
+                    max="1440"
+                    value={chatSettings.sessionTimeout}
+                    onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
+                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm w-24"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    The chat session will reset after this period of inactivity
+                  </p>
                 </div>
 
                 <div className="mt-4">
@@ -331,8 +457,12 @@ const TestChatbotPage = () => {
                 
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Installation Code</h3>
-                  <pre className="bg-gray-100 p-3 text-xs text-gray-800 rounded overflow-x-auto">
-{`<script>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Copy and paste this code into your website, just before the closing &lt;/body&gt; tag:
+                  </p>
+                  <pre className="bg-gray-100 p-3 text-xs text-gray-800 rounded overflow-x-auto whitespace-pre-wrap">
+{`<!-- Customate.ai Chat Widget -->
+<script>
   (function(c,u,s,t,o,m,a,t,e){
     c['CustomateWidget']=o;
     c[o]=c[o]||function(){(c[o].q=c[o].q||[]).push(arguments)};
@@ -341,12 +471,24 @@ const TestChatbotPage = () => {
     t.parentNode.insertBefore(a,t)
   })(window,document,'script','https://cdn.customate.ai/widget.js','cw');
   
-  cw('init', '${chatSettings.apiKey}');
+  cw('init', '${chatSettings.apiKey}', {
+    primaryColor: '${chatSettings.primaryColor}',
+    position: '${chatSettings.widgetPosition}',
+    chatbotName: '${chatSettings.chatbotName}',
+    showTypingIndicator: ${chatSettings.showTypingIndicator},
+    enableSuggestions: ${chatSettings.enableSuggestions},
+    resetOnPageRefresh: ${chatSettings.resetOnPageRefresh},
+    sessionTimeout: ${chatSettings.sessionTimeout}${chatSettings.customData?.collectionId ? `,
+    customData: {
+      collectionId: '${chatSettings.customData.collectionId}'
+    }` : ''}
+  });
 </script>`}
                   </pre>
                   <button 
                     onClick={() => {
-                      navigator.clipboard.writeText(`<script>
+                      navigator.clipboard.writeText(`<!-- Customate.ai Chat Widget -->
+<script>
   (function(c,u,s,t,o,m,a,t,e){
     c['CustomateWidget']=o;
     c[o]=c[o]||function(){(c[o].q=c[o].q||[]).push(arguments)};
@@ -355,14 +497,38 @@ const TestChatbotPage = () => {
     t.parentNode.insertBefore(a,t)
   })(window,document,'script','https://cdn.customate.ai/widget.js','cw');
   
-  cw('init', '${chatSettings.apiKey}');
+  cw('init', '${chatSettings.apiKey}', {
+    primaryColor: '${chatSettings.primaryColor}',
+    position: '${chatSettings.widgetPosition}',
+    chatbotName: '${chatSettings.chatbotName}',
+    showTypingIndicator: ${chatSettings.showTypingIndicator},
+    enableSuggestions: ${chatSettings.enableSuggestions},
+    resetOnPageRefresh: ${chatSettings.resetOnPageRefresh},
+    sessionTimeout: ${chatSettings.sessionTimeout}${chatSettings.customData?.collectionId ? `,
+    customData: {
+      collectionId: '${chatSettings.customData.collectionId}'
+    }` : ''}
+  });
 </script>`);
-                      alert('Code copied to clipboard!');
+                      toast.success('Code copied to clipboard!');
                     }}
-                    className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                    className="mt-2 text-sm text-indigo-600 hover:text-indigo-500 flex items-center"
                   >
+                    <DocumentDuplicateIcon className="h-4 w-4 mr-1" />
                     Copy to clipboard
                   </button>
+                </div>
+                
+                <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                  <h3 className="text-sm font-medium text-yellow-800 mb-2">Production Deployment</h3>
+                  <p className="text-xs text-yellow-700">
+                    This widget uses your actual API key. When deploying to production, ensure:
+                  </p>
+                  <ul className="list-disc ml-5 mt-1 text-xs text-yellow-700 space-y-1">
+                    <li>Your subscription has adequate capacity for your traffic</li>
+                    <li>Your knowledge base includes only production-ready content</li>
+                    <li>You've thoroughly tested the widget's behavior with your users</li>
+                  </ul>
                 </div>
               </div>
             )}

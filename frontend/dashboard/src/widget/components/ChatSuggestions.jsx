@@ -1,3 +1,4 @@
+// frontend/dashboard/src/widget/components/ChatSuggestions.jsx
 import React from 'react';
 
 /**
@@ -5,8 +6,9 @@ import React from 'react';
  * 
  * @param {Array} suggestions - Array of suggestion strings
  * @param {Function} onSuggestionClick - Callback for when a suggestion is clicked
+ * @param {String} primaryColor - Primary color for styling
  */
-const ChatSuggestions = ({ suggestions, onSuggestionClick }) => {
+const ChatSuggestions = ({ suggestions, onSuggestionClick, primaryColor }) => {
   if (!suggestions || suggestions.length === 0) {
     return null;
   }
@@ -19,6 +21,12 @@ const ChatSuggestions = ({ suggestions, onSuggestionClick }) => {
             key={`suggestion-${index}`}
             className="customate-suggestion-button"
             onClick={() => onSuggestionClick(suggestion)}
+            style={{ 
+              borderColor: primaryColor,
+              '&:hover': {
+                backgroundColor: `${primaryColor}10`
+              }
+            }}
           >
             {suggestion}
           </button>

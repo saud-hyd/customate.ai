@@ -1,3 +1,4 @@
+// frontend/dashboard/src/widget/utils/storage.js
 import { getConfig } from '../config';
 
 // Storage keys with prefixes to avoid collisions
@@ -5,9 +6,12 @@ const KEYS = {
   SESSION_ID: '_customate_session_id',
   CHAT_HISTORY: '_customate_chat_history',
   USER_ID: '_customate_user_id',
-  LAST_VISIT: '_customate_last_visit',
+  LAST_ACTIVITY: '_customate_last_activity',
   PREFERENCES: '_customate_preferences'
 };
+
+// Default session timeout - 30 minutes (in milliseconds)
+const DEFAULT_SESSION_TIMEOUT = 30 * 60 * 1000;
 
 /**
  * Get a unique storage key with API key as prefix
@@ -87,10 +91,42 @@ const removeFromStorage = (key) => {
 };
 
 /**
+ * Update last activity timestamp
+ */
+export const updateLastActivity = () => {
+  setInStorage(KEYS.LAST_ACTIVITY, Date.now());
+};
+
+/**
+ * Check if the current session has expired due to inactivity
+ * @returns {boolean} - True if session has expired
+ */
+export const hasSessionExpired = () => {
+  const lastActivity = getFromStorage(KEYS.LAST_ACTIVITY);
+  if (!lastActivity) return true;
+  
+  const now = Date.now();
+  const elapsed = now - lastActivity;
+  
+  // Get timeout from config or use default
+  const config = getConfig();
+  const sessionTimeoutMs = (config.sessionTimeout || 30) * 60 * 1000;
+  
+  return elapsed > sessionTimeoutMs;
+};
+
+/**
  * Get chat session ID from storage
  * @returns {string|null} - Session ID or null
  */
 export const getSessionId = () => {
+  // Check if session has expired
+  if (hasSessionExpired()) {
+    clearSession();
+    return null;
+  }
+  
+  updateLastActivity();
   return getFromStorage(KEYS.SESSION_ID);
 };
 
@@ -100,6 +136,7 @@ export const getSessionId = () => {
  */
 export const saveSessionId = (sessionId) => {
   setInStorage(KEYS.SESSION_ID, sessionId);
+  updateLastActivity();
 };
 
 /**
@@ -107,6 +144,9 @@ export const saveSessionId = (sessionId) => {
  */
 export const clearSession = () => {
   removeFromStorage(KEYS.SESSION_ID);
+  removeFromStorage(KEYS.CHAT_HISTORY);
+  removeFromStorage(KEYS.LAST_ACTIVITY);
+  console.log('Chat session cleared due to inactivity or manual reset');
 };
 
 /**
@@ -114,6 +154,13 @@ export const clearSession = () => {
  * @returns {Array} - Chat history messages
  */
 export const getLocalHistory = () => {
+  // Don't return history if session has expired
+  if (hasSessionExpired()) {
+    clearSession();
+    return [];
+  }
+  
+  updateLastActivity();
   return getFromStorage(KEYS.CHAT_HISTORY) || [];
 };
 
@@ -125,6 +172,7 @@ export const saveLocalHistory = (messages) => {
   // Limit to last 20 messages to conserve space
   const limitedHistory = messages.slice(-20);
   setInStorage(KEYS.CHAT_HISTORY, limitedHistory);
+  updateLastActivity();
 };
 
 /**
@@ -157,11 +205,4 @@ export const savePreferences = (preferences) => {
  */
 export const getPreferences = () => {
   return getFromStorage(KEYS.PREFERENCES) || {};
-};
-
-/**
- * Update user last visit timestamp
- */
-export const updateLastVisit = () => {
-  setInStorage(KEYS.LAST_VISIT, new Date().toISOString());
 };
