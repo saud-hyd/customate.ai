@@ -1,3 +1,6 @@
+// File: frontend/dashboard/src/components/layout/DashboardLayout.jsx
+// This file defines the main layout for the dashboard, including the sidebar navigation
+
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
@@ -37,6 +40,11 @@ const DashboardLayout = () => {
           <Link to="/integrations" className={`flex items-center px-6 py-3 text-gray-700 ${isActive('/integrations')}`}>
             <i className="fas fa-plug mr-3 text-indigo-600"></i>
             Integrations
+          </Link>
+          {/* ADD SUBSCRIPTION LINK HERE */}
+          <Link to="/subscription" className={`flex items-center px-6 py-3 text-gray-700 ${isActive('/subscription')}`}>
+            <i className="fas fa-credit-card mr-3 text-indigo-600"></i>
+            Subscription
           </Link>
           <Link to="/settings" className={`flex items-center px-6 py-3 text-gray-700 ${isActive('/settings')}`}>
             <i className="fas fa-cog mr-3 text-indigo-600"></i>

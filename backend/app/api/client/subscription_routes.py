@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional, List
+from pydantic import BaseModel, Field
 import stripe
 import logging
 
@@ -15,60 +16,100 @@ from app.api.client.schemas import (
     PaymentMethodResponse, SubscriptionCancelRequest, InvoiceResponse,
     CheckoutSessionRequest, BillingPortalRequest, RecommendedPlanResponse
 )
+from app.api.client.schemas import SubscriptionCancelRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/client/subscription", tags=["subscription"])
+
+class SubscriptionChangeRequest(BaseModel):
+    """Request schema for changing subscription plan."""
+    plan_type: str = Field(..., description="New plan type (free, basic, professional, enterprise)")
+
+class SubscriptionCancelRequest(BaseModel):
+    """Request schema for cancelling subscription."""
+    cancel_immediately: bool = Field(False, description="Whether to cancel immediately or at period end")
+
+class CheckoutSessionRequest(BaseModel):
+    """Request schema for creating checkout session."""
+    plan_type: str = Field(..., description="Plan type to subscribe to")
+    success_url: str = Field(..., description="URL to redirect on success")
+    cancel_url: str = Field(..., description="URL to redirect on cancellation")
+
+class BillingPortalRequest(BaseModel):
+    """Request schema for creating billing portal session."""
+    return_url: str = Field(..., description="URL to return to after billing portal")
 
 # Initialize services
 stripe_service = StripeService()
 notification_service = NotificationService()
 usage_tracker = UsageTracker()
 
-@router.get("", response_model=SubscriptionResponse)
+@router.get("", response_model=Dict[str, Any])
 async def get_subscription(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
     """
-    Get current client subscription details.
+    Get current subscription information.
     """
-    # Get subscription info from Stripe service
-    subscription_info = await stripe_service.get_subscription_info(current_client)
-    return subscription_info
+    try:
+        stripe_service = StripeService()
+        subscription_info = await stripe_service.get_subscription_info(current_client, db)  # Pass db here
+        
+        return subscription_info
+    except Exception as e:
+        logger.exception(f"Error getting subscription info: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve subscription information: {str(e)}"
+        )
 
 @router.post("/change", response_model=Dict[str, Any])
 async def change_subscription_plan(
-    plan_change: PlanChangeRequest,
-    background_tasks: BackgroundTasks,
+    plan_data: SubscriptionChangeRequest,
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
     """
-    Change the current subscription plan.
+    Change subscription plan.
     """
-    # Get current subscription for comparison
-    current_subscription_info = await stripe_service.get_subscription_info(current_client)
-    current_plan = current_subscription_info.get("plan_type", "free")
+    plan_type = plan_data.plan_type
     
-    # Change plan
-    updated_subscription = await stripe_service.update_subscription(
-        db=db,
-        client=current_client,
-        new_plan_type=plan_change.plan_type,
-        proration_behavior=plan_change.proration_behavior
-    )
+    # Validate plan type
+    if plan_type not in ["free", "basic", "professional", "enterprise"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid plan type: {plan_type}"
+        )
     
-    # Send notification about plan change in the background
-    background_tasks.add_task(
-        notification_service.send_subscription_updated_notification,
-        db=db,
-        client_id=current_client.client_id,
-        new_plan=plan_change.plan_type,
-        previous_plan=current_plan
-    )
-    
-    return updated_subscription
-
+    try:
+        # Initialize services
+        stripe_service = StripeService()
+        notification_service = NotificationService()
+        
+        # Get current subscription info
+        current_subscription_info = await stripe_service.get_subscription_info(current_client, db)  # Pass db here
+        current_plan = current_subscription_info.get("plan_type", "free")
+        
+        # Update subscription
+        result = await stripe_service.update_subscription(db, current_client, plan_type)
+        
+        # Send notification about plan change
+        await notification_service.send_subscription_updated_notification(
+            db=db,
+            client_id=current_client.client_id,
+            new_plan=plan_type,
+            previous_plan=current_plan
+        )
+        
+        return result
+    except Exception as e:
+        logger.exception(f"Error changing subscription plan: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to change subscription plan: {str(e)}"
+        )
+        
 @router.post("/cancel", response_model=Dict[str, Any])
 async def cancel_subscription(
     cancel_request: SubscriptionCancelRequest,
@@ -101,16 +142,25 @@ async def cancel_subscription(
     
     return cancellation_result
 
-@router.get("/recommended", response_model=RecommendedPlanResponse)
+@router.get("/recommended", response_model=Dict[str, Any])
 async def get_recommended_plan(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
     """
-    Get a recommended subscription plan based on usage patterns.
+    Get recommended subscription plan based on usage.
     """
-    recommendation = await stripe_service.get_recommended_plan(db, current_client)
-    return recommendation
+    try:
+        stripe_service = StripeService()
+        result = await stripe_service.get_recommended_plan(db, current_client)  # Order of parameters matters here
+        
+        return result
+    except Exception as e:
+        logger.exception(f"Error getting recommended plan: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get recommended plan: {str(e)}"
+        )
 
 @router.get("/payment-methods", response_model=List[PaymentMethodResponse])
 async def get_payment_methods(

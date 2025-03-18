@@ -3,6 +3,8 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
+
 
 from app.core.config.settings import settings
 from app.domain.client.entities import Client, Subscription
@@ -501,12 +503,13 @@ class StripeService:
                 detail=f"Failed to add payment method: {str(e)}"
             )
     
-    async def get_subscription_info(self, client: Client) -> Dict[str, Any]:
+    async def get_subscription_info(self, client: Client, db: Session) -> Dict[str, Any]:
         """
         Get detailed subscription information for a client.
         
         Args:
             client: Client entity
+            db: Database session
             
         Returns:
             Subscription information

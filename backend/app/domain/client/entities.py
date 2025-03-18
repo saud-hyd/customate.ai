@@ -60,31 +60,31 @@ class ClientSettings(Base):
         return f"<ClientSettings for {self.client_id}>"
 
 class Subscription(Base):
-    """Subscription entity representing a client's plan."""
+    """Subscription model for client subscription plans."""
     
     __tablename__ = "subscriptions"
     
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(String(36), ForeignKey("clients.client_id", ondelete="CASCADE"), nullable=False)
     plan_type = Column(String(50), nullable=False)
-    status = Column(String(50), nullable=False)  # active, inactive, trial, past_due, cancelled, pending_cancellation
+    status = Column(String(50), nullable=False)
     message_limit = Column(Integer, nullable=True)
     user_limit = Column(Integer, nullable=True)
-    storage_limit_bytes = Column(Integer, nullable=True)
+    storage_limit_bytes = Column(Integer, nullable=True)  # Added missing column
     collections_limit = Column(Integer, nullable=True)
     starts_at = Column(DateTime, nullable=False)
     expires_at = Column(DateTime, nullable=True)
-    payment_id = Column(String(255), nullable=True)  # Stripe subscription ID
-    payment_method_id = Column(String(255), nullable=True)  # Default payment method ID
-    auto_renew = Column(Boolean, default=True)
-    billing_cycle = Column(String(20), default="monthly")  # monthly, annually
+    payment_id = Column(String(255), nullable=True)
+    payment_method_id = Column(String(255), nullable=True)
+    auto_renew = Column(Boolean, default=False)
+    billing_cycle = Column(String(50), nullable=True)
     is_trial = Column(Boolean, default=False)
     trial_ends_at = Column(DateTime, nullable=True)
-    stripe_data = Column(JSON, nullable=True)  # Additional Stripe subscription data
+    stripe_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
+    # Define relationships
     client = relationship("Client", back_populates="subscriptions")
     
     def __repr__(self):

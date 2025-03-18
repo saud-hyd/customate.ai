@@ -57,7 +57,7 @@ const subscriptionService = {
    */
   getPaymentMethods: async () => {
     try {
-      const response = await api.get('/api/client/payment-methods');
+      const response = await api.get('/api/client/subscription/payment-methods');
       return response.data;
     } catch (error) {
       console.error('Error getting payment methods:', error);
@@ -73,7 +73,7 @@ const subscriptionService = {
    */
   addPaymentMethod: async (paymentMethodId, setAsDefault = true) => {
     try {
-      const response = await api.post('/api/client/payment-methods', { 
+      const response = await api.post('/api/client/subscription/payment-methods', { 
         payment_method_id: paymentMethodId,
         set_as_default: setAsDefault
       });
@@ -91,7 +91,7 @@ const subscriptionService = {
    */
   removePaymentMethod: async (paymentMethodId) => {
     try {
-      const response = await api.delete(`/api/client/payment-methods/${paymentMethodId}`);
+      const response = await api.delete(`/api/client/subscription/payment-methods/${paymentMethodId}`);
       return response.data;
     } catch (error) {
       console.error('Error removing payment method:', error);
@@ -106,7 +106,7 @@ const subscriptionService = {
    */
   getInvoices: async (limit = 10) => {
     try {
-      const response = await api.get('/api/client/invoices', {
+      const response = await api.get('/api/client/subscription/invoices', {
         params: { limit }
       });
       return response.data;
@@ -123,7 +123,7 @@ const subscriptionService = {
    */
   createCheckoutSession: async (planType) => {
     try {
-      const response = await api.post('/api/client/checkout-session', {
+      const response = await api.post('/api/client/subscription/checkout-session', {
         plan_type: planType,
         success_url: `${window.location.origin}/subscription?success=true`,
         cancel_url: `${window.location.origin}/subscription?cancelled=true`
@@ -142,7 +142,7 @@ const subscriptionService = {
    */
   getBillingPortal: async (returnUrl) => {
     try {
-      const response = await api.post('/api/client/billing-portal', {
+      const response = await api.post('/api/client/subscription/billing-portal', {
         return_url: returnUrl || `${window.location.origin}/subscription`
       });
       return response.data;
