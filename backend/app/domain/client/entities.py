@@ -67,12 +67,20 @@ class Subscription(Base):
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(String(36), ForeignKey("clients.client_id", ondelete="CASCADE"), nullable=False)
     plan_type = Column(String(50), nullable=False)
-    status = Column(String(50), nullable=False)
+    status = Column(String(50), nullable=False)  # active, inactive, trial, past_due, cancelled, pending_cancellation
     message_limit = Column(Integer, nullable=True)
     user_limit = Column(Integer, nullable=True)
+    storage_limit_bytes = Column(Integer, nullable=True)
+    collections_limit = Column(Integer, nullable=True)
     starts_at = Column(DateTime, nullable=False)
     expires_at = Column(DateTime, nullable=True)
-    payment_id = Column(String(255), nullable=True)
+    payment_id = Column(String(255), nullable=True)  # Stripe subscription ID
+    payment_method_id = Column(String(255), nullable=True)  # Default payment method ID
+    auto_renew = Column(Boolean, default=True)
+    billing_cycle = Column(String(20), default="monthly")  # monthly, annually
+    is_trial = Column(Boolean, default=False)
+    trial_ends_at = Column(DateTime, nullable=True)
+    stripe_data = Column(JSON, nullable=True)  # Additional Stripe subscription data
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -81,3 +89,32 @@ class Subscription(Base):
     
     def __repr__(self):
         return f"<Subscription {self.plan_type} for {self.client_id}>"
+        
+    @property
+    def is_active(self):
+        """Check if subscription is currently active."""
+        if self.status not in ["active", "trial"]:
+            return False
+        
+        # Check if expired
+        if self.expires_at and self.expires_at < datetime.utcnow():
+            return False
+            
+        return True
+    
+    @property
+    def days_until_expiration(self):
+        """Get number of days until subscription expires."""
+        if not self.expires_at:
+            return None
+            
+        delta = self.expires_at - datetime.utcnow()
+        return max(0, delta.days)
+    
+    @property
+    def storage_limit_mb(self):
+        """Get storage limit in megabytes."""
+        if not self.storage_limit_bytes:
+            return None
+            
+        return self.storage_limit_bytes / (1024 * 1024)

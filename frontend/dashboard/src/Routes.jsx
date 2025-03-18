@@ -16,6 +16,7 @@ import SettingsPage from './pages/settings/SettingsPage';
 import TestChatbotPage from './pages/TestChatbotPage';
 import ConversationsPage from './pages/chat/ConversationsPage';
 import IntegrationsPage from './pages/integrations/IntegrationsPage';
+import SubscriptionPage from './pages/subscription/SubscriptionPage';
 
 // Enhanced Knowledge pages
 import EnhancedKnowledgeListPage from './pages/knowledge/EnhancedKnowledgeListPage';
@@ -105,6 +106,7 @@ const AppRoutes = () => {
         
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
+        <Route path="subscription" element={<SubscriptionPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="test" element={<TestChatbotPage />} />
         

@@ -117,9 +117,13 @@ class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[s
         # Get the active subscription that hasn't expired
         return db.query(self.model).filter(
             self.model.client_id == client_id,
-            self.model.status == "active",
+            self.model.status.in_(["active", "trial", "past_due"]),
             (self.model.expires_at > datetime.utcnow()) | (self.model.expires_at == None)
         ).first()
+    
+    def get_by_payment_id(self, db: Session, payment_id: str) -> Optional[Subscription]:
+        """Get subscription by payment ID (Stripe subscription ID)."""
+        return db.query(self.model).filter(self.model.payment_id == payment_id).first()
     
     def create(self, db: Session, *, obj_in: Dict[str, Any]) -> Subscription:
         """Create a new subscription."""
@@ -138,3 +142,26 @@ class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[s
         db.commit()
         db.refresh(db_obj)
         return db_obj
+        
+    def get_trial_eligible(self, db: Session, client_id: str) -> bool:
+        """Check if a client is eligible for a trial subscription."""
+        # Check if client has had a trial subscription before
+        had_trial = db.query(self.model).filter(
+            self.model.client_id == client_id,
+            self.model.is_trial == True
+        ).first() is not None
+        
+        return not had_trial
+    
+    def get_expiring_subscriptions(self, db: Session, days_threshold: int = 3) -> List[Subscription]:
+        """Get subscriptions that are expiring within a certain number of days."""
+        from datetime import datetime, timedelta
+        
+        expiry_threshold = datetime.utcnow() + timedelta(days=days_threshold)
+        
+        return db.query(self.model).filter(
+            self.model.status.in_(["active", "trial"]),
+            self.model.expires_at <= expiry_threshold,
+            self.model.expires_at > datetime.utcnow(),
+            self.model.auto_renew == False
+        ).all()

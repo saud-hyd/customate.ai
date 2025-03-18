@@ -11,7 +11,8 @@ import {
   DocumentTextIcon, 
   ChartBarIcon, 
   Cog6ToothIcon,
-  PuzzlePieceIcon // New icon for Integrations
+  PuzzlePieceIcon, 
+  CreditCardIcon  
 } from '@heroicons/react/24/outline';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -22,8 +23,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Chat', href: '/chat', icon: ChatBubbleLeftRightIcon },
     { name: 'Knowledge Base', href: '/knowledge', icon: DocumentTextIcon },
-    { name: 'Integrations', href: '/integrations', icon: PuzzlePieceIcon }, // Add this line
+    { name: 'Integrations', href: '/integrations', icon: PuzzlePieceIcon },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
+    { name: 'Subscription', href: '/subscription', icon: CreditCardIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
   ];
 
@@ -58,7 +60,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 src="/logo.svg"
                 alt="Customate.ai"
               />
-              <span className="ml-2 text-xl font-bold text-white">Customate.ai</span>
+              <span className="ml-2 text-xl font-bold text-white">Customate</span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
               {navigation.map((item) => (

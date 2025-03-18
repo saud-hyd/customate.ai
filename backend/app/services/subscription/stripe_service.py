@@ -1,0 +1,1031 @@
+import stripe
+import logging
+from typing import Dict, Any, Optional, List
+from datetime import datetime, timedelta
+from fastapi import HTTPException, status
+
+from app.core.config.settings import settings
+from app.domain.client.entities import Client, Subscription
+from app.repositories.client_repository import SubscriptionRepository
+from app.services.analytics.usage_tracker import UsageTracker
+
+logger = logging.getLogger(__name__)
+
+# Initialize Stripe with API key
+stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_version = "2023-10-16"  # Use latest stable API version
+
+# Define plan mapping between internal plans and Stripe price IDs
+PLAN_MAPPING = {
+    "free": settings.STRIPE_FREE_PLAN_ID,
+    "basic": settings.STRIPE_BASIC_PLAN_ID,
+    "professional": settings.STRIPE_PRO_PLAN_ID,
+    "enterprise": settings.STRIPE_ENTERPRISE_PLAN_ID
+}
+
+# Define plan limits
+PLAN_LIMITS = {
+    "free": {
+        "message_limit": 500,
+        "user_limit": 5,
+        "storage_limit_mb": 50,
+        "collections_limit": 3,
+        "features": ["basic_chat", "knowledge_integration"]
+    },
+    "basic": {
+        "message_limit": 5000,
+        "user_limit": 25,
+        "storage_limit_mb": 500,
+        "collections_limit": 10,
+        "features": ["basic_chat", "knowledge_integration", "analytics"]
+    },
+    "professional": {
+        "message_limit": 20000,
+        "user_limit": 100,
+        "storage_limit_mb": 2000,
+        "collections_limit": 50,
+        "features": ["advanced_chat", "knowledge_integration", "analytics", "integrations"]
+    },
+    "enterprise": {
+        "message_limit": 100000,
+        "user_limit": 500,
+        "storage_limit_mb": 10000,
+        "collections_limit": 250,
+        "features": ["advanced_chat", "knowledge_integration", "analytics", "integrations", "priority_support"]
+    }
+}
+
+
+class StripeService:
+    """Service for managing Stripe subscriptions and payments."""
+    
+    def __init__(self):
+        """Initialize Stripe service."""
+        self.subscription_repo = SubscriptionRepository()
+        self.usage_tracker = UsageTracker()
+    
+    async def create_customer(self, client: Client) -> Dict[str, Any]:
+        """
+        Create a Stripe customer for a client.
+        
+        Args:
+            client: Client entity
+            
+        Returns:
+            Stripe customer object
+        """
+        try:
+            customer = stripe.Customer.create(
+                email=client.email,
+                name=client.name,
+                metadata={
+                    "client_id": client.client_id,
+                    "created_at": datetime.utcnow().isoformat()
+                }
+            )
+            
+            logger.info(f"Created Stripe customer for client {client.client_id}: {customer.id}")
+            return customer
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error creating customer for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to create Stripe customer: {str(e)}"
+            )
+    
+    async def create_subscription(
+        self, 
+        db,
+        client: Client, 
+        plan_type: str,
+        payment_method_id: Optional[str] = None,
+        trial_days: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Create a Stripe subscription for a client.
+        
+        Args:
+            db: Database session
+            client: Client entity
+            plan_type: Subscription plan type
+            payment_method_id: Payment method ID for the subscription
+            trial_days: Number of trial days (0 for no trial)
+            
+        Returns:
+            Subscription details
+        """
+        if plan_type not in PLAN_MAPPING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid plan type: {plan_type}"
+            )
+        
+        try:
+            # Check if client has a Stripe customer ID
+            stripe_customer_id = await self._ensure_customer_id(client)
+            
+            # If payment method provided, attach it to the customer
+            if payment_method_id and plan_type != "free":
+                try:
+                    stripe.PaymentMethod.attach(
+                        payment_method_id,
+                        customer=stripe_customer_id
+                    )
+                    
+                    # Set as default payment method
+                    stripe.Customer.modify(
+                        stripe_customer_id,
+                        invoice_settings={
+                            "default_payment_method": payment_method_id
+                        }
+                    )
+                except stripe.error.StripeError as e:
+                    logger.error(f"Error attaching payment method: {str(e)}")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Payment method error: {str(e)}"
+                    )
+            
+            # Create the subscription
+            subscription_data = {
+                "customer": stripe_customer_id,
+                "items": [
+                    {
+                        "price": PLAN_MAPPING[plan_type]
+                    }
+                ],
+                "metadata": {
+                    "client_id": client.client_id,
+                    "plan_type": plan_type
+                },
+                "expand": ["latest_invoice.payment_intent"]
+            }
+            
+            # Add trial period if specified
+            if trial_days > 0:
+                subscription_data["trial_period_days"] = trial_days
+            
+            # For free plans, set billing to send invoice and due days far in future
+            if plan_type == "free":
+                subscription_data["collection_method"] = "send_invoice"
+                subscription_data["days_until_due"] = 365 * 10  # ~10 years
+            
+            # Create the subscription in Stripe
+            stripe_subscription = stripe.Subscription.create(**subscription_data)
+            
+            # Get limits for the plan
+            plan_limits = PLAN_LIMITS[plan_type]
+            
+            # Create subscription in our database
+            current_time = datetime.utcnow()
+            expires_at = current_time + timedelta(days=30)  # Default to 30 days
+            
+            # If subscription has a trial, use trial end as expiry
+            if stripe_subscription.trial_end:
+                expires_at = datetime.fromtimestamp(stripe_subscription.trial_end)
+            # If not a trial but has current period end, use that
+            elif stripe_subscription.current_period_end:
+                expires_at = datetime.fromtimestamp(stripe_subscription.current_period_end)
+            
+            # Create subscription in our database
+            subscription = self.subscription_repo.create(db, obj_in={
+                "client_id": client.client_id,
+                "plan_type": plan_type,
+                "status": "active",
+                "message_limit": plan_limits["message_limit"],
+                "user_limit": plan_limits["user_limit"],
+                "starts_at": current_time,
+                "expires_at": expires_at,
+                "payment_id": stripe_subscription.id,
+                "stripe_data": {
+                    "subscription_id": stripe_subscription.id,
+                    "customer_id": stripe_customer_id,
+                    "status": stripe_subscription.status
+                }
+            })
+            
+            logger.info(f"Created subscription for client {client.client_id}: {stripe_subscription.id}")
+            
+            # Initialize usage counters
+            self.usage_tracker.initialize_subscription_usage(db, client.client_id)
+            
+            return {
+                "subscription_id": subscription.id,
+                "plan_type": plan_type,
+                "status": "active",
+                "stripe_subscription_id": stripe_subscription.id,
+                "customer_id": stripe_customer_id,
+                "trial_end": stripe_subscription.trial_end,
+                "current_period_end": stripe_subscription.current_period_end,
+                "requires_action": self._check_if_requires_action(stripe_subscription)
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error creating subscription for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to create subscription: {str(e)}"
+            )
+    
+    async def update_subscription(
+        self,
+        db,
+        client: Client,
+        new_plan_type: str,
+        proration_behavior: str = "create_prorations"
+    ) -> Dict[str, Any]:
+        """
+        Update a client's subscription to a new plan.
+        
+        Args:
+            db: Database session
+            client: Client entity
+            new_plan_type: New subscription plan type
+            proration_behavior: How to handle proration ("create_prorations" or "none")
+            
+        Returns:
+            Updated subscription details
+        """
+        if new_plan_type not in PLAN_MAPPING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid plan type: {new_plan_type}"
+            )
+        
+        try:
+            # Get active subscription
+            active_sub = self.subscription_repo.get_active_subscription(db, client.client_id)
+            if not active_sub:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No active subscription found"
+                )
+            
+            # Get Stripe subscription ID
+            stripe_subscription_id = active_sub.payment_id
+            if not stripe_subscription_id:
+                # This is likely a subscription not yet connected to Stripe
+                # Create a new subscription instead
+                return await self.create_subscription(db, client, new_plan_type)
+            
+            # Fetch the subscription from Stripe
+            stripe_subscription = stripe.Subscription.retrieve(stripe_subscription_id)
+            
+            # Update the subscription items
+            stripe.Subscription.modify(
+                stripe_subscription_id,
+                cancel_at_period_end=False,
+                proration_behavior=proration_behavior,
+                items=[{
+                    "id": stripe_subscription["items"]["data"][0].id,
+                    "price": PLAN_MAPPING[new_plan_type]
+                }],
+                metadata={
+                    "client_id": client.client_id,
+                    "plan_type": new_plan_type
+                }
+            )
+            
+            # Get updated subscription details
+            updated_stripe_sub = stripe.Subscription.retrieve(stripe_subscription_id)
+            
+            # Get limits for the new plan
+            plan_limits = PLAN_LIMITS[new_plan_type]
+            
+            # Update our database
+            expires_at = datetime.fromtimestamp(updated_stripe_sub.current_period_end)
+            
+            updated_sub = self.subscription_repo.update(db, db_obj=active_sub, obj_in={
+                "plan_type": new_plan_type,
+                "message_limit": plan_limits["message_limit"],
+                "user_limit": plan_limits["user_limit"],
+                "expires_at": expires_at
+            })
+            
+            logger.info(f"Updated subscription for client {client.client_id} to {new_plan_type}")
+            
+            return {
+                "subscription_id": updated_sub.id,
+                "plan_type": new_plan_type,
+                "status": "active",
+                "stripe_subscription_id": stripe_subscription_id,
+                "current_period_end": updated_stripe_sub.current_period_end
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error updating subscription for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to update subscription: {str(e)}"
+            )
+    
+    async def cancel_subscription(
+        self,
+        db,
+        client: Client,
+        cancel_immediately: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Cancel a client's subscription.
+        
+        Args:
+            db: Database session
+            client: Client entity
+            cancel_immediately: If True, cancel immediately; otherwise, cancel at period end
+            
+        Returns:
+            Cancellation details
+        """
+        try:
+            # Get active subscription
+            active_sub = self.subscription_repo.get_active_subscription(db, client.client_id)
+            if not active_sub:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No active subscription found"
+                )
+            
+            # Get Stripe subscription ID
+            stripe_subscription_id = active_sub.payment_id
+            if not stripe_subscription_id:
+                # This is a subscription not linked to Stripe, just update our DB
+                active_sub.status = "cancelled"
+                db.add(active_sub)
+                db.commit()
+                db.refresh(active_sub)
+                
+                logger.info(f"Cancelled non-Stripe subscription for client {client.client_id}")
+                
+                return {
+                    "subscription_id": active_sub.id,
+                    "status": "cancelled",
+                    "cancelled_at": datetime.utcnow().isoformat()
+                }
+            
+            # Cancel in Stripe
+            if cancel_immediately:
+                # Immediately cancel
+                cancelled_subscription = stripe.Subscription.delete(stripe_subscription_id)
+            else:
+                # Cancel at period end
+                cancelled_subscription = stripe.Subscription.modify(
+                    stripe_subscription_id,
+                    cancel_at_period_end=True
+                )
+            
+            # Update our database
+            active_sub.status = "cancelled" if cancel_immediately else "pending_cancellation"
+            db.add(active_sub)
+            db.commit()
+            db.refresh(active_sub)
+            
+            logger.info(f"Cancelled subscription for client {client.client_id}: {stripe_subscription_id}")
+            
+            return {
+                "subscription_id": active_sub.id,
+                "status": active_sub.status,
+                "stripe_subscription_id": stripe_subscription_id,
+                "cancelled_at": datetime.utcnow().isoformat(),
+                "effective_cancellation_date": datetime.fromtimestamp(cancelled_subscription.current_period_end).isoformat() if not cancel_immediately else None
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error cancelling subscription for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to cancel subscription: {str(e)}"
+            )
+    
+    async def get_payment_methods(self, client: Client) -> List[Dict[str, Any]]:
+        """
+        Get a client's saved payment methods.
+        
+        Args:
+            client: Client entity
+            
+        Returns:
+            List of payment methods
+        """
+        try:
+            # Check if client has a Stripe customer ID
+            stripe_customer_id = await self._ensure_customer_id(client)
+            
+            # Get payment methods
+            payment_methods = stripe.PaymentMethod.list(
+                customer=stripe_customer_id,
+                type="card"
+            )
+            
+            # Format the response
+            formatted_methods = []
+            for method in payment_methods.data:
+                card = method.card
+                formatted_methods.append({
+                    "id": method.id,
+                    "type": method.type,
+                    "card": {
+                        "brand": card.brand,
+                        "last4": card.last4,
+                        "exp_month": card.exp_month,
+                        "exp_year": card.exp_year
+                    },
+                    "billing_details": method.billing_details,
+                    "created": datetime.fromtimestamp(method.created).isoformat()
+                })
+            
+            return formatted_methods
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error getting payment methods for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to get payment methods: {str(e)}"
+            )
+    
+    async def add_payment_method(
+        self,
+        client: Client,
+        payment_method_id: str,
+        set_as_default: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Add a payment method for a client.
+        
+        Args:
+            client: Client entity
+            payment_method_id: Stripe payment method ID
+            set_as_default: Whether to set this payment method as default
+            
+        Returns:
+            Added payment method details
+        """
+        try:
+            # Check if client has a Stripe customer ID
+            stripe_customer_id = await self._ensure_customer_id(client)
+            
+            # Attach the payment method to the customer
+            payment_method = stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=stripe_customer_id
+            )
+            
+            # Set as default if requested
+            if set_as_default:
+                stripe.Customer.modify(
+                    stripe_customer_id,
+                    invoice_settings={
+                        "default_payment_method": payment_method_id
+                    }
+                )
+            
+            # Format the response
+            card = payment_method.card
+            return {
+                "id": payment_method.id,
+                "type": payment_method.type,
+                "card": {
+                    "brand": card.brand,
+                    "last4": card.last4,
+                    "exp_month": card.exp_month,
+                    "exp_year": card.exp_year
+                },
+                "billing_details": payment_method.billing_details,
+                "created": datetime.fromtimestamp(payment_method.created).isoformat(),
+                "is_default": set_as_default
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error adding payment method for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to add payment method: {str(e)}"
+            )
+    
+    async def get_subscription_info(self, client: Client) -> Dict[str, Any]:
+        """
+        Get detailed subscription information for a client.
+        
+        Args:
+            client: Client entity
+            
+        Returns:
+            Subscription information
+        """
+        try:
+            # Get Stripe subscription ID from our database
+            subscription = self.subscription_repo.get_active_subscription(db, client.client_id)
+            if not subscription or not subscription.payment_id:
+                # Return basic subscription info from our database
+                return {
+                    "subscription_id": subscription.id if subscription else None,
+                    "plan_type": subscription.plan_type if subscription else "none",
+                    "status": subscription.status if subscription else "inactive",
+                    "start_date": subscription.starts_at.isoformat() if subscription and subscription.starts_at else None,
+                    "end_date": subscription.expires_at.isoformat() if subscription and subscription.expires_at else None,
+                    "limits": PLAN_LIMITS.get(subscription.plan_type if subscription else "free", {})
+                }
+            
+            # Get subscription from Stripe
+            stripe_subscription = stripe.Subscription.retrieve(subscription.payment_id)
+            
+            # Format the response
+            return {
+                "subscription_id": subscription.id,
+                "stripe_subscription_id": stripe_subscription.id,
+                "plan_type": subscription.plan_type,
+                "status": stripe_subscription.status,
+                "current_period_start": datetime.fromtimestamp(stripe_subscription.current_period_start).isoformat(),
+                "current_period_end": datetime.fromtimestamp(stripe_subscription.current_period_end).isoformat(),
+                "cancel_at_period_end": stripe_subscription.cancel_at_period_end,
+                "canceled_at": datetime.fromtimestamp(stripe_subscription.canceled_at).isoformat() if stripe_subscription.canceled_at else None,
+                "limits": PLAN_LIMITS.get(subscription.plan_type, {})
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error getting subscription info for {client.client_id}: {str(e)}")
+            # Fall back to database information
+            return {
+                "subscription_id": subscription.id if subscription else None,
+                "plan_type": subscription.plan_type if subscription else "none",
+                "status": subscription.status if subscription else "inactive",
+                "start_date": subscription.starts_at.isoformat() if subscription and subscription.starts_at else None,
+                "end_date": subscription.expires_at.isoformat() if subscription and subscription.expires_at else None,
+                "limits": PLAN_LIMITS.get(subscription.plan_type if subscription else "free", {})
+            }
+    
+    async def get_invoices(self, client: Client, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get a client's invoices.
+        
+        Args:
+            client: Client entity
+            limit: Maximum number of invoices to retrieve
+            
+        Returns:
+            List of invoices
+        """
+        try:
+            # Check if client has a Stripe customer ID
+            stripe_customer_id = await self._ensure_customer_id(client)
+            
+            # Get invoices
+            invoices = stripe.Invoice.list(
+                customer=stripe_customer_id,
+                limit=limit
+            )
+            
+            # Format the response
+            formatted_invoices = []
+            for invoice in invoices.data:
+                formatted_invoices.append({
+                    "id": invoice.id,
+                    "number": invoice.number,
+                    "amount_due": invoice.amount_due / 100,  # Convert from cents to dollars
+                    "amount_paid": invoice.amount_paid / 100,
+                    "currency": invoice.currency,
+                    "status": invoice.status,
+                    "created": datetime.fromtimestamp(invoice.created).isoformat(),
+                    "period_start": datetime.fromtimestamp(invoice.period_start).isoformat(),
+                    "period_end": datetime.fromtimestamp(invoice.period_end).isoformat(),
+                    "pdf_url": invoice.invoice_pdf
+                })
+            
+            return formatted_invoices
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error getting invoices for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to get invoices: {str(e)}"
+            )
+    
+    async def create_checkout_session(
+        self, 
+        client: Client, 
+        plan_type: str,
+        success_url: str,
+        cancel_url: str
+    ) -> Dict[str, Any]:
+        """
+        Create a Checkout session for subscription signup.
+        
+        Args:
+            client: Client entity
+            plan_type: Subscription plan type
+            success_url: URL to redirect to on success
+            cancel_url: URL to redirect to on cancellation
+            
+        Returns:
+            Checkout session details
+        """
+        if plan_type not in PLAN_MAPPING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid plan type: {plan_type}"
+            )
+        
+        try:
+            # Check if client has a Stripe customer ID
+            stripe_customer_id = await self._ensure_customer_id(client)
+            
+            # Create the checkout session
+            checkout_session = stripe.checkout.Session.create(
+                customer=stripe_customer_id,
+                payment_method_types=["card"],
+                line_items=[
+                    {
+                        "price": PLAN_MAPPING[plan_type],
+                        "quantity": 1
+                    }
+                ],
+                mode="subscription",
+                success_url=success_url,
+                cancel_url=cancel_url,
+                metadata={
+                    "client_id": client.client_id,
+                    "plan_type": plan_type
+                }
+            )
+            
+            return {
+                "checkout_url": checkout_session.url,
+                "session_id": checkout_session.id
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error creating checkout session for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to create checkout session: {str(e)}"
+            )
+    
+    async def create_billing_portal_session(
+        self,
+        client: Client,
+        return_url: str
+    ) -> Dict[str, Any]:
+        """
+        Create a billing portal session for subscription management.
+        
+        Args:
+            client: Client entity
+            return_url: URL to return to after billing portal
+            
+        Returns:
+            Billing portal session details
+        """
+        try:
+            # Check if client has a Stripe customer ID
+            stripe_customer_id = await self._ensure_customer_id(client)
+            
+            # Create the billing portal session
+            portal_session = stripe.billing_portal.Session.create(
+                customer=stripe_customer_id,
+                return_url=return_url
+            )
+            
+            return {
+                "portal_url": portal_session.url
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error creating billing portal for {client.client_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to create billing portal: {str(e)}"
+            )
+    
+    async def get_recommended_plan(self, db, client: Client) -> Dict[str, Any]:
+        """
+        Get a recommended plan based on client's usage patterns.
+        
+        Args:
+            db: Database session
+            client: Client entity
+            
+        Returns:
+            Recommended plan details
+        """
+        # Get current subscription
+        current_sub = self.subscription_repo.get_active_subscription(db, client.client_id)
+        current_plan = current_sub.plan_type if current_sub else "free"
+        
+        # Get usage data
+        usage_data = self.usage_tracker.check_subscription_limits(db, client.client_id)
+        
+        # Initialize with current plan
+        recommended_plan = current_plan
+        recommendation_reason = "Your current plan meets your needs."
+        
+        # Check message usage percentage
+        message_percentage = usage_data.get("current", {}).get("messages", {}).get("percentage", 0)
+        user_percentage = usage_data.get("current", {}).get("users", {}).get("percentage", 0)
+        storage_percentage = usage_data.get("current", {}).get("storage", {}).get("percentage", 0)
+        
+        # Determine if upgrade needed
+        # If usage consistently over 80% of any limit, suggest an upgrade
+        if message_percentage > 80 or user_percentage > 80 or storage_percentage > 80:
+            # Logic to determine which plan to recommend
+            if current_plan == "free":
+                recommended_plan = "basic"
+                if message_percentage > user_percentage and message_percentage > storage_percentage:
+                    recommendation_reason = f"You're using {message_percentage:.1f}% of your message limit. Upgrading will give you 10x more messages."
+                elif user_percentage > message_percentage and user_percentage > storage_percentage:
+                    recommendation_reason = f"You're using {user_percentage:.1f}% of your user limit. Upgrading will give you 5x more users."
+                else:
+                    recommendation_reason = f"You're using {storage_percentage:.1f}% of your storage limit. Upgrading will give you 10x more storage."
+            elif current_plan == "basic":
+                recommended_plan = "professional"
+                if message_percentage > user_percentage and message_percentage > storage_percentage:
+                    recommendation_reason = f"You're using {message_percentage:.1f}% of your message limit. Upgrading will give you 4x more messages."
+                elif user_percentage > message_percentage and user_percentage > storage_percentage:
+                    recommendation_reason = f"You're using {user_percentage:.1f}% of your user limit. Upgrading will give you 4x more users."
+                else:
+                    recommendation_reason = f"You're using {storage_percentage:.1f}% of your storage limit. Upgrading will give you 4x more storage."
+            elif current_plan == "professional":
+                recommended_plan = "enterprise"
+                if message_percentage > user_percentage and message_percentage > storage_percentage:
+                    recommendation_reason = f"You're using {message_percentage:.1f}% of your message limit. Upgrading will give you 5x more messages."
+                elif user_percentage > message_percentage and user_percentage > storage_percentage:
+                    recommendation_reason = f"You're using {user_percentage:.1f}% of your user limit. Upgrading will give you 5x more users."
+                else:
+                    recommendation_reason = f"You're using {storage_percentage:.1f}% of your storage limit. Upgrading will give you 5x more storage."
+        
+        # Check if downgrade might be appropriate (usage less than 20% for 3 consecutive months)
+        elif message_percentage < 20 and user_percentage < 20 and storage_percentage < 20:
+            # Check historical data for consistent low usage
+            # Simplified for now, in real implementation would check multiple months
+            if current_plan == "enterprise":
+                recommended_plan = "professional"
+                recommendation_reason = "Your usage is consistently below 20% of limits. You could save money by downgrading to Professional plan."
+            elif current_plan == "professional":
+                recommended_plan = "basic"
+                recommendation_reason = "Your usage is consistently below 20% of limits. You could save money by downgrading to Basic plan."
+            elif current_plan == "basic":
+                # Only recommend downgrade to free if they're using very little
+                if message_percentage < 10 and user_percentage < 10 and storage_percentage < 10:
+                    recommended_plan = "free"
+                    recommendation_reason = "Your usage is very low. You could switch to the Free plan."
+        
+        return {
+            "current_plan": current_plan,
+            "recommended_plan": recommended_plan,
+            "recommendation_reason": recommendation_reason,
+            "current_limits": PLAN_LIMITS.get(current_plan, {}),
+            "recommended_limits": PLAN_LIMITS.get(recommended_plan, {}),
+            "usage_data": usage_data
+        }
+    
+    async def _ensure_customer_id(self, client: Client) -> str:
+        """
+        Ensure client has a Stripe customer ID, creating one if not.
+        
+        Args:
+            client: Client entity
+            
+        Returns:
+            Stripe customer ID
+        """
+        # Check if client has a Stripe customer ID stored in metadata or a related table
+        # This is a simplified version; in a real implementation, you'd store this in the database
+        
+        # For this example, let's search for an existing customer by email
+        customers = stripe.Customer.list(email=client.email, limit=1)
+        
+        if customers and customers.data:
+            return customers.data[0].id
+        
+        # Create a new customer if none exists
+        customer = await self.create_customer(client)
+        return customer["id"]
+    
+    def _check_if_requires_action(self, subscription: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Check if a subscription requires additional action for payment.
+        
+        Args:
+            subscription: Stripe subscription object
+            
+        Returns:
+            Action details if required, None otherwise
+        """
+        if (
+            hasattr(subscription, "latest_invoice") and
+            subscription.latest_invoice and
+            hasattr(subscription.latest_invoice, "payment_intent") and
+            subscription.latest_invoice.payment_intent
+        ):
+            pi = subscription.latest_invoice.payment_intent
+            
+            if pi.status == "requires_action":
+                return {
+                    "requires_action": True,
+                    "payment_intent_client_secret": pi.client_secret
+                }
+        
+        return None
+    
+    async def handle_webhook_event(self, event_data: Dict[str, Any], db) -> Dict[str, Any]:
+        """
+        Handle a webhook event from Stripe.
+        
+        Args:
+            event_data: Webhook event data
+            db: Database session
+            
+        Returns:
+            Processing result
+        """
+        try:
+            event_type = event_data["type"]
+            event_object = event_data["data"]["object"]
+            
+            logger.info(f"Processing Stripe webhook: {event_type}")
+            
+            # Handle subscription events
+            if event_type == "customer.subscription.created":
+                await self._handle_subscription_created(event_object, db)
+            elif event_type == "customer.subscription.updated":
+                await self._handle_subscription_updated(event_object, db)
+            elif event_type == "customer.subscription.deleted":
+                await self._handle_subscription_deleted(event_object, db)
+            # Handle invoice events
+            elif event_type == "invoice.payment_succeeded":
+                await self._handle_payment_succeeded(event_object, db)
+            elif event_type == "invoice.payment_failed":
+                await self._handle_payment_failed(event_object, db)
+            
+            return {"status": "success", "event_type": event_type}
+            
+        except Exception as e:
+            logger.error(f"Error handling webhook event: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error handling webhook event: {str(e)}"
+            )
+    
+    async def _handle_subscription_created(self, subscription_data: Dict[str, Any], db) -> None:
+        """Handle subscription.created webhook event."""
+        # Get client_id from metadata
+        client_id = subscription_data.get("metadata", {}).get("client_id")
+        if not client_id:
+            logger.warning("No client_id in subscription metadata")
+            return
+        
+        # Get existing subscription from our DB
+        existing_sub = self.subscription_repo.get_active_subscription(db, client_id)
+        
+        # If we already have this subscription, just update it
+        if existing_sub and existing_sub.payment_id == subscription_data["id"]:
+            logger.info(f"Subscription already exists for {client_id}")
+            return
+        
+        # Otherwise, create a new subscription
+        plan_type = subscription_data.get("metadata", {}).get("plan_type", "basic")
+        plan_limits = PLAN_LIMITS[plan_type]
+        
+        # Create new subscription in our database
+        current_time = datetime.utcnow()
+        expires_at = current_time + timedelta(days=30)  # Default
+        
+        # Use Stripe data if available
+        if subscription_data.get("current_period_end"):
+            expires_at = datetime.fromtimestamp(subscription_data["current_period_end"])
+        
+        # Create or update subscription
+        if existing_sub:
+            # Update existing subscription
+            self.subscription_repo.update(db, db_obj=existing_sub, obj_in={
+                "plan_type": plan_type,
+                "status": "active",
+                "message_limit": plan_limits["message_limit"],
+                "user_limit": plan_limits["user_limit"],
+                "payment_id": subscription_data["id"],
+                "expires_at": expires_at
+            })
+        else:
+            # Create new subscription
+            self.subscription_repo.create(db, obj_in={
+                "client_id": client_id,
+                "plan_type": plan_type,
+                "status": "active",
+                "message_limit": plan_limits["message_limit"],
+                "user_limit": plan_limits["user_limit"],
+                "starts_at": current_time,
+                "expires_at": expires_at,
+                "payment_id": subscription_data["id"]
+            })
+        
+        logger.info(f"Created subscription for client {client_id} from webhook")
+    
+    async def _handle_subscription_updated(self, subscription_data: Dict[str, Any], db) -> None:
+        """Handle subscription.updated webhook event."""
+        # Get client_id from metadata
+        client_id = subscription_data.get("metadata", {}).get("client_id")
+        if not client_id:
+            logger.warning("No client_id in subscription metadata")
+            return
+        
+        # Get existing subscription from our DB
+        existing_sub = self.subscription_repo.get_by_payment_id(db, subscription_data["id"])
+        if not existing_sub:
+            logger.warning(f"No subscription found for Stripe subscription ID: {subscription_data['id']}")
+            return
+        
+        # Get plan type from metadata or use existing
+        plan_type = subscription_data.get("metadata", {}).get("plan_type", existing_sub.plan_type)
+        plan_limits = PLAN_LIMITS[plan_type]
+        
+        # Update status based on Stripe status
+        stripe_status = subscription_data["status"]
+        status_mapping = {
+            "active": "active",
+            "past_due": "past_due",
+            "unpaid": "unpaid",
+            "canceled": "cancelled",
+            "incomplete": "pending",
+            "incomplete_expired": "failed",
+            "trialing": "active"
+        }
+        status = status_mapping.get(stripe_status, existing_sub.status)
+        
+        # Update subscription in our DB
+        expires_at = existing_sub.expires_at
+        if subscription_data.get("current_period_end"):
+            expires_at = datetime.fromtimestamp(subscription_data["current_period_end"])
+        
+        self.subscription_repo.update(db, db_obj=existing_sub, obj_in={
+            "plan_type": plan_type,
+            "status": status,
+            "message_limit": plan_limits["message_limit"],
+            "user_limit": plan_limits["user_limit"],
+            "expires_at": expires_at
+        })
+        
+        logger.info(f"Updated subscription for client {client_id} from webhook")
+    
+    async def _handle_subscription_deleted(self, subscription_data: Dict[str, Any], db) -> None:
+        """Handle subscription.deleted webhook event."""
+        # Get existing subscription from our DB by Stripe ID
+        existing_sub = self.subscription_repo.get_by_payment_id(db, subscription_data["id"])
+        if not existing_sub:
+            logger.warning(f"No subscription found for Stripe subscription ID: {subscription_data['id']}")
+            return
+        
+        # Update subscription in our DB
+        self.subscription_repo.update(db, db_obj=existing_sub, obj_in={
+            "status": "cancelled"
+        })
+        
+        logger.info(f"Marked subscription as cancelled for client {existing_sub.client_id} from webhook")
+    
+    async def _handle_payment_succeeded(self, invoice_data: Dict[str, Any], db) -> None:
+        """Handle invoice.payment_succeeded webhook event."""
+        # Get subscription ID from invoice
+        subscription_id = invoice_data.get("subscription")
+        if not subscription_id:
+            logger.info("Invoice not related to a subscription")
+            return
+        
+        # Get existing subscription from our DB
+        existing_sub = self.subscription_repo.get_by_payment_id(db, subscription_id)
+        if not existing_sub:
+            logger.warning(f"No subscription found for Stripe subscription ID: {subscription_id}")
+            return
+        
+        # Update subscription in our DB if needed
+        if existing_sub.status != "active":
+            self.subscription_repo.update(db, db_obj=existing_sub, obj_in={
+                "status": "active"
+            })
+        
+        # If this payment extends the subscription period, update expires_at
+        if invoice_data.get("period_end"):
+            new_period_end = datetime.fromtimestamp(invoice_data["period_end"])
+            if new_period_end > existing_sub.expires_at:
+                self.subscription_repo.update(db, db_obj=existing_sub, obj_in={
+                    "expires_at": new_period_end
+                })
+        
+        logger.info(f"Payment succeeded for client {existing_sub.client_id}")
+    
+    async def _handle_payment_failed(self, invoice_data: Dict[str, Any], db) -> None:
+        """Handle invoice.payment_failed webhook event."""
+        # Get subscription ID from invoice
+        subscription_id = invoice_data.get("subscription")
+        if not subscription_id:
+            logger.info("Invoice not related to a subscription")
+            return
+        
+        # Get existing subscription from our DB
+        existing_sub = self.subscription_repo.get_by_payment_id(db, subscription_id)
+        if not existing_sub:
+            logger.warning(f"No subscription found for Stripe subscription ID: {subscription_id}")
+            return
+        
+        # Update subscription status in our DB
+        self.subscription_repo.update(db, db_obj=existing_sub, obj_in={
+            "status": "past_due"
+        })
+        
+        logger.info(f"Payment failed for client {existing_sub.client_id}")

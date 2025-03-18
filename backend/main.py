@@ -10,7 +10,9 @@ from app.core.database.session import engine, Base
 from app.core import logger
 from app.core.middleware.client_context import ClientContextMiddleware
 from app.core.middleware.analytics_middleware import AnalyticsMiddleware
-from app.api.debug import analytics_debug
+from app.core.middleware.subscription_limit_middleware import SubscriptionLimitMiddleware
+
+
 
 # Import routes
 from app.api.auth import routes as auth_routes
@@ -23,7 +25,10 @@ from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
 from app.api.knowledge import collection_routes
 from app.api.integration import routes as integration_routes  
-from app.api.widget import router as widget_router  
+from app.api.widget import router as widget_router 
+from app.api.client import subscription_routes
+from app.api.notifications import router as notifications_router
+
 
 
 import logging
@@ -55,8 +60,10 @@ app.add_middleware(
 )
 
 # Add middleware (order matters)
-app.add_middleware(ClientContextMiddleware)  # Must be before AnalyticsMiddleware
+app.add_middleware(ClientContextMiddleware) 
+app.add_middleware(SubscriptionLimitMiddleware)
 app.add_middleware(AnalyticsMiddleware)
+
 
 # Include routes
 app.include_router(auth_routes.router, prefix="/api")
@@ -68,9 +75,10 @@ app.include_router(session_routes.router, prefix="/api")
 app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
-app.include_router(analytics_debug.router, prefix="/api")
 app.include_router(integration_routes.router, prefix="/api")  # Add this line
 app.include_router(widget_router, prefix="/api")  
+app.include_router(subscription_routes.router, prefix="/api")
+app.include_router(notifications_router, prefix="/api")
 
 # Request logging middleware
 @app.middleware("http")
