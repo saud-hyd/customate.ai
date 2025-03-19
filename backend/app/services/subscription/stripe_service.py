@@ -1,3 +1,4 @@
+# backend/app/services/subscription/stripe_service.py
 import stripe
 import logging
 from typing import Dict, Any, Optional, List
@@ -60,6 +61,9 @@ PLAN_LIMITS = {
 
 class StripeService:
     """Service for managing Stripe subscriptions and payments."""
+    
+    # Static webhook secret for stripe verification
+    WEBHOOK_SECRET = settings.STRIPE_WEBHOOK_SECRET
     
     def __init__(self):
         """Initialize Stripe service."""
@@ -148,7 +152,37 @@ class StripeService:
                         detail=f"Payment method error: {str(e)}"
                     )
             
-            # Create the subscription
+            # For free plans, we don't need to create a Stripe subscription
+            if plan_type == "free":
+                # Create free plan in our database
+                current_time = datetime.utcnow()
+                plan_limits = PLAN_LIMITS[plan_type]
+                
+                subscription = self.subscription_repo.create(db, obj_in={
+                    "client_id": client.client_id,
+                    "plan_type": "free",
+                    "status": "active",
+                    "message_limit": plan_limits["message_limit"],
+                    "user_limit": plan_limits["user_limit"],
+                    "starts_at": current_time,
+                    "expires_at": None,  # Free plan doesn't expire
+                    "is_trial": False
+                })
+                
+                logger.info(f"Created free subscription for client {client.client_id}")
+                
+                # Initialize usage counters
+                self.usage_tracker.initialize_subscription_usage(db, client.client_id)
+                
+                return {
+                    "subscription_id": subscription.id,
+                    "plan_type": "free",
+                    "status": "active",
+                    "stripe_subscription_id": None,
+                    "customer_id": stripe_customer_id
+                }
+            
+            # Create the subscription for paid plans
             subscription_data = {
                 "customer": stripe_customer_id,
                 "items": [
@@ -166,11 +200,6 @@ class StripeService:
             # Add trial period if specified
             if trial_days > 0:
                 subscription_data["trial_period_days"] = trial_days
-            
-            # For free plans, set billing to send invoice and due days far in future
-            if plan_type == "free":
-                subscription_data["collection_method"] = "send_invoice"
-                subscription_data["days_until_due"] = 365 * 10  # ~10 years
             
             # Create the subscription in Stripe
             stripe_subscription = stripe.Subscription.create(**subscription_data)
@@ -257,68 +286,135 @@ class StripeService:
         try:
             # Get active subscription
             active_sub = self.subscription_repo.get_active_subscription(db, client.client_id)
-            if not active_sub:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="No active subscription found"
-                )
             
-            # Get Stripe subscription ID
-            stripe_subscription_id = active_sub.payment_id
-            if not stripe_subscription_id:
-                # This is likely a subscription not yet connected to Stripe
-                # Create a new subscription instead
+            # If no active subscription found, create a free tier subscription first
+            if not active_sub:
+                logger.info(f"No active subscription found for client {client.client_id}, creating free tier first")
+                
+                # Create free tier subscription in our database
+                plan_limits = PLAN_LIMITS["free"]
+                active_sub = self.subscription_repo.create(db, obj_in={
+                    "client_id": client.client_id,
+                    "plan_type": "free",
+                    "status": "active",
+                    "message_limit": plan_limits["message_limit"],
+                    "user_limit": plan_limits["user_limit"],
+                    "starts_at": datetime.utcnow(),
+                    "expires_at": None,  # Free plan doesn't expire
+                    "is_trial": False
+                })
+                
+                logger.info(f"Created free tier subscription for client {client.client_id}")
+                
+                # If upgrading to same free plan, just return it
+                if new_plan_type == "free":
+                    return {
+                        "subscription_id": active_sub.id,
+                        "plan_type": "free",
+                        "status": "active",
+                        "message_limit": plan_limits["message_limit"],
+                        "user_limit": plan_limits["user_limit"]
+                    }
+                
+                # For non-free plans, proceed to create a new subscription
+                if new_plan_type != "free":
+                    return await self.create_subscription(db, client, new_plan_type)
+            
+            # If current plan is free and upgrading to paid plan
+            if active_sub.plan_type == "free" and new_plan_type != "free":
+                # Create a new Stripe subscription
                 return await self.create_subscription(db, client, new_plan_type)
             
-            # Fetch the subscription from Stripe
-            stripe_subscription = stripe.Subscription.retrieve(stripe_subscription_id)
-            
-            # Update the subscription items
-            stripe.Subscription.modify(
-                stripe_subscription_id,
-                cancel_at_period_end=False,
-                proration_behavior=proration_behavior,
-                items=[{
-                    "id": stripe_subscription["items"]["data"][0].id,
-                    "price": PLAN_MAPPING[new_plan_type]
-                }],
-                metadata={
-                    "client_id": client.client_id,
-                    "plan_type": new_plan_type
+            # If downgrading to free plan
+            if new_plan_type == "free":
+                # If they have a Stripe subscription ID, cancel it
+                if active_sub.payment_id:
+                    try:
+                        stripe.Subscription.delete(active_sub.payment_id)
+                    except stripe.error.StripeError as e:
+                        logger.error(f"Error cancelling Stripe subscription: {str(e)}")
+                
+                # Update to free plan in database
+                plan_limits = PLAN_LIMITS["free"]
+                updated_sub = self.subscription_repo.update(db, db_obj=active_sub, obj_in={
+                    "plan_type": "free",
+                    "status": "active",
+                    "message_limit": plan_limits["message_limit"],
+                    "user_limit": plan_limits["user_limit"],
+                    "expires_at": None,  # Free plan doesn't expire
+                    "payment_id": None  # Clear Stripe subscription ID
+                })
+                
+                return {
+                    "subscription_id": updated_sub.id,
+                    "plan_type": "free",
+                    "status": "active"
                 }
-            )
             
-            # Get updated subscription details
-            updated_stripe_sub = stripe.Subscription.retrieve(stripe_subscription_id)
+            # For paid plan changes
+            # Get Stripe subscription ID or create one if it's missing
+            stripe_subscription_id = active_sub.payment_id
+            if not stripe_subscription_id:
+                # No Stripe subscription yet, create one
+                return await self.create_subscription(db, client, new_plan_type)
             
-            # Get limits for the new plan
-            plan_limits = PLAN_LIMITS[new_plan_type]
+            # Update existing Stripe subscription
+            try:
+                # Fetch the subscription from Stripe
+                stripe_subscription = stripe.Subscription.retrieve(stripe_subscription_id)
+                
+                # Update the subscription items
+                stripe.Subscription.modify(
+                    stripe_subscription_id,
+                    cancel_at_period_end=False,
+                    proration_behavior=proration_behavior,
+                    items=[{
+                        "id": stripe_subscription["items"]["data"][0].id,
+                        "price": PLAN_MAPPING[new_plan_type]
+                    }],
+                    metadata={
+                        "client_id": client.client_id,
+                        "plan_type": new_plan_type
+                    }
+                )
+                
+                # Get updated subscription details
+                updated_stripe_sub = stripe.Subscription.retrieve(stripe_subscription_id)
+                
+                # Get limits for the new plan
+                plan_limits = PLAN_LIMITS[new_plan_type]
+                
+                # Update our database
+                expires_at = datetime.fromtimestamp(updated_stripe_sub.current_period_end)
+                
+                updated_sub = self.subscription_repo.update(db, db_obj=active_sub, obj_in={
+                    "plan_type": new_plan_type,
+                    "message_limit": plan_limits["message_limit"],
+                    "user_limit": plan_limits["user_limit"],
+                    "expires_at": expires_at
+                })
+                
+                logger.info(f"Updated subscription for client {client.client_id} to {new_plan_type}")
+                
+                return {
+                    "subscription_id": updated_sub.id,
+                    "plan_type": new_plan_type,
+                    "status": "active",
+                    "stripe_subscription_id": stripe_subscription_id,
+                    "current_period_end": updated_stripe_sub.current_period_end
+                }
+            except stripe.error.StripeError as e:
+                logger.error(f"Stripe error updating subscription: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Failed to update subscription: {str(e)}"
+                )
             
-            # Update our database
-            expires_at = datetime.fromtimestamp(updated_stripe_sub.current_period_end)
-            
-            updated_sub = self.subscription_repo.update(db, db_obj=active_sub, obj_in={
-                "plan_type": new_plan_type,
-                "message_limit": plan_limits["message_limit"],
-                "user_limit": plan_limits["user_limit"],
-                "expires_at": expires_at
-            })
-            
-            logger.info(f"Updated subscription for client {client.client_id} to {new_plan_type}")
-            
-            return {
-                "subscription_id": updated_sub.id,
-                "plan_type": new_plan_type,
-                "status": "active",
-                "stripe_subscription_id": stripe_subscription_id,
-                "current_period_end": updated_stripe_sub.current_period_end
-            }
-            
-        except stripe.error.StripeError as e:
-            logger.error(f"Stripe error updating subscription for {client.client_id}: {str(e)}")
+        except Exception as e:
+            logger.exception(f"Error updating subscription: {str(e)}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Failed to update subscription: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to update subscription plan: {str(e)}"
             )
     
     async def cancel_subscription(
@@ -517,15 +613,29 @@ class StripeService:
         try:
             # Get Stripe subscription ID from our database
             subscription = self.subscription_repo.get_active_subscription(db, client.client_id)
-            if not subscription or not subscription.payment_id:
+            
+            # If no active subscription, return default free tier information
+            if not subscription:
+                # Return free tier subscription info
+                return {
+                    "subscription_id": None,
+                    "plan_type": "free",
+                    "status": "active",
+                    "start_date": datetime.utcnow().isoformat(),
+                    "end_date": None,
+                    "limits": PLAN_LIMITS.get("free", {})
+                }
+                
+            # If subscription exists but has no Stripe payment ID
+            if not subscription.payment_id:
                 # Return basic subscription info from our database
                 return {
-                    "subscription_id": subscription.id if subscription else None,
-                    "plan_type": subscription.plan_type if subscription else "none",
-                    "status": subscription.status if subscription else "inactive",
-                    "start_date": subscription.starts_at.isoformat() if subscription and subscription.starts_at else None,
-                    "end_date": subscription.expires_at.isoformat() if subscription and subscription.expires_at else None,
-                    "limits": PLAN_LIMITS.get(subscription.plan_type if subscription else "free", {})
+                    "subscription_id": subscription.id,
+                    "plan_type": subscription.plan_type,
+                    "status": subscription.status,
+                    "start_date": subscription.starts_at.isoformat() if subscription.starts_at else None,
+                    "end_date": subscription.expires_at.isoformat() if subscription.expires_at else None,
+                    "limits": PLAN_LIMITS.get(subscription.plan_type, {})
                 }
             
             # Get subscription from Stripe
@@ -547,14 +657,25 @@ class StripeService:
         except stripe.error.StripeError as e:
             logger.error(f"Stripe error getting subscription info for {client.client_id}: {str(e)}")
             # Fall back to database information
-            return {
-                "subscription_id": subscription.id if subscription else None,
-                "plan_type": subscription.plan_type if subscription else "none",
-                "status": subscription.status if subscription else "inactive",
-                "start_date": subscription.starts_at.isoformat() if subscription and subscription.starts_at else None,
-                "end_date": subscription.expires_at.isoformat() if subscription and subscription.expires_at else None,
-                "limits": PLAN_LIMITS.get(subscription.plan_type if subscription else "free", {})
-            }
+            if subscription:
+                return {
+                    "subscription_id": subscription.id,
+                    "plan_type": subscription.plan_type,
+                    "status": subscription.status,
+                    "start_date": subscription.starts_at.isoformat() if subscription.starts_at else None,
+                    "end_date": subscription.expires_at.isoformat() if subscription.expires_at else None,
+                    "limits": PLAN_LIMITS.get(subscription.plan_type, {})
+                }
+            else:
+                # If no subscription, return free tier info
+                return {
+                    "subscription_id": None,
+                    "plan_type": "free",
+                    "status": "active",
+                    "start_date": datetime.utcnow().isoformat(),
+                    "end_date": None,
+                    "limits": PLAN_LIMITS.get("free", {})
+                }
     
     async def get_invoices(self, client: Client, limit: int = 10) -> List[Dict[str, Any]]:
         """

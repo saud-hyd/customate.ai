@@ -44,6 +44,11 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
                         request.state.client_id = client.client_id
                         request.state.client = client
                         client_id = client.client_id
+                        
+                        # Initialize subscription usage if needed - can be added here
+                        # from app.services.analytics.usage_tracker import UsageTracker
+                        # usage_tracker = UsageTracker()
+                        # usage_tracker.initialize_subscription_usage(db, client.client_id)
                 finally:
                     db.close()
         
@@ -65,6 +70,27 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
             f"Status: {response.status_code} "
             f"Process Time: {process_time:.4f}s"
         )
+        
+        # In the dispatch method after the request processing
+        # Update usage tracking
+        if client_id and response.status_code < 500:
+            try:
+                # Track user activity for subscription limits
+                from app.services.analytics.usage_tracker import UsageTracker
+                tracker = UsageTracker()
+                
+                # Increment active user count if this is a new user session
+                user_id = request.headers.get("X-User-ID") or request.query_params.get("user_id")
+                if user_id:
+                    # In a real async implementation, this would need to be handled properly
+                    # For now, we're using a sync method in an async context
+                    db = SessionLocal()
+                    try:
+                        tracker.track_user_activity(db, client_id, user_id)
+                    finally:
+                        db.close()
+            except Exception as e:
+                logger.error(f"Error tracking user activity: {str(e)}")
         
         return response
         

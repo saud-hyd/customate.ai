@@ -88,8 +88,12 @@ async def change_subscription_plan(
         notification_service = NotificationService()
         
         # Get current subscription info
-        current_subscription_info = await stripe_service.get_subscription_info(current_client, db)  # Pass db here
-        current_plan = current_subscription_info.get("plan_type", "free")
+        try:
+            current_subscription_info = await stripe_service.get_subscription_info(current_client, db)
+            current_plan = current_subscription_info.get("plan_type", "free")
+        except Exception as e:
+            logger.warning(f"Error fetching current subscription, assuming free tier: {str(e)}")
+            current_plan = "free"
         
         # Update subscription
         result = await stripe_service.update_subscription(db, current_client, plan_type)
@@ -103,13 +107,16 @@ async def change_subscription_plan(
         )
         
         return result
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
         logger.exception(f"Error changing subscription plan: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to change subscription plan: {str(e)}"
         )
-        
+                
 @router.post("/cancel", response_model=Dict[str, Any])
 async def cancel_subscription(
     cancel_request: SubscriptionCancelRequest,

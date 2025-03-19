@@ -17,7 +17,7 @@ import {
   ChatBubbleLeftRightIcon, 
   UserGroupIcon, 
   CurrencyDollarIcon, 
-  ArchiveBoxIcon, // Replaced ArchiveIcon with ArchiveBoxIcon
+  ArchiveBoxIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   ExclamationTriangleIcon,
@@ -48,15 +48,33 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
     return <LoadingState message="Loading subscription data..." />;
   }
 
-  const { current, historical, subscription } = data;
+  // Add fallbacks for missing data
+  const current = data.current || {
+    messages: { used: 0, limit: 500, percentage: 0 },
+    users: { used: 0, limit: 5, percentage: 0 },
+    storage: { 
+      used_bytes: 0, 
+      limit_bytes: 52428800, // 50MB
+      percentage: 0,
+      used_mb: 0,
+      limit_mb: 50
+    }
+  };
+
+  const historical = data.historical || [];
+  const subscription = data.subscription || { 
+    plan_type: 'free', 
+    status: 'active',
+    expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString() // 30 days from now
+  };
 
   // Generate historical usage data for chart
   const historicalChartData = {
-    labels: historical?.map(item => item.month) || [],
+    labels: historical.map(item => item.month),
     datasets: [
       {
         label: 'Messages',
-        data: historical?.map(item => (item.messages_used / item.messages_limit) * 100) || [],
+        data: historical.map(item => (item.messages_used / Math.max(1, item.messages_limit)) * 100),
         fill: false,
         borderColor: 'rgba(59, 130, 246, 1)',
         backgroundColor: 'rgba(59, 130, 246, 0.5)',
@@ -64,7 +82,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       },
       {
         label: 'Users',
-        data: historical?.map(item => (item.active_users / item.active_users_limit) * 100) || [],
+        data: historical.map(item => (item.active_users / Math.max(1, item.active_users_limit)) * 100),
         fill: false,
         borderColor: 'rgba(139, 92, 246, 1)',
         backgroundColor: 'rgba(139, 92, 246, 0.5)',
@@ -72,7 +90,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       },
       {
         label: 'Storage',
-        data: historical?.map(item => (item.storage_used_bytes / item.storage_limit_bytes) * 100) || [],
+        data: historical.map(item => (item.storage_used_bytes / Math.max(1, item.storage_limit_bytes)) * 100),
         fill: false,
         borderColor: 'rgba(16, 185, 129, 1)',
         backgroundColor: 'rgba(16, 185, 129, 0.5)',
@@ -83,51 +101,51 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
 
   // Generate raw usage data for bar chart
   const rawUsageData = {
-    labels: historical?.map(item => item.month) || [],
+    labels: historical.map(item => item.month),
     datasets: [
       {
         label: 'Messages',
-        data: historical?.map(item => item.messages_used) || [],
+        data: historical.map(item => item.messages_used),
         backgroundColor: 'rgba(59, 130, 246, 0.7)',
       },
     ],
   };
   
-  // Current usage metrics
+  // Current usage metrics - ensure safe access with fallbacks
   const usageMetrics = [
     {
       title: 'Messages',
-      used: current?.messages?.used || 0,
-      limit: current?.messages?.limit || 1,
-      percentage: current?.messages?.percentage || 0,
+      used: current.messages?.used || 0,
+      limit: current.messages?.limit || 1,
+      percentage: current.messages?.percentage || 0,
       icon: ChatBubbleLeftRightIcon,
       color: 'blue',
     },
     {
       title: 'Active Users',
-      used: current?.users?.used || 0,
-      limit: current?.users?.limit || 1,
-      percentage: current?.users?.percentage || 0,
+      used: current.users?.used || 0,
+      limit: current.users?.limit || 1,
+      percentage: current.users?.percentage || 0,
       icon: UserGroupIcon,
       color: 'purple',
     },
     {
       title: 'Storage',
-      used: formatBytes(current?.storage?.used_bytes || 0),
-      limit: formatBytes(current?.storage?.limit_bytes || 0),
-      percentage: current?.storage?.percentage || 0,
-      icon: ArchiveBoxIcon, // Updated to ArchiveBoxIcon
+      used: formatBytes(current.storage?.used_bytes || 0),
+      limit: formatBytes(current.storage?.limit_bytes || 0),
+      percentage: current.storage?.percentage || 0,
+      icon: ArchiveBoxIcon,
       color: 'green',
     },
   ];
 
-  // Trend metrics (month-over-month changes)
+  // Only calculate trend metrics if we have at least 2 months of historical data
   const trendMetrics = historical && historical.length >= 2 ? [
     {
       title: 'Messages Growth',
       value: historical[0].messages_used - (historical[1]?.messages_used || 0),
       percentage: historical[1]?.messages_used ? 
-        ((historical[0].messages_used - historical[1].messages_used) / historical[1].messages_used) * 100 : 0,
+        ((historical[0].messages_used - historical[1].messages_used) / Math.max(1, historical[1].messages_used)) * 100 : 0,
       icon: ChatBubbleLeftRightIcon,
       color: 'blue',
     },
@@ -135,7 +153,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       title: 'User Growth',
       value: historical[0].active_users - (historical[1]?.active_users || 0),
       percentage: historical[1]?.active_users ? 
-        ((historical[0].active_users - historical[1].active_users) / historical[1].active_users) * 100 : 0,
+        ((historical[0].active_users - historical[1].active_users) / Math.max(1, historical[1].active_users)) * 100 : 0,
       icon: UserGroupIcon,
       color: 'purple',
     },
@@ -143,11 +161,37 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       title: 'Storage Growth',
       value: formatBytes(historical[0].storage_used_bytes - (historical[1]?.storage_used_bytes || 0)),
       percentage: historical[1]?.storage_used_bytes ? 
-        ((historical[0].storage_used_bytes - historical[1].storage_used_bytes) / historical[1].storage_used_bytes) * 100 : 0,
-      icon: ArchiveBoxIcon, // Updated to ArchiveBoxIcon
+        ((historical[0].storage_used_bytes - historical[1].storage_used_bytes) / Math.max(1, historical[1].storage_used_bytes)) * 100 : 0,
+      icon: ArchiveBoxIcon,
       color: 'green',
     },
   ] : [];
+  
+  // Helper function to get color classes
+  const getColorClass = (type, color) => {
+    const colorMap = {
+      bg: {
+        blue: 'bg-blue-500',
+        green: 'bg-green-500',
+        purple: 'bg-purple-500',
+        red: 'bg-red-500'
+      },
+      text: {
+        blue: 'text-blue-500',
+        green: 'text-green-500',
+        purple: 'text-purple-500',
+        red: 'text-red-500'
+      },
+      bgLight: {
+        blue: 'bg-blue-100',
+        green: 'bg-green-100',
+        purple: 'bg-purple-100',
+        red: 'bg-red-100'
+      }
+    };
+    
+    return colorMap[type][color] || '';
+  };
   
   return (
     <div className="space-y-8">
@@ -192,7 +236,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
             <div key={metric.title} className="space-y-2">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <metric.icon className={`h-5 w-5 text-${metric.color}-500 mr-2`} aria-hidden="true" />
+                  <metric.icon className={`h-5 w-5 ${getColorClass('text', metric.color)} mr-2`} aria-hidden="true" />
                   <span className="text-sm font-medium text-gray-700">{metric.title}</span>
                 </div>
                 <span className="text-sm text-gray-700">
@@ -201,7 +245,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
-                  className={`h-2.5 rounded-full bg-${metric.color}-500 ${
+                  className={`h-2.5 rounded-full ${getColorClass('bg', metric.color)} ${
                     metric.percentage > 90 ? 'animate-pulse' : ''
                   }`}
                   style={{ width: `${Math.min(metric.percentage, 100)}%` }}
@@ -230,69 +274,80 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       </div>
 
       {/* Historical usage chart */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Usage Trends (% of Plan Limits)</h3>
-        <div className="h-80">
-          <Line
-            data={historicalChartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  max: 100,
-                  title: {
-                    display: true,
-                    text: 'Percentage of Plan Limit',
+      {historical.length > 0 ? (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Usage Trends (% of Plan Limits)</h3>
+          <div className="h-80">
+            <Line
+              data={historicalChartData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                      display: true,
+                      text: 'Percentage of Plan Limit',
+                    },
+                    ticks: {
+                      callback: function(value) {
+                        return value + '%';
+                      }
+                    }
                   },
-                  ticks: {
-                    callback: function(value) {
-                      return value + '%';
+                },
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        label += context.parsed.y.toFixed(1) + '%';
+                        return label;
+                      }
                     }
                   }
                 },
-              },
-              plugins: {
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      let label = context.dataset.label || '';
-                      if (label) {
-                        label += ': ';
-                      }
-                      label += context.parsed.y.toFixed(1) + '%';
-                      return label;
-                    }
-                  }
-                }
-              },
-            }}
-          />
+              }}
+            />
+          </div>
+          <p className="mt-4 text-sm text-gray-500">
+            This chart shows your usage as a percentage of your plan limits over time.
+          </p>
         </div>
-        <p className="mt-4 text-sm text-gray-500">
-          This chart shows your usage as a percentage of your plan limits over time.
-        </p>
-      </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Usage Trends</h3>
+          <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Not enough historical data available yet.</p>
+          </div>
+        </div>
+      )}
 
       {/* Raw usage chart */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Message Volume</h3>
-        <div className="h-64">
-          <Bar
-            data={rawUsageData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  display: false,
+      {historical.length > 0 ? (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Message Volume</h3>
+          <div className="h-64">
+            <Bar
+              data={rawUsageData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
                 },
-              },
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/* Month-over-month trends */}
       {trendMetrics.length > 0 && (
@@ -321,8 +376,8 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
                     </p>
                   </div>
                 </div>
-                <div className={`p-2 rounded-md bg-${metric.color}-100`}>
-                  <metric.icon className={`h-6 w-6 text-${metric.color}-600`} aria-hidden="true" />
+                <div className={`p-2 rounded-md ${getColorClass('bgLight', metric.color)}`}>
+                  <metric.icon className={`h-6 w-6 ${getColorClass('text', metric.color)}`} aria-hidden="true" />
                 </div>
               </div>
             </div>
@@ -331,90 +386,96 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       )}
 
       {/* Historical usage table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 pt-6">
-          <h3 className="text-lg font-medium text-gray-900">Monthly Usage History</h3>
-        </div>
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Month
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Messages
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Active Users
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Storage
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Usage Level
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {historical?.map((month, idx) => (
-                <tr key={idx}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{month.month}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">
-                      {formatNumber(month.messages_used)} / {formatNumber(month.messages_limit)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {Math.round((month.messages_used / month.messages_limit) * 100)}% used
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">
-                      {formatNumber(month.active_users)} / {formatNumber(month.active_users_limit)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {Math.round((month.active_users / month.active_users_limit) * 100)}% used
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">
-                      {formatBytes(month.storage_used_bytes)} / {formatBytes(month.storage_limit_bytes)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {Math.round((month.storage_used_bytes / month.storage_limit_bytes) * 100)}% used
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {Math.max(
-                      (month.messages_used / month.messages_limit),
-                      (month.active_users / month.active_users_limit),
-                      (month.storage_used_bytes / month.storage_limit_bytes)
-                    ) * 100 > 90 ? (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                        High
-                      </span>
-                    ) : Math.max(
-                      (month.messages_used / month.messages_limit),
-                      (month.active_users / month.active_users_limit),
-                      (month.storage_used_bytes / month.storage_limit_bytes)
-                    ) * 100 > 70 ? (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                        Medium
-                      </span>
-                    ) : (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Low
-                      </span>
-                    )}
-                  </td>
+      {historical.length > 0 ? (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 pt-6">
+            <h3 className="text-lg font-medium text-gray-900">Monthly Usage History</h3>
+          </div>
+          <div className="mt-6 overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Month
+                  </th>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Messages
+                  </th>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Active Users
+                  </th>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Storage
+                  </th>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Usage Level
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {historical.map((month, idx) => (
+                  <tr key={idx}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">{month.month}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900">
+                        {formatNumber(month.messages_used)} / {formatNumber(month.messages_limit)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {Math.round((month.messages_used / Math.max(1, month.messages_limit)) * 100)}% used
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900">
+                        {formatNumber(month.active_users)} / {formatNumber(month.active_users_limit)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {Math.round((month.active_users / Math.max(1, month.active_users_limit)) * 100)}% used
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900">
+                        {formatBytes(month.storage_used_bytes)} / {formatBytes(month.storage_limit_bytes)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {Math.round((month.storage_used_bytes / Math.max(1, month.storage_limit_bytes)) * 100)}% used
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {Math.max(
+                        (month.messages_used / Math.max(1, month.messages_limit)),
+                        (month.active_users / Math.max(1, month.active_users_limit)),
+                        (month.storage_used_bytes / Math.max(1, month.storage_limit_bytes))
+                      ) * 100 > 90 ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                          High
+                        </span>
+                      ) : Math.max(
+                        (month.messages_used / Math.max(1, month.messages_limit)),
+                        (month.active_users / Math.max(1, month.active_users_limit)),
+                        (month.storage_used_bytes / Math.max(1, month.storage_limit_bytes))
+                      ) * 100 > 70 ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          Medium
+                        </span>
+                      ) : (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Low
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <p className="text-gray-500">No historical usage data available yet. Check back after using the service for a while.</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+// frontend/dashboard/src/pages/settings/SettingsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -28,8 +29,9 @@ const SettingsPage = () => {
     // Load subscription limits
     const fetchSubscriptionLimits = async () => {
       try {
-        const data = await analyticsService.checkSubscriptionLimits();
-        setSubscriptionLimits(data);
+        // Fixed: Use the correct service and method for fetching subscription limits
+        const data = await subscriptionService.getCurrentSubscription();
+        setSubscriptionLimits(data.limits);
       } catch (err) {
         console.error('Error fetching subscription limits:', err);
       }
@@ -136,6 +138,7 @@ const SettingsPage = () => {
             <SubscriptionContent 
               setError={setError} 
               setSuccess={setSuccess}
+              subscriptionLimits={subscriptionLimits}
             />
           )}
 

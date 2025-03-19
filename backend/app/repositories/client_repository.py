@@ -72,32 +72,37 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
         """Get client settings by client_id."""
         return db.query(self.model).filter(self.model.client_id == client_id).first()
     
-    def create(self, db: Session, *, obj_in: Dict[str, Any]) -> ClientSettings:
-        """Create client settings."""
-        # Check if settings already exist
-        existing = self.get_by_client_id(db, obj_in["client_id"])
-        if existing:
-            return existing
-            
-        # Create new settings with defaults
-        settings_data = {
-            "client_id": obj_in["client_id"],
-            "primary_color": obj_in.get("primary_color", "#4f46e5"),
-            "logo_url": obj_in.get("logo_url"),
-            "greeting_message": obj_in.get("greeting_message", "Hello! How can I help you today?"),
-            "enable_suggestions": obj_in.get("enable_suggestions", True),
-            "enable_typing_indicator": obj_in.get("enable_typing_indicator", True),
-            "widget_position": obj_in.get("widget_position", "bottom-right"),
-            "fallback_email": obj_in.get("fallback_email"),
-            "chatbot_name": obj_in.get("chatbot_name", "AI Assistant"),
-            "custom_settings": obj_in.get("custom_settings", {})
-        }
-        
-        db_obj = self.model(**settings_data)
-        db.add(db_obj)
+def create(self, db: Session, *, obj_in: Dict[str, Any]) -> Subscription:
+    """Create a new subscription."""
+    # Check if there's an active subscription already
+    active_sub = self.get_active_subscription(db, obj_in["client_id"])
+    
+    # If creating a new active subscription, deactivate the current one
+    if active_sub and obj_in.get("status") == "active":
+        active_sub.status = "inactive"
+        db.add(active_sub)
         db.commit()
-        db.refresh(db_obj)
-        return db_obj
+    
+    # Add storage limits based on plan type
+    plan_type = obj_in.get("plan_type", "free")
+    if "storage_limit_bytes" not in obj_in:
+        if plan_type == "free":
+            obj_in["storage_limit_bytes"] = 52428800  # 50 MB
+        elif plan_type == "basic":
+            obj_in["storage_limit_bytes"] = 524288000  # 500 MB
+        elif plan_type == "professional":
+            obj_in["storage_limit_bytes"] = 2147483648  # 2 GB
+        elif plan_type == "enterprise":
+            obj_in["storage_limit_bytes"] = 10737418240  # 10 GB
+        else:
+            obj_in["storage_limit_bytes"] = 52428800  # Default 50 MB
+    
+    # Create the new subscription
+    db_obj = self.model(**obj_in)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 
 class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[str, Any]]):

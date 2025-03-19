@@ -541,7 +541,6 @@ class UsageTracker:
         except Exception as e:
             logger.error(f"Error tracking search performance: {str(e)}")
     
-    # Update the _update_daily_stats method in the UsageTracker class
     def _update_daily_stats(self, db: Session, client_id: str) -> None:
         """Update or create daily statistics aggregates."""
         try:
@@ -625,7 +624,6 @@ class UsageTracker:
         except Exception as e:
             logger.error(f"Error updating daily stats: {str(e)}")
                         
-    # Add this method to backend/app/services/analytics/usage_tracker.py
     def initialize_client_analytics(self, db: Session, client_id: str) -> None:
         """Initialize analytics data for a new client."""
         try:
@@ -739,3 +737,38 @@ class UsageTracker:
                 "within_limits": True,
                 "error": "Error checking limits"
             }
+            
+    def initialize_subscription_usage(self, db: Session, client_id: str) -> None:
+        """Initialize subscription usage data for a new client."""
+        try:
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            
+            # Get subscription information
+            from app.repositories.client_repository import SubscriptionRepository
+            sub_repo = SubscriptionRepository()
+            subscription = sub_repo.get_active_subscription(db, client_id)
+            
+            if not subscription:
+                logger.warning(f"No active subscription found for client {client_id}")
+                return
+            
+            # Check if usage record already exists
+            usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+            
+            if not usage:
+                # Create usage record with zeros
+                self.subscription_usage_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "subscription_id": subscription.id,
+                    "month_year": current_month,
+                    "messages_used": 0,
+                    "messages_limit": subscription.message_limit,
+                    "active_users": 0,
+                    "active_users_limit": subscription.user_limit,
+                    "storage_used_bytes": 0,
+                    "storage_limit_bytes": subscription.storage_limit_bytes or 100 * 1024 * 1024  # Default 100MB
+                })
+                
+                logger.info(f"Initialized subscription usage for client {client_id}")
+        except Exception as e:
+            logger.error(f"Error initializing subscription usage: {str(e)}")

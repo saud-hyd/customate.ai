@@ -108,6 +108,7 @@ const AnalyticsPage = () => {
           
           // Even if some data is missing, update what we have
           setAnalyticsData({
+            ...analyticsData,
             overview: { 
               dashboardData: overviewData,
               chat: chatData, 
@@ -116,8 +117,7 @@ const AnalyticsPage = () => {
             },
             chat: chatData,
             knowledge: knowledgeData,
-            subscription: subscriptionData,
-            api: null
+            subscription: subscriptionData
           });
           
           // If all requests failed, show error
@@ -127,8 +127,62 @@ const AnalyticsPage = () => {
           
           break;
           
-        // Similar approach for other tabs
-        // ...rest of switch statement
+        case 'engagement':
+          try {
+            const chatData = await analyticsService.getChatPerformance(days);
+            setAnalyticsData({
+              ...analyticsData,
+              chat: chatData
+            });
+          } catch (err) {
+            console.error('Failed to fetch chat performance:', err);
+            setError('Failed to load chat engagement data. Please try again later.');
+          }
+          break;
+          
+        case 'knowledge':
+          try {
+            const knowledgeData = await analyticsService.getKnowledgeUsage(days);
+            setAnalyticsData({
+              ...analyticsData,
+              knowledge: knowledgeData
+            });
+          } catch (err) {
+            console.error('Failed to fetch knowledge usage:', err);
+            setError('Failed to load knowledge base data. Please try again later.');
+          }
+          break;
+          
+        case 'subscription':
+          try {
+            const subscriptionData = await analyticsService.getSubscriptionUsage(
+              Math.ceil(days / 30) // Convert days to months
+            );
+            setAnalyticsData({
+              ...analyticsData,
+              subscription: subscriptionData
+            });
+          } catch (err) {
+            console.error('Failed to fetch subscription usage:', err);
+            setError('Failed to load subscription data. Please try again later.');
+          }
+          break;
+          
+        case 'api':
+          try {
+            const apiData = await analyticsService.getApiUsage(days);
+            setAnalyticsData({
+              ...analyticsData,
+              api: apiData
+            });
+          } catch (err) {
+            console.error('Failed to fetch API usage:', err);
+            setError('Failed to load API usage data. Please try again later.');
+          }
+          break;
+          
+        default:
+          console.warn(`Unknown tab: ${activeTab}`);
       }
     } catch (err) {
       console.error('Error fetching analytics data:', err);
