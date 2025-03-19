@@ -13,7 +13,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { ChatAlt2Icon, UserGroupIcon, ClockIcon, ThumbUpIcon, ThumbDownIcon } from '@heroicons/react/outline';
+import { ChatBubbleLeftRightIcon, UserGroupIcon, ClockIcon, HandThumbUpIcon, HandThumbDownIcon } from '@heroicons/react/24/outline';
 import LoadingState from '../common/LoadingState';
 import { formatNumber, formatDuration } from '../../utils/formatters';
 
@@ -100,7 +100,7 @@ const EngagementAnalytics = ({ data, dateRange }) => {
     {
       title: 'Total Messages',
       value: formatNumber(data.summary?.total_messages || 0),
-      icon: ChatAlt2Icon,
+      icon: ChatBubbleLeftRightIcon,
       color: 'bg-blue-500',
       description: 'Messages exchanged with users',
     },
@@ -114,7 +114,7 @@ const EngagementAnalytics = ({ data, dateRange }) => {
     {
       title: 'Messages per Session',
       value: (data.summary?.messages_per_session || 0).toFixed(1),
-      icon: ChatAlt2Icon,
+      icon: ChatBubbleLeftRightIcon,
       color: 'bg-yellow-500',
       description: 'Average conversation length',
     },
@@ -277,7 +277,7 @@ const EngagementAnalytics = ({ data, dateRange }) => {
             <div className="grid grid-cols-2 gap-6 w-full max-w-md">
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100">
-                  <ThumbUpIcon className="h-12 w-12 text-green-600" />
+                  <HandThumbUpIcon className="h-12 w-12 text-green-600" />
                 </div>
                 <div className="mt-3">
                   <span className="block text-2xl font-bold text-gray-900">{satisfactionData.positive}%</span>
@@ -286,7 +286,7 @@ const EngagementAnalytics = ({ data, dateRange }) => {
               </div>
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-red-100">
-                  <ThumbDownIcon className="h-12 w-12 text-red-600" />
+                  <HandThumbDownIcon className="h-12 w-12 text-red-600" />
                 </div>
                 <div className="mt-3">
                   <span className="block text-2xl font-bold text-gray-900">{satisfactionData.negative}%</span>

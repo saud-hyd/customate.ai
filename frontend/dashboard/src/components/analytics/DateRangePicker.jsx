@@ -1,6 +1,6 @@
 // Path: frontend/dashboard/src/components/analytics/DateRangePicker.jsx
 import React, { useState } from 'react';
-import { CalendarIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 /**
  * Date Range Picker Component
@@ -79,7 +79,7 @@ const DateRangePicker = ({ currentRange, onRangeSelect, onClose }) => {
           className="text-gray-400 hover:text-gray-500"
           onClick={onClose}
         >
-          <XIcon className="h-5 w-5" aria-hidden="true" />
+          <XMarkIcon className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
 

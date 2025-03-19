@@ -14,15 +14,15 @@ import {
   Filler,
 } from 'chart.js';
 import { 
-  ChatAlt2Icon, 
+  ChatBubbleLeftRightIcon, 
   UserGroupIcon, 
   CurrencyDollarIcon, 
-  ArchiveIcon,
+  ArchiveBoxIcon, // Replaced ArchiveIcon with ArchiveBoxIcon
   ArrowUpIcon,
   ArrowDownIcon,
-  ExclamationIcon,
-  BadgeCheckIcon
-} from '@heroicons/react/outline';
+  ExclamationTriangleIcon,
+  CheckBadgeIcon
+} from '@heroicons/react/24/outline';
 import LoadingState from '../common/LoadingState';
 import { formatNumber, formatBytes } from '../../utils/formatters';
 
@@ -100,7 +100,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       used: current?.messages?.used || 0,
       limit: current?.messages?.limit || 1,
       percentage: current?.messages?.percentage || 0,
-      icon: ChatAlt2Icon,
+      icon: ChatBubbleLeftRightIcon,
       color: 'blue',
     },
     {
@@ -116,7 +116,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       used: formatBytes(current?.storage?.used_bytes || 0),
       limit: formatBytes(current?.storage?.limit_bytes || 0),
       percentage: current?.storage?.percentage || 0,
-      icon: ArchiveIcon,
+      icon: ArchiveBoxIcon, // Updated to ArchiveBoxIcon
       color: 'green',
     },
   ];
@@ -128,7 +128,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       value: historical[0].messages_used - (historical[1]?.messages_used || 0),
       percentage: historical[1]?.messages_used ? 
         ((historical[0].messages_used - historical[1].messages_used) / historical[1].messages_used) * 100 : 0,
-      icon: ChatAlt2Icon,
+      icon: ChatBubbleLeftRightIcon,
       color: 'blue',
     },
     {
@@ -144,7 +144,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
       value: formatBytes(historical[0].storage_used_bytes - (historical[1]?.storage_used_bytes || 0)),
       percentage: historical[1]?.storage_used_bytes ? 
         ((historical[0].storage_used_bytes - historical[1].storage_used_bytes) / historical[1].storage_used_bytes) * 100 : 0,
-      icon: ArchiveIcon,
+      icon: ArchiveBoxIcon, // Updated to ArchiveBoxIcon
       color: 'green',
     },
   ] : [];
@@ -160,7 +160,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
               <h2 className="ml-3 text-2xl font-bold text-white">
                 {subscription?.plan_type ? subscription.plan_type.charAt(0).toUpperCase() + subscription.plan_type.slice(1) : 'Standard'} Plan
               </h2>
-              <BadgeCheckIcon className="ml-2 h-6 w-6 text-green-300" />
+              <CheckBadgeIcon className="ml-2 h-6 w-6 text-green-300" />
             </div>
             <p className="mt-2 text-blue-100">
               {subscription?.status === 'active' ? 'Active Subscription' : 'Subscription Status: ' + (subscription?.status || 'Unknown')}
@@ -211,7 +211,7 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
                 <span className="text-xs text-gray-500">
                   {metric.percentage > 90 ? (
                     <span className="text-red-500 flex items-center">
-                      <ExclamationIcon className="h-4 w-4 mr-1" />
+                      <ExclamationTriangleIcon className="h-4 w-4 mr-1" />
                       Near limit
                     </span>
                   ) : (

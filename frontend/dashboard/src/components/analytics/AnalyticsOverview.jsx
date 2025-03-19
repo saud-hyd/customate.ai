@@ -1,6 +1,6 @@
 // Path: frontend/dashboard/src/components/analytics/AnalyticsOverview.jsx
 import React from 'react';
-import { ArrowSmUpIcon, ArrowSmDownIcon, ChatAlt2Icon, DocumentSearchIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/outline';
+import { ArrowUpIcon, ArrowDownIcon, ChatBubbleLeftRightIcon, MagnifyingGlassIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -15,7 +15,6 @@ import {
   Filler,
 } from 'chart.js';
 import LoadingState from '../common/LoadingState';
-import { formatNumber } from '../../utils/formatters';
 
 // Register ChartJS components
 ChartJS.register(
@@ -29,6 +28,15 @@ ChartJS.register(
   Legend,
   Filler
 );
+
+/**
+ * Simple formatter for numbers
+ * @param {number} num - Number to format
+ * @returns {string} Formatted number
+ */
+const formatNumber = (num) => {
+  return new Intl.NumberFormat().format(num);
+};
 
 /**
  * Analytics Overview Component
@@ -47,21 +55,21 @@ const AnalyticsOverview = ({ data, dateRange }) => {
       title: 'Total Conversations',
       value: formatNumber(chat?.summary?.total_sessions || 0),
       change: 5.2, // Example percentage change
-      icon: ChatAlt2Icon,
+      icon: ChatBubbleLeftRightIcon,
       color: 'bg-blue-500',
     },
     {
       title: 'Total Messages',
       value: formatNumber(chat?.summary?.total_messages || 0),
       change: 12.5, // Example percentage change
-      icon: DocumentSearchIcon,
+      icon: MagnifyingGlassIcon,
       color: 'bg-purple-500',
     },
     {
       title: 'Knowledge Usage',
       value: `${Math.round(chat?.summary?.knowledge_usage_percentage || 0)}%`,
       change: 3.8, // Example percentage change
-      icon: DocumentSearchIcon,
+      icon: MagnifyingGlassIcon,
       color: 'bg-green-500',
     },
     {
@@ -144,14 +152,14 @@ const AnalyticsOverview = ({ data, dateRange }) => {
               <div className="text-sm">
                 <div className="flex items-center">
                   {card.change > 0 ? (
-                    <ArrowSmUpIcon
+                    <ArrowUpIcon
                       className={`h-5 w-5 flex-shrink-0 ${
                         card.reverseColors ? 'text-red-500' : 'text-green-500'
                       }`}
                       aria-hidden="true"
                     />
                   ) : (
-                    <ArrowSmDownIcon
+                    <ArrowDownIcon
                       className={`h-5 w-5 flex-shrink-0 ${
                         card.reverseColors ? 'text-green-500' : 'text-red-500'
                       }`}
@@ -319,7 +327,7 @@ const AnalyticsOverview = ({ data, dateRange }) => {
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow p-6">
           <div className="flex items-start">
             <div className="flex-shrink-0 rounded-md p-3 bg-blue-500">
-              <ChatAlt2Icon className="h-6 w-6 text-white" aria-hidden="true" />
+              <ChatBubbleLeftRightIcon className="h-6 w-6 text-white" aria-hidden="true" />
             </div>
             <div className="ml-5">
               <h3 className="text-lg font-medium text-gray-900">Engagement Insights</h3>
@@ -338,7 +346,7 @@ const AnalyticsOverview = ({ data, dateRange }) => {
         <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-lg shadow p-6">
           <div className="flex items-start">
             <div className="flex-shrink-0 rounded-md p-3 bg-green-500">
-              <DocumentSearchIcon className="h-6 w-6 text-white" aria-hidden="true" />
+              <MagnifyingGlassIcon className="h-6 w-6 text-white" aria-hidden="true" />
             </div>
             <div className="ml-5">
               <h3 className="text-lg font-medium text-gray-900">Knowledge Insights</h3>

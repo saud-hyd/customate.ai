@@ -16,12 +16,12 @@ import {
 } from 'chart.js';
 import { 
   CloudIcon, 
-  CodeIcon, 
+  CodeBracketIcon, 
   ClockIcon, 
   ServerIcon,
   ExclamationCircleIcon,
   CheckCircleIcon,
-} from '@heroicons/react/outline';
+} from '@heroicons/react/24/outline';
 import LoadingState from '../common/LoadingState';
 import { formatNumber, formatDuration } from '../../utils/formatters';
 

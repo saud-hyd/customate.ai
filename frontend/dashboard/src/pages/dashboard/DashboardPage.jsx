@@ -68,11 +68,14 @@ const DashboardPage = () => {
       setLoading(true);
       setError(null);
       
-      // Occasionally reset analytics to ensure data is up-to-date
-      // This is a temporary fix until we identify the root cause
-      if (!lastRefresh || (new Date() - lastRefresh) > 5 * 60 * 1000) { // Every 5 minutes
-        console.log('Resetting analytics data...');
-        await analyticsService.resetAnalytics();
+      // Try to reset analytics, but continue even if it fails
+      try {
+        if (!lastRefresh || (new Date() - lastRefresh) > 5 * 60 * 1000) { // Every 5 minutes
+          console.log('Resetting analytics data...');
+          await analyticsService.resetAnalytics();
+        }
+      } catch (resetError) {
+        console.warn('Failed to reset analytics, continuing with fetch:', resetError);
       }
       
       // Fetch dashboard overview data

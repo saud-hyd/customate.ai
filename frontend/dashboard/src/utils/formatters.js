@@ -1,86 +1,116 @@
 // Path: frontend/dashboard/src/utils/formatters.js
 
 /**
- * Format number with commas for thousands
- * @param {number} number - Number to format
- * @param {number} decimals - Number of decimal places
- * @returns {string} - Formatted number
+ * Format a number with thousands separators
+ * @param {number} num - Number to format
+ * @returns {string} Formatted number string
  */
-export const formatNumber = (number, decimals = 0) => {
-    if (number === null || number === undefined) return '0';
-    
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
-    }).format(number);
+export const formatNumber = (num) => {
+    if (num === undefined || num === null) return '0';
+    return new Intl.NumberFormat().format(num);
   };
   
   /**
-   * Format percentage value
-   * @param {number} value - Value to format
+   * Format a percentage with fixed decimal places
+   * @param {number} percent - Percentage value
    * @param {number} decimals - Number of decimal places
-   * @returns {string} - Formatted percentage
+   * @returns {string} Formatted percentage
    */
-  export const formatPercentage = (value, decimals = 1) => {
-    if (value === null || value === undefined) return '0%';
-    
-    return `${new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
-    }).format(value)}%`;
+  export const formatPercentage = (percent, decimals = 0) => {
+    if (percent === undefined || percent === null) return '0%';
+    return percent.toFixed(decimals) + '%';
   };
   
   /**
-   * Format bytes to human-readable format
+   * Format bytes into a human-readable string
    * @param {number} bytes - Bytes to format
    * @param {number} decimals - Number of decimal places
-   * @returns {string} - Formatted bytes
+   * @returns {string} Formatted bytes (KB, MB, GB, etc.)
    */
   export const formatBytes = (bytes, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
+    if (bytes === undefined || bytes === null) return '0 Bytes';
   
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${sizes[i]}`;
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
   };
   
   /**
-   * Format date to local string
-   * @param {Date|string} date - Date to format
-   * @param {boolean} includeTime - Whether to include time
-   * @returns {string} - Formatted date
+   * Format milliseconds into a human-readable duration
+   * @param {number} ms - Milliseconds to format
+   * @returns {string} Formatted duration
    */
-  export const formatDate = (date, includeTime = false) => {
-    if (!date) return '';
+  export const formatDuration = (ms) => {
+    if (ms === undefined || ms === null) return '0 ms';
     
-    const dateObj = new Date(date);
-    
-    if (includeTime) {
-      return dateObj.toLocaleString();
+    if (ms < 1000) {
+      return `${Math.round(ms)} ms`;
     }
     
-    return dateObj.toLocaleDateString();
-  };
-  
-  /**
-   * Format duration in milliseconds to readable format
-   * @param {number} milliseconds - Duration in milliseconds
-   * @returns {string} - Formatted duration
-   */
-  export const formatDuration = (milliseconds) => {
-    if (!milliseconds) return '0 ms';
+    const seconds = ms / 1000;
     
-    if (milliseconds < 1000) {
-      return `${Math.round(milliseconds)} ms`;
-    }
-    
-    const seconds = milliseconds / 1000;
     if (seconds < 60) {
       return `${seconds.toFixed(1)} sec`;
     }
     
     const minutes = seconds / 60;
     return `${minutes.toFixed(1)} min`;
+  };
+  
+  /**
+   * Format a date to a standard string format
+   * @param {Date|string} date - Date to format
+   * @param {object} options - Intl.DateTimeFormat options
+   * @returns {string} Formatted date string
+   */
+  export const formatDate = (date, options = {}) => {
+    if (!date) return 'N/A';
+    
+    const defaultOptions = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    };
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    return new Intl.DateTimeFormat('default', { ...defaultOptions, ...options }).format(dateObj);
+  };
+  
+  /**
+   * Format a date to a time string
+   * @param {Date|string} date - Date to format
+   * @returns {string} Formatted time string
+   */
+  export const formatTime = (date) => {
+    if (!date) return 'N/A';
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    return new Intl.DateTimeFormat('default', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    }).format(dateObj);
+  };
+  
+  /**
+   * Format a date to a date and time string
+   * @param {Date|string} date - Date to format
+   * @returns {string} Formatted date and time string
+   */
+  export const formatDateTime = (date) => {
+    if (!date) return 'N/A';
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    return new Intl.DateTimeFormat('default', { 
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(dateObj);
   };

@@ -14,7 +14,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { DocumentSearchIcon, DocumentTextIcon, SearchIcon, CheckCircleIcon } from '@heroicons/react/outline';
+import { DocumentIcon, DocumentTextIcon, MagnifyingGlassIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import LoadingState from '../common/LoadingState';
 import { formatNumber, formatPercentage } from '../../utils/formatters';
 
@@ -111,7 +111,7 @@ const KnowledgeAnalytics = ({ data, dateRange }) => {
     {
       title: 'Total Searches',
       value: formatNumber(data.summary?.total_searches || 0),
-      icon: SearchIcon,
+      icon: MagnifyingGlassIcon,
       color: 'bg-blue-500',
       description: 'Total knowledge base queries',
     },
@@ -132,7 +132,7 @@ const KnowledgeAnalytics = ({ data, dateRange }) => {
     {
       title: 'Documents',
       value: formatNumber(data.summary?.current_documents || 0),
-      icon: DocumentSearchIcon,
+      icon: DocumentIcon,
       color: 'bg-amber-500',
       description: 'Processed source documents',
     },

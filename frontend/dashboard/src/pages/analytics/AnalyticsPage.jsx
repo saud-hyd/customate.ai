@@ -1,6 +1,7 @@
 // Path: frontend/dashboard/src/pages/analytics/AnalyticsPage.jsx
 import React, { useState, useEffect } from 'react';
-import { CalendarIcon, FilterIcon } from '@heroicons/react/outline';
+import { CalendarIcon } from '@heroicons/react/24/outline';
+import { XIcon } from '@heroicons/react/24/outline';
 import analyticsService from '../../services/analyticsService';
 import DateRangePicker from '../../components/analytics/DateRangePicker';
 import AnalyticsOverview from '../../components/analytics/AnalyticsOverview';
