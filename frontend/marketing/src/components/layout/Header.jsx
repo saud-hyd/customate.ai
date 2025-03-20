@@ -73,7 +73,7 @@ const Header = () => {
                 variant="outline" 
                 size="sm" 
                 as={Link} 
-                to="https://app.customate.ai/login"
+                to="http://localhost:3001/api/auth/login"
               >
                 Login
               </Button>
@@ -81,7 +81,7 @@ const Header = () => {
                 variant="primary" 
                 size="sm" 
                 as={Link} 
-                to="https://app.customate.ai/register"
+                to="http://localhost:3001/api/auth/register"
               >
                 Sign Up
               </Button>
@@ -158,7 +158,7 @@ const Header = () => {
               size="sm" 
               fullWidth 
               as={Link} 
-              to="https://app.customate.ai/login"
+              to="http://localhost:3001/api/auth/login"
             >
               Login
             </Button>
@@ -167,7 +167,7 @@ const Header = () => {
               size="sm" 
               fullWidth 
               as={Link} 
-              to="https://app.customate.ai/register"
+              to="http://localhost:3001/api/auth/register"
             >
               Sign Up
             </Button>

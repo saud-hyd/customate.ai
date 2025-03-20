@@ -63,7 +63,7 @@ const HeroSection = () => {
                 <div className="rounded-md shadow">
                   <Button
                     as={Link}
-                    to="https://app.customate.ai/register"
+                    to="http://localhost:3001/api/auth/register"
                     variant="primary"
                     size="lg"
                   >

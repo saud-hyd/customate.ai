@@ -208,8 +208,6 @@ class KnowledgeMetricsRepository(BaseRepository[KnowledgeMetrics, dict, dict]):
             db.refresh(new_metrics)
             return new_metrics
 
-# Update the SubscriptionUsageRepository class in this file
-
 class SubscriptionUsageRepository(BaseRepository[SubscriptionUsage, dict, dict]):
     """Repository for SubscriptionUsage entity."""
     
@@ -317,6 +315,13 @@ class SubscriptionUsageRepository(BaseRepository[SubscriptionUsage, dict, dict])
             
             usage = self.create(db, obj_in=usage_data)
             return usage
+    
+    # Method needed by admin dashboard
+    def get_total_messages(self, db: Session) -> int:
+        """Get total messages across all clients."""
+        result = db.query(func.sum(self.model.messages_used)).scalar()
+        return result or 0
+
 class DailyStatsRepository(BaseRepository[DailyStats, dict, dict]):
     """Repository for DailyStats entity."""
     
@@ -372,3 +377,91 @@ class DailyStatsRepository(BaseRepository[DailyStats, dict, dict]):
             db.commit()
             db.refresh(new_stats)
             return new_stats
+    
+    # Methods needed by admin dashboard
+    def get_platform_totals(self, db: Session, date: str) -> Dict[str, Any]:
+        """Get platform-wide stats for a specific date."""
+        result = db.query(
+            func.sum(self.model.total_sessions).label("total_sessions"),
+            func.sum(self.model.total_messages).label("total_messages"),
+            func.sum(self.model.total_searches).label("total_searches"),
+            func.avg(self.model.average_response_time_ms).label("avg_response_time_ms")  # Changed field name
+        ).filter(self.model.date == date).first()
+        
+        if not result:
+            return {
+                "total_sessions": 0,
+                "total_messages": 0,
+                "total_searches": 0,
+                "avg_response_time_ms": 0
+            }
+        
+        return {
+            "total_sessions": result.total_sessions or 0,
+            "total_messages": result.total_messages or 0,
+            "total_searches": result.total_searches or 0,
+            "avg_response_time_ms": result.avg_response_time_ms or 0
+        }
+    
+    def get_date_range_totals(
+        self, 
+        db: Session, 
+        client_id: str, 
+        start_date: str, 
+        end_date: str
+    ) -> Dict[str, Any]:
+        """Get aggregated stats for a date range."""
+        result = db.query(
+            func.sum(self.model.total_sessions).label("total_sessions"),
+            func.sum(self.model.total_messages).label("total_messages"),
+            func.sum(self.model.total_searches).label("total_searches"),
+            func.avg(self.model.average_response_time_ms).label("average_response_time_ms")  # Changed field name
+        ).filter(
+            self.model.client_id == client_id,
+            self.model.date >= start_date,
+            self.model.date <= end_date
+        ).first()
+        
+        if not result:
+            return {
+                "total_sessions": 0,
+                "total_messages": 0,
+                "total_searches": 0,
+                "average_response_time_ms": 0
+            }
+        
+        return {
+            "total_sessions": result.total_sessions or 0,
+            "total_messages": result.total_messages or 0,
+            "total_searches": result.total_searches or 0,
+            "average_response_time_ms": result.average_response_time_ms or 0
+        }
+    
+    def get_daily_platform_totals(
+        self, 
+        db: Session, 
+        start_date: str, 
+        end_date: str
+    ) -> List[Dict[str, Any]]:
+        """Get daily platform-wide stats for a date range."""
+        results = db.query(
+            self.model.date,
+            func.sum(self.model.total_sessions).label("total_sessions"),
+            func.sum(self.model.total_messages).label("total_messages"),
+            func.sum(self.model.total_searches).label("total_searches"),
+            func.avg(self.model.average_response_time_ms).label("avg_response_time_ms")  # Changed field name
+        ).filter(
+            self.model.date >= start_date,
+            self.model.date <= end_date
+        ).group_by(self.model.date).order_by(self.model.date).all()
+        
+        return [
+            {
+                "date": result.date,
+                "total_sessions": result.total_sessions or 0,
+                "total_messages": result.total_messages or 0,
+                "total_searches": result.total_searches or 0,
+                "avg_response_time_ms": result.avg_response_time_ms or 0
+            }
+            for result in results
+        ]

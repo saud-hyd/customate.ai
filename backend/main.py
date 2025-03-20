@@ -28,6 +28,8 @@ from app.api.integration import routes as integration_routes
 from app.api.widget import router as widget_router 
 from app.api.client import subscription_routes
 from app.api.notifications import router as notifications_router
+from app.api.admin.routes import router as admin_router
+
 
 
 
@@ -51,7 +53,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "test:1"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:5173", "test:1"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,6 +81,8 @@ app.include_router(integration_routes.router, prefix="/api")  # Add this line
 app.include_router(widget_router, prefix="/api")  
 app.include_router(subscription_routes.router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
+app.include_router(admin_router)
+
 
 # Request logging middleware
 @app.middleware("http")
