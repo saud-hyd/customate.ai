@@ -33,6 +33,10 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
             "/static",
         ]
     
+    def _should_skip_tracking(self, path: str) -> bool:
+        """Check if tracking should be skipped for this path."""
+        return any(path.startswith(skip_path) for skip_path in self._endpoints_to_skip)
+    
     async def dispatch(self, request: Request, call_next):
         # Skip tracking for certain endpoints
         if self._should_skip_tracking(request.url.path):
@@ -69,6 +73,15 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
                     user_agent=request.headers.get("user-agent")
                 )
                 
+                # Increment message count for chat endpoints
+                if request.url.path.startswith("/api/chatbot/message") and response.status_code < 400:
+                    logger.info(f"Tracking chat message for client {client_id}")
+                    # Make sure to initialize usage if it doesn't exist
+                    self.usage_tracker.initialize_subscription_usage(db, client_id)
+                    # Increment message usage
+                    self.usage_tracker.subscription_usage_repo.increment_usage(db, client_id, "messages_used")
+                    logger.info(f"Incremented message count for client {client_id}")
+                
                 # Close the session
                 db.close()
                 
@@ -79,7 +92,3 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
         response.headers["X-Process-Time-Ms"] = str(process_time_ms)
         
         return response
-    
-    def _should_skip_tracking(self, path: str) -> bool:
-        """Check if tracking should be skipped for this path."""
-        return any(path.startswith(skip_path) for skip_path in self._endpoints_to_skip)

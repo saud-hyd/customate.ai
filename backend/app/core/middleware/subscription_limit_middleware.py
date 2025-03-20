@@ -97,78 +97,136 @@ class SubscriptionLimitMiddleware(BaseHTTPMiddleware):
         """Check if path should bypass limit checking."""
         return any(path.startswith(exempt_path) for exempt_path in EXEMPT_PATHS)
     
+# backend/app/core/middleware/subscription_limit_middleware.py
+# Update the _check_limits_cache method to use analytics data
+
     def _check_limits_cache(self, client_id: str, path: str) -> tuple:
         """
-        Check if client has exceeded limits, using cache if available.
+        Check if client has exceeded limits, using analytics data directly.
         
         Returns:
             tuple: (limits_exceeded, limit_info)
         """
         current_time = time.time()
         
-        # Check cache first
-        if client_id in self.limit_check_cache:
-            cache_entry = self.limit_check_cache[client_id]
-            cache_age = current_time - cache_entry["cache_time"]
-            
-            # Use cache if relatively fresh
-            if cache_age < self.cache_ttl:
-                limits = cache_entry["limits"]
-                
-                # Check if any limits exceeded
-                for limit_type, limit_data in limits.items():
-                    if limit_data["percentage"] >= 100:
-                        limit_info = {
-                            "limit_type": limit_type,
-                            "used": limit_data["used"],
-                            "limit": limit_data["limit"],
-                            "percentage": limit_data["percentage"]
-                        }
-                        return True, limit_info
-                
-                # For specific endpoints, check the relevant limit type
-                limit_type = self._get_limit_type_for_path(path)
-                if limit_type and limit_type in limits:
-                    if limits[limit_type]["percentage"] >= 100:
-                        return True, {
-                            "limit_type": limit_type,
-                            "used": limits[limit_type]["used"],
-                            "limit": limits[limit_type]["limit"],
-                            "percentage": limits[limit_type]["percentage"]
-                        }
-                
-                # No limits exceeded
-                return False, limits
-        
-        # No cache hit or cache expired, check database
+        # Get fresh limits data from analytics
         db = SessionLocal()
         try:
-            # Get fresh limits data
-            limits_data = self.usage_tracker.check_subscription_limits(db, client_id)
+            # Calculate message usage directly from analytics data
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            current_month_start = f"{current_month}-01"
+            
+            # Import needed components
+            from sqlalchemy import func
+            from app.domain.analytics.entities import ChatMetrics, DailyStats
+            
+            # Get total messages from analytics (ChatMetrics)
+            total_messages = db.query(func.sum(ChatMetrics.total_messages))\
+                .filter(
+                    ChatMetrics.client_id == client_id,
+                    ChatMetrics.date >= current_month_start
+                ).scalar() or 0
+                
+            # Get total active users from daily stats
+            total_users = db.query(func.max(DailyStats.total_users))\
+                .filter(
+                    DailyStats.client_id == client_id,
+                    DailyStats.date >= current_month_start
+                ).scalar() or 0
+                
+            # Get storage usage
+            from app.repositories.knowledge_repository import DocumentSourceRepository
+            docs_repo = DocumentSourceRepository()
+            storage_bytes = 0
+            
+            try:
+                # Get document statistics
+                stats = docs_repo.get_document_statistics(db, client_id)
+                storage_bytes = stats.get("total_size_bytes", 0)
+            except Exception as e:
+                logger.error(f"Error getting storage statistics: {str(e)}")
+            
+            # Get subscription info for limits
+            from app.repositories.client_repository import SubscriptionRepository
+            sub_repo = SubscriptionRepository()
+            subscription = sub_repo.get_active_subscription(db, client_id)
+            
+            # Default limits
+            message_limit = 1000
+            user_limit = 10
+            storage_limit = 100 * 1024 * 1024  # 100MB
+            
+            if subscription:
+                message_limit = subscription.message_limit or message_limit
+                user_limit = subscription.user_limit or user_limit
+                storage_limit = subscription.storage_limit_bytes or storage_limit
+            
+            # Calculate percentages
+            message_percentage = (total_messages / message_limit * 100) if message_limit > 0 else 0
+            user_percentage = (total_users / user_limit * 100) if user_limit > 0 else 0
+            storage_percentage = (storage_bytes / storage_limit * 100) if storage_limit > 0 else 0
+            
+            # Create limits info
+            limits = {
+                "messages": {
+                    "used": total_messages,
+                    "limit": message_limit,
+                    "percentage": message_percentage,
+                    "exceeded": message_percentage >= 100
+                },
+                "users": {
+                    "used": total_users,
+                    "limit": user_limit,
+                    "percentage": user_percentage,
+                    "exceeded": user_percentage >= 100
+                },
+                "storage": {
+                    "used": storage_bytes,
+                    "limit": storage_limit,
+                    "percentage": storage_percentage,
+                    "exceeded": storage_percentage >= 100
+                }
+            }
             
             # Update cache
             self.limit_check_cache[client_id] = {
                 "cache_time": current_time,
-                "limits": limits_data.get("current", {})
+                "limits": limits
             }
             
-            limits = limits_data.get("current", {})
-            
             # Check if any limits exceeded
-            for limit_type, limit_data in limits.items():
-                if limit_data["percentage"] >= 100:
-                    limit_info = {
-                        "limit_type": limit_type,
-                        "used": limit_data["used"],
-                        "limit": limit_data["limit"],
-                        "percentage": limit_data["percentage"]
-                    }
-                    return True, limit_info
+            messages_exceeded = limits["messages"]["exceeded"]
+            users_exceeded = limits["users"]["exceeded"]
+            storage_exceeded = limits["storage"]["exceeded"]
+            
+            if messages_exceeded:
+                return True, {
+                    "limit_type": "messages",
+                    "used": limits["messages"]["used"],
+                    "limit": limits["messages"]["limit"],
+                    "percentage": limits["messages"]["percentage"]
+                }
+            
+            if users_exceeded:
+                return True, {
+                    "limit_type": "users",
+                    "used": limits["users"]["used"],
+                    "limit": limits["users"]["limit"],
+                    "percentage": limits["users"]["percentage"]
+                }
+            
+            if storage_exceeded:
+                return True, {
+                    "limit_type": "storage",
+                    "used": limits["storage"]["used"],
+                    "limit": limits["storage"]["limit"],
+                    "percentage": limits["storage"]["percentage"]
+                }
             
             # For specific endpoints, check the relevant limit type
             limit_type = self._get_limit_type_for_path(path)
             if limit_type and limit_type in limits:
-                if limits[limit_type]["percentage"] >= 100:
+                if limits[limit_type]["exceeded"]:
                     return True, {
                         "limit_type": limit_type,
                         "used": limits[limit_type]["used"],
@@ -178,9 +236,10 @@ class SubscriptionLimitMiddleware(BaseHTTPMiddleware):
             
             # No limits exceeded
             return False, limits
+            
         finally:
             db.close()
-    
+                
     def _get_limit_type_for_path(self, path: str) -> Optional[str]:
         """Get the limit type associated with a specific endpoint path."""
         for endpoint_pattern, limit_type in ENDPOINT_LIMIT_MAPPING.items():

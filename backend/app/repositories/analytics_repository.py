@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
+import logging
 
 from app.repositories.base_repository import BaseRepository
 from app.domain.analytics.entities import (
@@ -207,6 +208,8 @@ class KnowledgeMetricsRepository(BaseRepository[KnowledgeMetrics, dict, dict]):
             db.refresh(new_metrics)
             return new_metrics
 
+# Update the SubscriptionUsageRepository class in this file
+
 class SubscriptionUsageRepository(BaseRepository[SubscriptionUsage, dict, dict]):
     """Repository for SubscriptionUsage entity."""
     
@@ -237,7 +240,11 @@ class SubscriptionUsageRepository(BaseRepository[SubscriptionUsage, dict, dict])
     
     def increment_usage(self, db: Session, client_id: str, 
                          field: str, increment: int = 1) -> SubscriptionUsage:
-        """Increment a usage counter field for the current month."""
+        """
+        Increment a usage counter field for the current month.
+        
+        Fixed to ensure proper updating of usage counts.
+        """
         current_month = datetime.utcnow().strftime("%Y-%m")
         usage = self.get_by_month(db, client_id, current_month)
         
@@ -257,19 +264,59 @@ class SubscriptionUsageRepository(BaseRepository[SubscriptionUsage, dict, dict])
                 "month_year": current_month,
                 field: increment,
                 "messages_limit": subscription.message_limit,
-                "active_users_limit": subscription.user_limit
+                "active_users_limit": subscription.user_limit,
+                "storage_limit_bytes": subscription.storage_limit_bytes
             }
             usage = self.create(db, obj_in=usage_data)
         else:
             # Update existing record
+            # FIXED: Make sure we get current value or default to 0, and force commit immediately
             current_value = getattr(usage, field, 0) or 0
             setattr(usage, field, current_value + increment)
+            setattr(usage, "last_updated", datetime.utcnow())
             db.add(usage)
             db.commit()
             db.refresh(usage)
         
-        return usage
-
+        # Force query to refresh data to ensure consistency
+        return self.get_by_month(db, client_id, current_month)
+    
+    def update_or_create(self, db: Session, client_id: str,
+                          month_year: str, **data) -> SubscriptionUsage:
+        """Update or create subscription usage for a specific month."""
+        usage = self.get_by_month(db, client_id, month_year)
+        
+        if usage:
+            # Update existing record
+            for key, value in data.items():
+                if hasattr(usage, key):
+                    setattr(usage, key, value)
+            setattr(usage, "last_updated", datetime.utcnow())
+            db.add(usage)
+            db.commit()
+            db.refresh(usage)
+            return usage
+        else:
+            # Create new record
+            from app.repositories.client_repository import SubscriptionRepository
+            sub_repo = SubscriptionRepository()
+            subscription = sub_repo.get_active_subscription(db, client_id)
+            
+            if not subscription:
+                raise ValueError(f"No active subscription found for client {client_id}")
+                
+            usage_data = {
+                "client_id": client_id,
+                "subscription_id": subscription.id,
+                "month_year": month_year,
+                "messages_limit": subscription.message_limit,
+                "active_users_limit": subscription.user_limit,
+                "storage_limit_bytes": subscription.storage_limit_bytes,
+                **data
+            }
+            
+            usage = self.create(db, obj_in=usage_data)
+            return usage
 class DailyStatsRepository(BaseRepository[DailyStats, dict, dict]):
     """Repository for DailyStats entity."""
     

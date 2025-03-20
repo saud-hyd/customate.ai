@@ -1,4 +1,3 @@
-// Path: frontend/dashboard/src/pages/analytics/AnalyticsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import analyticsService from '../../services/analyticsService';
@@ -12,11 +11,6 @@ import LoadingState from '../../components/common/LoadingState';
 import ErrorAlert from '../../components/common/ErrorAlert';
 import api from '../../services/api';
 
-
-/**
- * Enhanced Analytics Page
- * Provides visualizations and metrics for chatbot performance
- */
 const AnalyticsPage = () => {
   // State management
   const [activeTab, setActiveTab] = useState('overview');
@@ -27,6 +21,7 @@ const AnalyticsPage = () => {
     chat: null,
     knowledge: null,
     subscription: null,
+    subscriptionLimits: null, // Add this to store limits data
     api: null
   });
   const [loading, setLoading] = useState(true);
@@ -80,7 +75,7 @@ const AnalyticsPage = () => {
           }
           
           // Use try/catch for each API call separately to avoid one failure blocking all data
-          let overviewData, chatData, knowledgeData, subscriptionData;
+          let overviewData, chatData, knowledgeData, subscriptionData, subscriptionLimitsData;
           
           try {
             overviewData = await analyticsService.getDashboardOverview();
@@ -106,6 +101,51 @@ const AnalyticsPage = () => {
             console.warn('Failed to fetch subscription usage:', err);
           }
           
+          // Add this block to fetch the subscription limits
+          try {
+            subscriptionLimitsData = await analyticsService.getSubscriptionLimits();
+            
+            // Transform the returned data structure to match what the UI expects
+            if (subscriptionLimitsData && subscriptionLimitsData.limits) {
+              // Create the current object with the correct structure
+              const current = {
+                messages: {
+                  used: subscriptionLimitsData.limits.messages.used,
+                  limit: subscriptionLimitsData.limits.messages.limit,
+                  percentage: subscriptionLimitsData.limits.messages.percentage * 100
+                },
+                users: {
+                  used: subscriptionLimitsData.limits.users.active,
+                  limit: subscriptionLimitsData.limits.users.limit,
+                  percentage: subscriptionLimitsData.limits.users.percentage * 100
+                },
+                storage: {
+                  used_bytes: subscriptionLimitsData.limits.storage.used_bytes,
+                  limit_bytes: subscriptionLimitsData.limits.storage.limit_bytes,
+                  percentage: subscriptionLimitsData.limits.storage.percentage * 100,
+                  
+                  // Convert bytes to MB for UI display
+                  used_mb: subscriptionLimitsData.limits.storage.used_bytes / (1024 * 1024),
+                  limit_mb: subscriptionLimitsData.limits.storage.limit_bytes / (1024 * 1024)
+                }
+              };
+              
+              // Update subscriptionData if it exists
+              if (subscriptionData) {
+                subscriptionData.current = current;
+              } else {
+                // Create a minimal subscriptionData object
+                subscriptionData = { 
+                  current: current,
+                  historical: [],
+                  subscription: { plan_type: 'basic', status: 'active' }
+                };
+              }
+            }
+          } catch (err) {
+            console.warn('Failed to fetch subscription limits:', err);
+          }
+          
           // Even if some data is missing, update what we have
           setAnalyticsData({
             ...analyticsData,
@@ -117,11 +157,12 @@ const AnalyticsPage = () => {
             },
             chat: chatData,
             knowledge: knowledgeData,
-            subscription: subscriptionData
+            subscription: subscriptionData,
+            subscriptionLimits: subscriptionLimitsData
           });
           
           // If all requests failed, show error
-          if (!overviewData && !chatData && !knowledgeData && !subscriptionData) {
+          if (!overviewData && !chatData && !knowledgeData && !subscriptionData && !subscriptionLimitsData) {
             setError('Failed to load any analytics data. The backend API endpoints may not be fully implemented yet.');
           }
           
@@ -158,9 +199,41 @@ const AnalyticsPage = () => {
             const subscriptionData = await analyticsService.getSubscriptionUsage(
               Math.ceil(days / 30) // Convert days to months
             );
+            
+            // Also get current subscription limits for the subscription tab
+            const subscriptionLimitsData = await analyticsService.getSubscriptionLimits();
+            
+            // Process the data to match expected format
+            if (subscriptionLimitsData && subscriptionLimitsData.limits) {
+              // Similar transformation as in the overview case
+              const current = {
+                messages: {
+                  used: subscriptionLimitsData.limits.messages.used,
+                  limit: subscriptionLimitsData.limits.messages.limit,
+                  percentage: subscriptionLimitsData.limits.messages.percentage * 100
+                },
+                users: {
+                  used: subscriptionLimitsData.limits.users.active,
+                  limit: subscriptionLimitsData.limits.users.limit,
+                  percentage: subscriptionLimitsData.limits.users.percentage * 100
+                },
+                storage: {
+                  used_bytes: subscriptionLimitsData.limits.storage.used_bytes,
+                  limit_bytes: subscriptionLimitsData.limits.storage.limit_bytes,
+                  percentage: subscriptionLimitsData.limits.storage.percentage * 100,
+                  used_mb: subscriptionLimitsData.limits.storage.used_bytes / (1024 * 1024),
+                  limit_mb: subscriptionLimitsData.limits.storage.limit_bytes / (1024 * 1024)
+                }
+              };
+              
+              // Merge with subscription data
+              subscriptionData.current = current;
+            }
+            
             setAnalyticsData({
               ...analyticsData,
-              subscription: subscriptionData
+              subscription: subscriptionData,
+              subscriptionLimits: subscriptionLimitsData
             });
           } catch (err) {
             console.error('Failed to fetch subscription usage:', err);

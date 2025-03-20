@@ -78,3 +78,25 @@ async def update_client_settings(
             "chatbot_name": updated_settings.chatbot_name,
         }
     }
+    
+@router.get("/subscription", response_model=Dict[str, Any])
+async def get_client_subscription(
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Get current subscription information including usage from analytics."""
+    try:
+        # Initialize Stripe service
+        from app.services.subscription.stripe_service import StripeService
+        stripe_service = StripeService()
+        
+        # Get subscription information directly from analytics
+        subscription_info = await stripe_service.get_subscription_info(current_client, db)
+        
+        return subscription_info
+    except Exception as e:
+        logger.exception(f"Error getting subscription info: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve subscription information: {str(e)}"
+        )    

@@ -400,88 +400,141 @@ class ReportingService:
                 "details": str(e)
             }
     
+# backend/app/services/analytics/reporting_service.py
+# Update the get_subscription_usage_report method
+
     async def get_subscription_usage_report(self, db: Session, client_id: str, months: int = 6) -> Dict[str, Any]:
+        """
+        Generate subscription usage report with data directly from analytics.
+        
+        Args:
+            db: Database session
+            client_id: Client ID
+            months: Number of months to include in report
+            
+        Returns:
+            Dictionary with subscription usage report data
+        """
         try:
             # Get current subscription information
             from app.repositories.client_repository import SubscriptionRepository
             sub_repo = SubscriptionRepository()
             subscription = sub_repo.get_active_subscription(db, client_id)
             
-            # Get usage data for current month
+            # Get current month for calculations
             current_month = datetime.utcnow().strftime("%Y-%m")
-            current_usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+            current_month_start = f"{current_month}-01"
             
-            # If no usage data exists, initialize it
-            if not current_usage and subscription:
-                self.usage_tracker.initialize_subscription_usage(db, client_id)
-                current_usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+            # Calculate message usage directly from analytics data
+            from sqlalchemy import func
+            from app.domain.analytics.entities import ChatMetrics, DailyStats
             
-            # Format current usage data
-            current_data = None
-            if current_usage:
-                messages_percent = (current_usage.messages_used / current_usage.messages_limit * 100) if current_usage.messages_limit else 0
-                users_percent = (current_usage.active_users / current_usage.active_users_limit * 100) if current_usage.active_users_limit else 0
-                storage_percent = (current_usage.storage_used_bytes / current_usage.storage_limit_bytes * 100) if current_usage.storage_limit_bytes else 0
+            # Get total messages from chat metrics
+            total_messages = db.query(func.sum(ChatMetrics.total_messages))\
+                .filter(
+                    ChatMetrics.client_id == client_id,
+                    ChatMetrics.date >= current_month_start
+                ).scalar() or 0
                 
-                current_data = {
-                    "messages": {
-                        "used": current_usage.messages_used,
-                        "limit": current_usage.messages_limit,
-                        "percentage": messages_percent
-                    },
-                    "users": {
-                        "used": current_usage.active_users,
-                        "limit": current_usage.active_users_limit,
-                        "percentage": users_percent
-                    },
-                    "storage": {
-                        "used_bytes": current_usage.storage_used_bytes,
-                        "limit_bytes": current_usage.storage_limit_bytes,
-                        "percentage": storage_percent,
-                        "used_mb": round(current_usage.storage_used_bytes / (1024 * 1024), 2) if current_usage.storage_used_bytes else 0,
-                        "limit_mb": round(current_usage.storage_limit_bytes / (1024 * 1024), 2) if current_usage.storage_limit_bytes else 0
-                    }
+            # Get total active users from daily stats
+            total_users = db.query(func.max(DailyStats.total_users))\
+                .filter(
+                    DailyStats.client_id == client_id,
+                    DailyStats.date >= current_month_start
+                ).scalar() or 0
+                
+            # Get storage usage
+            from app.repositories.knowledge_repository import DocumentSourceRepository
+            docs_repo = DocumentSourceRepository()
+            storage_bytes = 0
+            
+            try:
+                # Get document statistics
+                stats = docs_repo.get_document_statistics(db, client_id)
+                storage_bytes = stats.get("total_size_bytes", 0)
+            except Exception as e:
+                logger.error(f"Error getting storage statistics: {str(e)}")
+            
+            # Set default limits
+            message_limit = 1000
+            user_limit = 10
+            storage_limit = 100 * 1024 * 1024  # 100MB
+            
+            if subscription:
+                message_limit = subscription.message_limit or message_limit
+                user_limit = subscription.user_limit or user_limit
+                storage_limit = subscription.storage_limit_bytes or storage_limit
+                
+            # Create current usage data
+            current_data = {
+                "messages": {
+                    "used": total_messages,
+                    "limit": message_limit,
+                    "percentage": min(100, (total_messages / message_limit * 100) if message_limit > 0 else 0)
+                },
+                "users": {
+                    "used": total_users,
+                    "limit": user_limit,
+                    "percentage": min(100, (total_users / user_limit * 100) if user_limit > 0 else 0)
+                },
+                "storage": {
+                    "used_bytes": storage_bytes,
+                    "limit_bytes": storage_limit,
+                    "percentage": min(100, (storage_bytes / storage_limit * 100) if storage_limit > 0 else 0),
+                    "used_mb": round(storage_bytes / (1024 * 1024), 2),
+                    "limit_mb": round(storage_limit / (1024 * 1024), 2)
                 }
+            }
             
             # Get historical usage data
             historical_data = []
             for i in range(months):
+                # Calculate month date
                 date = datetime.utcnow() - timedelta(days=30 * i)
                 month_str = date.strftime("%Y-%m")
+                month_start = f"{month_str}-01"
                 
-                usage = self.subscription_usage_repo.get_by_month(db, client_id, month_str)
-                
-                # If no historical data, create sample data
-                if not usage and i < 3:  # Only create for last 3 months
-                    if subscription:
-                        # Create decreasing usage for past months (sample data)
-                        messages_used = max(0, int(subscription.message_limit * (0.3 - (i * 0.05))))
-                        active_users = max(0, int(subscription.user_limit * (0.2 - (i * 0.03))))
-                        storage_used = max(0, int((subscription.storage_limit_bytes or 100*1024*1024) * (0.15 - (i * 0.02))))
-                        
-                        usage_data = {
-                            "client_id": client_id,
-                            "subscription_id": subscription.id,
-                            "month_year": month_str,
-                            "messages_used": messages_used,
-                            "messages_limit": subscription.message_limit,
-                            "active_users": active_users,
-                            "active_users_limit": subscription.user_limit,
-                            "storage_used_bytes": storage_used,
-                            "storage_limit_bytes": subscription.storage_limit_bytes or 100 * 1024 * 1024
-                        }
-                        usage = self.subscription_usage_repo.create(db, obj_in=usage_data)
-                
-                if usage:
+                if i == 0:
+                    # Current month - use the data we already calculated
                     historical_data.append({
                         "month": month_str,
-                        "messages_used": usage.messages_used,
-                        "messages_limit": usage.messages_limit,
-                        "active_users": usage.active_users,
-                        "active_users_limit": usage.active_users_limit,
-                        "storage_used_bytes": usage.storage_used_bytes,
-                        "storage_limit_bytes": usage.storage_limit_bytes
+                        "messages_used": total_messages,
+                        "messages_limit": message_limit,
+                        "active_users": total_users,
+                        "active_users_limit": user_limit,
+                        "storage_used_bytes": storage_bytes,
+                        "storage_limit_bytes": storage_limit
                     })
+                    continue
+                    
+                # For past months, query historical data
+                # Get messages from chat metrics for this month
+                past_messages = db.query(func.sum(ChatMetrics.total_messages))\
+                    .filter(
+                        ChatMetrics.client_id == client_id,
+                        ChatMetrics.date.like(f"{month_str}%")
+                    ).scalar() or 0
+                    
+                # Get max users from daily stats for this month
+                past_users = db.query(func.max(DailyStats.total_users))\
+                    .filter(
+                        DailyStats.client_id == client_id,
+                        DailyStats.date.like(f"{month_str}%")
+                    ).scalar() or 0
+                    
+                # For storage, we don't have historical data, but we can estimate
+                # For demo purposes, assume decreasing usage going back in time
+                past_storage = max(0, storage_bytes * (1 - (i * 0.1)))
+                
+                historical_data.append({
+                    "month": month_str,
+                    "messages_used": past_messages,
+                    "messages_limit": message_limit,
+                    "active_users": past_users,
+                    "active_users_limit": user_limit,
+                    "storage_used_bytes": past_storage,
+                    "storage_limit_bytes": storage_limit
+                })
             
             # Get subscription details
             subscription_details = None
@@ -509,9 +562,16 @@ class ReportingService:
             logger.error(f"Error generating subscription usage report: {str(e)}")
             return {
                 "error": "Failed to generate subscription usage report",
-                "details": str(e)
+                "details": str(e),
+                "current": {
+                    "messages": {"used": 0, "limit": 1000, "percentage": 0},
+                    "users": {"used": 0, "limit": 10, "percentage": 0},
+                    "storage": {"used_bytes": 0, "limit_bytes": 100 * 1024 * 1024, "percentage": 0}
+                },
+                "historical": [],
+                "subscription": {"plan_type": "basic", "status": "active"}
             }
-                
+                            
     def get_api_usage_report(self, db: Session, client_id: str, days: int = 30) -> Dict[str, Any]:
         """
         Generate API usage report.

@@ -1,15 +1,12 @@
 // Path: frontend/dashboard/src/components/analytics/SubscriptionUsage.jsx
+// This component is responsible for displaying subscription limits and usage metrics 
+// in the analytics dashboard. It shows current usage for messages, active users, and storage.
+
 import React, { useState, useEffect } from 'react';
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
 import Card from '../common/Card';
 import analyticsService from '../../services/analyticsService';
 import api from '../../services/api';
-
-/**
- * SubscriptionUsage component for displaying subscription limits and usage
- * Provides visual indicators of current usage against plan limits
- * Used in the analytics dashboard to monitor resource consumption
- */
 
 const SubscriptionUsage = ({ refreshData }) => {
   const [usageData, setUsageData] = useState(null);
@@ -18,21 +15,21 @@ const SubscriptionUsage = ({ refreshData }) => {
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    const fetchUsageData = async () => {
-      try {
-        setLoading(true);
-        const data = await analyticsService.getSubscriptionUsage();
-        setUsageData(data);
-      } catch (err) {
-        console.error('Error fetching subscription usage:', err);
-        setError('Failed to load subscription data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsageData();
   }, []);
+
+  const fetchUsageData = async () => {
+    try {
+      setLoading(true);
+      const data = await analyticsService.getSubscriptionUsage();
+      setUsageData(data);
+    } catch (err) {
+      console.error('Error fetching subscription usage:', err);
+      setError('Failed to load subscription data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpdateUsage = async () => {
     try {
@@ -92,6 +89,14 @@ const SubscriptionUsage = ({ refreshData }) => {
   }
 
   const { current, subscription } = usageData || { current: null, subscription: null };
+  
+  // Calculate MB from bytes for storage display
+  const used_mb = current?.storage?.used_bytes 
+    ? (current.storage.used_bytes / (1024 * 1024)).toFixed(1) 
+    : '0';
+  const limit_mb = current?.storage?.limit_bytes 
+    ? (current.storage.limit_bytes / (1024 * 1024)).toFixed(1) 
+    : '0';
 
   return (
     <Card 
@@ -172,12 +177,12 @@ const SubscriptionUsage = ({ refreshData }) => {
           </div>
         </div>
 
-        {/* Storage usage */}
+        {/* Storage usage - using calculated MB values */}
         <div>
           <div className="flex justify-between mb-1">
             <span className="text-sm font-medium text-gray-700">Storage</span>
             <span className="text-sm text-gray-700">
-              {(current?.storage?.used_mb || 0).toFixed(1)} MB / {(current?.storage?.limit_mb || 0).toFixed(1)} MB
+              {used_mb} MB / {limit_mb} MB
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">

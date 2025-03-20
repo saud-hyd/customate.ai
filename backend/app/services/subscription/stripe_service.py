@@ -599,6 +599,9 @@ class StripeService:
                 detail=f"Failed to add payment method: {str(e)}"
             )
     
+# backend/app/services/subscription/stripe_service.py
+# Update the get_subscription_info method in this file
+
     async def get_subscription_info(self, client: Client, db: Session) -> Dict[str, Any]:
         """
         Get detailed subscription information for a client.
@@ -614,6 +617,40 @@ class StripeService:
             # Get Stripe subscription ID from our database
             subscription = self.subscription_repo.get_active_subscription(db, client.client_id)
             
+            # Calculate message usage directly from analytics data
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            current_month_start = f"{current_month}-01"
+            
+            # Import needed components
+            from sqlalchemy import func
+            from app.domain.analytics.entities import ChatMetrics, DailyStats
+            
+            # Get total messages from analytics (ChatMetrics)
+            total_messages = db.query(func.sum(ChatMetrics.total_messages))\
+                .filter(
+                    ChatMetrics.client_id == client.client_id,
+                    ChatMetrics.date >= current_month_start
+                ).scalar() or 0
+                
+            # Get total active users from daily stats
+            total_users = db.query(func.max(DailyStats.total_users))\
+                .filter(
+                    DailyStats.client_id == client.client_id,
+                    DailyStats.date >= current_month_start
+                ).scalar() or 0
+                
+            # Get storage usage
+            from app.repositories.knowledge_repository import DocumentSourceRepository
+            docs_repo = DocumentSourceRepository()
+            storage_bytes = 0
+            
+            try:
+                # Get document statistics
+                stats = docs_repo.get_document_statistics(db, client.client_id)
+                storage_bytes = stats.get("total_size_bytes", 0)
+            except Exception as e:
+                logger.error(f"Error getting storage statistics: {str(e)}")
+                
             # If no active subscription, return default free tier information
             if not subscription:
                 # Return free tier subscription info
@@ -623,9 +660,26 @@ class StripeService:
                     "status": "active",
                     "start_date": datetime.utcnow().isoformat(),
                     "end_date": None,
-                    "limits": PLAN_LIMITS.get("free", {})
+                    "limits": PLAN_LIMITS.get("free", {}),
+                    "usage": {
+                        "messages": {
+                            "used": total_messages,
+                            "limit": PLAN_LIMITS.get("free", {}).get("message_limit", 500),
+                            "percentage": min(100, (total_messages / PLAN_LIMITS.get("free", {}).get("message_limit", 500)) * 100 if PLAN_LIMITS.get("free", {}).get("message_limit", 500) > 0 else 0)
+                        },
+                        "users": {
+                            "used": total_users,
+                            "limit": PLAN_LIMITS.get("free", {}).get("user_limit", 5),
+                            "percentage": min(100, (total_users / PLAN_LIMITS.get("free", {}).get("user_limit", 5)) * 100 if PLAN_LIMITS.get("free", {}).get("user_limit", 5) > 0 else 0)
+                        },
+                        "storage": {
+                            "used_bytes": storage_bytes,
+                            "limit_bytes": PLAN_LIMITS.get("free", {}).get("storage_limit_mb", 50) * 1024 * 1024,
+                            "percentage": min(100, (storage_bytes / (PLAN_LIMITS.get("free", {}).get("storage_limit_mb", 50) * 1024 * 1024)) * 100 if PLAN_LIMITS.get("free", {}).get("storage_limit_mb", 50) > 0 else 0)
+                        }
+                    }
                 }
-                
+                    
             # If subscription exists but has no Stripe payment ID
             if not subscription.payment_id:
                 # Return basic subscription info from our database
@@ -635,48 +689,130 @@ class StripeService:
                     "status": subscription.status,
                     "start_date": subscription.starts_at.isoformat() if subscription.starts_at else None,
                     "end_date": subscription.expires_at.isoformat() if subscription.expires_at else None,
-                    "limits": PLAN_LIMITS.get(subscription.plan_type, {})
+                    "limits": PLAN_LIMITS.get(subscription.plan_type, {}),
+                    "usage": {
+                        "messages": {
+                            "used": total_messages,
+                            "limit": subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000),
+                            "percentage": min(100, (total_messages / (subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000))) * 100 if (subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000)) > 0 else 0)
+                        },
+                        "users": {
+                            "used": total_users,
+                            "limit": subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10),
+                            "percentage": min(100, (total_users / (subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10))) * 100 if (subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10)) > 0 else 0)
+                        },
+                        "storage": {
+                            "used_bytes": storage_bytes,
+                            "limit_bytes": subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024,
+                            "percentage": min(100, (storage_bytes / (subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024)) * 100 if (subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024) > 0 else 0)
+                        }
+                    }
                 }
             
             # Get subscription from Stripe
-            stripe_subscription = stripe.Subscription.retrieve(subscription.payment_id)
-            
-            # Format the response
-            return {
-                "subscription_id": subscription.id,
-                "stripe_subscription_id": stripe_subscription.id,
-                "plan_type": subscription.plan_type,
-                "status": stripe_subscription.status,
-                "current_period_start": datetime.fromtimestamp(stripe_subscription.current_period_start).isoformat(),
-                "current_period_end": datetime.fromtimestamp(stripe_subscription.current_period_end).isoformat(),
-                "cancel_at_period_end": stripe_subscription.cancel_at_period_end,
-                "canceled_at": datetime.fromtimestamp(stripe_subscription.canceled_at).isoformat() if stripe_subscription.canceled_at else None,
-                "limits": PLAN_LIMITS.get(subscription.plan_type, {})
-            }
-            
-        except stripe.error.StripeError as e:
-            logger.error(f"Stripe error getting subscription info for {client.client_id}: {str(e)}")
-            # Fall back to database information
-            if subscription:
+            try:
+                stripe_subscription = stripe.Subscription.retrieve(subscription.payment_id)
+                
+                # Format the response with analytics data
                 return {
                     "subscription_id": subscription.id,
+                    "stripe_subscription_id": stripe_subscription.id,
                     "plan_type": subscription.plan_type,
-                    "status": subscription.status,
-                    "start_date": subscription.starts_at.isoformat() if subscription.starts_at else None,
-                    "end_date": subscription.expires_at.isoformat() if subscription.expires_at else None,
-                    "limits": PLAN_LIMITS.get(subscription.plan_type, {})
+                    "status": stripe_subscription.status,
+                    "current_period_start": datetime.fromtimestamp(stripe_subscription.current_period_start).isoformat(),
+                    "current_period_end": datetime.fromtimestamp(stripe_subscription.current_period_end).isoformat(),
+                    "cancel_at_period_end": stripe_subscription.cancel_at_period_end,
+                    "canceled_at": datetime.fromtimestamp(stripe_subscription.canceled_at).isoformat() if stripe_subscription.canceled_at else None,
+                    "limits": PLAN_LIMITS.get(subscription.plan_type, {}),
+                    "usage": {
+                        "messages": {
+                            "used": total_messages,
+                            "limit": subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000),
+                            "percentage": min(100, (total_messages / (subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000))) * 100 if (subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000)) > 0 else 0)
+                        },
+                        "users": {
+                            "used": total_users,
+                            "limit": subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10),
+                            "percentage": min(100, (total_users / (subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10))) * 100 if (subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10)) > 0 else 0)
+                        },
+                        "storage": {
+                            "used_bytes": storage_bytes,
+                            "limit_bytes": subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024,
+                            "percentage": min(100, (storage_bytes / (subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024)) * 100 if (subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024) > 0 else 0)
+                        }
+                    }
                 }
-            else:
-                # If no subscription, return free tier info
-                return {
-                    "subscription_id": None,
-                    "plan_type": "free",
-                    "status": "active",
-                    "start_date": datetime.utcnow().isoformat(),
-                    "end_date": None,
-                    "limits": PLAN_LIMITS.get("free", {})
+            except stripe.error.StripeError as e:
+                logger.error(f"Stripe error getting subscription info for {client.client_id}: {str(e)}")
+                # Fall back to database information
+                if subscription:
+                    return {
+                        "subscription_id": subscription.id,
+                        "plan_type": subscription.plan_type,
+                        "status": subscription.status,
+                        "start_date": subscription.starts_at.isoformat() if subscription.starts_at else None,
+                        "end_date": subscription.expires_at.isoformat() if subscription.expires_at else None,
+                        "limits": PLAN_LIMITS.get(subscription.plan_type, {}),
+                        "usage": {
+                            "messages": {
+                                "used": total_messages,
+                                "limit": subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000),
+                                "percentage": min(100, (total_messages / (subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000))) * 100 if (subscription.message_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("message_limit", 1000)) > 0 else 0)
+                            },
+                            "users": {
+                                "used": total_users,
+                                "limit": subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10),
+                                "percentage": min(100, (total_users / (subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10))) * 100 if (subscription.user_limit or PLAN_LIMITS.get(subscription.plan_type, {}).get("user_limit", 10)) > 0 else 0)
+                            },
+                            "storage": {
+                                "used_bytes": storage_bytes,
+                                "limit_bytes": subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024,
+                                "percentage": min(100, (storage_bytes / (subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024)) * 100 if (subscription.storage_limit_bytes or PLAN_LIMITS.get(subscription.plan_type, {}).get("storage_limit_mb", 100) * 1024 * 1024) > 0 else 0)
+                            }
+                        }
+                    }
+                else:
+                    # If no subscription, return free tier info
+                    return {
+                        "subscription_id": None,
+                        "plan_type": "free",
+                        "status": "active",
+                        "start_date": datetime.utcnow().isoformat(),
+                        "end_date": None,
+                        "limits": PLAN_LIMITS.get("free", {}),
+                        "usage": {
+                            "messages": {
+                                "used": total_messages,
+                                "limit": PLAN_LIMITS.get("free", {}).get("message_limit", 500),
+                                "percentage": min(100, (total_messages / PLAN_LIMITS.get("free", {}).get("message_limit", 500)) * 100 if PLAN_LIMITS.get("free", {}).get("message_limit", 500) > 0 else 0)
+                            },
+                            "users": {
+                                "used": total_users,
+                                "limit": PLAN_LIMITS.get("free", {}).get("user_limit", 5),
+                                "percentage": min(100, (total_users / PLAN_LIMITS.get("free", {}).get("user_limit", 5)) * 100 if PLAN_LIMITS.get("free", {}).get("user_limit", 5) > 0 else 0)
+                            },
+                            "storage": {
+                                "used_bytes": storage_bytes,
+                                "limit_bytes": PLAN_LIMITS.get("free", {}).get("storage_limit_mb", 50) * 1024 * 1024,
+                                "percentage": min(100, (storage_bytes / (PLAN_LIMITS.get("free", {}).get("storage_limit_mb", 50) * 1024 * 1024)) * 100 if PLAN_LIMITS.get("free", {}).get("storage_limit_mb", 50) > 0 else 0)
+                            }
+                        }
+                    }
+        except Exception as e:
+            logger.error(f"Error getting subscription info: {str(e)}")
+            # Return minimal info if an error occurs
+            return {
+                "subscription_id": None,
+                "plan_type": "unknown",
+                "status": "error",
+                "error": str(e),
+                "usage": {
+                    "messages": {"used": 0, "limit": 1000, "percentage": 0},
+                    "users": {"used": 0, "limit": 10, "percentage": 0},
+                    "storage": {"used_bytes": 0, "limit_bytes": 100 * 1024 * 1024, "percentage": 0}
                 }
-    
+            }
+                
     async def get_invoices(self, client: Client, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Get a client's invoices.

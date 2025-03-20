@@ -41,6 +41,12 @@ class ChatService:
         """
         Process a user message with enhanced knowledge integration.
         """
+        # Initialize subscription usage if needed
+        try:
+            self.usage_tracker.initialize_subscription_usage(self.db, client_id)
+        except Exception as e:
+            logger.error(f"Error initializing subscription usage: {str(e)}")
+        
         # Get or create session
         session = self._get_or_create_session(client_id, session_id, user_info)
         

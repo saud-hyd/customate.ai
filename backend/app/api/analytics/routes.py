@@ -473,3 +473,92 @@ async def update_usage_data(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating usage data: {str(e)}"
         )
+        
+@router.post("/repair-subscription-data", response_model=Dict[str, Any])
+async def repair_subscription_data(
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """
+    Repair subscription usage data by initializing missing records.
+    Only accessible by admins.
+    """
+    # Check if current client has admin privileges
+    if current_client.email != "admin@customate.ai":  # Replace with proper admin check
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to perform this action"
+        )
+    
+    usage_tracker = UsageTracker()
+    usage_tracker.repair_subscription_data(db)
+    
+    return {
+        "success": True,
+        "message": "Subscription data repair initiated"
+    }        
+    
+@router.post("/sync-subscription-usage", response_model=Dict[str, Any])
+async def sync_subscription_usage(
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """
+    Manually synchronize subscription usage data with analytics metrics.
+    This endpoint ensures the subscription usage is correctly updated from analytics data.
+    """
+    try:
+        usage_tracker = UsageTracker()
+        
+        # Calculate total messages for the current month from chat metrics
+        current_month = datetime.utcnow().strftime("%Y-%m")
+        current_month_start = f"{current_month}-01"
+        
+        from sqlalchemy import func
+        from app.domain.analytics.entities import ChatMetrics
+        
+        # Get total messages from chat metrics
+        total_messages = db.query(func.sum(ChatMetrics.total_messages))\
+            .filter(
+                ChatMetrics.client_id == current_client.client_id,
+                ChatMetrics.date >= current_month_start
+            ).scalar() or 0
+        
+        # Get current subscription usage
+        from app.repositories.analytics_repository import SubscriptionUsageRepository
+        sub_usage_repo = SubscriptionUsageRepository()
+        
+        usage = sub_usage_repo.get_by_month(db, current_client.client_id, current_month)
+        
+        if not usage:
+            # Initialize subscription usage if it doesn't exist
+            usage_tracker.initialize_subscription_usage(db, current_client.client_id)
+            usage = sub_usage_repo.get_by_month(db, current_client.client_id, current_month)
+        
+        if usage:
+            # Update with accurate message count
+            sub_usage_repo.update(db, db_obj=usage, obj_in={
+                "messages_used": total_messages,
+                "last_updated": datetime.utcnow()
+            })
+        
+        # Update storage usage
+        usage_tracker._update_storage_usage(db, current_client.client_id)
+        
+        # Update active users
+        usage_tracker._update_active_users(db, current_client.client_id)
+        
+        return {
+            "success": True,
+            "message": "Subscription usage synchronized successfully",
+            "updated_values": {
+                "messages_count": total_messages
+            }
+        }
+        
+    except Exception as e:
+        logging.exception(f"Error synchronizing subscription usage: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to synchronize subscription usage: {str(e)}"
+        )    
