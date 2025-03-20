@@ -2,12 +2,13 @@
 import stripe
 import logging
 import os
+import random  # Added for generating random data
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from app.services.subscription.stripe_service import StripeService
-from app.repositories.client_repository import ClientRepository
+from app.repositories.client_repository import ClientRepository, SubscriptionRepository
 
 logger = logging.getLogger(__name__)
 

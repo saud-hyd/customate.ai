@@ -30,16 +30,12 @@ export const authService = {
         }
       };
       
-      // Try different possible endpoint paths
+      // Try with the correct endpoint path
       try {
-        await api.get('/api/admin/dashboard', config);
+        await api.get('/admin/dashboard', config);
       } catch (error) {
-        try {
-          await api.get('/admin/dashboard', config);
-        } catch (innerError) {
-          console.error('Authentication error:', innerError);
-          throw new Error('Invalid credentials or endpoint not found');
-        }
+        console.error('Authentication error:', error);
+        throw new Error('Invalid credentials or endpoint not found');
       }
       
       const userInfo = {
@@ -107,7 +103,20 @@ export const authService = {
         localStorage.setItem('adminUser', JSON.stringify(adminUser));
       }
       
-      // In production, validate token with backend
+      // In production, validate token with backend using the correct endpoint
+      const config = {
+        headers: {
+          'X-Admin-Key': adminToken,
+          'X-Admin-User': username
+        }
+      };
+      
+      try {
+        await api.get('/admin/dashboard', config);
+      } catch (error) {
+        throw new Error('Invalid token or session expired');
+      }
+      
       return adminUser;
     } catch (error) {
       console.error('Token validation failed:', error);

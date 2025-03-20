@@ -1,3 +1,5 @@
+// Path: frontend/admin/src/services/clientService.js
+
 import api from './api';
 
 export const clientService = {
@@ -19,69 +21,39 @@ export const clientService = {
     if (status) params.status = status;
     if (plan_type) params.plan_type = plan_type;
     
-    const response = await api.get('/api/admin/clients', { params });
+    // Update endpoint to match the backend path
+    const response = await api.get('/admin/clients', { params });
     return response.data;
   },
   
-  /**
-   * Get client details by ID
-   * 
-   * @param {string} clientId - Client ID
-   * @returns {Promise<Object>} - Client details
-   */
+  // Update other methods as well...
   async getClientById(clientId) {
-    const response = await api.get(`/api/admin/clients/${clientId}`);
+    const response = await api.get(`/admin/clients/${clientId}`);
     return response.data;
   },
   
-  /**
-   * Activate a client
-   * 
-   * @param {string} clientId - Client ID
-   * @returns {Promise<Object>} - Activation result
-   */
   async activateClient(clientId) {
-    const response = await api.post(`/api/admin/clients/${clientId}/activate`);
+    const response = await api.post(`/admin/clients/${clientId}/activate`);
     return response.data;
   },
   
-  /**
-   * Deactivate a client
-   * 
-   * @param {string} clientId - Client ID
-   * @returns {Promise<Object>} - Deactivation result
-   */
   async deactivateClient(clientId) {
-    const response = await api.post(`/api/admin/clients/${clientId}/deactivate`);
+    const response = await api.post(`/admin/clients/${clientId}/deactivate`);
     return response.data;
   },
   
-  /**
-   * Change client's subscription plan
-   * 
-   * @param {string} clientId - Client ID
-   * @param {string} planType - New plan type
-   * @param {boolean} prorate - Whether to prorate charges
-   * @returns {Promise<Object>} - Plan change result
-   */
   async changeClientPlan(clientId, planType, prorate = true) {
     const data = {
       plan_type: planType,
       prorate
     };
     
-    const response = await api.post(`/api/admin/clients/${clientId}/change-plan`, data);
+    const response = await api.post(`/admin/clients/${clientId}/change-plan`, data);
     return response.data;
   },
   
-  /**
-   * Send notification to clients
-   * 
-   * @param {Object} notificationData - Notification data
-   * @returns {Promise<Object>} - Notification result
-   */
   async sendNotification(notificationData) {
-    const response = await api.post('/api/admin/notifications/send', notificationData);
+    const response = await api.post('/admin/notifications/send', notificationData);
     return response.data;
   }
 };

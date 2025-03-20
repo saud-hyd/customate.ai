@@ -1,3 +1,5 @@
+// Path: frontend/admin/src/services/statsService.js
+
 import api from './api';
 
 export const statsService = {
@@ -7,7 +9,8 @@ export const statsService = {
    * @returns {Promise<Object>} - Dashboard data
    */
   async getDashboardStats() {
-    const response = await api.get('/api/admin/dashboard');
+    // Update endpoint to match the backend path
+    const response = await api.get('/admin/dashboard');
     return response.data;
   },
   
@@ -17,7 +20,8 @@ export const statsService = {
    * @returns {Promise<Object>} - System stats
    */
   async getSystemStats() {
-    const response = await api.get('/api/admin/system/stats');
+    // Update endpoint to match the backend path
+    const response = await api.get('/admin/system/stats');
     return response.data;
   }
 };

@@ -1,3 +1,5 @@
+// Path: frontend/admin/src/services/paymentService.js
+
 import api from './api';
 
 export const paymentService = {
@@ -10,7 +12,8 @@ export const paymentService = {
   async getPaymentOverview(period = 'month') {
     const params = { period };
     
-    const response = await api.get('/api/admin/payments', { params });
+    // Update endpoint to match the backend path
+    const response = await api.get('/admin/payments', { params });
     return response.data;
   },
   
@@ -27,7 +30,8 @@ export const paymentService = {
     
     if (status) params.status = status;
     
-    const response = await api.get('/api/admin/payments/history', { params });
+    // Update endpoint to match the backend path
+    const response = await api.get('/admin/payments/history', { params });
     return response.data;
   },
   
@@ -41,7 +45,8 @@ export const paymentService = {
    * @returns {Promise<Object>} - Refund result
    */
   async issueRefund(paymentId, refundData) {
-    const response = await api.post(`/api/admin/payments/${paymentId}/refund`, refundData);
+    // Update endpoint to match the backend path
+    const response = await api.post(`/admin/payments/${paymentId}/refund`, refundData);
     return response.data;
   }
 };
