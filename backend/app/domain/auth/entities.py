@@ -1,18 +1,18 @@
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Integer
+from sqlalchemy import Column, String, DateTime, Integer, Boolean
 from app.core.database.session import Base
 
-class OTPVerification(Base):
-    """OTP verification entity."""
+class MagicLinkToken(Base):
+    """Magic link token entity."""
     
-    __tablename__ = "otp_verifications"
+    __tablename__ = "magic_link_tokens"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    otp = Column(String(6), nullable=False)
+    email = Column(String(255), nullable=False, index=True)
+    token = Column(String(255), nullable=False, unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)
-    verified = Column(Integer, default=0)  # 0 = not verified, 1 = verified
+    used = Column(Boolean, default=False)
     
     def __repr__(self):
-        return f"<OTPVerification {self.email}>"
+        return f"<MagicLinkToken {self.email}>"

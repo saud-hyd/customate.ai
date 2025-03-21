@@ -17,6 +17,8 @@ import TestChatbotPage from './pages/TestChatbotPage';
 import ConversationsPage from './pages/chat/ConversationsPage';
 import IntegrationsPage from './pages/integrations/IntegrationsPage';
 import SubscriptionPage from './pages/subscription/SubscriptionPage';
+import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
+
 
 // Enhanced Knowledge pages
 import EnhancedKnowledgeListPage from './pages/knowledge/EnhancedKnowledgeListPage';
@@ -95,6 +97,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="conversations" element={<ConversationsPage />} />
         <Route path="chat" element={<ChatPage />} />

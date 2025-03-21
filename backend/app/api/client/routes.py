@@ -6,6 +6,8 @@ from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.repositories.client_repository import ClientRepository, ClientSettingsRepository
 from app.domain.client.entities import Client, ClientSettings
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/client", tags=["client"])
 

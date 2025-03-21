@@ -1,6 +1,5 @@
-// src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios'; // Make sure this import is at the top!
+import authService from '../services/authService';
 
 export const AuthContext = createContext(null);
 
@@ -13,18 +12,16 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (apiKey) {
+      if (token || apiKey) {
         try {
-          const response = await axios.get('http://localhost:8000/api/client', {
-            headers: {
-              'X-API-Key': apiKey
-            }
-          });
-          setUser(response.data);
+          const userInfo = await authService.getCurrentClient();
+          setUser(userInfo);
           setIsAuthenticated(true);
         } catch (error) {
           console.error('Auth verification failed:', error);
+          localStorage.removeItem('token');
           localStorage.removeItem('apiKey');
+          setToken(null);
           setApiKey(null);
         }
       }
@@ -32,53 +29,102 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuth();
-  }, [apiKey]);
+  }, [token, apiKey]);
 
-  const login = async (email, password) => {
+  // Email/Password login
+  const loginWithEmailPassword = async (email, password) => {
     try {
-      // Use email as username and password as API key
-      const formData = new URLSearchParams();
-      formData.append('username', email);
-      formData.append('password', password);
-      
-      const response = await axios.post(
-        'http://localhost:8000/api/auth/token', 
-        formData.toString(),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }
-      );
-      
-      const { api_key } = response.data;
-      
-      if (api_key) {
-        localStorage.setItem('apiKey', api_key);
-        setApiKey(api_key);
-        
-        // Fetch user info with the API key
-        const clientResponse = await axios.get('http://localhost:8000/api/client', {
-          headers: {
-            'X-API-Key': api_key
-          }
-        });
-        
-        setUser(clientResponse.data);
-        setIsAuthenticated(true);
-        
-        return clientResponse.data;
-      } else {
-        throw new Error('No API key received from server');
-      }
+      const response = await authService.login(email, password);
+      handleAuthResponse(response);
+      return response;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   };
 
+  // Magic Link authentication
+  const sendMagicLink = async (email, isRegistration = false) => {
+    try {
+      await authService.requestMagicLink(email, isRegistration);
+      // No need to set auth state here as the user will authenticate via the link
+      return true;
+    } catch (error) {
+      console.error('Magic link error:', error);
+      throw error;
+    }
+  };
+
+  // Verify magic link token
+  const verifyMagicLink = async (token) => {
+    try {
+      const response = await authService.verifyMagicLink(token);
+      handleAuthResponse(response);
+      return response;
+    } catch (error) {
+      console.error('Magic link verification error:', error);
+      throw error;
+    }
+  };
+
+  // Google authentication
+  const loginWithGoogle = async (isRegistration = false) => {
+    try {
+      // This will redirect to Google's OAuth page
+      await authService.initiateGoogleAuth(isRegistration);
+      // The response will be handled by a callback route
+      return true;
+    } catch (error) {
+      console.error('Google auth error:', error);
+      throw error;
+    }
+  };
+
+  // Handle OAuth callback
+  const handleOAuthCallback = async (params) => {
+    try {
+      const response = await authService.handleOAuthCallback(params);
+      handleAuthResponse(response);
+      return response;
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      throw error;
+    }
+  };
+
+  // Register with email/password
+  const registerWithEmailPassword = async (email, password) => {
+    try {
+      const response = await authService.register({ email, password });
+      handleAuthResponse(response);
+      return response;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
+
+  // Helper to handle auth response
+  const handleAuthResponse = (response) => {
+    if (response.access_token) {
+      localStorage.setItem('token', response.access_token);
+      setToken(response.access_token);
+    }
+    
+    if (response.api_key) {
+      localStorage.setItem('apiKey', response.api_key);
+      setApiKey(response.api_key);
+    }
+    
+    setUser(response);
+    setIsAuthenticated(true);
+  };
+
+  // Logout
   const logout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('apiKey');
+    setToken(null);
     setApiKey(null);
     setUser(null);
     setIsAuthenticated(false);
@@ -88,10 +134,16 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        token,
         apiKey,
         isAuthenticated,
         loading,
-        login,
+        loginWithEmailPassword,
+        sendMagicLink,
+        verifyMagicLink,
+        loginWithGoogle,
+        handleOAuthCallback,
+        registerWithEmailPassword,
         logout
       }}
     >

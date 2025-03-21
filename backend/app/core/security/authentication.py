@@ -1,10 +1,21 @@
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
+from fastapi import HTTPException
+from starlette import status
+from jose.exceptions import JWTError
+
 
 from jose import jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 import logging
+import json
+import hmac
+import base64
+import secrets
+import hashlib
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,3 +83,86 @@ def authenticate_client_by_api_key(db: Session, api_key: str) -> Optional[Client
         logger.info("No client found with this API key")
         
     return None
+def create_magic_link_token(data: Dict[str, Any]) -> str:
+    """
+    Create a token for magic link authentication.
+    """
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    
+    # Add a random component to prevent token reuse
+    to_encode.update({"jti": secrets.token_hex(8)})
+    
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_magic_link_token(token: str) -> Dict[str, Any]:
+    """
+    Verify a magic link token.
+    """
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+def encode_state_data(data: Dict[str, Any]) -> str:
+    """
+    Encode state data for OAuth flow.
+    """
+    # Add a timestamp and random value to prevent CSRF
+    data_copy = data.copy()
+    data_copy.update({
+        "timestamp": int(datetime.utcnow().timestamp()),
+        "nonce": secrets.token_hex(8)
+    })
+    
+    json_data = json.dumps(data_copy)
+    encoded = base64.urlsafe_b64encode(json_data.encode('utf-8')).decode('utf-8')
+    
+    # Add signature
+    signature = hmac.new(
+        settings.SECRET_KEY.encode('utf-8'),
+        encoded.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return f"{encoded}.{signature}"
+
+def decode_state_data(state: str) -> Dict[str, Any]:
+    """
+    Decode and verify state data from OAuth flow.
+    """
+    try:
+        # Split encoded data and signature
+        encoded, signature = state.split('.')
+        
+        # Verify signature
+        expected_signature = hmac.new(
+            settings.SECRET_KEY.encode('utf-8'),
+            encoded.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if not hmac.compare_digest(signature, expected_signature):
+            return {}
+        
+        # Decode data
+        json_data = base64.urlsafe_b64decode(encoded).decode('utf-8')
+        data = json.loads(json_data)
+        
+        # Check timestamp (valid for 1 hour)
+        timestamp = data.get("timestamp", 0)
+        current_time = int(datetime.utcnow().timestamp())
+        
+        if current_time - timestamp > 3600:
+            return {}
+        
+        return data
+    except Exception:
+        return {}

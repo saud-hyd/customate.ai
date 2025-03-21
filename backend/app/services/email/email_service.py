@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any
 import logging
+from datetime import datetime
 
 from app.core.config.settings import settings
 
@@ -27,6 +28,13 @@ class EmailService:
     def send_email(self, recipient: str, subject: str, body_html: str, body_text: str = None) -> bool:
         """Send an email using SMTP."""
         try:
+            # For development/debugging - log instead of sending
+            if settings.DEBUG:
+                logger.info(f"[DEBUG] Email to: {recipient}")
+                logger.info(f"[DEBUG] Subject: {subject}")
+                logger.info(f"[DEBUG] Body HTML: {body_html[:100]}...")
+                return True
+                
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
             message["From"] = self.sender_email
@@ -94,6 +102,65 @@ class EmailService:
         This code will expire in 10 minutes.
         
         If you didn't request this verification, please ignore this email.
+        """
+        
+        return self.send_email(recipient, subject, html, text)
+        
+    def send_magic_link_email(self, recipient: str, magic_link_url: str, is_registration: bool = False) -> bool:
+        """
+        Send magic link authentication email.
+        
+        Args:
+            recipient: Email address to send to
+            magic_link_url: The full URL for the magic link
+            is_registration: Whether this is for registration or login
+            
+        Returns:
+            Boolean indicating success
+        """
+        subject = "Complete Your Registration - Customate.ai" if is_registration else "Sign in to Customate.ai"
+        
+        action_text = "Complete Registration" if is_registration else "Sign In"
+        message_intro = "Welcome to Customate.ai! To complete your registration" if is_registration else "To sign in to your account"
+        
+        # HTML body
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #4f46e5;">Customate.ai</h1>
+                </div>
+                <div style="background-color: #f9fafb; padding: 20px; border-radius: 5px;">
+                    <h2>{"Welcome to Customate.ai!" if is_registration else "Sign in to Customate.ai"}</h2>
+                    <p>{message_intro}, please click the button below:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{magic_link_url}" style="background-color: #4f46e5; color: white; font-size: 16px; font-weight: bold; padding: 12px 24px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                            {action_text}
+                        </a>
+                    </div>
+                    <p>This link will expire in 15 minutes for security reasons.</p>
+                    <p>If you didn't request this, you can safely ignore this email.</p>
+                </div>
+                <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280;">
+                    <p>© {2025} Customate.ai. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text body
+        text = f"""
+        {"Welcome to Customate.ai!" if is_registration else "Sign in to Customate.ai"}
+        
+        {message_intro}, please use the following link:
+        
+        {magic_link_url}
+        
+        This link will expire in 15 minutes for security reasons.
+        
+        If you didn't request this, you can safely ignore this email.
         """
         
         return self.send_email(recipient, subject, html, text)

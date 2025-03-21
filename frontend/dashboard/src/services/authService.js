@@ -18,7 +18,6 @@ const authService = {
       
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('clientId', response.data.client_id);
         localStorage.setItem('apiKey', response.data.api_key || password);
       }
       
@@ -29,13 +28,14 @@ const authService = {
     }
   },
   
-  // Request OTP for email verification
-  async requestOTP(email) {
+  // Request magic link
+  async requestMagicLink(email, isRegistration = false) {
     try {
       const formData = new URLSearchParams();
       formData.append('email', email);
+      formData.append('is_registration', isRegistration);
       
-      const response = await api.post('/api/auth/request-otp', formData, {
+      const response = await api.post('/api/auth/magic-link/request', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -43,52 +43,75 @@ const authService = {
       
       return response.data;
     } catch (error) {
-      console.error('Error requesting OTP:', error);
+      console.error('Error requesting magic link:', error);
       throw error;
     }
   },
   
-  // Verify OTP
-  async verifyOTP(email, otp) {
+  // Verify magic link token
+  async verifyMagicLink(token) {
     try {
-      const formData = new URLSearchParams();
-      formData.append('email', email);
-      formData.append('otp', otp);
+      const response = await api.get(`/api/auth/magic-link/verify?token=${token}`);
       
-      const response = await api.post('/api/auth/verify-otp', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('apiKey', response.data.api_key);
+      }
       
       return response.data;
     } catch (error) {
-      console.error('Error verifying OTP:', error);
+      console.error('Error verifying magic link:', error);
       throw error;
     }
   },
   
-  // Register a new client with OTP verification
-  async register(clientData) {
+  // Initiate Google OAuth flow
+  async initiateGoogleAuth(isRegistration = false) {
+    // This will redirect the browser to Google's OAuth page
+    const redirectUri = `${window.location.origin}/auth/callback`;
+    window.location.href = `/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=${isRegistration}`;
+    return true;
+  },
+  
+  // Handle OAuth callback
+  async handleOAuthCallback(params) {
+    try {
+      const response = await api.get(`/api/auth/oauth/callback?${new URLSearchParams(params).toString()}`);
+      
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('apiKey', response.data.api_key);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      throw error;
+    }
+  },
+  
+  // Register with email and password
+  async register(userData) {
     try {
       // Format data for API
       const formData = new URLSearchParams();
-      formData.append('name', clientData.name);
-      formData.append('email', clientData.email);
-      formData.append('industry', clientData.industry);
+      formData.append('email', userData.email);
+      formData.append('password', userData.password);
       
-      if (clientData.website) {
-        formData.append('website', clientData.website);
-      }
-      
-      formData.append('password', clientData.password);
-      formData.append('otp', clientData.otp);
+      if (userData.name) formData.append('name', userData.name);
+      if (userData.industry) formData.append('industry', userData.industry);
+      if (userData.website) formData.append('website', userData.website);
       
       const response = await api.post('/api/auth/register', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
+      
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('apiKey', response.data.api_key);
+      }
       
       return response.data;
     } catch (error) {
@@ -97,30 +120,27 @@ const authService = {
     }
   },
   
-  // Rest of the code remains the same...
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('clientId');
-    localStorage.removeItem('apiKey');
-  },
-  
+  // Get current logged-in client information
   async getCurrentClient() {
     try {
       const response = await api.get('/api/client');
       return response.data;
     } catch (error) {
       // If API call fails, we're not logged in
-      return null;
+      throw error;
     }
   },
   
-  async updateSettings(settingsData) {
-    const response = await api.put('/api/client/settings', settingsData);
-    return response.data;
+  // Logout
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('apiKey');
+    localStorage.removeItem('clientId');
   },
   
+  // Check if authenticated
   isAuthenticated() {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('token') || !!localStorage.getItem('apiKey');
   }
 };
 
