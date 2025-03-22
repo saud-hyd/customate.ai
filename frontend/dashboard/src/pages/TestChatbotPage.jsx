@@ -1,9 +1,7 @@
-// frontend/dashboard/src/pages/TestChatbotPage.jsx
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import knowledgeService from '../services/knowledgeService';
-import clientService from '../services/clientService';
-import WidgetComponent from '../widget/components/WidgetComponent';
+import { RadioGroup } from '@headlessui/react';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { 
   SwatchIcon, 
   Cog6ToothIcon,
@@ -14,6 +12,9 @@ import {
   InformationCircleIcon,
   DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
+import knowledgeService from '../services/knowledgeService';
+import clientService from '../services/clientService';
+import WidgetComponent from '../widget/components/WidgetComponent';
 
 const TestChatbotPage = () => {
   // State
@@ -30,8 +31,55 @@ const TestChatbotPage = () => {
     apiKey: "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50", // Default API key (will be replaced)
     apiUrl: 'http://localhost:8000', // Backend URL
     // Initial message to show
-    greeting: "Hi there! I'm your Customate.AI assistant. How can I help you today?"
+    greeting: "Hi there! I'm your Customate.AI assistant. How can I help you today?",
+    // LLM settings
+    llmProvider: "deepseek",
+    llmModel: null
   });
+  
+  // LLM options for selection
+  const llmOptions = [
+    { 
+      provider: 'deepseek', 
+      name: 'DeepSeek', 
+      models: [
+        { id: 'deepseek-chat', name: 'DeepSeek Chat' }
+      ]
+    },
+    { 
+      provider: 'openai', 
+      name: 'OpenAI', 
+      models: [
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+        { id: 'gpt-4', name: 'GPT-4' },
+        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' }
+      ]
+    },
+    { 
+      provider: 'claude', 
+      name: 'Claude', 
+      models: [
+        { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+        { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
+        { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' }
+      ]
+    }
+  ];
+  
+  const settingsToSave = {
+    primary_color: chatSettings.primaryColor,
+    chatbot_name: chatSettings.chatbotName,
+    widget_position: chatSettings.widgetPosition,
+    show_typing_indicator: chatSettings.showTypingIndicator,
+    enable_suggestions: chatSettings.enableSuggestions,
+    greeting_message: chatSettings.greeting,
+    reset_on_page_refresh: chatSettings.resetOnPageRefresh,
+    session_timeout: chatSettings.sessionTimeout,
+    custom_settings: {
+      llm_provider: chatSettings.llmProvider,
+      llm_model: chatSettings.llmModel
+    }
+  };
   
   const [collections, setCollections] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState(null);
@@ -68,7 +116,10 @@ const TestChatbotPage = () => {
         enableSuggestions: settings.enable_suggestions !== undefined ? settings.enable_suggestions : prev.enableSuggestions,
         greeting: settings.greeting_message || prev.greeting,
         resetOnPageRefresh: settings.reset_on_page_refresh !== undefined ? settings.reset_on_page_refresh : prev.resetOnPageRefresh,
-        sessionTimeout: settings.session_timeout || prev.sessionTimeout
+        sessionTimeout: settings.session_timeout || prev.sessionTimeout,
+        // Load LLM settings
+        llmProvider: settings.llm_provider || prev.llmProvider,
+        llmModel: settings.llm_model || prev.llmModel
       }));
     } catch (err) {
       console.error('Error fetching current settings:', err);
@@ -124,6 +175,24 @@ const TestChatbotPage = () => {
     }));
   };
   
+  // Handler for LLM provider change
+  const handleLlmProviderChange = (provider) => {
+    setChatSettings(prev => ({
+      ...prev,
+      llmProvider: provider,
+      // Reset model when provider changes
+      llmModel: null
+    }));
+  };
+
+  // Handler for LLM model change
+  const handleLlmModelChange = (model) => {
+    setChatSettings(prev => ({
+      ...prev,
+      llmModel: model
+    }));
+  };
+  
   // Save settings
   const handleSaveSettings = async () => {
     try {
@@ -137,7 +206,11 @@ const TestChatbotPage = () => {
         enable_suggestions: chatSettings.enableSuggestions,
         greeting_message: chatSettings.greeting,
         reset_on_page_refresh: chatSettings.resetOnPageRefresh,
-        session_timeout: chatSettings.sessionTimeout
+        session_timeout: chatSettings.sessionTimeout,
+        custom_settings: {
+          llm_provider: chatSettings.llmProvider,
+          llm_model: chatSettings.llmModel
+        }
       };
       
       await clientService.updateWidgetSettings(settingsToSave);
@@ -255,6 +328,19 @@ const TestChatbotPage = () => {
               >
                 <ChatBubbleLeftRightIcon className="h-5 w-5 mr-2" />
                 Behavior
+              </button>
+              <button
+                onClick={() => setActiveSettingsTab('llm')}
+                className={`${
+                  activeSettingsTab === 'llm'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                LLM Settings
               </button>
               <button
                 onClick={() => setActiveSettingsTab('info')}
@@ -432,6 +518,118 @@ const TestChatbotPage = () => {
                 </div>
               </div>
             )}
+
+            {/* LLM Settings tab */}
+            {activeSettingsTab === 'llm' && (
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-4">LLM Provider</h4>
+                  <RadioGroup value={chatSettings.llmProvider} onChange={handleLlmProviderChange}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {llmOptions.map((option) => (
+                        <RadioGroup.Option
+                          key={option.provider}
+                          value={option.provider}
+                          className={({ checked }) => `
+                            ${checked ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-200'}
+                            relative border rounded-lg p-4 flex cursor-pointer focus:outline-none
+                          `}
+                        >
+                          {({ checked }) => (
+                            <>
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center">
+                                  <div className="text-sm">
+                                    <RadioGroup.Label
+                                      as="p"
+                                      className={`font-medium ${
+                                        checked ? 'text-indigo-900' : 'text-gray-900'
+                                      }`}
+                                    >
+                                      {option.name}
+                                    </RadioGroup.Label>
+                                  </div>
+                                </div>
+                                {checked && (
+                                  <div className="flex-shrink-0 text-indigo-500">
+                                    <CheckCircleIcon className="h-5 w-5" />
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </RadioGroup.Option>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                {/* Show model options for selected provider */}
+                {chatSettings.llmProvider && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Model</h4>
+                    <RadioGroup 
+                      value={chatSettings.llmModel} 
+                      onChange={handleLlmModelChange}
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {llmOptions
+                          .find(opt => opt.provider === chatSettings.llmProvider)
+                          ?.models.map((model) => (
+                            <RadioGroup.Option
+                              key={model.id}
+                              value={model.id}
+                              className={({ checked }) => `
+                                ${checked ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-200'}
+                                relative border rounded-lg p-3 flex cursor-pointer focus:outline-none
+                              `}
+                            >
+                              {({ checked }) => (
+                                <>
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center">
+                                      <div className="text-sm">
+                                        <RadioGroup.Label
+                                          as="p"
+                                          className={`font-medium ${
+                                            checked ? 'text-indigo-900' : 'text-gray-900'
+                                          }`}
+                                        >
+                                          {model.name}
+                                        </RadioGroup.Label>
+                                      </div>
+                                    </div>
+                                    {checked && (
+                                      <div className="flex-shrink-0 text-indigo-500">
+                                        <CheckCircleIcon className="h-5 w-5" />
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </RadioGroup.Option>
+                          ))}
+                      </div>
+                    </RadioGroup>
+                  </div>
+                )}
+
+                {/* Description of LLM options */}
+                <div className="bg-blue-50 rounded-md p-4 mt-4">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">About LLM Settings</h4>
+                  <p className="text-sm text-blue-700">
+                    Select the LLM (Large Language Model) provider and specific model to use for your chatbot. 
+                    Each provider has different capabilities and pricing. Your selection here will be used for all 
+                    interactions with your chatbot.
+                  </p>
+                  <div className="mt-3 text-xs text-blue-600">
+                    <p>• DeepSeek: Default model with good performance for general queries</p>
+                    <p>• OpenAI: Offers GPT models with strong reasoning capabilities</p>
+                    <p>• Claude: Anthropic's models with excellent conversation and instruction-following abilities</p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Info tab */}
             {activeSettingsTab === 'info' && (
@@ -480,14 +678,21 @@ const TestChatbotPage = () => {
     resetOnPageRefresh: ${chatSettings.resetOnPageRefresh},
     sessionTimeout: ${chatSettings.sessionTimeout}${chatSettings.customData?.collectionId ? `,
     customData: {
-      collectionId: '${chatSettings.customData.collectionId}'
+      collectionId: '${chatSettings.customData.collectionId}'${chatSettings.llmProvider ? `,
+      llmProvider: '${chatSettings.llmProvider}'` : ''}${chatSettings.llmModel ? `,
+      llmModel: '${chatSettings.llmModel}'` : ''}
+    }` : chatSettings.llmProvider ? `,
+    customData: {
+      llmProvider: '${chatSettings.llmProvider}'${chatSettings.llmModel ? `,
+      llmModel: '${chatSettings.llmModel}'` : ''}
     }` : ''}
   });
 </script>`}
                   </pre>
+                  
                   <button 
                     onClick={() => {
-                      navigator.clipboard.writeText(`<!-- Customate.ai Chat Widget -->
+                      const embedCode = `<!-- Customate.ai Chat Widget -->
 <script>
   (function(c,u,s,t,o,m,a,t,e){
     c['CustomateWidget']=o;
@@ -506,10 +711,17 @@ const TestChatbotPage = () => {
     resetOnPageRefresh: ${chatSettings.resetOnPageRefresh},
     sessionTimeout: ${chatSettings.sessionTimeout}${chatSettings.customData?.collectionId ? `,
     customData: {
-      collectionId: '${chatSettings.customData.collectionId}'
+      collectionId: '${chatSettings.customData.collectionId}'${chatSettings.llmProvider ? `,
+      llmProvider: '${chatSettings.llmProvider}'` : ''}${chatSettings.llmModel ? `,
+      llmModel: '${chatSettings.llmModel}'` : ''}
+    }` : chatSettings.llmProvider ? `,
+    customData: {
+      llmProvider: '${chatSettings.llmProvider}'${chatSettings.llmModel ? `,
+      llmModel: '${chatSettings.llmModel}'` : ''}
     }` : ''}
   });
-</script>`);
+</script>`;
+                      navigator.clipboard.writeText(embedCode);
                       toast.success('Code copied to clipboard!');
                     }}
                     className="mt-2 text-sm text-indigo-600 hover:text-indigo-500 flex items-center"
@@ -568,7 +780,15 @@ const TestChatbotPage = () => {
             
             {/* Real widget integration */}
             <div className="absolute" style={{ right: '0', bottom: '0', zIndex: 100 }}>
-              <WidgetComponent config={chatSettings} />
+              <WidgetComponent config={{
+                ...chatSettings,
+                // Make sure LLM settings are passed through
+                customData: {
+                  ...chatSettings.customData,
+                  llmProvider: chatSettings.llmProvider,
+                  llmModel: chatSettings.llmModel
+                }
+              }} />
             </div>
           </div>
         </div>

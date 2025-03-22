@@ -17,6 +17,8 @@ from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
 from app.core import logger
+from app.services.llm.llm_factory import LLMFactory
+
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
@@ -28,7 +30,7 @@ async def send_message(
     db: Session = Depends(get_db)
 ):
     """Send a message to the chatbot and get a response using enhanced knowledge integration."""
-    start_time = time.time()  # Add this line to track response time
+    start_time = time.time()
     
     if "message" not in message_data:
         raise HTTPException(
@@ -48,8 +50,14 @@ async def send_message(
         "referrer": request.headers.get("referer"),
     }
     
-    # Initialize services with enhanced implementations
-    llm_service = DeepSeekService()
+    # Get LLM service based on client settings or overrides in the request
+    llm_service = LLMFactory.create_llm_service(
+        db, 
+        current_client.client_id,
+        message_data.get("llm_settings")  # Pass any override settings from request
+    )
+    
+    # Initialize other services
     search_service = EnhancedSearchService(llm_service)
     industry_factory = IndustryFactory()
     context_manager = ContextManager()
@@ -71,7 +79,7 @@ async def send_message(
         user_info=user_info
     )
     
-    # Add this block to track usage stats
+    # Track usage stats
     usage_tracker = UsageTracker()
     usage_tracker.track_chat_interaction(
         db=db,

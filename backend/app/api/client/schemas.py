@@ -137,6 +137,8 @@ class ClientSettingsUpdateRequest(BaseModel):
     fallback_email: Optional[str] = None
     chatbot_name: Optional[str] = None
     custom_settings: Optional[Dict[str, Any]] = None
+    llm_provider: Optional[str] = None  
+    llm_model: Optional[str] = None 
 
 class ClientResponse(BaseModel):
     client_id: str

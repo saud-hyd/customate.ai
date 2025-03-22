@@ -104,16 +104,24 @@ class ChatService {
    * Send a message to the chatbot and get a response
    * @param {string} message - The user's message
    * @param {string} sessionId - Optional session ID for continuing a conversation
+   * @param {Object} llmSettings - Optional LLM provider and model settings
    * @returns {Promise<Object>} Response from the chatbot
    */
-  async sendMessage(message, sessionId = null) {
+  async sendMessage(message, sessionId = null, llmSettings = null) {
     try {
+      const requestData = {
+        message,
+        session_id: sessionId,
+      };
+      
+      // Add LLM settings if provided
+      if (llmSettings) {
+        requestData.llm_settings = llmSettings;
+      }
+      
       const response = await axios.post(
         `${API_URL}/chatbot/message`,
-        {
-          message,
-          session_id: sessionId,
-        },
+        requestData,
         {
           headers: this.getHeaders(),
         }
@@ -132,9 +140,10 @@ class ChatService {
    * @param {function} onChunk - Callback for each response chunk
    * @param {function} onDone - Callback when streaming is complete
    * @param {function} onError - Callback for errors
+   * @param {Object} llmSettings - Optional LLM provider and model settings
    * @returns {function} Function to cancel the stream
    */
-  sendMessageStreaming(message, sessionId = null, onChunk, onDone, onError) {
+  sendMessageStreaming(message, sessionId = null, onChunk, onDone, onError, llmSettings = null) {
     // Ensure error callback exists
     const handleError = typeof onError === 'function' ? onError : (err) => {
       console.error('Streaming error:', err);
@@ -145,6 +154,11 @@ class ChatService {
       message,
       session_id: sessionId,
     };
+    
+    // Add LLM settings if provided
+    if (llmSettings) {
+      requestData.llm_settings = llmSettings;
+    }
     
     // Use fetch with ReadableStream API
     const controller = new AbortController();

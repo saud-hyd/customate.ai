@@ -1,3 +1,4 @@
+# backend/app/services/llm/claude_service.py
 from typing import Dict, Any, List, Optional, AsyncGenerator
 import httpx
 import os
@@ -8,18 +9,18 @@ from app.services.llm.llm_service import LLMService
 from app.core.config.settings import settings
 from app.core import logger
 
-class OpenAIService(LLMService):
-    """OpenAI LLM service implementation with mock fallback."""
+class ClaudeService(LLMService):
+    """Claude AI LLM service implementation with mock fallback."""
     
-    def __init__(self, model_name="gpt-3.5-turbo"):
-        self.api_key = settings.OPENAI_API_KEY
-        self.api_base_url = "https://api.openai.com/v1"
+    def __init__(self, model_name="claude-3-opus-20240229"):
+        self.api_key = settings.CLAUDE_API_KEY
+        self.api_base_url = "https://api.anthropic.com/v1"
         self.model = model_name
         self._mock_service = None  # Lazy-loaded mock service
         
         # Verify API key is set
         if not self.api_key:
-            logger.warning("OpenAI API key not configured. LLM service may not function properly.")
+            logger.warning("Claude API key not configured. LLM service may not function properly.")
     
     async def generate_response(
         self,
@@ -29,7 +30,7 @@ class OpenAIService(LLMService):
         industry_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Generate a response from OpenAI.
+        Generate a response from Claude.
         
         Args:
             user_message: The user's message
@@ -50,28 +51,29 @@ class OpenAIService(LLMService):
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{self.api_base_url}/chat/completions",
+                    f"{self.api_base_url}/messages",
                     headers={
-                        "Authorization": f"Bearer {self.api_key}",
+                        "x-api-key": self.api_key,
+                        "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json",
                     },
                     json={
                         "model": self.model,
                         "messages": messages,
-                        "temperature": 0.7,
                         "max_tokens": 1024,
+                        "temperature": 0.7,
                     },
                     timeout=30.0,
                 )
                 
                 if response.status_code != 200:
-                    logger.error(f"OpenAI API error: {response.status_code} - {response.text}")
+                    logger.error(f"Claude API error: {response.status_code} - {response.text}")
                     return {
                         "content": "I apologize, but I'm having trouble generating a response right now. Please try again later."
                     }
                 
                 result = response.json()
-                content = result["choices"][0]["message"]["content"]
+                content = result["content"][0]["text"]
                 
                 return {
                     "content": content,
@@ -79,14 +81,15 @@ class OpenAIService(LLMService):
                 }
                 
         except Exception as e:
-            logger.exception(f"Error calling OpenAI API: {str(e)}")
+            logger.exception(f"Error calling Claude API: {str(e)}")
             return {
                 "content": "I apologize, but I'm having trouble generating a response right now. Please try again later."
             }
     
     async def generate_embeddings(self, text: str) -> List[float]:
         """
-        Generate embeddings for text using OpenAI's embeddings API.
+        Generate embeddings for text.
+        Claude doesn't have a dedicated embeddings API, so we fall back to the mock service.
         
         Args:
             text: The text to generate embeddings for
@@ -94,31 +97,6 @@ class OpenAIService(LLMService):
         Returns:
             Vector embeddings as a list of floats
         """
-        # Make API request to embeddings endpoint
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.api_base_url}/embeddings",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": "text-embedding-ada-002",  # Default embedding model
-                        "input": text
-                    },
-                    timeout=30.0,
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    embeddings = result["data"][0]["embedding"]
-                    return embeddings
-                else:
-                    logger.error(f"OpenAI embeddings API error: {response.status_code} - {response.text}")
-        except Exception as e:
-            logger.warning(f"Error calling OpenAI embedding API: {str(e)}, using mock service")
-            
         # Fallback to mock service
         mock_service = self._get_mock_service()
         return await mock_service.generate_embeddings(text)
@@ -163,13 +141,14 @@ class OpenAIService(LLMService):
         system_prompt: str, 
         conversation_history: List[Dict[str, str]],
         current_message: str
-    ) -> List[Dict[str, str]]:
-        """Format messages for the OpenAI API."""
+    ) -> List[Dict[str, Any]]:
+        """Format messages for the Claude API."""
         messages = [{"role": "system", "content": system_prompt}]
         
         # Add conversation history
         for msg in conversation_history:
-            messages.append({"role": msg["role"], "content": msg["content"]})
+            role = "user" if msg["role"] == "user" else "assistant"
+            messages.append({"role": role, "content": msg["content"]})
         
         # Add current message
         messages.append({"role": "user", "content": current_message})
@@ -184,7 +163,7 @@ class OpenAIService(LLMService):
         industry_context: Optional[Dict[str, Any]] = None,
     ) -> AsyncGenerator[str, None]:
         """
-        Generate a streaming response from OpenAI.
+        Generate a streaming response from Claude.
         
         Args:
             user_message: The user's message
@@ -204,41 +183,45 @@ class OpenAIService(LLMService):
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{self.api_base_url}/chat/completions",
+                    f"{self.api_base_url}/messages",
                     headers={
-                        "Authorization": f"Bearer {self.api_key}",
+                        "x-api-key": self.api_key,
+                        "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json",
                     },
                     json={
                         "model": self.model,
                         "messages": messages,
-                        "temperature": 0.7,
                         "max_tokens": 1024,
+                        "temperature": 0.7,
                         "stream": True
                     },
-                    timeout=60.0,
+                    timeout=30.0,
                 )
                 
                 if response.status_code != 200:
-                    logger.error(f"OpenAI API error: {response.status_code} - {response.text}")
+                    logger.error(f"Claude API error: {response.status_code} - {response.text}")
                     yield "I apologize, but I'm having trouble generating a response right now. Please try again later."
                     return
                 
                 # Process the streaming response
+                buffer = ""
                 async for line in response.aiter_lines():
                     if line.startswith("data: "):
-                        line = line[6:]
-                        if line.strip() == "[DONE]":
+                        data = line[6:]
+                        if data.strip() == "[DONE]":
                             break
-                            
+                        
                         try:
-                            chunk = json.loads(line)
-                            delta = chunk.get("choices", [{}])[0].get("delta", {})
-                            if "content" in delta and delta["content"]:
-                                yield delta["content"]
+                            chunk = json.loads(data)
+                            if chunk.get("type") == "content_block_delta":
+                                delta_text = chunk.get("delta", {}).get("text", "")
+                                if delta_text:
+                                    buffer += delta_text
+                                    yield delta_text
                         except Exception as e:
-                            logger.error(f"Error parsing OpenAI stream: {str(e)}")
+                            logger.error(f"Error parsing Claude stream chunk: {str(e)}")
                 
         except Exception as e:
-            logger.exception(f"Error in OpenAI streaming response: {str(e)}")
+            logger.exception(f"Error in Claude streaming response: {str(e)}")
             yield "I apologize, but I'm having trouble generating a streaming response right now. Please try again later."

@@ -14,27 +14,29 @@ async def get_widget_settings(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
-    """Get widget settings for the current client."""
     settings_repo = ClientSettingsRepository()
     settings = settings_repo.get_by_client_id(db, current_client.client_id)
     
     if not settings:
-        return {
-            "primary_color": "#4f46e5",
-            "chatbot_name": "AI Assistant",
-            "widget_position": "bottom-right",
-            "show_typing_indicator": True,
-            "enable_suggestions": True,
-        }
+        # Create default settings if they don't exist
+        settings = settings_repo.create(db, obj_in={"client_id": current_client.client_id})
+    
+    custom_settings = settings.custom_settings or {}
+    llm_provider = custom_settings.get("llm_provider", "deepseek")
+    llm_model = custom_settings.get("llm_model")
     
     return {
         "primary_color": settings.primary_color,
-        "chatbot_name": settings.chatbot_name,
-        "widget_position": settings.widget_position,
-        "show_typing_indicator": settings.enable_typing_indicator,
+        "logo_url": settings.logo_url,
+        "greeting_message": settings.greeting_message,
         "enable_suggestions": settings.enable_suggestions,
+        "enable_typing_indicator": settings.enable_typing_indicator,
+        "widget_position": settings.widget_position,
+        "chatbot_name": settings.chatbot_name,
+        "llm_provider": llm_provider,
+        "llm_model": llm_model
     }
-
+    
 @router.put("/settings", response_model=Dict[str, Any])
 async def update_widget_settings(
     settings_data: Dict[str, Any],

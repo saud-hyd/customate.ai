@@ -1,8 +1,8 @@
-// Ensure the component is properly handling the streaming messages
+// frontend/dashboard/src/components/chat/ChatInterface.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import chatService from '../../services/chatService';
 
-const ChatInterface = () => {
+const ChatInterface = (props) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
@@ -24,6 +24,16 @@ const ChatInterface = () => {
     e?.preventDefault();
     
     if (!input.trim()) return;
+    
+    // Get LLM settings from props if available
+    let llmSettings = null;
+    if (config && config.llmProvider) {
+      llmSettings = {
+        llm_provider: config.llmProvider,
+        llm_model: config.llmModel
+      };
+      console.log("Using LLM settings:", llmSettings);
+    }
     
     // Add user message to state
     const userMessage = {
@@ -81,7 +91,7 @@ const ChatInterface = () => {
                   isStreaming: false,
                 };
               } else {
-                // Set the content (not append - the backend sends cumulative text)
+                // Update the content (not append - the backend sends cumulative text)
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
                   content: chunk,
@@ -150,7 +160,9 @@ const ChatInterface = () => {
           });
           
           cancelStreamRef.current = null;
-        }
+        },
+        // Pass LLM settings
+        llmSettings
       );
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -184,6 +196,14 @@ const ChatInterface = () => {
       handleSendMessage();
     }
   };
+
+  // Reset the chat when the resetSession prop changes
+  useEffect(() => {
+    if (props.resetSession) {
+      setMessages([]);
+      setSessionId(null);
+    }
+  }, [props.resetSession]);
 
   // Message component with blinking cursor for streaming
   const Message = ({ message }) => {
