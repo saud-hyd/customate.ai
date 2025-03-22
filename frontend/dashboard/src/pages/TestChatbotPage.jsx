@@ -194,6 +194,7 @@ const TestChatbotPage = () => {
   };
   
   // Save settings
+// Save settings
   const handleSaveSettings = async () => {
     try {
       setIsSaving(true);
@@ -212,6 +213,8 @@ const TestChatbotPage = () => {
           llm_model: chatSettings.llmModel
         }
       };
+      
+      console.log("Saving settings:", settingsToSave); // Add this debug line
       
       await clientService.updateWidgetSettings(settingsToSave);
       

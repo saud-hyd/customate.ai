@@ -22,8 +22,6 @@ async def get_widget_settings(
         settings = settings_repo.create(db, obj_in={"client_id": current_client.client_id})
     
     custom_settings = settings.custom_settings or {}
-    llm_provider = custom_settings.get("llm_provider", "deepseek")
-    llm_model = custom_settings.get("llm_model")
     
     return {
         "primary_color": settings.primary_color,
@@ -33,8 +31,10 @@ async def get_widget_settings(
         "enable_typing_indicator": settings.enable_typing_indicator,
         "widget_position": settings.widget_position,
         "chatbot_name": settings.chatbot_name,
-        "llm_provider": llm_provider,
-        "llm_model": llm_model
+        "llm_provider": custom_settings.get("llm_provider", "deepseek"),
+        "llm_model": custom_settings.get("llm_model"),
+        # Return the full custom settings
+        "custom_settings": custom_settings
     }
     
 @router.put("/settings", response_model=Dict[str, Any])
@@ -54,6 +54,9 @@ async def update_widget_settings(
         "widget_position": settings_data.get("widget_position", "bottom-right"),
         "enable_typing_indicator": settings_data.get("show_typing_indicator", True),
         "enable_suggestions": settings_data.get("enable_suggestions", True),
+        "greeting_message": settings_data.get("greeting_message"),
+        # Add the custom settings to be saved in the database
+        "custom_settings": settings_data.get("custom_settings", {}),
     }
     
     if not settings:
@@ -64,6 +67,7 @@ async def update_widget_settings(
         # Update existing settings
         settings = settings_repo.update(db, db_obj=settings, obj_in=db_settings)
     
+    # Return the complete updated settings
     return {
         "message": "Widget settings updated successfully",
         "settings": {
@@ -72,25 +76,8 @@ async def update_widget_settings(
             "widget_position": settings.widget_position,
             "show_typing_indicator": settings.enable_typing_indicator,
             "enable_suggestions": settings.enable_suggestions,
+            "greeting_message": settings.greeting_message,
+            # Include custom settings in the response
+            "custom_settings": settings.custom_settings
         }
-    }
-
-@router.get("/embed", response_model=Dict[str, Any])
-async def get_widget_embed_code(
-    current_client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db)
-):
-    """Get embed code for the widget."""
-    return {
-        "embed_code": f"""
-<!-- Customate.ai Chatbot Widget -->
-<script>
-  window.customateConfig = {{
-    apiKey: '{current_client.api_key}',
-    position: 'bottom-right',
-    primaryColor: '#4f46e5'
-  }};
-</script>
-<script src="https://cdn.customate.ai/widget.js" async></script>
-        """.strip()
     }

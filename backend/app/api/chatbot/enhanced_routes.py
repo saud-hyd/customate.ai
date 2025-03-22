@@ -151,8 +151,32 @@ async def send_message_stream(
         "referrer": request.headers.get("referer"),
     }
     
-    # Initialize services
-    llm_service = DeepSeekService()
+    # Initialize fallback flag and error message
+    use_fallback = False
+    fallback_message = ""
+    
+    # Try to get the requested LLM service
+    try:
+        # Get LLM service based on client settings or overrides in the request
+        llm_service = LLMFactory.create_llm_service(
+            db, 
+            current_client.client_id,
+            message_data.get("llm_settings")  # Pass any override settings from request
+        )
+        
+        # Log which LLM service is being used
+        logger.info(f"Using LLM service: {llm_service.__class__.__name__}")
+        
+    except ValueError as e:
+        # Handle initialization errors (like missing API keys)
+        logger.error(f"Error initializing LLM service: {str(e)}")
+        use_fallback = True
+        fallback_message = str(e)
+        
+        # Use DeepSeek as fallback
+        llm_service = DeepSeekService()
+    
+    # Initialize the rest of the services
     search_service = EnhancedSearchService(llm_service)
     industry_factory = IndustryFactory()
     context_manager = ContextManager()
@@ -168,6 +192,15 @@ async def send_message_stream(
     
     async def stream_response():
         """Generate the streaming response."""
+        # If we're using a fallback, send a warning message first
+        if use_fallback:
+            warning = {
+                "type": "warning",
+                "message": f"Using DeepSeek as fallback: {fallback_message}"
+            }
+            yield f"data: {json.dumps(warning)}\n\n"
+        
+        # Now continue with the regular streaming process
         session_id_value = None
         knowledge_used = False
         integration_used = False

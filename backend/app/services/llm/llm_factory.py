@@ -7,6 +7,7 @@ from app.services.llm.deepseek_service import DeepSeekService
 from app.services.llm.openai_service import OpenAIService
 from app.services.llm.claude_service import ClaudeService
 from app.repositories.client_repository import ClientSettingsRepository
+from app.core.config.settings import settings  # Add this import
 from app.core import logger
 
 class LLMFactory:
@@ -33,6 +34,7 @@ class LLMFactory:
         if override_settings and "llm_provider" in override_settings:
             provider = override_settings["llm_provider"]
             model = override_settings.get("llm_model")
+            logger.info(f"Using override LLM settings: provider={provider}, model={model}")
             return LLMFactory._create_service_for_provider(provider, model)
         
         # Otherwise, load settings from the database
@@ -45,11 +47,13 @@ class LLMFactory:
                 custom = settings.custom_settings
                 provider = custom.get("llm_provider", "deepseek")
                 model = custom.get("llm_model")
+                logger.info(f"Using client settings: provider={provider}, model={model}")
                 return LLMFactory._create_service_for_provider(provider, model)
             except Exception as e:
                 logger.error(f"Error creating LLM service from settings: {str(e)}")
         
         # Default to DeepSeek if no valid settings found
+        logger.info("Using default DeepSeek service (no settings found)")
         return DeepSeekService()
     
     @staticmethod
@@ -65,10 +69,16 @@ class LLMFactory:
             Configured LLM service instance
         """
         if provider == "openai":
+            if not settings.OPENAI_API_KEY:
+                logger.warning("OpenAI API key not configured. Falling back to DeepSeek.")
+                return DeepSeekService()
             if model:
                 return OpenAIService(model_name=model)
             return OpenAIService()
         elif provider == "claude":
+            if not settings.CLAUDE_API_KEY:
+                logger.warning("Claude API key not configured. Falling back to DeepSeek.")
+                return DeepSeekService()
             if model:
                 return ClaudeService(model_name=model)
             return ClaudeService()

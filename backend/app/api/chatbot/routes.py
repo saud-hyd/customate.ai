@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional, List
 import time
+import traceback
 
 from app.api.auth.dependencies import get_current_client
 from app.core.database.dependencies import get_db
@@ -9,9 +10,12 @@ from app.domain.client.entities import Client
 from app.services.chat.chat_service import ChatService
 from app.services.knowledge.similarity_service import SimilarityService
 from app.services.llm.deepseek_service import DeepSeekService
+from app.services.llm.claude_service import ClaudeService
+from app.services.llm.openai_service import OpenAIService
 from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
+from app.services.llm.llm_factory import LLMFactory
 from app.core import logger
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
@@ -44,8 +48,14 @@ async def send_message(
         "referrer": request.headers.get("referer"),
     }
     
-    # Initialize services
-    llm_service = DeepSeekService()
+    # Use LLM Factory to get the correct LLM service
+    llm_service = LLMFactory.create_llm_service(
+        db, 
+        current_client.client_id,
+        message_data.get("llm_settings")  # Pass any override settings from request
+    )
+    
+    # Initialize other services
     similarity_service = SimilarityService(llm_service)
     industry_factory = IndustryFactory()
     context_manager = ContextManager()
@@ -96,8 +106,10 @@ async def get_chat_history(
     db: Session = Depends(get_db)
 ):
     """Get chat history for a specific session."""
-    # Initialize chat service
-    llm_service = DeepSeekService()
+    # Use LLM Factory to get the correct LLM service
+    llm_service = LLMFactory.create_llm_service(db, current_client.client_id)
+    
+    # Initialize other services
     similarity_service = SimilarityService(llm_service)
     industry_factory = IndustryFactory()
     context_manager = ContextManager()
@@ -118,3 +130,42 @@ async def get_chat_history(
     )
     
     return history
+
+@router.get("/test-llm/{provider}")
+async def test_llm_directly(provider: str):
+    """Test LLM provider directly with a simple prompt"""
+    try:
+        if provider == "claude":
+            service = ClaudeService()
+            response = await service.generate_response(
+                user_message="Hello, can you say 'Testing Claude API' and nothing else?",
+                conversation_history=[]
+            )
+            return {"success": True, "response": response}
+        
+        elif provider == "openai":
+            service = OpenAIService()
+            response = await service.generate_response(
+                user_message="Hello, can you say 'Testing OpenAI API' and nothing else?",
+                conversation_history=[]
+            )
+            return {"success": True, "response": response}
+        
+        elif provider == "deepseek":
+            service = DeepSeekService()
+            response = await service.generate_response(
+                user_message="Hello, can you say 'Testing DeepSeek API' and nothing else?",
+                conversation_history=[]
+            )
+            return {"success": True, "response": response}
+        
+        else:
+            return {"success": False, "error": "Invalid provider"}
+    
+    except Exception as e:
+        logger.exception(f"Error testing {provider}: {str(e)}")
+        return {
+            "success": False, 
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }

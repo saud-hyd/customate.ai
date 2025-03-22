@@ -21,7 +21,8 @@ class ClaudeService(LLMService):
         # Verify API key is set
         if not self.api_key:
             logger.warning("Claude API key not configured. LLM service may not function properly.")
-    
+            raise ValueError("Claude API key is not configured")
+
     async def generate_response(
         self,
         user_message: str,
@@ -50,6 +51,9 @@ class ClaudeService(LLMService):
         # Make API request
         try:
             async with httpx.AsyncClient() as client:
+                
+                logger.info(f"Claude API request: URL={self.api_base_url}/messages, Model={self.model}")
+
                 response = await client.post(
                     f"{self.api_base_url}/messages",
                     headers={
@@ -82,9 +86,14 @@ class ClaudeService(LLMService):
                 
         except Exception as e:
             logger.exception(f"Error calling Claude API: {str(e)}")
-            return {
-                "content": "I apologize, but I'm having trouble generating a response right now. Please try again later."
-            }
+            if settings.DEBUG:
+                return {
+                    "content": f"DEBUG MODE - Error calling Claude API: {str(e)}"
+                }
+            else:
+                return {
+                    "content": "I apologize, but I'm having trouble generating a response right now. Please try again later."
+                }
     
     async def generate_embeddings(self, text: str) -> List[float]:
         """
