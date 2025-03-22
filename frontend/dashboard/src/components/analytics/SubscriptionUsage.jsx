@@ -1,22 +1,25 @@
 // Path: frontend/dashboard/src/components/analytics/SubscriptionUsage.jsx
-// This component is responsible for displaying subscription limits and usage metrics 
-// in the analytics dashboard. It shows current usage for messages, active users, and storage.
-
 import React, { useState, useEffect } from 'react';
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
 import Card from '../common/Card';
 import analyticsService from '../../services/analyticsService';
 import api from '../../services/api';
+import { formatNumber } from '../../utils/formatters';
 
-const SubscriptionUsage = ({ refreshData }) => {
+const SubscriptionUsage = ({ usageData: propUsageData, refreshData }) => {
   const [usageData, setUsageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    fetchUsageData();
-  }, []);
+    if (propUsageData) {
+      setUsageData(propUsageData);
+      setLoading(false);
+    } else {
+      fetchUsageData();
+    }
+  }, [propUsageData]);
 
   const fetchUsageData = async () => {
     try {
@@ -34,20 +37,23 @@ const SubscriptionUsage = ({ refreshData }) => {
   const handleUpdateUsage = async () => {
     try {
       setLoading(true);
-      await api.post('/api/analytics/update-usage');
+      // Use the API endpoint to sync subscription usage
+      await api.post('/api/analytics/sync-subscription-usage');
+      
       // Refresh data after update
       if (refreshData) {
         await refreshData();
       } else {
-        // If no refreshData prop, fetch usage data again
         const data = await analyticsService.getSubscriptionUsage();
         setUsageData(data);
       }
+      
       // Show success message
       setMessage({
         type: 'success',
         text: 'Usage data updated successfully'
       });
+      
       // Clear message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
@@ -88,7 +94,7 @@ const SubscriptionUsage = ({ refreshData }) => {
     );
   }
 
-  const { current, subscription } = usageData || { current: null, subscription: null };
+  const { current, subscription, historical } = usageData || {};
   
   // Calculate MB from bytes for storage display
   const used_mb = current?.storage?.used_bytes 
@@ -101,7 +107,7 @@ const SubscriptionUsage = ({ refreshData }) => {
   return (
     <Card 
       title="Subscription Usage" 
-      subtitle={`${subscription?.plan_type || 'Standard'} Plan`}
+      subtitle={`${subscription?.plan_type ? subscription.plan_type.charAt(0).toUpperCase() + subscription.plan_type.slice(1) : 'Standard'} Plan`}
       actionButton={
         <button
           onClick={handleUpdateUsage}
@@ -116,9 +122,9 @@ const SubscriptionUsage = ({ refreshData }) => {
           <span className="text-sm text-gray-500">
             Next billing date: {subscription?.expires_at ? new Date(subscription.expires_at).toLocaleDateString() : 'N/A'}
           </span>
-          <button className="text-sm text-primary-600 hover:text-primary-700">
-            Upgrade Plan
-          </button>
+          <a href="/subscription" className="text-sm text-primary-600 hover:text-primary-700">
+            Manage Subscription
+          </a>
         </div>
       }
     >
@@ -134,7 +140,7 @@ const SubscriptionUsage = ({ refreshData }) => {
           <div className="flex justify-between mb-1">
             <span className="text-sm font-medium text-gray-700">Messages</span>
             <span className="text-sm text-gray-700">
-              {current?.messages?.used.toLocaleString() || '0'} / {current?.messages?.limit.toLocaleString() || '0'}
+              {formatNumber(current?.messages?.used || 0)} / {formatNumber(current?.messages?.limit || 0)}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -158,7 +164,7 @@ const SubscriptionUsage = ({ refreshData }) => {
           <div className="flex justify-between mb-1">
             <span className="text-sm font-medium text-gray-700">Active Users</span>
             <span className="text-sm text-gray-700">
-              {current?.users?.used.toLocaleString() || '0'} / {current?.users?.limit.toLocaleString() || '0'}
+              {formatNumber(current?.users?.used || 0)} / {formatNumber(current?.users?.limit || 0)}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -177,7 +183,7 @@ const SubscriptionUsage = ({ refreshData }) => {
           </div>
         </div>
 
-        {/* Storage usage - using calculated MB values */}
+        {/* Storage usage */}
         <div>
           <div className="flex justify-between mb-1">
             <span className="text-sm font-medium text-gray-700">Storage</span>
@@ -202,7 +208,7 @@ const SubscriptionUsage = ({ refreshData }) => {
         </div>
 
         {/* Monthly trend */}
-        {usageData?.historical && usageData.historical.length >= 2 && (
+        {historical && historical.length >= 2 && (
           <div className="pt-4 border-t border-gray-200">
             <h4 className="text-sm font-medium text-gray-700 mb-3">Usage Trend</h4>
             <div className="flex space-x-3">
@@ -210,24 +216,24 @@ const SubscriptionUsage = ({ refreshData }) => {
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">Messages</span>
                   <span className={`text-xs ${
-                    usageData.historical[0]?.messages_used > usageData.historical[1]?.messages_used 
+                    historical[0]?.messages_used > historical[1]?.messages_used 
                       ? 'text-green-600' 
                       : 'text-red-600'
                   }`}>
-                    {usageData.historical[0]?.messages_used > usageData.historical[1]?.messages_used ? (
+                    {historical[0]?.messages_used > historical[1]?.messages_used ? (
                       <ArrowUpIcon className="h-3 w-3 inline" />
                     ) : (
                       <ArrowDownIcon className="h-3 w-3 inline" />
                     )}
                     {' '}
                     {Math.abs(
-                      ((usageData.historical[0]?.messages_used || 0) - (usageData.historical[1]?.messages_used || 0)) / 
-                      (usageData.historical[1]?.messages_used || 1) * 100
+                      ((historical[0]?.messages_used || 0) - (historical[1]?.messages_used || 0)) / 
+                      Math.max(1, historical[1]?.messages_used || 1) * 100
                     ).toFixed(1)}%
                   </span>
                 </div>
                 <p className="text-lg font-semibold mt-1">
-                  {(usageData.historical[0]?.messages_used || 0).toLocaleString()}
+                  {formatNumber(historical[0]?.messages_used || 0)}
                 </p>
               </div>
               
@@ -235,24 +241,24 @@ const SubscriptionUsage = ({ refreshData }) => {
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">Users</span>
                   <span className={`text-xs ${
-                    usageData.historical[0]?.active_users > usageData.historical[1]?.active_users 
+                    historical[0]?.active_users > historical[1]?.active_users 
                       ? 'text-green-600' 
                       : 'text-red-600'
                   }`}>
-                    {usageData.historical[0]?.active_users > usageData.historical[1]?.active_users ? (
+                    {historical[0]?.active_users > historical[1]?.active_users ? (
                       <ArrowUpIcon className="h-3 w-3 inline" />
                     ) : (
                       <ArrowDownIcon className="h-3 w-3 inline" />
                     )}
                     {' '}
                     {Math.abs(
-                      ((usageData.historical[0]?.active_users || 0) - (usageData.historical[1]?.active_users || 0)) / 
-                      (usageData.historical[1]?.active_users || 1) * 100
+                      ((historical[0]?.active_users || 0) - (historical[1]?.active_users || 0)) / 
+                      Math.max(1, historical[1]?.active_users || 1) * 100
                     ).toFixed(1)}%
                   </span>
                 </div>
                 <p className="text-lg font-semibold mt-1">
-                  {(usageData.historical[0]?.active_users || 0).toLocaleString()}
+                  {formatNumber(historical[0]?.active_users || 0)}
                 </p>
               </div>
               
@@ -260,24 +266,24 @@ const SubscriptionUsage = ({ refreshData }) => {
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">Storage</span>
                   <span className={`text-xs ${
-                    usageData.historical[0]?.storage_used_bytes > usageData.historical[1]?.storage_used_bytes 
+                    historical[0]?.storage_used_bytes > historical[1]?.storage_used_bytes 
                       ? 'text-green-600' 
                       : 'text-red-600'
                   }`}>
-                    {usageData.historical[0]?.storage_used_bytes > usageData.historical[1]?.storage_used_bytes ? (
+                    {historical[0]?.storage_used_bytes > historical[1]?.storage_used_bytes ? (
                       <ArrowUpIcon className="h-3 w-3 inline" />
                     ) : (
                       <ArrowDownIcon className="h-3 w-3 inline" />
                     )}
                     {' '}
                     {Math.abs(
-                      ((usageData.historical[0]?.storage_used_bytes || 0) - (usageData.historical[1]?.storage_used_bytes || 0)) / 
-                      (usageData.historical[1]?.storage_used_bytes || 1) * 100
+                      ((historical[0]?.storage_used_bytes || 0) - (historical[1]?.storage_used_bytes || 0)) / 
+                      Math.max(1, historical[1]?.storage_used_bytes || 1) * 100
                     ).toFixed(1)}%
                   </span>
                 </div>
                 <p className="text-lg font-semibold mt-1">
-                  {((usageData.historical[0]?.storage_used_bytes || 0) / (1024 * 1024)).toFixed(1)} MB
+                  {((historical[0]?.storage_used_bytes || 0) / (1024 * 1024)).toFixed(1)} MB
                 </p>
               </div>
             </div>

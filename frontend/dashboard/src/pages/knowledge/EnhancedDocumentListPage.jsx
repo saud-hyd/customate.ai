@@ -1,5 +1,6 @@
 // frontend/dashboard/src/pages/knowledge/EnhancedDocumentListPage.jsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import knowledgeService from '../../services/knowledgeService';
 import EnhancedDocumentUploader from '../../components/knowledge/EnhancedDocumentUploader';
 import DocumentPreview from '../../components/knowledge/DocumentPreview';
@@ -16,8 +17,8 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
+  ChevronDownIcon,
   FolderIcon,
-  EyeIcon,
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 
@@ -33,6 +34,7 @@ const EnhancedDocumentListPage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [collectionFilter, setCollectionFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
   const [filtersOpen, setFiltersOpen] = useState(false);
   
@@ -46,7 +48,7 @@ const EnhancedDocumentListPage = () => {
   // Apply filters when documents, search query, or filters change
   useEffect(() => {
     applyFilters();
-  }, [documents, searchQuery, statusFilter, sortBy]);
+  }, [documents, searchQuery, statusFilter, collectionFilter, sortBy]);
 
   const fetchData = async () => {
     try {
@@ -83,6 +85,11 @@ const EnhancedDocumentListPage = () => {
     // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(doc => doc.status === statusFilter);
+    }
+    
+    // Collection filter (this would require modifying the backend to include collection info in documents)
+    if (collectionFilter !== 'all' && documents[0]?.collection_id) {
+      filtered = filtered.filter(doc => doc.collection_id === collectionFilter);
     }
     
     // Sorting
@@ -149,6 +156,7 @@ const EnhancedDocumentListPage = () => {
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
+    setCollectionFilter('all');
     setSortBy('date-desc');
   };
 
@@ -227,7 +235,7 @@ const EnhancedDocumentListPage = () => {
     <div className="space-y-6">
       {/* Page header */}
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Document Library</h1>
             <p className="mt-1 text-sm text-gray-500">
@@ -311,6 +319,20 @@ const EnhancedDocumentListPage = () => {
               <option value="failed">Failed</option>
             </select>
             
+            {/* Collection filter */}
+            <select
+              value={collectionFilter}
+              onChange={(e) => setCollectionFilter(e.target.value)}
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="all">All Collections</option>
+              {collections.map(collection => (
+                <option key={collection.collection_id} value={collection.collection_id}>
+                  {collection.name}
+                </option>
+              ))}
+            </select>
+            
             {/* Sort by */}
             <select
               value={sortBy}
@@ -326,7 +348,7 @@ const EnhancedDocumentListPage = () => {
             </select>
             
             {/* Clear filters button */}
-            {(searchQuery || statusFilter !== 'all' || sortBy !== 'date-desc') && (
+            {(searchQuery || statusFilter !== 'all' || collectionFilter !== 'all' || sortBy !== 'date-desc') && (
               <button
                 onClick={clearFilters}
                 className="text-sm text-gray-500 hover:text-gray-700 flex items-center"
@@ -353,6 +375,20 @@ const EnhancedDocumentListPage = () => {
               <option value="failed">Failed</option>
             </select>
             
+            {/* Collection filter */}
+            <select
+              value={collectionFilter}
+              onChange={(e) => setCollectionFilter(e.target.value)}
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="all">All Collections</option>
+              {collections.map(collection => (
+                <option key={collection.collection_id} value={collection.collection_id}>
+                  {collection.name}
+                </option>
+              ))}
+            </select>
+            
             {/* Sort by */}
             <select
               value={sortBy}
@@ -368,7 +404,7 @@ const EnhancedDocumentListPage = () => {
             </select>
             
             {/* Clear filters button */}
-            {(searchQuery || statusFilter !== 'all' || sortBy !== 'date-desc') && (
+            {(searchQuery || statusFilter !== 'all' || collectionFilter !== 'all' || sortBy !== 'date-desc') && (
               <button
                 onClick={clearFilters}
                 className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
@@ -381,7 +417,7 @@ const EnhancedDocumentListPage = () => {
         )}
       </div>
 
-      {/* Document list - No tables, fully responsive layout */}
+      {/* Document list */}
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
         {loading ? (
           <div className="py-12 text-center">
@@ -432,8 +468,8 @@ const EnhancedDocumentListPage = () => {
               </p>
             </div>
             
-            {/* Document list items - Full width list layout instead of cards */}
-            <div className="divide-y divide-gray-200">
+            {/* Document cards layout */}
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredDocuments.map((doc) => {
                 const { typeLabel, bgColor, textColor } = getFileTypeInfo(doc.filename);
                 const statusBadge = getStatusBadge(doc.status);
@@ -441,45 +477,51 @@ const EnhancedDocumentListPage = () => {
                 return (
                   <div 
                     key={doc.document_id} 
-                    className="p-4 hover:bg-gray-50 transition-colors duration-150"
+                    className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                      {/* Document info */}
-                      <div className="flex items-start flex-1 min-w-0">
-                        <div className={`flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg ${bgColor} ${textColor} mr-3`}>
-                          {typeLabel}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-medium text-gray-900 truncate" title={doc.filename}>
-                            {doc.filename}
-                          </h3>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.className}`}>
-                              {statusBadge.icon}
-                              {statusBadge.label}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {formatFileSize(doc.file_size)}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {formatDate(doc.created_at)}
-                            </span>
-                          </div>
-                        </div>
+                    {/* Document header */}
+                    <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center">
+                      <div className={`flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg ${bgColor} ${textColor} mr-3`}>
+                        {typeLabel}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-gray-900 truncate" title={doc.filename}>
+                          {doc.filename}
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {formatFileSize(doc.file_size)} • {formatDate(doc.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Document body */}
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div className="flex items-center mb-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.className}`}>
+                          {statusBadge.icon}
+                          {statusBadge.label}
+                        </span>
                       </div>
                       
+                      {/* Collection info (if available) */}
+                      {doc.collection_name && (
+                        <div className="flex items-center text-xs text-gray-500 mb-4">
+                          <FolderIcon className="h-4 w-4 mr-1" />
+                          {doc.collection_name}
+                        </div>
+                      )}
+                      
                       {/* Action buttons */}
-                      <div className="flex space-x-2 ml-auto">
+                      <div className="flex space-x-2 mt-auto pt-4 border-t border-gray-100">
                         <button
                           onClick={() => handleViewDocument(doc)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                          className="flex-1 flex items-center justify-center py-2 px-3 border border-gray-300 rounded text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                         >
-                          <EyeIcon className="h-4 w-4 mr-1" />
                           View
                         </button>
                         <button
                           onClick={() => handleDeleteDocument(doc.document_id)}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-red-600 bg-white hover:bg-red-50"
+                          className="flex items-center justify-center py-2 px-3 border border-gray-300 rounded text-sm font-medium text-red-600 bg-white hover:bg-red-50"
                           title="Delete document"
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -498,7 +540,7 @@ const EnhancedDocumentListPage = () => {
       {isUploadModalOpen && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsUploadModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-lg w-full p-6 shadow-xl m-4">
+          <div className="relative bg-white rounded-lg max-w-lg w-full p-6 shadow-xl">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">Upload Document</h3>
               <button
@@ -523,7 +565,7 @@ const EnhancedDocumentListPage = () => {
       {isPreviewModalOpen && selectedDocument && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsPreviewModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg w-full max-w-4xl p-6 shadow-xl max-h-[90vh] overflow-y-auto m-4">
+          <div className="relative bg-white rounded-lg w-full max-w-4xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">Document Details</h3>
               <button

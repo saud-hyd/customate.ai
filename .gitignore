@@ -41,5 +41,4 @@ ENV/
 storage/
 storage/*
 *.log
-
-"backend/app.log*" 
+backend/app.log.*

@@ -1,4 +1,4 @@
-// frontend/dashboard/src/services/subscriptionService.js
+// Path: frontend/dashboard/src/services/subscriptionService.js
 import api from './api';
 
 /**
@@ -26,7 +26,26 @@ const subscriptionService = {
    */
   changePlan: async (planType) => {
     try {
-      const response = await api.post('/api/client/subscription/change', { plan_type: planType });
+      // For free plan downgrades, directly change
+      if (planType === 'free') {
+        const response = await api.post('/api/client/subscription/change', { 
+          plan_type: planType 
+        });
+        return response.data;
+      }
+      
+      // For paid plans, create a checkout session and redirect
+      const response = await api.post('/api/client/subscription/checkout-session', {
+        plan_type: planType,
+        success_url: `${window.location.origin}/subscription?success=true`,
+        cancel_url: `${window.location.origin}/subscription?cancelled=true`
+      });
+      
+      // Redirect to checkout URL if available
+      if (response.data && response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error changing subscription plan:', error);
@@ -35,126 +54,50 @@ const subscriptionService = {
   },
 
   /**
-   * Cancel the current subscription
-   * @param {boolean} immediately - Whether to cancel immediately or at the end of the billing period
-   * @returns {Promise<Object>} Cancellation result
+   * Get subscription limits and usage
+   * @returns {Promise<Object>} Subscription limits and usage data
    */
-  cancelSubscription: async (immediately = false) => {
+  getSubscriptionLimits: async () => {
     try {
-      const response = await api.post('/api/client/subscription/cancel', { 
-        cancel_immediately: immediately 
-      });
+      const response = await api.get('/api/analytics/subscription/limits');
       return response.data;
     } catch (error) {
-      console.error('Error cancelling subscription:', error);
+      console.error('Error fetching subscription limits:', error);
       throw error;
     }
   },
 
   /**
-   * Get saved payment methods
+   * Get payment methods
    * @returns {Promise<Array>} List of payment methods
    */
   getPaymentMethods: async () => {
     try {
       const response = await api.get('/api/client/subscription/payment-methods');
-      return response.data;
+      return response.data || [];
     } catch (error) {
       console.error('Error getting payment methods:', error);
-      throw error;
+      return [];
     }
   },
 
   /**
-   * Add a new payment method
-   * @param {string} paymentMethodId - Stripe payment method ID
-   * @param {boolean} setAsDefault - Whether to set as default payment method
-   * @returns {Promise<Object>} Added payment method
-   */
-  addPaymentMethod: async (paymentMethodId, setAsDefault = true) => {
-    try {
-      const response = await api.post('/api/client/subscription/payment-methods', { 
-        payment_method_id: paymentMethodId,
-        set_as_default: setAsDefault
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error adding payment method:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Remove a payment method
-   * @param {string} paymentMethodId - Stripe payment method ID
-   * @returns {Promise<Object>} Removal result
-   */
-  removePaymentMethod: async (paymentMethodId) => {
-    try {
-      const response = await api.delete(`/api/client/subscription/payment-methods/${paymentMethodId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error removing payment method:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Get recent invoices
-   * @param {number} limit - Maximum number of invoices to return
+   * Get invoices
    * @returns {Promise<Array>} List of invoices
    */
-  getInvoices: async (limit = 10) => {
+  getInvoices: async () => {
     try {
-      const response = await api.get('/api/client/subscription/invoices', {
-        params: { limit }
-      });
-      return response.data;
+      const response = await api.get('/api/client/subscription/invoices');
+      return response.data || [];
     } catch (error) {
       console.error('Error getting invoices:', error);
-      throw error;
+      return [];
     }
   },
 
   /**
-   * Get a stripe checkout session for subscription signup
-   * @param {string} planType - Plan type to subscribe to
-   * @returns {Promise<Object>} Checkout session data with URL
-   */
-  createCheckoutSession: async (planType) => {
-    try {
-      const response = await api.post('/api/client/subscription/checkout-session', {
-        plan_type: planType,
-        success_url: `${window.location.origin}/subscription?success=true`,
-        cancel_url: `${window.location.origin}/subscription?cancelled=true`
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Get a Stripe billing portal session for subscription management
-   * @param {string} returnUrl - URL to return to after billing portal
-   * @returns {Promise<Object>} Billing portal session data with URL
-   */
-  getBillingPortal: async (returnUrl) => {
-    try {
-      const response = await api.post('/api/client/subscription/billing-portal', {
-        return_url: returnUrl || `${window.location.origin}/subscription`
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error getting billing portal:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Get recommended subscription plan based on usage
-   * @returns {Promise<Object>} Recommendation data
+   * Get recommended plan based on usage
+   * @returns {Promise<Object>} Recommended plan data
    */
   getRecommendedPlan: async () => {
     try {
@@ -162,21 +105,7 @@ const subscriptionService = {
       return response.data;
     } catch (error) {
       console.error('Error getting recommended plan:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Check if current usage exceeds limits
-   * @returns {Promise<Object>} Usage status with limit information
-   */
-  checkLimits: async () => {
-    try {
-      const response = await api.get('/api/analytics/subscription/limits');
-      return response.data;
-    } catch (error) {
-      console.error('Error checking subscription limits:', error);
-      throw error;
+      return null;
     }
   }
 };

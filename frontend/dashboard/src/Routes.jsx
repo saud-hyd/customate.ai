@@ -19,11 +19,10 @@ import IntegrationsPage from './pages/integrations/IntegrationsPage';
 import SubscriptionPage from './pages/subscription/SubscriptionPage';
 import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
 
-
-// Enhanced Knowledge pages
-import EnhancedKnowledgeListPage from './pages/knowledge/EnhancedKnowledgeListPage';
-import EnhancedDocumentListPage from './pages/knowledge/EnhancedDocumentListPage';
+// Knowledge management pages
+import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
 import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
+import DocumentListPage from './pages/knowledge/DocumentListPage';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -102,9 +101,9 @@ const AppRoutes = () => {
         <Route path="conversations" element={<ConversationsPage />} />
         <Route path="chat" element={<ChatPage />} />
         
-        {/* Enhanced Knowledge Routes */}
-        <Route path="knowledge" element={<EnhancedKnowledgeListPage />} />
-        <Route path="knowledge/documents" element={<EnhancedDocumentListPage />} />
+        {/* Knowledge management routes */}
+        <Route path="knowledge" element={<KnowledgeListPage />} />
+        <Route path="knowledge/documents" element={<DocumentListPage />} />
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         
         <Route path="analytics" element={<AnalyticsPage />} />

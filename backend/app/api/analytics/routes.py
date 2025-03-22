@@ -498,6 +498,8 @@ async def repair_subscription_data(
         "message": "Subscription data repair initiated"
     }        
     
+# Add this to backend/app/api/analytics/routes.py if it's not already there
+
 @router.post("/sync-subscription-usage", response_model=Dict[str, Any])
 async def sync_subscription_usage(
     current_client: Client = Depends(get_current_client),
@@ -561,4 +563,4 @@ async def sync_subscription_usage(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to synchronize subscription usage: {str(e)}"
-        )    
+        )

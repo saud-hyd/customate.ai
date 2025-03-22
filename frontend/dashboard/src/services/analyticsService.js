@@ -82,6 +82,41 @@ const analyticsService = {
       console.error('Error resetting analytics:', error);
       throw error;
     }
+  },
+  
+  // New function to get more detailed usage statistics
+  getDetailedUsageStats: async (days = 30) => {
+    try {
+      const response = await api.get('/api/analytics/performance', {
+        params: { days }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching detailed usage stats:', error);
+      throw error;
+    }
+  },
+  
+  // Function to sync subscription usage with analytics data
+  syncSubscriptionUsage: async () => {
+    try {
+      const response = await api.post('/api/analytics/sync-subscription-usage');
+      return response.data;
+    } catch (error) {
+      console.error('Error syncing subscription usage:', error);
+      throw error;
+    }
+  },
+  
+  // Function to update usage data
+  updateUsageData: async () => {
+    try {
+      const response = await api.post('/api/analytics/update-usage');
+      return response.data;
+    } catch (error) {
+      console.error('Error updating usage data:', error);
+      throw error;
+    }
   }
 };
 

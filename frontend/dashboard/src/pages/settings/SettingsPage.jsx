@@ -1,14 +1,10 @@
-// frontend/dashboard/src/pages/settings/SettingsPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
 import useAuth from '../../hooks/useAuth';
-import analyticsService from '../../services/analyticsService';
 import subscriptionService from '../../services/subscriptionService';
 import TeamMembersSection from '../../components/settings/TeamMembersSection';
 import ProfileSettings from '../../components/settings/ProfileSettings';
 import SupportSection from '../../components/settings/SupportSection';
-import SubscriptionContent from '../../components/settings/SubscriptionContent';
+import BillingSection from '../../components/settings/BillingSection';
 
 import {
   UserIcon,
@@ -20,25 +16,44 @@ import {
 const SettingsPage = () => {
   const { currentUser, updateSettings } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [subscriptionLimits, setSubscriptionLimits] = useState(null);
+  const [billingData, setBillingData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load subscription limits
-    const fetchSubscriptionLimits = async () => {
-      try {
-        // Fixed: Use the correct service and method for fetching subscription limits
-        const data = await subscriptionService.getCurrentSubscription();
-        setSubscriptionLimits(data.limits);
-      } catch (err) {
-        console.error('Error fetching subscription limits:', err);
-      }
-    };
+    // Only fetch billing data when billing tab is active
+    if (activeTab === 'billing') {
+      fetchBillingData();
+    }
+  }, [activeTab]);
 
-    fetchSubscriptionLimits();
-  }, []);
+  const fetchBillingData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch payment methods
+      const paymentMethods = await subscriptionService.getPaymentMethods();
+      
+      // Fetch recent invoices
+      const invoices = await subscriptionService.getInvoices();
+      
+      // Fetch subscription info
+      const subscription = await subscriptionService.getCurrentSubscription();
+      
+      setBillingData({
+        paymentMethods,
+        invoices,
+        subscription
+      });
+      
+    } catch (err) {
+      console.error('Error fetching billing data:', err);
+      setError('Failed to load billing information. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -46,7 +61,7 @@ const SettingsPage = () => {
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your account settings, subscription, team members, and get support.
+          Manage your account settings, billing, team members, and get support.
         </p>
       </div>
 
@@ -66,15 +81,15 @@ const SettingsPage = () => {
               Profile
             </button>
             <button
-              onClick={() => setActiveTab('subscription')}
+              onClick={() => setActiveTab('billing')}
               className={`${
-                activeTab === 'subscription'
+                activeTab === 'billing'
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
             >
               <CreditCardIcon className="h-5 w-5 mr-2" />
-              Subscription
+              Billing
             </button>
             <button
               onClick={() => setActiveTab('team')}
@@ -133,12 +148,14 @@ const SettingsPage = () => {
             />
           )}
 
-          {/* Subscription tab - Use our component directly instead of iframe */}
-          {activeTab === 'subscription' && (
-            <SubscriptionContent 
+          {/* Billing tab - New section */}
+          {activeTab === 'billing' && (
+            <BillingSection 
+              billingData={billingData}
+              loading={loading}
               setError={setError} 
               setSuccess={setSuccess}
-              subscriptionLimits={subscriptionLimits}
+              refreshData={fetchBillingData}
             />
           )}
 

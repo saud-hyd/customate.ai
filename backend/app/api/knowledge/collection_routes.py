@@ -58,6 +58,28 @@ async def create_collection(
         "updated_at": collection.updated_at.isoformat()
     }
 
+@router.delete("/collections/{collection_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_collection(
+    collection_id: str,
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Delete a collection and all its items."""
+    # Verify collection belongs to client
+    collection_repo = KnowledgeCollectionRepository()
+    collection = collection_repo.get_by_collection_id(db, collection_id)
+    
+    if not collection or collection.client_id != current_client.client_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Collection not found"
+        )
+    
+    # Delete the collection (cascade should handle items)
+    collection_repo.delete(db, id=collection.id)
+    
+    return None
+
 @router.get("/collections/{collection_id}/items")
 async def get_collection_items(
     collection_id: str,
@@ -124,3 +146,39 @@ async def create_collection_item(
         "created_at": item.created_at.isoformat(),
         "updated_at": item.updated_at.isoformat()
     }
+
+@router.get("/documents/{document_id}/sections")
+async def get_document_sections(
+    document_id: str,
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Get all knowledge items (sections) generated from a document."""
+    # First verify the document belongs to the client
+    from app.repositories.knowledge_repository import DocumentSourceRepository
+    doc_repo = DocumentSourceRepository()
+    document = doc_repo.get_by_document_id(db, document_id)
+    
+    if not document or document.client_id != current_client.client_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found"
+        )
+    
+    # Get all items that reference this document
+    item_repo = KnowledgeItemRepository()
+    items = db.query(item_repo.model).filter(
+        item_repo.model.source_document_id == document_id
+    ).all()
+    
+    return [
+        {
+            "item_id": item.item_id,
+            "title": item.title,
+            "content": item.content,
+            "collection_id": item.collection_id,
+            "created_at": item.created_at.isoformat(),
+            "updated_at": item.updated_at.isoformat()
+        }
+        for item in items
+    ]

@@ -1,209 +1,166 @@
-// frontend/dashboard/src/pages/knowledge/EnhancedKnowledgeListPage.jsx
+// frontend/dashboard/src/pages/knowledge/EnhancedDocumentListPage.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import knowledgeService from '../../services/knowledgeService';
-import DocumentUploader from '../../components/knowledge/DocumentUploader';
+import EnhancedDocumentUploader from '../../components/knowledge/EnhancedDocumentUploader';
+import DocumentPreview from '../../components/knowledge/DocumentPreview';
 import { useToast } from '../../context/ToastContext';
 
 // Import icons
 import {
   DocumentIcon,
-  DocumentTextIcon,
-  FolderIcon,
+  DocumentArrowUpIcon,
   TrashIcon,
   ArrowPathIcon,
-  PlusIcon,
   MagnifyingGlassIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  DocumentDuplicateIcon
+  XMarkIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  FolderIcon,
+  EyeIcon,
+  AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 
-const EnhancedKnowledgeListPage = () => {
-  const [activeTab, setActiveTab] = useState('faqs');
-  const [collections, setCollections] = useState([]);
-  const [activeCollection, setActiveCollection] = useState(null);
-  const [items, setItems] = useState([]);
+const EnhancedDocumentListPage = () => {
   const [documents, setDocuments] = useState([]);
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
-  const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
-  const [newCollection, setNewCollection] = useState({ name: '', description: '', type: 'general' });
-  const [newItem, setNewItem] = useState({ title: '', content: '' });
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedDocuments, setExpandedDocuments] = useState({});
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('date-desc');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
+  
   const { success, error: showError } = useToast();
 
-  // Fetch collections on component mount
+  // Fetch documents and collections on mount or refresh
   useEffect(() => {
-    fetchCollections();
-  }, []);
+    fetchData();
+  }, [refreshTrigger]);
 
-  // Fetch items when active collection changes
+  // Apply filters when documents, search query, or filters change
   useEffect(() => {
-    if (activeCollection) {
-      fetchCollectionItems(activeCollection.collection_id);
-    } else {
-      setItems([]);
-    }
-  }, [activeCollection]);
+    applyFilters();
+  }, [documents, searchQuery, statusFilter, sortBy]);
 
-  // Fetch documents when documents tab is active
-  useEffect(() => {
-    if (activeTab === 'documents') {
-      fetchDocuments();
-    }
-  }, [activeTab]);
-
-  const fetchCollections = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await knowledgeService.getCollections();
-      setCollections(data);
       
-      // Set the first collection as active if available
-      if (data.length > 0 && !activeCollection) {
-        setActiveCollection(data[0]);
-      }
+      // Fetch documents and collections in parallel
+      const [documentsData, collectionsData] = await Promise.all([
+        knowledgeService.getDocuments(),
+        knowledgeService.getCollections()
+      ]);
+      
+      setDocuments(documentsData);
+      setCollections(collectionsData);
     } catch (err) {
-      console.error('Error fetching collections:', err);
-      setError('Failed to load knowledge collections. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCollectionItems = async (collectionId) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await knowledgeService.getCollectionItems(collectionId);
-      setItems(data);
-    } catch (err) {
-      console.error('Error fetching collection items:', err);
-      setError('Failed to load knowledge items. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDocuments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await knowledgeService.getDocuments();
-      setDocuments(data);
-    } catch (err) {
-      console.error('Error fetching documents:', err);
+      console.error('Error fetching data:', err);
       setError('Failed to load documents. Please try again later.');
+      showError('Failed to load documents');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateCollection = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      await knowledgeService.createCollection(newCollection);
-      setIsNewCollectionModalOpen(false);
-      setNewCollection({ name: '', description: '', type: 'general' });
-      success('Collection created successfully');
-      await fetchCollections();
-    } catch (err) {
-      console.error('Error creating collection:', err);
-      setError('Failed to create collection. Please try again later.');
-      showError('Failed to create collection');
-    } finally {
-      setLoading(false);
+  const applyFilters = () => {
+    let filtered = [...documents];
+    
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(doc => 
+        doc.filename.toLowerCase().includes(query)
+      );
     }
+    
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(doc => doc.status === statusFilter);
+    }
+    
+    // Sorting
+    switch (sortBy) {
+      case 'name-asc':
+        filtered.sort((a, b) => a.filename.localeCompare(b.filename));
+        break;
+      case 'name-desc':
+        filtered.sort((a, b) => b.filename.localeCompare(a.filename));
+        break;
+      case 'date-asc':
+        filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        break;
+      case 'date-desc':
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        break;
+      case 'size-asc':
+        filtered.sort((a, b) => a.file_size - b.file_size);
+        break;
+      case 'size-desc':
+        filtered.sort((a, b) => b.file_size - a.file_size);
+        break;
+      default:
+        break;
+    }
+    
+    setFilteredDocuments(filtered);
   };
 
-  const handleCreateItem = async () => {
-    try {
-      if (!activeCollection) {
-        setError('Please select a collection first');
-        return;
-      }
-      
-      setLoading(true);
-      setError(null);
-      await knowledgeService.createKnowledgeItem(activeCollection.collection_id, newItem);
-      setIsNewItemModalOpen(false);
-      setNewItem({ title: '', content: '' });
-      success('Knowledge item created successfully');
-      await fetchCollectionItems(activeCollection.collection_id);
-    } catch (err) {
-      console.error('Error creating knowledge item:', err);
-      setError('Failed to create knowledge item. Please try again later.');
-      showError('Failed to create knowledge item');
-    } finally {
-      setLoading(false);
-    }
+  const confirmDeleteDocument = (document) => {
+    setDocumentToDelete(document);
+    setIsDeleteConfirmOpen(true);
   };
 
-  const handleDeleteDocument = async (documentId) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) {
-      return;
-    }
+  const handleDeleteDocument = async () => {
+    if (!documentToDelete) return;
     
     try {
       setLoading(true);
-      await knowledgeService.deleteDocument(documentId);
+      await knowledgeService.deleteDocument(documentToDelete.document_id);
       success('Document deleted successfully');
-      // Refresh the documents list
-      await fetchDocuments();
+      setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       console.error('Error deleting document:', err);
       setError('Failed to delete document. Please try again later.');
       showError('Failed to delete document');
     } finally {
       setLoading(false);
+      setIsDeleteConfirmOpen(false);
+      setDocumentToDelete(null);
     }
   };
 
-  const handleUploadComplete = async () => {
+  const handleViewDocument = (document) => {
+    setSelectedDocument(document);
+    setIsPreviewModalOpen(true);
+  };
+
+  const handleUploadComplete = () => {
     setIsUploadModalOpen(false);
     success('Document uploaded successfully');
-    await fetchCollections();
-    
-    if (activeTab === 'documents') {
-      await fetchDocuments();
-    }
-    
-    if (activeCollection) {
-      await fetchCollectionItems(activeCollection.collection_id);
-    }
+    setRefreshTrigger(prev => prev + 1);
   };
 
-  const toggleDocumentExpansion = (documentId) => {
-    setExpandedDocuments(prev => ({
-      ...prev,
-      [documentId]: !prev[documentId]
-    }));
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
   };
 
-  // Filter items based on search query
-  const filteredItems = searchQuery
-    ? items.filter(item => 
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.content.toLowerCase().includes(searchQuery.toLowerCase()))
-    : items;
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSortBy('date-desc');
+  };
 
-  // Group items by source document
-  const groupedItems = filteredItems.reduce((acc, item) => {
-    const sourceDocId = item.source_document_id || 'no-source';
-    if (!acc[sourceDocId]) {
-      acc[sourceDocId] = [];
-    }
-    acc[sourceDocId].push(item);
-    return acc;
-  }, {});
-
-  // Format the creation date
+  // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -213,80 +170,113 @@ const EnhancedKnowledgeListPage = () => {
     });
   };
 
-  const getStatusColor = (status) => {
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  // Get status badge classes
+  const getStatusBadge = (status) => {
     switch (status) {
       case 'processed':
-        return 'bg-green-100 text-green-800';
+        return {
+          className: 'bg-green-100 text-green-800',
+          icon: <CheckCircleIcon className="h-4 w-4 mr-1" />,
+          label: 'Processed'
+        };
       case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
+        return {
+          className: 'bg-yellow-100 text-yellow-800',
+          icon: <ClockIcon className="h-4 w-4 mr-1" />,
+          label: 'Processing'
+        };
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return {
+          className: 'bg-red-100 text-red-800',
+          icon: <ExclamationTriangleIcon className="h-4 w-4 mr-1" />,
+          label: 'Failed'
+        };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return {
+          className: 'bg-gray-100 text-gray-800',
+          icon: null,
+          label: status
+        };
     }
+  };
+
+  // Get file type icon and color
+  const getFileTypeInfo = (filename) => {
+    const extension = filename.split('.').pop().toLowerCase();
+    
+    switch (extension) {
+      case 'pdf':
+        return { typeLabel: 'PDF', bgColor: 'bg-red-100', textColor: 'text-red-800' };
+      case 'doc':
+      case 'docx':
+        return { typeLabel: 'DOC', bgColor: 'bg-blue-100', textColor: 'text-blue-800' };
+      case 'txt':
+        return { typeLabel: 'TXT', bgColor: 'bg-gray-100', textColor: 'text-gray-800' };
+      case 'csv':
+        return { typeLabel: 'CSV', bgColor: 'bg-green-100', textColor: 'text-green-800' };
+      case 'xls':
+      case 'xlsx':
+        return { typeLabel: 'XLS', bgColor: 'bg-green-100', textColor: 'text-green-800' };
+      case 'md':
+        return { typeLabel: 'MD', bgColor: 'bg-purple-100', textColor: 'text-purple-800' };
+      default:
+        return { typeLabel: extension.toUpperCase(), bgColor: 'bg-gray-100', textColor: 'text-gray-800' };
+    }
+  };
+
+  // Truncate filename if too long for display
+  const truncateFilename = (filename, maxLength = 40) => {
+    if (filename.length <= maxLength) return filename;
+    
+    const extension = filename.split('.').pop();
+    const nameWithoutExt = filename.substring(0, filename.length - extension.length - 1);
+    
+    if (nameWithoutExt.length <= maxLength - 3 - extension.length) {
+      return filename;
+    }
+    
+    return nameWithoutExt.substring(0, maxLength - 3 - extension.length) + '...' + '.' + extension;
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Knowledge Base</h2>
-        <div className="flex space-x-3">
-          <button
-            type="button"
-            onClick={() => setIsNewCollectionModalOpen(true)}
-            className="btn btn-outline flex items-center"
-          >
-            <FolderIcon className="h-5 w-5 mr-2" />
-            New Collection
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsUploadModalOpen(true)}
-            className="btn btn-outline flex items-center"
-          >
-            <DocumentIcon className="h-5 w-5 mr-2" />
-            Upload Document
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsNewItemModalOpen(true)}
-            disabled={!activeCollection}
-            className="btn btn-primary flex items-center"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            New Item
-          </button>
+      {/* Page header */}
+      <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Document Library</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Upload and manage your documents for the knowledge base.
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleRefresh}
+              className="p-2 rounded-full text-gray-400 hover:text-gray-500"
+              title="Refresh document list"
+            >
+              <ArrowPathIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="btn btn-primary flex items-center"
+            >
+              <DocumentArrowUpIcon className="h-5 w-5 mr-1" />
+              Upload Document
+            </button>
+          </div>
         </div>
-      </div>
-      
-      {/* Knowledge Base Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex -mb-px">
-          <button
-            className={`whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm ${
-              activeTab === 'faqs' 
-                ? 'border-indigo-500 text-indigo-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('faqs')}
-          >
-            Knowledge Items
-          </button>
-          <button
-            className={`whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm ${
-              activeTab === 'documents' 
-                ? 'border-indigo-500 text-indigo-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('documents')}
-          >
-            Uploaded Documents
-          </button>
-        </nav>
       </div>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4">
           <div className="flex">
             <div className="ml-3">
               <p className="text-sm text-red-700">{error}</p>
@@ -295,410 +285,255 @@ const EnhancedKnowledgeListPage = () => {
         </div>
       )}
 
-      {/* Knowledge Items Tab */}
-      {activeTab === 'faqs' && (
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Collections sidebar */}
-          <div className="w-full md:w-64 bg-white shadow-sm rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Collections</h2>
-              <button
-                onClick={fetchCollections}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-500"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-              </button>
+      {/* Filters and Search */}
+      <div className="bg-white shadow-sm rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          {/* Search box */}
+          <div className="relative w-full sm:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
             </div>
-            
-            {loading && collections.length === 0 ? (
-              <div className="py-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                <p className="mt-2 text-sm">Loading collections...</p>
-              </div>
-            ) : collections.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
-                <FolderIcon className="h-12 w-12 mx-auto text-gray-400" />
-                <p className="mt-2 text-sm">No collections yet</p>
-                <button
-                  onClick={() => setIsNewCollectionModalOpen(true)}
-                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
-                >
-                  Create your first collection
-                </button>
-              </div>
-            ) : (
-              <ul className="space-y-1">
-                {collections.map((collection) => (
-                  <li key={collection.collection_id}>
-                    <button
-                      onClick={() => setActiveCollection(collection)}
-                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                        activeCollection?.collection_id === collection.collection_id
-                          ? 'bg-indigo-100 text-indigo-700'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <FolderIcon className="h-5 w-5 mr-3 text-gray-400" />
-                      <span className="truncate">{collection.name}</span>
-                      <span className="ml-auto text-xs text-gray-500">{collection.item_count || 0}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Knowledge items */}
-          <div className="flex-1 bg-white shadow-sm rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                {activeCollection ? activeCollection.name : 'Select a Collection'}
-              </h2>
-              
-              {/* Search box */}
-              <div className="w-64 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                />
-              </div>
-            </div>
-            
-            {activeCollection && (
-              <p className="text-sm text-gray-600 mb-4">
-                {activeCollection.description || `All items in the ${activeCollection.name} collection.`}
-              </p>
-            )}
-            
-            {loading && activeCollection && filteredItems.length === 0 ? (
-              <div className="py-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                <p className="mt-2 text-sm">Loading items...</p>
-              </div>
-            ) : !activeCollection ? (
-              <div className="py-8 text-center text-gray-500">
-                <DocumentTextIcon className="h-12 w-12 mx-auto text-gray-400" />
-                <p className="mt-2 text-sm">Select a collection to view items</p>
-              </div>
-            ) : filteredItems.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
-                <DocumentTextIcon className="h-12 w-12 mx-auto text-gray-400" />
-                <p className="mt-2 text-sm">No items in this collection</p>
-                <button
-                  onClick={() => setIsNewItemModalOpen(true)}
-                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
-                >
-                  Add your first item
-                </button>
-              </div>
-            ) : (
-              <div>
-                {/* Group items by source document */}
-                {Object.entries(groupedItems).map(([sourceDocId, docItems]) => {
-                  // Get the first item to extract document info
-                  const firstItem = docItems[0];
-                  const isExpanded = expandedDocuments[sourceDocId] || false;
-                  
-                  return (
-                    <div key={sourceDocId} className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
-                      {/* Document header or standalone item header */}
-                      <div 
-                        className={`bg-gray-50 px-4 py-3 flex items-center justify-between cursor-pointer ${
-                          sourceDocId !== 'no-source' ? 'border-b border-gray-200' : ''
-                        }`}
-                        onClick={() => sourceDocId !== 'no-source' && toggleDocumentExpansion(sourceDocId)}
-                      >
-                        <div className="flex items-center">
-                          {sourceDocId !== 'no-source' ? (
-                            <>
-                              <DocumentDuplicateIcon className="h-5 w-5 text-gray-400 mr-2" />
-                              <div>
-                                <h3 className="text-sm font-medium text-gray-900">
-                                  {firstItem.title.split(' - ')[0]}
-                                </h3>
-                                <p className="text-xs text-gray-500">
-                                  {docItems.length} sections • {formatDate(firstItem.created_at)}
-                                </p>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-2" />
-                              <h3 className="text-sm font-medium text-gray-900">
-                                Custom Knowledge Items
-                              </h3>
-                            </>
-                          )}
-                        </div>
-                        
-                        {sourceDocId !== 'no-source' && (
-                          <div className="flex items-center">
-                            {isExpanded ? (
-                              <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-                            ) : (
-                              <ChevronRightIcon className="h-5 w-5 text-gray-400" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Items list */}
-                      <div className={sourceDocId !== 'no-source' && !isExpanded ? 'hidden' : ''}>
-                        <ul className="divide-y divide-gray-200">
-                          {docItems.map((item) => (
-                            <li key={item.item_id} className="py-4 px-4 hover:bg-gray-50">
-                              <Link to={`/dashboard/knowledge/${item.item_id}`} className="block">
-                                <div className="flex items-start">
-                                  <DocumentTextIcon className="h-5 w-5 text-gray-400 mt-1 mr-3 flex-shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <h3 className="text-base font-medium text-gray-900 truncate">
-                                      {item.title}
-                                    </h3>
-                                    <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                                      {item.content}
-                                    </p>
-                                    <div className="mt-2 flex items-center text-xs text-gray-500">
-                                      <span>Updated: {formatDate(item.updated_at)}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Documents Tab */}
-      {activeTab === 'documents' && (
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Uploaded Documents</h3>
-            <div className="flex space-x-2">
+            <input
+              type="text"
+              placeholder="Search documents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            />
+            {searchQuery && (
               <button
-                onClick={fetchDocuments}
-                className="p-2 rounded-full text-gray-400 hover:text-gray-500"
-                title="Refresh document list"
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
               >
-                <ArrowPathIcon className="h-5 w-5" />
+                <XMarkIcon className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setIsUploadModalOpen(true)}
-                className="btn btn-primary flex items-center"
-              >
-                <DocumentIcon className="h-5 w-5 mr-1" />
-                Upload New Document
-              </button>
-            </div>
+            )}
           </div>
           
-          {loading ? (
-            <div className="py-8 text-center text-gray-500">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-2 text-sm">Loading documents...</p>
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
-              <DocumentIcon className="h-12 w-12 mx-auto text-gray-400" />
-              <p className="mt-2 text-sm">No documents uploaded yet</p>
+          {/* Filter toggle button (mobile) */}
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className="flex sm:hidden items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <AdjustmentsHorizontalIcon className="h-4 w-4 mr-1" />
+            {filtersOpen ? 'Hide Filters' : 'Show Filters'}
+          </button>
+          
+          {/* Desktop filters */}
+          <div className="hidden sm:flex items-center space-x-2">
+            {/* Status filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="all">All Status</option>
+              <option value="processed">Processed</option>
+              <option value="processing">Processing</option>
+              <option value="failed">Failed</option>
+            </select>
+            
+            {/* Sort by */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="size-desc">Size (Largest First)</option>
+              <option value="size-asc">Size (Smallest First)</option>
+            </select>
+            
+            {/* Clear filters button */}
+            {(searchQuery || statusFilter !== 'all' || sortBy !== 'date-desc') && (
               <button
-                onClick={() => setIsUploadModalOpen(true)}
-                className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                onClick={clearFilters}
+                className="text-sm text-gray-500 hover:text-gray-700 flex items-center"
               >
-                Upload your first document
+                <XMarkIcon className="h-4 w-4 mr-1" />
+                Clear Filters
               </button>
+            )}
+          </div>
+        </div>
+        
+        {/* Mobile filters */}
+        {filtersOpen && (
+          <div className="mt-4 sm:hidden grid grid-cols-2 gap-2">
+            {/* Status filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="all">All Status</option>
+              <option value="processed">Processed</option>
+              <option value="processing">Processing</option>
+              <option value="failed">Failed</option>
+            </select>
+            
+            {/* Sort by */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="size-desc">Size (Largest First)</option>
+              <option value="size-asc">Size (Smallest First)</option>
+            </select>
+            
+            {/* Clear filters button */}
+            {(searchQuery || statusFilter !== 'all' || sortBy !== 'date-desc') && (
+              <button
+                onClick={clearFilters}
+                className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+              >
+                <XMarkIcon className="h-4 w-4 mr-1" />
+                Clear Filters
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Document list - No tables, fully responsive layout */}
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        {loading ? (
+          <div className="py-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-500">Loading documents...</p>
+          </div>
+        ) : filteredDocuments.length === 0 ? (
+          <div className="py-16 text-center">
+            {documents.length === 0 ? (
+              <>
+                <DocumentIcon className="h-12 w-12 text-gray-400 mx-auto" />
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No documents yet</h3>
+                <p className="mt-1 text-gray-500">Get started by uploading your first document.</p>
+                <div className="mt-6">
+                  <button
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <DocumentArrowUpIcon className="h-5 w-5 mr-2" />
+                    Upload Document
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <MagnifyingGlassIcon className="h-12 w-12 text-gray-400 mx-auto" />
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No matches found</h3>
+                <p className="mt-1 text-gray-500">Try adjusting your search or filter criteria.</p>
+                <div className="mt-6">
+                  <button
+                    onClick={clearFilters}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <XMarkIcon className="h-5 w-5 mr-2" />
+                    Clear Filters
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Results count */}
+            <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
+              <p className="text-sm text-gray-500">
+                Showing {filteredDocuments.length} {filteredDocuments.length === 1 ? 'document' : 'documents'}
+                {documents.length !== filteredDocuments.length ? ` (filtered from ${documents.length})` : ''}
+              </p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-5/12">Document</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Size</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12">Uploaded</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {documents.map((doc) => (
-                    <tr key={doc.document_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <DocumentIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                          <span className="font-medium text-gray-900 truncate">{doc.filename}</span>
+            
+            {/* Document list items - Full width list layout instead of cards */}
+            <div className="divide-y divide-gray-200">
+              {filteredDocuments.map((doc) => {
+                const { typeLabel, bgColor, textColor } = getFileTypeInfo(doc.filename);
+                const statusBadge = getStatusBadge(doc.status);
+                const truncatedFilename = truncateFilename(doc.filename);
+                
+                return (
+                  <div 
+                    key={doc.document_id} 
+                    className="p-4 hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      {/* Document info */}
+                      <div className="flex items-start flex-1 min-w-0">
+                        <div className={`flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg ${bgColor} ${textColor} mr-3`}>
+                          {typeLabel}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(doc.status)}`}>
-                          {doc.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {Math.round(doc.file_size / 1024)} KB
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(doc.created_at)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-medium text-gray-900 truncate" title={doc.filename}>
+                            {truncatedFilename}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.className}`}>
+                              {statusBadge.icon}
+                              {statusBadge.label}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {formatFileSize(doc.file_size)}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {formatDate(doc.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="flex space-x-2 ml-auto">
                         <button
-                          onClick={() => handleDeleteDocument(doc.document_id)}
-                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleViewDocument(doc)}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          <EyeIcon className="h-4 w-4 mr-1" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => confirmDeleteDocument(doc)}
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-red-600 bg-white hover:bg-red-50"
                           title="Delete document"
                         >
-                          <TrashIcon className="h-5 w-5" />
+                          <TrashIcon className="h-4 w-4" />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
-      {/* New Collection Modal */}
-      {isNewCollectionModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsNewCollectionModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Collection</h3>
-            
-            <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <input
-                type="text"
-                id="name"
-                value={newCollection.name}
-                onChange={(e) => setNewCollection({...newCollection, name: e.target.value})}
-                className="input w-full"
-                placeholder="Collection name"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-              <textarea
-                id="description"
-                value={newCollection.description}
-                onChange={(e) => setNewCollection({...newCollection, description: e.target.value})}
-                className="input w-full"
-                rows="3"
-                placeholder="Collection description"
-              ></textarea>
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select
-                id="type"
-                value={newCollection.type}
-                onChange={(e) => setNewCollection({...newCollection, type: e.target.value})}
-                className="input w-full"
-              >
-                <option value="general">General</option>
-                <option value="faqs">FAQs</option>
-                <option value="policies">Policies</option>
-                <option value="products">Products</option>
-                <option value="procedures">Procedures</option>
-              </select>
-            </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setIsNewCollectionModalOpen(false)}
-                className="btn btn-outline"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateCollection}
-                disabled={!newCollection.name}
-                className="btn btn-primary"
-              >
-                Create Collection
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Item Modal */}
-      {isNewItemModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsNewItemModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Add Knowledge Item</h3>
-            
-            <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-              <input
-                type="text"
-                id="title"
-                value={newItem.title}
-                onChange={(e) => setNewItem({...newItem, title: e.target.value})}
-                className="input w-full"
-                placeholder="Item title"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-              <textarea
-                id="content"
-                value={newItem.content}
-                onChange={(e) => setNewItem({...newItem, content: e.target.value})}
-                className="input w-full"
-                rows="8"
-                placeholder="Item content"
-              ></textarea>
-            </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setIsNewItemModalOpen(false)}
-                className="btn btn-outline"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateItem}
-                disabled={!newItem.title || !newItem.content}
-                className="btn btn-primary"
-              >
-                Add Item
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Document Upload Modal */}
+      {/* Upload Modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsUploadModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Document</h3>
+          <div className="relative bg-white rounded-lg max-w-lg w-full p-6 shadow-xl m-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Upload Document</h3>
+              <button
+                type="button"
+                className="text-gray-400 hover:text-gray-500"
+                onClick={() => setIsUploadModalOpen(false)}
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
             
-            <DocumentUploader 
+            <EnhancedDocumentUploader 
               collections={collections} 
               onUploadComplete={handleUploadComplete}
               onCancel={() => setIsUploadModalOpen(false)}
@@ -706,8 +541,83 @@ const EnhancedKnowledgeListPage = () => {
           </div>
         </div>
       )}
+
+      {/* Document Preview Modal */}
+      {isPreviewModalOpen && selectedDocument && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsPreviewModalOpen(false)}></div>
+          <div className="relative bg-white rounded-lg w-full max-w-4xl p-6 shadow-xl max-h-[90vh] overflow-y-auto m-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Document Details</h3>
+              <button
+                type="button"
+                className="text-gray-400 hover:text-gray-500"
+                onClick={() => setIsPreviewModalOpen(false)}
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <DocumentPreview
+              documentId={selectedDocument.document_id}
+              onClose={() => setIsPreviewModalOpen(false)}
+            />
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                onClick={() => setIsPreviewModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Document Confirmation Modal */}
+      {isDeleteConfirmOpen && documentToDelete && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteConfirmOpen(false)}></div>
+          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <ExclamationTriangleIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Delete Document
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to delete <span className="font-semibold">{truncateFilename(documentToDelete.filename, 30)}</span>? 
+                    This action cannot be undone and all knowledge items generated from this document will be permanently removed.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={handleDeleteDocument}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                onClick={() => setIsDeleteConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default EnhancedKnowledgeListPage;
+export default EnhancedDocumentListPage;
