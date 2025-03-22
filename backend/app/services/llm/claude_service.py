@@ -45,8 +45,8 @@ class ClaudeService(LLMService):
         # Construct system prompt with knowledge context
         system_prompt = self._build_system_prompt(knowledge_context, industry_context)
         
-        # Format messages for API
-        messages = self._format_messages(system_prompt, conversation_history, user_message)
+        # Format messages for API - this will be altered for Claude's format
+        formatted_messages = self._format_messages(None, conversation_history, user_message)
         
         # Make API request
         try:
@@ -54,6 +54,18 @@ class ClaudeService(LLMService):
                 
                 logger.info(f"Claude API request: URL={self.api_base_url}/messages, Model={self.model}")
 
+                # Create request body with system as a separate parameter
+                request_data = {
+                    "model": self.model,
+                    "messages": formatted_messages,
+                    "max_tokens": 1024,
+                    "temperature": 0.7,
+                }
+                
+                # Add system prompt as a separate parameter if it exists
+                if system_prompt:
+                    request_data["system"] = system_prompt
+                
                 response = await client.post(
                     f"{self.api_base_url}/messages",
                     headers={
@@ -61,19 +73,14 @@ class ClaudeService(LLMService):
                         "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json",
                     },
-                    json={
-                        "model": self.model,
-                        "messages": messages,
-                        "max_tokens": 1024,
-                        "temperature": 0.7,
-                    },
+                    json=request_data,
                     timeout=30.0,
                 )
                 
                 if response.status_code != 200:
                     logger.error(f"Claude API error: {response.status_code} - {response.text}")
                     return {
-                        "content": "I apologize, but I'm having trouble generating a response right now. Please try again later."
+                        "content": f"I apologize, but I'm having trouble generating a response right now. Error code: {response.status_code}"
                     }
                 
                 result = response.json()
@@ -147,17 +154,21 @@ class ClaudeService(LLMService):
     
     def _format_messages(
         self, 
-        system_prompt: str, 
+        system_prompt: Optional[str], 
         conversation_history: List[Dict[str, str]],
         current_message: str
     ) -> List[Dict[str, Any]]:
-        """Format messages for the Claude API."""
-        messages = [{"role": "system", "content": system_prompt}]
+        """
+        Format messages for the Claude API.
+        Note: For Claude, system prompt is handled separately, not as a message.
+        """
+        messages = []
         
-        # Add conversation history
+        # Add conversation history - skipping any system messages
         for msg in conversation_history:
-            role = "user" if msg["role"] == "user" else "assistant"
-            messages.append({"role": role, "content": msg["content"]})
+            if msg["role"] != "system":  # Skip system messages as Claude handles them differently
+                role = "user" if msg["role"] == "user" else "assistant"
+                messages.append({"role": role, "content": msg["content"]})
         
         # Add current message
         messages.append({"role": "user", "content": current_message})
@@ -186,11 +197,26 @@ class ClaudeService(LLMService):
         # Construct system prompt with knowledge context
         system_prompt = self._build_system_prompt(knowledge_context, industry_context)
         
-        # Format messages for API
-        messages = self._format_messages(system_prompt, conversation_history, user_message)
+        # Format messages for API - Claude handles system prompts differently
+        formatted_messages = self._format_messages(None, conversation_history, user_message)
         
         try:
             async with httpx.AsyncClient() as client:
+                # Create request body with system as a separate parameter
+                request_data = {
+                    "model": self.model,
+                    "messages": formatted_messages,
+                    "max_tokens": 1024,
+                    "temperature": 0.7,
+                    "stream": True
+                }
+                
+                # Add system prompt as a separate parameter if it exists
+                if system_prompt:
+                    request_data["system"] = system_prompt
+                
+                logger.info(f"Claude streaming request with system prompt: {system_prompt is not None}")
+                
                 response = await client.post(
                     f"{self.api_base_url}/messages",
                     headers={
@@ -198,19 +224,13 @@ class ClaudeService(LLMService):
                         "anthropic-version": "2023-06-01",
                         "Content-Type": "application/json",
                     },
-                    json={
-                        "model": self.model,
-                        "messages": messages,
-                        "max_tokens": 1024,
-                        "temperature": 0.7,
-                        "stream": True
-                    },
+                    json=request_data,
                     timeout=30.0,
                 )
                 
                 if response.status_code != 200:
                     logger.error(f"Claude API error: {response.status_code} - {response.text}")
-                    yield "I apologize, but I'm having trouble generating a response right now. Please try again later."
+                    yield f"I apologize, but I'm having trouble generating a response right now. Error code: {response.status_code}"
                     return
                 
                 # Process the streaming response
@@ -233,4 +253,4 @@ class ClaudeService(LLMService):
                 
         except Exception as e:
             logger.exception(f"Error in Claude streaming response: {str(e)}")
-            yield "I apologize, but I'm having trouble generating a streaming response right now. Please try again later."
+            yield f"I apologize, but I'm having trouble generating a streaming response right now. Error: {str(e) if settings.DEBUG else 'Please try again later.'}"
