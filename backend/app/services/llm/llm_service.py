@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
 
+from app.utils.business_context import BusinessContextPrompt
+from app.core import logger
+
 class LLMService(ABC):
     """Abstract base class for LLM services."""
     
@@ -38,3 +41,22 @@ class LLMService(ABC):
             Vector embeddings as a list of floats
         """
         pass
+    
+    def enhance_system_prompt(self, base_prompt: str, industry_context: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Enhance a system prompt with business focus and off-topic handling.
+        
+        Args:
+            base_prompt: Original system prompt
+            industry_context: Industry-specific context
+            
+        Returns:
+            Enhanced system prompt
+        """
+        # Extract industry information from context
+        industry_type = "business"
+        if industry_context and "industry" in industry_context:
+            industry_type = industry_context["industry"]
+        
+        # Enhance the prompt with business focus and off-topic handling
+        return BusinessContextPrompt.enhance_system_prompt(base_prompt, industry_type)

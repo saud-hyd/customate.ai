@@ -146,17 +146,18 @@ class OpenAIService(LLMService):
     - For numerical lists, use proper numbered formatting
     """
         
+        # Enhance prompt with business focus and off-topic handling
+        enhanced_prompt = self.enhance_system_prompt(base_prompt, industry_context)
+        
+        # Add knowledge context if provided
         if knowledge_context:
             knowledge_text = "\n\nRelevant information:\n" + "\n".join([
                 f"- {item['title']}: {item['content']}" 
                 for item in knowledge_context
             ])
-            base_prompt += knowledge_text
+            enhanced_prompt += knowledge_text
         
-        if industry_context and "industry_instructions" in industry_context:
-            base_prompt += f"\n\n{industry_context['industry_instructions']}"
-        
-        return base_prompt
+        return enhanced_prompt    
     
     def _format_messages(
         self, 
