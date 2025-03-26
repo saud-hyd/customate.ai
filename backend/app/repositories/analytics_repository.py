@@ -8,7 +8,7 @@ import logging
 from app.repositories.base_repository import BaseRepository
 from app.domain.analytics.entities import (
     ApiUsageLog, ChatMetrics, KnowledgeMetrics, 
-    SubscriptionUsage, DailyStats
+    SubscriptionUsage, DailyStats, StorageUsage
 )
 
 class ApiUsageLogRepository(BaseRepository[ApiUsageLog, dict, dict]):
@@ -465,3 +465,27 @@ class DailyStatsRepository(BaseRepository[DailyStats, dict, dict]):
             }
             for result in results
         ]
+        
+# Update the StorageUsageRepository class in the existing file
+class StorageUsageRepository(BaseRepository[StorageUsage, dict, dict]):
+    """Repository for StorageUsage entity."""
+    
+    def __init__(self):
+        super().__init__(StorageUsage)
+    
+    def get_latest(self, db: Session, client_id: str) -> Optional[StorageUsage]:
+        """Get the latest storage usage record for a client."""
+        return db.query(self.model).filter(
+            self.model.client_id == client_id
+        ).order_by(desc(self.model.recorded_at)).first()
+    
+    def get_history(self, db: Session, client_id: str, days: int = 30) -> List[StorageUsage]:
+        """Get storage usage history for a client."""
+        cutoff_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
+        
+        return db.query(self.model).filter(
+            self.model.client_id == client_id,
+            self.model.recorded_at >= cutoff_date
+        ).order_by(self.model.recorded_at).all()
+
+# Other repository classes remain the same        

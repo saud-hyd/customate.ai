@@ -1,4 +1,4 @@
-# backend/app/workers/crawler_worker.py
+# backend/app/workers/crawler_worker.py - Updated to handle metrics updates
 import asyncio
 import time
 from sqlalchemy.orm import Session
@@ -9,6 +9,7 @@ from app.repositories.crawl_repository import WebsiteCrawlJobRepository, Crawled
 from app.services.knowledge.web_crawler_service import WebCrawlerService
 from app.services.knowledge.embedding_service import EmbeddingService
 from app.services.llm.deepseek_service import DeepSeekService
+from app.services.analytics.usage_tracker import UsageTracker  # Import UsageTracker
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,18 @@ class CrawlerWorker:
                         
                         # Start the job again
                         await crawler_service.start_crawl_job(job_id)
+            
+            # If job is completed, update usage metrics
+            elif job.status == "completed":
+                try:
+                    # Update storage and knowledge metrics
+                    usage_tracker = UsageTracker()
+                    usage_tracker.update_knowledge_counts(db, job.client_id)
+                    usage_tracker._update_storage_usage(db, job.client_id)
+                    usage_tracker._update_daily_stats(db, job.client_id)
+                    logger.info(f"Updated usage metrics for client {job.client_id} for completed job {job_id}")
+                except Exception as metrics_error:
+                    logger.error(f"Error updating metrics for completed job {job_id}: {str(metrics_error)}")
         
         except Exception as e:
             logger.exception(f"Error processing job {job_id}: {str(e)}")
@@ -171,4 +184,4 @@ async def run_crawler_worker():
 
 # Command-line entry point
 if __name__ == "__main__":
-    asyncio.run(run_crawler_worker())
+    asyncio.run

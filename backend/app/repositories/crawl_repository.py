@@ -99,6 +99,14 @@ class CrawledPageRepository(BaseRepository[CrawledPage, dict, dict]):
             self.model.job_id == job_id,
             self.model.status == "pending"
         ).limit(limit).all()
+        
+
+    def get_by_content_hash(self, db: Session, job_id: str, content_hash: str) -> Optional[CrawledPage]:
+        """Get crawled page by content hash to detect duplicates."""
+        return db.query(self.model).filter(
+            self.model.job_id == job_id,
+            self.model.content_hash == content_hash
+        ).first()        
     
     def get_pages_count_by_status(
         self, 

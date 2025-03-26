@@ -1,4 +1,3 @@
-// Path: frontend/dashboard/src/services/analyticsService.js
 import api from './api';
 
 /**
@@ -115,6 +114,17 @@ const analyticsService = {
       return response.data;
     } catch (error) {
       console.error('Error updating usage data:', error);
+      throw error;
+    }
+  },
+  
+  // New function to get detailed storage statistics
+  getStorageStatistics: async () => {
+    try {
+      const response = await api.get('/api/analytics/storage');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching storage statistics:', error);
       throw error;
     }
   }

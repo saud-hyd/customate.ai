@@ -1,4 +1,3 @@
-// frontend/dashboard/src/pages/dashboard/DashboardPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Chart } from 'chart.js/auto';
 import analyticsService from '../../services/analyticsService';
@@ -38,6 +37,16 @@ const DashboardPage = () => {
       users: { used: 0, limit: 5, percentage: 0 },
       storage: { used_bytes: 0, limit_bytes: 50 * 1024 * 1024, percentage: 0 }
     }
+  });
+  
+  // Add a new state for storage statistics
+  const [storageStats, setStorageStats] = useState({
+    total_bytes: 0,
+    document_bytes: 0,
+    knowledge_bytes: 0,
+    crawled_content_bytes: 0,
+    percentage: 0,
+    limit_bytes: 0
   });
   
   const [clientInfo, setClientInfo] = useState(null);
@@ -83,10 +92,11 @@ const DashboardPage = () => {
       setError(null);
       
       // Fetch all necessary data
-      const [overviewData, subscriptionInfo, clientData] = await Promise.all([
+      const [overviewData, subscriptionInfo, clientData, storageData] = await Promise.all([
         analyticsService.getDashboardOverview(),
         subscriptionService.getCurrentSubscription(),
-        clientService.getClientInfo()
+        clientService.getClientInfo(),
+        analyticsService.getStorageStatistics()
       ]);
       
       // Get chat performance data for trends
@@ -100,6 +110,7 @@ const DashboardPage = () => {
       
       setSubscriptionData(subscriptionInfo);
       setClientInfo(clientData);
+      setStorageStats(storageData);
       
       // Update last refresh timestamp
       setLastRefresh(new Date());
@@ -458,27 +469,50 @@ const DashboardPage = () => {
             </p>
           </div>
           
-          {/* Storage usage */}
+          {/* Storage usage - Updated with detailed breakdown */}
           <div className="space-y-2">
             <div className="flex justify-between">
               <h3 className="text-sm font-medium text-gray-500">Storage</h3>
               <span className="text-sm text-gray-500">
-                {formatBytes(subscriptionData.usage?.storage?.used_bytes || 0)} / {formatBytes(subscriptionData.usage?.storage?.limit_bytes || 0)}
+                {formatBytes(storageStats.total_bytes || 0)} / {formatBytes(storageStats.limit_bytes || 0)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div 
-                className={`${getUsageColor(subscriptionData.usage?.storage?.percentage || 0)} h-3 rounded-full transition-all duration-500`}
-                style={{ width: `${Math.min((subscriptionData.usage?.storage?.percentage || 0), 100)}%` }}
+                className={`${getUsageColor(storageStats.percentage || 0)} h-3 rounded-full transition-all duration-500`}
+                style={{ width: `${Math.min((storageStats.percentage || 0), 100)}%` }}
               ></div>
             </div>
-            <p className="text-xs text-gray-500">
-              {subscriptionData.usage?.storage?.percentage >= 90 ? (
-                <span className="text-red-600 font-medium">Critical: Only {formatBytes(subscriptionData.usage?.storage?.limit_bytes - subscriptionData.usage?.storage?.used_bytes)} left!</span>
-              ) : subscriptionData.usage?.storage?.percentage >= 80 ? (
-                <span className="text-orange-600">Warning: {formatPercentage(subscriptionData.usage?.storage?.percentage)} of your limit used</span>
+            
+            {/* Storage breakdown */}
+            <div className="mt-3 space-y-1.5 pt-2 border-t border-gray-100">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Documents</span>
+                <span className="font-medium text-gray-700">
+                  {formatBytes(storageStats.document_bytes || 0)}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Knowledge Base</span>
+                <span className="font-medium text-gray-700">
+                  {formatBytes(storageStats.knowledge_bytes || 0)}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Crawled Content</span>
+                <span className="font-medium text-gray-700">
+                  {formatBytes(storageStats.crawled_content_bytes || 0)}
+                </span>
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-2">
+              {storageStats.percentage >= 90 ? (
+                <span className="text-red-600 font-medium">Critical: Only {formatBytes(storageStats.limit_bytes - storageStats.total_bytes)} left!</span>
+              ) : storageStats.percentage >= 80 ? (
+                <span className="text-orange-600">Warning: {formatPercentage(storageStats.percentage)} of your limit used</span>
               ) : (
-                `${formatPercentage(subscriptionData.usage?.storage?.percentage)} of your storage limit used`
+                `${formatPercentage(storageStats.percentage)} of your storage limit used`
               )}
             </p>
           </div>

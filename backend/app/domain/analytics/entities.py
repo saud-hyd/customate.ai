@@ -10,6 +10,22 @@ def generate_uuid():
     """Generate a UUID string."""
     return str(uuid.uuid4())
 
+class StorageUsage(Base):
+    """Entity for tracking storage usage over time."""
+    
+    __tablename__ = "storage_usage"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    client_id = Column(String(36), ForeignKey("clients.client_id", ondelete="CASCADE"), nullable=False)
+    total_bytes = Column(Integer, nullable=False, default=0)
+    document_bytes = Column(Integer, nullable=False, default=0)
+    knowledge_bytes = Column(Integer, nullable=False, default=0)
+    crawled_content_bytes = Column(Integer, nullable=False, default=0)  # Added field for crawled content
+    recorded_at = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<StorageUsage client={self.client_id} total={self.total_bytes}>"
+
 class ApiUsageLog(Base):
     """Entity for tracking API endpoint usage."""
     

@@ -1,3 +1,4 @@
+# backend/app/services/knowledge/web_crawler_service.py - Updated to track storage metrics
 import asyncio
 import aiohttp
 import hashlib
@@ -13,6 +14,7 @@ from app.repositories.crawl_repository import WebsiteCrawlJobRepository, Crawled
 from app.repositories.knowledge_repository import KnowledgeItemRepository, KnowledgeCollectionRepository
 from app.domain.knowledge.crawl_entities import WebsiteCrawlJob, CrawledPage
 from app.services.knowledge.embedding_service import EmbeddingService
+from app.services.analytics.usage_tracker import UsageTracker  # Import UsageTracker
 from app.core import logger
 
 class WebCrawlerService:
@@ -238,6 +240,19 @@ class WebCrawlerService:
             )
             
             logger.info(f"Completed crawl job {job_id}, processed {total_pages} pages")
+            
+            # Update storage and knowledge metrics after job completion
+            try:
+                usage_tracker = UsageTracker()
+                # Update knowledge counts (items, collections)
+                usage_tracker.update_knowledge_counts(self.db, job.client_id)
+                # Update storage usage metrics
+                usage_tracker._update_storage_usage(self.db, job.client_id)
+                # Update daily statistics
+                usage_tracker._update_daily_stats(self.db, job.client_id)
+                logger.info(f"Updated usage metrics for client {job.client_id} after crawl job {job_id}")
+            except Exception as e:
+                logger.error(f"Error updating usage metrics after crawl job {job_id}: {str(e)}")
             
         except Exception as e:
             # Handle errors
@@ -565,9 +580,6 @@ class WebCrawlerService:
             }
             
             new_pages.append(new_page_data)
-            
-            # REMOVED: Do not increment pages_crawled here
-            # Instead, pages_crawled is incremented in _process_page
         
         # Batch create pages
         for page_data in new_pages:

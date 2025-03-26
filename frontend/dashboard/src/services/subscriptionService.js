@@ -1,4 +1,3 @@
-// Path: frontend/dashboard/src/services/subscriptionService.js
 import api from './api';
 
 /**

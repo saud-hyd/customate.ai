@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 import logging
 from app.domain.analytics.entities import ChatMetrics, KnowledgeMetrics
+from app.repositories.analytics_repository import StorageUsageRepository, SubscriptionUsageRepository, ChatMetricsRepository, KnowledgeMetricsRepository, DailyStatsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -564,3 +565,78 @@ async def sync_subscription_usage(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to synchronize subscription usage: {str(e)}"
         )
+        
+# Add this to the existing routes.py file
+
+@router.get("/storage", response_model=Dict[str, Any])
+async def get_storage_statistics(
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """
+    Get detailed storage statistics including breakdown by type.
+    """
+    try:
+        usage_tracker = UsageTracker()
+        
+        # Force update storage metrics to get the latest data
+        usage_tracker._update_storage_usage(db, current_client.client_id)
+        
+        # Get the latest storage usage record
+        storage_repo = StorageUsageRepository()
+        storage = storage_repo.get_latest(db, current_client.client_id)
+        
+        if not storage:
+            return {
+                "total_bytes": 0,
+                "document_bytes": 0, 
+                "knowledge_bytes": 0,
+                "crawled_content_bytes": 0,
+                "percentage": 0,
+                "limit_bytes": 0
+            }
+        
+        # Get subscription to determine limit
+        from app.repositories.client_repository import SubscriptionRepository
+        sub_repo = SubscriptionRepository()
+        subscription = sub_repo.get_active_subscription(db, current_client.client_id)
+        
+        # Default storage limit (50MB for free tier)
+        storage_limit = 50 * 1024 * 1024
+        
+        if subscription:
+            # Use plan-specific limit if available
+            if subscription.storage_limit_bytes:
+                storage_limit = subscription.storage_limit_bytes
+            else:
+                # Default limits based on plan type
+                if subscription.plan_type == "basic":
+                    storage_limit = 500 * 1024 * 1024
+                elif subscription.plan_type == "professional":
+                    storage_limit = 2 * 1024 * 1024 * 1024
+                elif subscription.plan_type == "enterprise":
+                    storage_limit = 10 * 1024 * 1024 * 1024
+        
+        # Calculate percentage
+        percentage = min(100, (storage.total_bytes / storage_limit) * 100) if storage_limit > 0 else 0
+        
+        return {
+            "total_bytes": storage.total_bytes,
+            "document_bytes": storage.document_bytes,
+            "knowledge_bytes": storage.knowledge_bytes,
+            "crawled_content_bytes": storage.crawled_content_bytes,
+            "percentage": percentage,
+            "limit_bytes": storage_limit
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error getting storage statistics: {str(e)}")
+        return {
+            "error": str(e),
+            "total_bytes": 0,
+            "document_bytes": 0,
+            "knowledge_bytes": 0,
+            "crawled_content_bytes": 0,
+            "percentage": 0,
+            "limit_bytes": 0
+        }        

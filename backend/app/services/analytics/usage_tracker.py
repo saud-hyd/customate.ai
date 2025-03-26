@@ -1,35 +1,266 @@
-# backend/app/services/analytics/usage_tracker.py
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List, Set
+import logging
+from typing import Dict, Any, Optional, List
+from datetime import datetime
+from sqlalchemy import func, desc
 from sqlalchemy.orm import Session
-import json
 
+from app.domain.analytics.entities import (
+    StorageUsage, SubscriptionUsage, ChatMetrics, KnowledgeMetrics, DailyStats
+)
 from app.repositories.analytics_repository import (
-    ApiUsageLogRepository, ChatMetricsRepository,
-    KnowledgeMetricsRepository, SubscriptionUsageRepository,
+    StorageUsageRepository, SubscriptionUsageRepository, 
+    ChatMetricsRepository, KnowledgeMetricsRepository,
     DailyStatsRepository
 )
-from app.core import logger
+from app.repositories.knowledge_repository import DocumentSourceRepository, KnowledgeItemRepository
+from app.domain.knowledge.entities import KnowledgeItem
+
+logger = logging.getLogger(__name__)
 
 class UsageTracker:
-    """
-    Service for tracking various usage metrics across the platform.
-    
-    This service provides methods to track:
-    - API endpoint usage
-    - Chat interactions and metrics
-    - Knowledge base usage
-    - Subscription usage against limits
-    - Daily aggregated statistics
-    """
+    """Service for tracking resource usage and subscription limits."""
     
     def __init__(self):
-        self.api_log_repo = ApiUsageLogRepository()
+        self.storage_repo = StorageUsageRepository()
+        self.subscription_usage_repo = SubscriptionUsageRepository()
         self.chat_metrics_repo = ChatMetricsRepository()
         self.knowledge_metrics_repo = KnowledgeMetricsRepository()
-        self.subscription_usage_repo = SubscriptionUsageRepository()
         self.daily_stats_repo = DailyStatsRepository()
-        
+    
+    def initialize_client_analytics(self, db: Session, client_id: str) -> None:
+        """Initialize analytics records for a new client."""
+        try:
+            # Create initial daily stats
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            
+            # Check if stats already exist for today
+            existing_stats = self.daily_stats_repo.get_by_date(
+                db, client_id, today
+            )
+            
+            if not existing_stats:
+                # Create new stats
+                self.daily_stats_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "date": today,
+                    "total_sessions": 0,
+                    "total_messages": 0,
+                    "total_searches": 0,
+                    "total_users": 0,
+                    "average_response_time_ms": 0,
+                    "knowledge_usage_ratio": 0
+                })
+            
+            # Initialize storage usage
+            existing_storage = self.storage_repo.get_latest(db, client_id)
+            
+            if not existing_storage:
+                self.storage_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "total_bytes": 0,
+                    "document_bytes": 0,
+                    "knowledge_bytes": 0,
+                    "crawled_content_bytes": 0,  # Added for tracking crawled content
+                    "recorded_at": datetime.utcnow()
+                })
+            
+            # Initialize subscription usage
+            self.initialize_subscription_usage(db, client_id)
+            
+        except Exception as e:
+            logger.exception(f"Error initializing client analytics: {str(e)}")
+            # Continue without failing - analytics are non-critical
+    
+    def initialize_subscription_usage(self, db: Session, client_id: str) -> None:
+        """Initialize subscription usage tracking."""
+        try:
+            # Get current month
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            
+            # Check if usage record exists for current month
+            existing_usage = self.subscription_usage_repo.get_by_month(
+                db, client_id, current_month
+            )
+            
+            if not existing_usage:
+                # Create new usage record
+                self.subscription_usage_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "month": current_month,
+                    "messages_used": 0,
+                    "users_active": 0,
+                    "storage_used_bytes": 0,
+                    "last_updated": datetime.utcnow()
+                })
+        except Exception as e:
+            logger.exception(f"Error initializing subscription usage: {str(e)}")
+    
+    def track_chat_message(
+        self, 
+        db: Session,
+        client_id: str,
+        session_id: str,
+        message_content: str,
+        is_user_message: bool,
+        response_time_ms: Optional[int] = None,
+        user_id: Optional[str] = None,
+        knowledge_used: bool = False,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """Track a chat message for analytics."""
+        try:
+            # Get today's date
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            
+            # Get/create metrics for today
+            chat_metrics = self.chat_metrics_repo.get_by_date(db, client_id, today)
+            
+            if not chat_metrics:
+                # Create new record
+                chat_metrics = self.chat_metrics_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "date": today,
+                    "total_messages": 0,
+                    "total_user_messages": 0,
+                    "total_assistant_messages": 0,
+                    "total_sessions": 0,
+                    "average_response_time_ms": 0,
+                    "knowledge_usage_count": 0,
+                    "stats_metadata": {}
+                })
+            
+            # Update metrics
+            metrics_data = {}
+            
+            # Increment message count
+            metrics_data["total_messages"] = chat_metrics.total_messages + 1
+            
+            # Update user/assistant message count
+            if is_user_message:
+                metrics_data["total_user_messages"] = chat_metrics.total_user_messages + 1
+            else:
+                metrics_data["total_assistant_messages"] = chat_metrics.total_assistant_messages + 1
+                # Track response time
+                if response_time_ms:
+                    # Calculate new average
+                    current_avg = chat_metrics.average_response_time_ms or 0
+                    current_count = chat_metrics.total_assistant_messages or 0
+                    
+                    if current_count > 0:
+                        new_avg = ((current_avg * current_count) + response_time_ms) / (current_count + 1)
+                        metrics_data["average_response_time_ms"] = new_avg
+                    else:
+                        metrics_data["average_response_time_ms"] = response_time_ms
+                
+                # Track knowledge usage
+                if knowledge_used:
+                    metrics_data["knowledge_usage_count"] = chat_metrics.knowledge_usage_count + 1
+            
+            # Update stats metadata
+            new_metadata = chat_metrics.stats_metadata or {}
+            
+            # Add/update metadata with token counts, etc.
+            if metadata:
+                new_metadata.update(metadata)
+            
+            metrics_data["stats_metadata"] = new_metadata
+            
+            # Update metrics
+            self.chat_metrics_repo.update(db, db_obj=chat_metrics, obj_in=metrics_data)
+            
+            # Update daily stats
+            self._update_daily_stats(db, client_id)
+            
+            # If this is an assistant message, increment message count for subscription
+            if not is_user_message:
+                self._increment_message_count(db, client_id)
+                
+        except Exception as e:
+            logger.exception(f"Error tracking chat message: {str(e)}")
+    
+    def track_knowledge_search(
+        self, 
+        db: Session,
+        client_id: str,
+        query: str,
+        results_count: int,
+        search_type: str = "hybrid",
+        response_time_ms: Optional[int] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """Track a knowledge base search for analytics."""
+        try:
+            # Get today's date
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            
+            # Get/create metrics for today
+            knowledge_metrics = self.knowledge_metrics_repo.get_by_date(db, client_id, today)
+            
+            if not knowledge_metrics:
+                # Create new record
+                knowledge_metrics = self.knowledge_metrics_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "date": today,
+                    "search_count": 0,
+                    "average_results": 0,
+                    "zero_results_count": 0,
+                    "average_response_time_ms": 0,
+                    "stats_metadata": {}
+                })
+            
+            # Update metrics
+            metrics_data = {}
+            
+            # Increment search count
+            metrics_data["search_count"] = knowledge_metrics.search_count + 1
+            
+            # Update average results
+            current_avg = knowledge_metrics.average_results or 0
+            current_count = knowledge_metrics.search_count or 0
+            
+            if current_count > 0:
+                new_avg = ((current_avg * current_count) + results_count) / (current_count + 1)
+                metrics_data["average_results"] = new_avg
+            else:
+                metrics_data["average_results"] = results_count
+            
+            # Track zero results
+            if results_count == 0:
+                metrics_data["zero_results_count"] = knowledge_metrics.zero_results_count + 1
+            
+            # Track response time
+            if response_time_ms:
+                current_avg = knowledge_metrics.average_response_time_ms or 0
+                
+                if current_count > 0:
+                    new_avg = ((current_avg * current_count) + response_time_ms) / (current_count + 1)
+                    metrics_data["average_response_time_ms"] = new_avg
+                else:
+                    metrics_data["average_response_time_ms"] = response_time_ms
+            
+            # Update stats metadata
+            new_metadata = knowledge_metrics.stats_metadata or {}
+            
+            # Track search types
+            search_types = new_metadata.get("search_types", {})
+            search_types[search_type] = search_types.get(search_type, 0) + 1
+            new_metadata["search_types"] = search_types
+            
+            # Add extra metadata
+            if metadata:
+                new_metadata.update(metadata)
+            
+            metrics_data["stats_metadata"] = new_metadata
+            
+            # Update metrics
+            self.knowledge_metrics_repo.update(db, db_obj=knowledge_metrics, obj_in=metrics_data)
+            
+            # Update daily stats
+            self._update_daily_stats(db, client_id)
+                
+        except Exception as e:
+            logger.exception(f"Error tracking knowledge search: {str(e)}")
+    
     def track_api_request(
         self, 
         db: Session,
@@ -37,655 +268,27 @@ class UsageTracker:
         endpoint: str,
         method: str,
         status_code: int,
-        response_time_ms: int,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        response_time_ms: int
     ) -> None:
-        """
-        Track an API request.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-            endpoint: API endpoint path
-            method: HTTP method (GET, POST, etc.)
-            status_code: HTTP status code
-            response_time_ms: Response time in milliseconds
-            ip_address: Optional client IP address
-            user_agent: Optional client user agent
-        """
+        """Track an API request for analytics."""
         try:
-            # Create API usage log
-            self.api_log_repo.create(db, obj_in={
-                "client_id": client_id,
-                "endpoint": endpoint,
-                "method": method,
-                "status_code": status_code,
-                "response_time_ms": response_time_ms,
-                "ip_address": ip_address,
-                "user_agent": user_agent,
-                "timestamp": datetime.utcnow()
-            })
-            
-            # Update subscription usage for API calls
-            if endpoint.startswith("/api/") and status_code < 500:
-                self.update_subscription_usage(db, client_id)
+            # Implementation for API request tracking
+            # This would be updated in a more complete implementation
+            pass
                 
         except Exception as e:
-            logger.error(f"Error tracking API request: {str(e)}")
+            logger.exception(f"Error tracking API request: {str(e)}")
     
-    def track_chat_interaction(
-            self,
-            db: Session,
-            client_id: str,
-            session_id: str,
-            response_time_ms: int,
-            used_knowledge: bool,
-            user_satisfaction: Optional[float] = None
-        ) -> None:
-            """
-            Track a chat interaction.
-            
-            Args:
-                db: Database session
-                client_id: Client ID
-                session_id: Chat session ID
-                response_time_ms: Response generation time in milliseconds
-                used_knowledge: Whether knowledge base was used in response
-                user_satisfaction: Optional user satisfaction rating (1-5)
-            """
-            try:
-                today = datetime.utcnow().strftime("%Y-%m-%d")
-                
-                # Update chat metrics for today
-                existing = self.chat_metrics_repo.get_by_date(db, client_id, today)
-                
-                if existing:
-                    # Update existing metrics
-                    total_messages = existing.total_messages + 1
-                    knowledge_usage = existing.knowledge_usage_count + (1 if used_knowledge else 0)
-                    
-                    # Calculate new average response time
-                    if existing.average_response_time_ms:
-                        avg_response_time = (
-                            (existing.average_response_time_ms * existing.total_messages) + response_time_ms
-                        ) / total_messages
-                    else:
-                        avg_response_time = response_time_ms
-                    
-                    # Update metrics
-                    self.chat_metrics_repo.update(db, db_obj=existing, obj_in={
-                        "total_messages": total_messages,
-                        "average_response_time_ms": avg_response_time,
-                        "knowledge_usage_count": knowledge_usage,
-                        "user_satisfaction": user_satisfaction if user_satisfaction else existing.user_satisfaction,
-                        "timestamp": datetime.utcnow()
-                    })
-                else:
-                    # Create new metrics
-                    self.chat_metrics_repo.create(db, obj_in={
-                        "client_id": client_id,
-                        "session_id": session_id,
-                        "total_messages": 1,
-                        "average_response_time_ms": response_time_ms,
-                        "knowledge_usage_count": 1 if used_knowledge else 0,
-                        "user_satisfaction": user_satisfaction,
-                        "timestamp": datetime.utcnow(),
-                        "date": today
-                    })
-                
-                # Update subscription usage for chat messages
-                # FIXED: Directly increment subscription usage count
-                self._update_subscription_message_count(db, client_id)
-                
-                # Update daily stats
-                self._update_daily_stats(db, client_id)
-                
-            except Exception as e:
-                logger.error(f"Error tracking chat interaction: {str(e)}")
-        
-    def _update_subscription_message_count(self, db: Session, client_id: str) -> None:
-        """
-        Update subscription message count directly using the analytics data.
-        This ensures message counts are always in sync with analytics.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-        """
+    def update_knowledge_counts(self, db: Session, client_id: str) -> None:
+        """Update knowledge item and collection counts."""
         try:
-            # Get current month for subscription usage
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            current_month_start = f"{current_month}-01"
-            
-            # Calculate total messages for the current month from chat metrics
-            from sqlalchemy import func
-            from app.domain.analytics.entities import ChatMetrics
-            
-            total_messages = db.query(func.sum(ChatMetrics.total_messages))\
-                .filter(
-                    ChatMetrics.client_id == client_id,
-                    ChatMetrics.date >= current_month_start
-                ).scalar() or 0
-            
-            # Get current subscription usage record
-            usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
-            
-            if usage:
-                # Update with accurate message count
-                self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
-                    "messages_used": total_messages,
-                    "last_updated": datetime.utcnow()
-                })
-            else:
-                # Initialize subscription usage if it doesn't exist
-                self.initialize_subscription_usage(db, client_id)
-                
-                # Try to get the newly created usage record
-                usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
-                
-                if usage:
-                    self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
-                        "messages_used": total_messages,
-                        "last_updated": datetime.utcnow()
-                    })
-            
-            logger.info(f"Updated subscription message count for client {client_id} to {total_messages}")
-            
-        except Exception as e:
-            logger.error(f"Error updating subscription message count: {str(e)}")
-                    
-    def track_knowledge_search(
-        self,
-        db: Session,
-        client_id: str,
-        query: str,
-        collection_id: Optional[str] = None,
-        results_count: int = 0,
-        relevance_scores: Optional[List[float]] = None
-    ) -> None:
-        """
-        Track a knowledge base search.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-            query: Search query text
-            collection_id: Optional knowledge collection ID
-            results_count: Number of results returned
-            relevance_scores: Optional list of relevance scores
-        """
-        try:
+            # Get daily stats
             today = datetime.utcnow().strftime("%Y-%m-%d")
-            
-            # Calculate average relevance if scores provided
-            avg_relevance = None
-            if relevance_scores and len(relevance_scores) > 0:
-                avg_relevance = sum(relevance_scores) / len(relevance_scores)
-            
-            # Update knowledge metrics for today
-            existing = self.knowledge_metrics_repo.get_by_date(db, client_id, today, collection_id)
-            
-            if existing:
-                # Update existing metrics
-                search_count = existing.search_count + 1
-                
-                # Calculate new average relevance
-                if avg_relevance:
-                    if existing.average_relevance_score:
-                        new_avg_relevance = (
-                            (existing.average_relevance_score * existing.search_count) + avg_relevance
-                        ) / search_count
-                    else:
-                        new_avg_relevance = avg_relevance
-                else:
-                    new_avg_relevance = existing.average_relevance_score
-                
-                # Update metrics
-                self.knowledge_metrics_repo.update(db, db_obj=existing, obj_in={
-                    "search_count": search_count,
-                    "average_relevance_score": new_avg_relevance
-                })
-            else:
-                # Create new metrics
-                self.knowledge_metrics_repo.create(db, obj_in={
-                    "client_id": client_id,
-                    "collection_id": collection_id,
-                    "search_count": 1,
-                    "average_relevance_score": avg_relevance,
-                    "items_count": 0,  # Will be updated separately
-                    "document_count": 0,  # Will be updated separately
-                    "date": today
-                })
-            
-            # Update daily stats
-            daily_stats = self.daily_stats_repo.get_by_date(db, client_id, today)
-            if daily_stats:
-                self.daily_stats_repo.update(db, db_obj=daily_stats, obj_in={
-                    "total_searches": daily_stats.total_searches + 1
-                })
-            
-        except Exception as e:
-            logger.error(f"Error tracking knowledge search: {str(e)}")
-    
-    def update_knowledge_counts(
-        self, 
-        db: Session,
-        client_id: str,
-        collection_id: Optional[str] = None
-    ) -> None:
-        """
-        Update knowledge item and document counts.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-            collection_id: Optional knowledge collection ID
-        """
-        try:
-            from app.repositories.knowledge_repository import (
-                KnowledgeCollectionRepository,
-                KnowledgeItemRepository,
-                DocumentSourceRepository
-            )
-            
-            today = datetime.utcnow().strftime("%Y-%m-%d")
-            items_repo = KnowledgeItemRepository()
-            docs_repo = DocumentSourceRepository()
-            collections_repo = KnowledgeCollectionRepository()
-            
-            # If no collection specified, update metrics for all collections
-            if not collection_id:
-                collections = collections_repo.get_by_client_id(db, client_id)
-                collection_ids = [c.collection_id for c in collections]
-            else:
-                collection_ids = [collection_id]
-            
-            # Update metrics for each collection
-            for col_id in collection_ids:
-                # Get item and document counts
-                items = items_repo.get_by_collection_id(db, col_id)
-                
-                # Only count processed documents
-                docs = docs_repo.get_documents_for_collection(db, col_id)
-                processed_docs = [d for d in docs if d.status == "processed"]
-                
-                # Update knowledge metrics
-                existing = self.knowledge_metrics_repo.get_by_date(db, client_id, today, col_id)
-                
-                if existing:
-                    self.knowledge_metrics_repo.update(db, db_obj=existing, obj_in={
-                        "items_count": len(items),
-                        "document_count": len(processed_docs)
-                    })
-                else:
-                    self.knowledge_metrics_repo.create(db, obj_in={
-                        "client_id": client_id,
-                        "collection_id": col_id,
-                        "search_count": 0,
-                        "items_count": len(items),
-                        "document_count": len(processed_docs),
-                        "date": today
-                    })
-                    
-            # Update storage usage in subscription
-            self._update_storage_usage(db, client_id)
-            
-        except Exception as e:
-            logger.error(f"Error updating knowledge counts: {str(e)}")
-    
-    def update_subscription_usage(self, db: Session, client_id: str) -> None:
-        """
-        Update subscription usage metrics.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-        """
-        try:
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            
-            # Get subscription info
-            from app.repositories.client_repository import SubscriptionRepository
-            sub_repo = SubscriptionRepository()
-            subscription = sub_repo.get_active_subscription(db, client_id)
-            
-            if not subscription:
-                logger.warning(f"No active subscription found for client {client_id}")
-                return
-            
-            # Get unique active users
-            self._update_active_users(db, client_id)
-            
-        except Exception as e:
-            logger.error(f"Error updating subscription usage: {str(e)}")
-    
-    def _update_storage_usage(self, db: Session, client_id: str) -> None:
-        """Update storage usage for client subscription."""
-        try:
-            from app.repositories.knowledge_repository import DocumentSourceRepository
-            docs_repo = DocumentSourceRepository()
-            
-            # Get document statistics
-            stats = docs_repo.get_document_statistics(db, client_id)
-            total_bytes = stats.get("total_size_bytes", 0)
-            
-            # Update subscription usage
-            usage = self.subscription_usage_repo.get_current_month(db, client_id)
-            if usage:
-                self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
-                    "storage_used_bytes": total_bytes
-                })
-            
-        except Exception as e:
-            logger.error(f"Error updating storage usage: {str(e)}")
-    
-    def _update_active_users(self, db: Session, client_id: str) -> None:
-        """Update active users count for subscription."""
-        try:
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            start_date = f"{current_month}-01"
-            
-            # Get unique user IDs from chat sessions this month
-            from app.repositories.chat_repository import ChatSessionRepository
-            session_repo = ChatSessionRepository()
-            
-            # Get all sessions from this month
-            from datetime import datetime
-            start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
-            
-            from sqlalchemy import func, distinct
-            from app.domain.chat.entities import ChatSession
-            
-            unique_users = db.query(func.count(distinct(ChatSession.user_id)))\
-                .filter(
-                    ChatSession.client_id == client_id,
-                    ChatSession.user_id.isnot(None),
-                    ChatSession.created_at >= start_datetime
-                )\
-                .scalar() or 0
-            
-            # Update subscription usage
-            usage = self.subscription_usage_repo.get_current_month(db, client_id)
-            if usage:
-                self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
-                    "active_users": unique_users
-                })
-            
-        except Exception as e:
-            logger.error(f"Error updating active users: {str(e)}")
-    
-    def track_response_performance(
-        self,
-        db: Session,
-        client_id: str,
-        session_id: str,
-        response_time_ms: int,
-        token_count: int,
-        knowledge_used: bool,
-        prompt_tokens: int = 0,
-        completion_tokens: int = 0
-    ) -> None:
-        """
-        Track detailed performance metrics for chatbot responses.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-            session_id: Chat session ID
-            response_time_ms: Response generation time in milliseconds
-            token_count: Total token count for the interaction
-            knowledge_used: Whether knowledge base was used
-            prompt_tokens: Number of tokens in the prompt
-            completion_tokens: Number of tokens in the completion
-        """
-        try:
-            today = datetime.utcnow().strftime("%Y-%m-%d")
-            
-            # Update chat metrics for today
-            existing = self.chat_metrics_repo.get_by_date(db, client_id, today)
-            
-            if existing:
-                # Calculate averages with current values
-                total_messages = existing.total_messages + 1
-                knowledge_usage = existing.knowledge_usage_count + (1 if knowledge_used else 0)
-                
-                # Calculate new average response time
-                if existing.average_response_time_ms:
-                    avg_response_time = (
-                        (existing.average_response_time_ms * existing.total_messages) + response_time_ms
-                    ) / total_messages
-                else:
-                    avg_response_time = response_time_ms
-                
-                # Update metrics including token counts
-                updated_metadata = existing.stats_metadata or {}
-                updated_metadata.update({
-                    "total_tokens": (updated_metadata.get("total_tokens", 0) or 0) + token_count,
-                    "prompt_tokens": (updated_metadata.get("prompt_tokens", 0) or 0) + prompt_tokens,
-                    "completion_tokens": (updated_metadata.get("completion_tokens", 0) or 0) + completion_tokens,
-                    "interactions_with_knowledge": (updated_metadata.get("interactions_with_knowledge", 0) or 0) + (1 if knowledge_used else 0)
-                })
-                
-                self.chat_metrics_repo.update(db, db_obj=existing, obj_in={
-                    "total_messages": total_messages,
-                    "average_response_time_ms": avg_response_time,
-                    "knowledge_usage_count": knowledge_usage,
-                    "stats_metadata": updated_metadata,
-                    "timestamp": datetime.utcnow()
-                })
-            else:
-                # Create new metrics record
-                metadata = {
-                    "total_tokens": token_count,
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "interactions_with_knowledge": 1 if knowledge_used else 0
-                }
-                
-                self.chat_metrics_repo.create(db, obj_in={
-                    "client_id": client_id,
-                    "session_id": session_id,
-                    "total_messages": 1,
-                    "average_response_time_ms": response_time_ms,
-                    "knowledge_usage_count": 1 if knowledge_used else 0,
-                    "stats_metadata": metadata,
-                    "timestamp": datetime.utcnow(),
-                    "date": today
-                })
-        
-        except Exception as e:
-            logger.error(f"Error tracking response performance: {str(e)}")
-
-    def track_search_performance(
-        self,
-        db: Session,
-        client_id: str,
-        query: str,
-        results_count: int,
-        response_time_ms: int,
-        search_type: str = "hybrid",
-        collection_id: Optional[str] = None,
-        relevance_scores: Optional[List[float]] = None
-    ) -> None:
-        """
-        Track search performance metrics.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-            query: Search query text
-            results_count: Number of results returned
-            response_time_ms: Response time in milliseconds
-            search_type: Type of search (vector, keyword, hybrid)
-            collection_id: Optional collection ID
-            relevance_scores: Optional list of relevance scores
-        """
-        try:
-            today = datetime.utcnow().strftime("%Y-%m-%d")
-            
-            # Calculate average relevance if scores provided
-            avg_relevance = None
-            if relevance_scores and len(relevance_scores) > 0:
-                avg_relevance = sum(relevance_scores) / len(relevance_scores)
-            
-            # Update knowledge metrics for today with performance data
-            existing = self.knowledge_metrics_repo.get_by_date(db, client_id, today, collection_id)
-            
-            if existing:
-                # Update existing metrics with performance data
-                search_count = existing.search_count + 1
-                
-                # Calculate new average relevance
-                if avg_relevance:
-                    if existing.average_relevance_score:
-                        new_avg_relevance = (
-                            (existing.average_relevance_score * existing.search_count) + avg_relevance
-                        ) / search_count
-                    else:
-                        new_avg_relevance = avg_relevance
-                else:
-                    new_avg_relevance = existing.average_relevance_score
-                
-                # Update with search performance stats
-                stats_metadata = existing.stats_metadata or {}
-                stats_metadata.update({
-                    f"{search_type}_searches": (stats_metadata.get(f"{search_type}_searches", 0) or 0) + 1,
-                    "total_response_time_ms": (stats_metadata.get("total_response_time_ms", 0) or 0) + response_time_ms,
-                    "avg_response_time_ms": ((stats_metadata.get("total_response_time_ms", 0) or 0) + response_time_ms) / search_count,
-                    "zero_results_searches": (stats_metadata.get("zero_results_searches", 0) or 0) + (1 if results_count == 0 else 0),
-                    "query_lengths": stats_metadata.get("query_lengths", []) + [len(query)]
-                })
-                
-                self.knowledge_metrics_repo.update(db, db_obj=existing, obj_in={
-                    "search_count": search_count,
-                    "average_relevance_score": new_avg_relevance,
-                    "stats_metadata": stats_metadata
-                })
-            else:
-                # Create new metrics with performance data
-                stats_metadata = {
-                    f"{search_type}_searches": 1,
-                    "total_response_time_ms": response_time_ms,
-                    "avg_response_time_ms": response_time_ms,
-                    "zero_results_searches": 1 if results_count == 0 else 0,
-                    "query_lengths": [len(query)]
-                }
-                
-                self.knowledge_metrics_repo.create(db, obj_in={
-                    "client_id": client_id,
-                    "collection_id": collection_id,
-                    "search_count": 1,
-                    "average_relevance_score": avg_relevance,
-                    "items_count": 0,  # Will be updated separately
-                    "document_count": 0,  # Will be updated separately
-                    "stats_metadata": stats_metadata,
-                    "date": today
-                })
-            
-            # Update daily stats
-            daily_stats = self.daily_stats_repo.get_by_date(db, client_id, today)
-            if daily_stats:
-                self.daily_stats_repo.update(db, db_obj=daily_stats, obj_in={
-                    "total_searches": daily_stats.total_searches + 1
-                })
-            
-        except Exception as e:
-            logger.error(f"Error tracking search performance: {str(e)}")
-    
-    def _update_daily_stats(self, db: Session, client_id: str) -> None:
-        """Update or create daily statistics aggregates."""
-        try:
-            today = datetime.utcnow().strftime("%Y-%m-%d")
-            
-            # Get existing stats or create new
             daily_stats = self.daily_stats_repo.get_by_date(db, client_id, today)
             
-            # Count total sessions today
-            from app.repositories.chat_repository import ChatSessionRepository
-            from app.domain.chat.entities import ChatSession
-            session_repo = ChatSessionRepository()
-            
-            # Get today's timestamp range
-            today_start = datetime.strptime(f"{today} 00:00:00", "%Y-%m-%d %H:%M:%S")
-            today_end = datetime.strptime(f"{today} 23:59:59", "%Y-%m-%d %H:%M:%S")
-            
-            # Count sessions
-            session_count = db.query(ChatSession)\
-                .filter(
-                    ChatSession.client_id == client_id,
-                    ChatSession.created_at >= today_start,
-                    ChatSession.created_at <= today_end
-                )\
-                .count()
-            
-            # Count unique users
-            from sqlalchemy import func, distinct
-            unique_users = db.query(func.count(distinct(ChatSession.user_id)))\
-                .filter(
-                    ChatSession.client_id == client_id,
-                    ChatSession.user_id.isnot(None),
-                    ChatSession.created_at >= today_start,
-                    ChatSession.created_at <= today_end
-                )\
-                .scalar() or 0
-            
-            # Get chat metrics
-            chat_metrics = self.chat_metrics_repo.get_by_date(db, client_id, today)
-            total_messages = chat_metrics.total_messages if chat_metrics else 0
-            avg_response_time = chat_metrics.average_response_time_ms if chat_metrics else None
-            knowledge_usage = chat_metrics.knowledge_usage_count if chat_metrics else 0
-            
-            # Calculate knowledge usage ratio
-            knowledge_ratio = (knowledge_usage / total_messages) if total_messages > 0 else 0
-            
-            # Get total searches
-            from sqlalchemy import func
-            from app.domain.analytics.entities import KnowledgeMetrics
-            
-            total_searches = db.query(func.sum(KnowledgeMetrics.search_count))\
-                .filter(
-                    KnowledgeMetrics.client_id == client_id,
-                    KnowledgeMetrics.date == today
-                )\
-                .scalar() or 0
-            
-            # Update or create daily stats
-            if daily_stats:
-                self.daily_stats_repo.update(db, db_obj=daily_stats, obj_in={
-                    "total_sessions": session_count,
-                    "total_messages": total_messages,
-                    "total_searches": total_searches,
-                    "total_users": unique_users,
-                    "average_response_time_ms": avg_response_time,
-                    "knowledge_usage_ratio": knowledge_ratio
-                })
-            else:
-                self.daily_stats_repo.create(db, obj_in={
-                    "client_id": client_id,
-                    "date": today,
-                    "total_sessions": session_count,
-                    "total_messages": total_messages,
-                    "total_searches": total_searches,
-                    "total_users": unique_users,
-                    "average_response_time_ms": avg_response_time,
-                    "knowledge_usage_ratio": knowledge_ratio,
-                    "stats_metadata": {}  # Initialize with empty JSON object
-                })
-                
-        except Exception as e:
-            logger.error(f"Error updating daily stats: {str(e)}")
-                        
-    def initialize_client_analytics(self, db: Session, client_id: str) -> None:
-        """Initialize analytics data for a new client."""
-        try:
-            today = datetime.utcnow().strftime("%Y-%m-%d")
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            
-            # Initialize daily stats
-            daily_stats = self.daily_stats_repo.get_by_date(db, client_id, today)
             if not daily_stats:
-                self.daily_stats_repo.create(db, obj_in={
+                # Create new record
+                daily_stats = self.daily_stats_repo.create(db, obj_in={
                     "client_id": client_id,
                     "date": today,
                     "total_sessions": 0,
@@ -697,221 +300,416 @@ class UsageTracker:
                     "stats_metadata": {}
                 })
             
-            # Initialize subscription usage
-            from app.repositories.client_repository import SubscriptionRepository
-            sub_repo = SubscriptionRepository()
-            subscription = sub_repo.get_active_subscription(db, client_id)
+            # Calculate knowledge base stats
+            from app.repositories.knowledge_repository import KnowledgeCollectionRepository, KnowledgeItemRepository
+            collection_repo = KnowledgeCollectionRepository()
+            item_repo = KnowledgeItemRepository()
             
-            if subscription:
-                usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
-                if not usage:
-                    self.subscription_usage_repo.create(db, obj_in={
-                        "client_id": client_id,
-                        "subscription_id": subscription.id,
-                        "month_year": current_month,
-                        "messages_used": 0,
-                        "messages_limit": subscription.message_limit,
-                        "active_users": 0,
-                        "active_users_limit": subscription.user_limit,
-                        "storage_used_bytes": 0,
-                        "storage_limit_bytes": 100 * 1024 * 1024  # 100MB default
-                    })
+            # Get collection count
+            collections = collection_repo.get_by_client_id(db, client_id)
+            collection_count = len(collections)
             
-            logger.info(f"Successfully initialized analytics for client {client_id}")
+            # Get item count
+            items = item_repo.get_items_for_client(db, client_id)
+            item_count = len(items)
+            
+            # Update metadata
+            metadata = daily_stats.stats_metadata or {}
+            metadata["knowledge_collections"] = collection_count
+            metadata["knowledge_items"] = item_count
+            
+            # Update stats
+            self.daily_stats_repo.update(db, db_obj=daily_stats, obj_in={
+                "stats_metadata": metadata
+            })
+            
         except Exception as e:
-            logger.error(f"Error initializing analytics: {str(e)}", exc_info=True)
+            logger.exception(f"Error updating knowledge counts: {str(e)}")
     
-# backend/app/services/analytics/usage_tracker.py
-# Update the check_subscription_limits method
-
-    def check_subscription_limits(self, db: Session, client_id: str) -> Dict[str, Any]:
-        """
-        Check if client has exceeded subscription limits.
-        
-        Args:
-            db: Database session
-            client_id: Client ID
-            
-        Returns:
-            Dictionary with limit status information
-        """
+    def _update_storage_usage(self, db: Session, client_id: str) -> None:
+        """Update storage usage metrics including document and crawled content."""
         try:
-            # Query analytics data directly instead of relying on subscription_usage table
-            # Get current month for calculations
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            current_month_start = f"{current_month}-01"
-            
-            # Calculate message usage directly from analytics data
-            from sqlalchemy import func
-            from app.domain.analytics.entities import ChatMetrics, DailyStats
-            
-            # Get total messages from chat metrics
-            total_messages = db.query(func.sum(ChatMetrics.total_messages))\
-                .filter(
-                    ChatMetrics.client_id == client_id,
-                    ChatMetrics.date >= current_month_start
-                ).scalar() or 0
-                
-            # Get total active users from daily stats
-            total_users = db.query(func.max(DailyStats.total_users))\
-                .filter(
-                    DailyStats.client_id == client_id,
-                    DailyStats.date >= current_month_start
-                ).scalar() or 0
-                
-            # Get storage usage
+            # Get document statistics
             from app.repositories.knowledge_repository import DocumentSourceRepository
             docs_repo = DocumentSourceRepository()
-            storage_bytes = 0
             
-            try:
-                # Get document statistics
-                stats = docs_repo.get_document_statistics(db, client_id)
-                storage_bytes = stats.get("total_size_bytes", 0)
-            except Exception as e:
-                logger.error(f"Error getting storage statistics: {str(e)}")
+            # Get document storage
+            docs_stats = docs_repo.get_document_statistics(db, client_id)
+            document_bytes = docs_stats.get("total_size_bytes", 0)
             
-            # Get subscription info for limits
+            logger.info(f"Document bytes for client {client_id}: {document_bytes}")
+            
+            # Direct SQL query to get the size of knowledge content
+            from sqlalchemy import text
+            
+            # Get collection IDs for this client
+            collections_query = text("""
+                SELECT collection_id FROM knowledge_collections 
+                WHERE client_id = :client_id
+            """)
+            
+            collection_results = db.execute(collections_query, {"client_id": client_id})
+            collection_ids = [row[0] for row in collection_results]
+            
+            if not collection_ids:
+                logger.warning(f"No collections found for client {client_id}")
+                collection_ids = ['']  # Dummy value to avoid empty IN clause
+            
+            # Calculate size from knowledge items with documents
+            kb_size_query = text("""
+                SELECT COALESCE(SUM(LENGTH(content)), 0) as total_size
+                FROM knowledge_items
+                WHERE collection_id IN :collection_ids
+                AND source_document_id IS NOT NULL
+            """)
+            
+            kb_size_result = db.execute(kb_size_query, {"collection_ids": tuple(collection_ids)})
+            kb_bytes = kb_size_result.scalar() or 0
+            
+            logger.info(f"Knowledge base bytes (with documents) for client {client_id}: {kb_bytes}")
+            
+            # Calculate size from crawled items (without source_document_id)
+            crawled_size_query = text("""
+                SELECT COALESCE(SUM(LENGTH(content)), 0) as total_size
+                FROM knowledge_items
+                WHERE collection_id IN :collection_ids
+                AND source_document_id IS NULL
+            """)
+            
+            crawled_size_result = db.execute(crawled_size_query, {"collection_ids": tuple(collection_ids)})
+            crawled_size = crawled_size_result.scalar() or 0
+            
+            logger.info(f"Crawled content bytes for client {client_id}: {crawled_size}")
+            
+            # Create or update storage usage record
+            storage_usage = self.storage_repo.get_latest(db, client_id)
+            
+            if not storage_usage:
+                self.storage_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "total_bytes": document_bytes + kb_bytes + crawled_size,
+                    "document_bytes": document_bytes,
+                    "knowledge_bytes": kb_bytes,
+                    "crawled_content_bytes": crawled_size,
+                    "recorded_at": datetime.utcnow()
+                })
+            else:
+                self.storage_repo.update(db, db_obj=storage_usage, obj_in={
+                    "total_bytes": document_bytes + kb_bytes + crawled_size,
+                    "document_bytes": document_bytes,
+                    "knowledge_bytes": kb_bytes,
+                    "crawled_content_bytes": crawled_size,
+                    "recorded_at": datetime.utcnow()
+                })
+            
+            # Update subscription usage storage metrics
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+            
+            if usage:
+                self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
+                    "storage_used_bytes": document_bytes + kb_bytes + crawled_size,
+                    "last_updated": datetime.utcnow()
+                })
+            
+        except Exception as e:
+            logger.exception(f"Error updating storage usage: {str(e)}")
+    
+    def _update_active_users(self, db: Session, client_id: str) -> None:
+        """Update active user count for subscription usage."""
+        try:
+            # Calculate active users from chat sessions
+            from app.domain.chat.entities import ChatSession
+            from sqlalchemy import func, distinct
+            
+            # Get current month
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            month_start = f"{current_month}-01"
+            
+            # Count distinct users this month
+            active_users = db.query(func.count(distinct(ChatSession.user_id)))\
+                .filter(
+                    ChatSession.client_id == client_id,
+                    ChatSession.created_at >= month_start,
+                    ChatSession.user_id.isnot(None)
+                )\
+                .scalar() or 0
+            
+            # Update subscription usage
+            usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+            
+            if usage:
+                self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
+                    "users_active": active_users,
+                    "last_updated": datetime.utcnow()
+                })
+            
+        except Exception as e:
+            logger.exception(f"Error updating active users: {str(e)}")
+    
+    def _update_daily_stats(self, db: Session, client_id: str) -> None:
+        """Update aggregate daily statistics."""
+        try:
+            # Get today's date
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            
+            # Get chat metrics for today
+            chat_metrics = self.chat_metrics_repo.get_by_date(db, client_id, today)
+            
+            # Get knowledge metrics for today
+            knowledge_metrics = self.knowledge_metrics_repo.get_by_date(db, client_id, today)
+            
+            # Get/create daily stats
+            daily_stats = self.daily_stats_repo.get_by_date(db, client_id, today)
+            
+            if not daily_stats:
+                daily_stats = self.daily_stats_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "date": today,
+                    "total_sessions": 0,
+                    "total_messages": 0,
+                    "total_searches": 0,
+                    "total_users": 0,
+                    "average_response_time_ms": 0,
+                    "knowledge_usage_ratio": 0,
+                    "stats_metadata": {}
+                })
+            
+            # Update stats data
+            stats_data = {}
+            
+            if chat_metrics:
+                stats_data["total_messages"] = chat_metrics.total_messages
+                stats_data["average_response_time_ms"] = chat_metrics.average_response_time_ms
+                
+                if chat_metrics.total_assistant_messages > 0:
+                    # Calculate knowledge usage ratio
+                    knowledge_usage_ratio = (
+                        chat_metrics.knowledge_usage_count / chat_metrics.total_assistant_messages
+                    ) if chat_metrics.total_assistant_messages > 0 else 0
+                    
+                    stats_data["knowledge_usage_ratio"] = knowledge_usage_ratio
+            
+            if knowledge_metrics:
+                stats_data["total_searches"] = knowledge_metrics.search_count
+            
+            # Get total sessions for today
+            from app.domain.chat.entities import ChatSession
+            session_count = db.query(ChatSession)\
+                .filter(
+                    ChatSession.client_id == client_id,
+                    func.date(ChatSession.created_at) == today
+                )\
+                .count()
+            
+            stats_data["total_sessions"] = session_count
+            
+            # Get unique users for today
+            from sqlalchemy import distinct
+            user_count = db.query(func.count(distinct(ChatSession.user_id)))\
+                .filter(
+                    ChatSession.client_id == client_id,
+                    func.date(ChatSession.created_at) == today,
+                    ChatSession.user_id.isnot(None)
+                )\
+                .scalar() or 0
+            
+            stats_data["total_users"] = user_count
+            
+            # Update storage metrics in metadata
+            metadata = daily_stats.stats_metadata or {}
+            
+            # Get storage usage
+            storage_usage = self.storage_repo.get_latest(db, client_id)
+            if storage_usage:
+                metadata["storage_usage"] = {
+                    "total_bytes": storage_usage.total_bytes,
+                    "document_bytes": storage_usage.document_bytes,
+                    "knowledge_bytes": storage_usage.knowledge_bytes,
+                    "crawled_content_bytes": storage_usage.crawled_content_bytes,
+                }
+            
+            stats_data["stats_metadata"] = metadata
+            
+            # Update daily stats
+            self.daily_stats_repo.update(db, db_obj=daily_stats, obj_in=stats_data)
+            
+        except Exception as e:
+            logger.exception(f"Error updating daily stats: {str(e)}")
+    
+    def _increment_message_count(self, db: Session, client_id: str) -> None:
+        """Increment message count for subscription usage."""
+        try:
+            # Get current month
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            
+            # Get subscription usage for current month
+            usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+            
+            if usage:
+                # Increment message count
+                self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
+                    "messages_used": usage.messages_used + 1,
+                    "last_updated": datetime.utcnow()
+                })
+            
+        except Exception as e:
+            logger.exception(f"Error incrementing message count: {str(e)}")
+    
+    def check_subscription_limits(self, db: Session, client_id: str) -> Dict[str, Any]:
+        """Check if client is within subscription limits."""
+        try:
+            # Get current subscription
             from app.repositories.client_repository import SubscriptionRepository
             sub_repo = SubscriptionRepository()
             subscription = sub_repo.get_active_subscription(db, client_id)
             
-            # Default limits
-            message_limit = 1000
-            user_limit = 10
-            storage_limit = 100 * 1024 * 1024  # 100MB
+            # Default limits if no subscription
+            message_limit = 500  # Free tier default
+            user_limit = 5      # Free tier default
+            storage_limit = 50 * 1024 * 1024  # 50 MB
             
             if subscription:
                 message_limit = subscription.message_limit or message_limit
                 user_limit = subscription.user_limit or user_limit
                 storage_limit = subscription.storage_limit_bytes or storage_limit
             
-            # Calculate percentages
-            message_percentage = (total_messages / message_limit * 100) if message_limit > 0 else 0
-            user_percentage = (total_users / user_limit * 100) if user_limit > 0 else 0
-            storage_percentage = (storage_bytes / storage_limit * 100) if storage_limit > 0 else 0
+            # Get current usage
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
             
-            # Check if any limits exceeded
-            messages_limit_exceeded = total_messages >= message_limit
-            users_limit_exceeded = total_users >= user_limit
-            storage_limit_exceeded = storage_bytes >= storage_limit
+            if not usage:
+                # Initialize usage tracking
+                self.initialize_subscription_usage(db, client_id)
+                usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
             
-            # Build response
-            within_limits = not (messages_limit_exceeded or users_limit_exceeded or storage_limit_exceeded)
+            # Force update of the data if it seems incomplete
+            if not usage or usage.storage_used_bytes == 0:
+                self._update_storage_usage(db, client_id)
+                self._update_active_users(db, client_id)
+                usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
             
-            response = {
-                "within_limits": within_limits,
-                "limits": {
+            # Prepare response
+            result = {
+                "current": {
                     "messages": {
-                        "used": total_messages,
+                        "used": usage.messages_used if usage else 0,
                         "limit": message_limit,
-                        "exceeded": messages_limit_exceeded,
-                        "percentage": message_percentage
+                        "percentage": min(100, ((usage.messages_used if usage else 0) / message_limit) * 100) if message_limit > 0 else 0
                     },
                     "users": {
-                        "active": total_users,
+                        "used": usage.users_active if usage else 0,
                         "limit": user_limit,
-                        "exceeded": users_limit_exceeded,
-                        "percentage": user_percentage
+                        "percentage": min(100, ((usage.users_active if usage else 0) / user_limit) * 100) if user_limit > 0 else 0
                     },
                     "storage": {
-                        "used_bytes": storage_bytes,
+                        "used_bytes": usage.storage_used_bytes if usage else 0,
                         "limit_bytes": storage_limit,
-                        "exceeded": storage_limit_exceeded,
-                        "percentage": storage_percentage
+                        "percentage": min(100, ((usage.storage_used_bytes if usage else 0) / storage_limit) * 100) if storage_limit > 0 else 0
                     }
                 }
             }
             
-            # Update cache for middleware (if it exists)
-            try:
-                # Only update if middleware cache attribute exists
-                from app.core.middleware.subscription_limit_middleware import SubscriptionLimitMiddleware
-                middleware = SubscriptionLimitMiddleware(None)  # Create instance without app
-                if hasattr(middleware, 'limit_check_cache'):
-                    middleware.limit_check_cache[client_id] = {
-                        "cache_time": time.time(),
-                        "limits": response["limits"]
-                    }
-            except Exception as e:
-                logger.error(f"Error updating middleware cache: {str(e)}")
+            # Add historical data
+            historical = []
             
-            return response
-                
+            # Get previous months
+            previous_months = self.subscription_usage_repo.get_previous_months(db, client_id, limit=6)
+            
+            for prev_usage in previous_months:
+                # Skip current month which is already in "current"
+                if prev_usage.month == current_month:
+                    continue
+                    
+                historical.append({
+                    "month": prev_usage.month,
+                    "messages": {
+                        "used": prev_usage.messages_used,
+                        "limit": message_limit,
+                        "percentage": min(100, (prev_usage.messages_used / message_limit) * 100) if message_limit > 0 else 0
+                    },
+                    "users": {
+                        "used": prev_usage.users_active,
+                        "limit": user_limit,
+                        "percentage": min(100, (prev_usage.users_active / user_limit) * 100) if user_limit > 0 else 0
+                    },
+                    "storage": {
+                        "used_bytes": prev_usage.storage_used_bytes,
+                        "limit_bytes": storage_limit,
+                        "percentage": min(100, (prev_usage.storage_used_bytes / storage_limit) * 100) if storage_limit > 0 else 0
+                    }
+                })
+            
+            result["historical"] = historical
+            
+            # Add subscription plan info
+            if subscription:
+                result["subscription"] = {
+                    "plan_type": subscription.plan_type,
+                    "status": subscription.status,
+                    "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None
+                }
+            else:
+                result["subscription"] = {
+                    "plan_type": "free",
+                    "status": "active",
+                    "expires_at": None
+                }
+            
+            return result
+            
         except Exception as e:
-            logger.error(f"Error checking subscription limits: {str(e)}")
+            logger.exception(f"Error checking subscription limits: {str(e)}")
             return {
-                "within_limits": True,
-                "error": "Error checking limits",
-                "limits": {
-                    "messages": {"used": 0, "limit": 1000, "exceeded": False, "percentage": 0},
-                    "users": {"active": 0, "limit": 10, "exceeded": False, "percentage": 0},
-                    "storage": {"used_bytes": 0, "limit_bytes": 100*1024*1024, "exceeded": False, "percentage": 0}
+                "error": str(e),
+                "current": {
+                    "messages": {"used": 0, "limit": 1000, "percentage": 0},
+                    "users": {"used": 0, "limit": 10, "percentage": 0},
+                    "storage": {"used_bytes": 0, "limit_bytes": 100 * 1024 * 1024, "percentage": 0}
                 }
             }
-                        
-    def initialize_subscription_usage(self, db: Session, client_id: str) -> None:
-        """Initialize subscription usage for a new client."""
-        try:
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            
-            # Get subscription info
-            from app.repositories.client_repository import SubscriptionRepository
-            sub_repo = SubscriptionRepository()
-            subscription = sub_repo.get_active_subscription(db, client_id)
-            
-            if not subscription:
-                logger.warning(f"No active subscription found for client {client_id}")
-                return
-            
-            # Check if usage record already exists for this month
-            existing_usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
-            if existing_usage:
-                logger.info(f"Subscription usage already exists for client {client_id}")
-                return
-                
-            # Create new usage record with default values
-            self.subscription_usage_repo.create(db, obj_in={
-                "client_id": client_id,
-                "subscription_id": subscription.id,
-                "month_year": current_month,
-                "messages_used": 0,
-                "messages_limit": subscription.message_limit,
-                "active_users": 0,
-                "active_users_limit": subscription.user_limit,
-                "storage_used_bytes": 0,
-                "storage_limit_bytes": subscription.storage_limit_bytes or 104857600  # Default 100MB
-            })
-            
-            logger.info(f"Initialized subscription usage for client {client_id}")
-        except Exception as e:
-            logger.error(f"Error initializing subscription usage: {str(e)}")
-            
+    
     def repair_subscription_data(self, db: Session) -> None:
-        """
-        Repair subscription data by initializing missing records
-        and ensuring all clients have current month usage data.
-        """
-        logger.info("Starting subscription data repair...")
-        
-        # Get all clients
-        from app.repositories.client_repository import ClientRepository
-        client_repo = ClientRepository()
-        clients = client_repo.get_all(db)
-        
-        current_month = datetime.utcnow().strftime("%Y-%m")
-        count = 0
-        
-        # For each client, ensure they have current month usage
-        for client in clients:
-            try:
-                # Check if usage exists for current month
-                existing = self.subscription_usage_repo.get_by_month(db, client.client_id, current_month)
-                if not existing:
-                    # Initialize usage for this client
-                    self.initialize_subscription_usage(db, client.client_id)
-                    count += 1
-            except Exception as e:
-                logger.error(f"Error repairing data for client {client.client_id}: {str(e)}")
-        
-        logger.info(f"Subscription data repair complete. Initialized {count} new records.")            
+        """Repair subscription usage data for all clients."""
+        try:
+            # Get all clients
+            from app.domain.client.entities import Client
+            clients = db.query(Client).all()
+            
+            for client in clients:
+                logger.info(f"Repairing subscription data for client {client.client_id}")
+                
+                # Initialize if needed
+                self.initialize_subscription_usage(db, client.client_id)
+                
+                # Update storage usage
+                self._update_storage_usage(db, client.client_id)
+                
+                # Update active users
+                self._update_active_users(db, client.client_id)
+                
+                # Update message count from chat metrics
+                current_month = datetime.utcnow().strftime("%Y-%m")
+                month_start = f"{current_month}-01"
+                
+                # Get total messages from chat metrics
+                from app.domain.analytics.entities import ChatMetrics
+                total_messages = db.query(func.sum(ChatMetrics.total_assistant_messages))\
+                    .filter(
+                        ChatMetrics.client_id == client.client_id,
+                        ChatMetrics.date >= month_start
+                    )\
+                    .scalar() or 0
+                
+                # Update subscription usage
+                usage = self.subscription_usage_repo.get_by_month(db, client.client_id, current_month)
+                if usage:
+                    self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
+                        "messages_used": total_messages,
+                        "last_updated": datetime.utcnow()
+                    })
+            
+            logger.info("Subscription data repair completed")
+            
+        except Exception as e:
+            logger.exception(f"Error repairing subscription data: {str(e)}")
