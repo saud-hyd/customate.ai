@@ -1,4 +1,3 @@
-// frontend/dashboard/src/Routes.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
@@ -23,6 +22,8 @@ import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
 import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
 import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
 import DocumentListPage from './pages/knowledge/DocumentListPage';
+import WebCrawlerPage from './pages/knowledge/WebCrawlerPage';
+
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -104,6 +105,7 @@ const AppRoutes = () => {
         {/* Knowledge management routes */}
         <Route path="knowledge" element={<KnowledgeListPage />} />
         <Route path="knowledge/documents" element={<DocumentListPage />} />
+        <Route path="knowledge/crawler" element={<WebCrawlerPage />} />
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         
         <Route path="analytics" element={<AnalyticsPage />} />

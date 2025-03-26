@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import knowledgeService from '../../services/knowledgeService';
 import DocumentUploader from '../../components/knowledge/DocumentUploader';
+import WebsiteCrawler from '../../components/knowledge/WebsiteCrawler'; // Import the new component
 import { useToast } from '../../context/ToastContext';
 
 import {
@@ -15,7 +16,9 @@ import {
   ChevronRightIcon,
   ChevronDownIcon,
   AdjustmentsHorizontalIcon,
-  CalendarIcon
+  CalendarIcon,
+  GlobeAltIcon, // Added for the websites tab
+  TrashIcon, // For delete buttons
 } from '@heroicons/react/24/outline';
 
 const KnowledgeListPage = () => {
@@ -36,6 +39,8 @@ const KnowledgeListPage = () => {
   const [expandedDocuments, setExpandedDocuments] = useState({}); // Track expanded document sections
   const [sortOption, setSortOption] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
+  const [isDeleteDocumentConfirmOpen, setIsDeleteDocumentConfirmOpen] = useState(false);
   
   const { success, error: showError } = useToast();
 
@@ -153,6 +158,25 @@ const KnowledgeListPage = () => {
     }
   };
 
+  const handleDeleteDocument = async () => {
+    if (!documentToDelete) return;
+    
+    try {
+      setLoading(true);
+      await knowledgeService.deleteDocument(documentToDelete.document_id);
+      success('Document deleted successfully');
+      await fetchDocuments();
+      setIsDeleteDocumentConfirmOpen(false);
+      setDocumentToDelete(null);
+    } catch (err) {
+      console.error('Error deleting document:', err);
+      setError('Failed to delete document');
+      if (showError) showError('Failed to delete document');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUploadComplete = async () => {
     setIsUploadModalOpen(false);
     await fetchCollections();
@@ -166,6 +190,11 @@ const KnowledgeListPage = () => {
     }
     
     if (success) success('Document uploaded successfully');
+  };
+
+  const handleCrawlComplete = async () => {
+    // Refresh collections after successful crawl
+    await fetchCollections();
   };
   
   // Toggle document expansion
@@ -309,6 +338,16 @@ const KnowledgeListPage = () => {
             onClick={() => setActiveTab('faqs')}
           >
             FAQs
+          </button>
+          <button
+            className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
+              activeTab === 'websites' 
+                ? 'border-indigo-500 text-indigo-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => setActiveTab('websites')}
+          >
+            Websites
           </button>
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
@@ -566,6 +605,14 @@ const KnowledgeListPage = () => {
         </div>
       )}
 
+      {/* Websites Tab View - New Section */}
+      {activeTab === 'websites' && (
+        <WebsiteCrawler 
+          collections={collections} 
+          onCrawlComplete={handleCrawlComplete} 
+        />
+      )}
+
       {/* Documents Tab View */}
       {activeTab === 'documents' && (
         <div className="bg-white shadow-sm rounded-lg p-6">
@@ -614,7 +661,7 @@ const KnowledgeListPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploaded</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -642,7 +689,16 @@ const KnowledgeListPage = () => {
                         {formatDate(doc.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {/* Delete button removed */}
+                        <button
+                          onClick={() => {
+                            setDocumentToDelete(doc);
+                            setIsDeleteDocumentConfirmOpen(true);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete document"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -705,6 +761,7 @@ const KnowledgeListPage = () => {
                 <option value="policies">Policies</option>
                 <option value="products">Products</option>
                 <option value="procedures">Procedures</option>
+                <option value="website">Website</option>
               </select>
             </div>
             
@@ -793,6 +850,48 @@ const KnowledgeListPage = () => {
               onUploadComplete={handleUploadComplete}
               onCancel={() => setIsUploadModalOpen(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Document Delete Confirmation Modal */}
+      {isDeleteDocumentConfirmOpen && documentToDelete && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteDocumentConfirmOpen(false)}></div>
+          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Delete Document
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to delete the document "{documentToDelete.filename}"? 
+                    This will permanently remove the document and all knowledge items created from it.
+                    This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={handleDeleteDocument}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                onClick={() => setIsDeleteDocumentConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

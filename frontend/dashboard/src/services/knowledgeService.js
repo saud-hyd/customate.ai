@@ -25,6 +25,41 @@ const knowledgeService = {
     const response = await api.delete(`/api/knowledge/knowledge/collections/${collectionId}`);
     return response.data;
   },
+
+// frontend/dashboard/src/services/knowledgeService.js
+// Add these methods to the existing knowledgeService object
+
+// Create a website crawl job
+  async createCrawlJob(crawlData) {
+    const response = await api.post('/api/knowledge/crawl', crawlData);
+    return response.data;
+  },
+
+  // Get all crawl jobs
+  async getCrawlJobs() {
+    const response = await api.get('/api/knowledge/crawl');
+    return response.data;
+  },
+
+  // Get a specific crawl job's status
+  async getCrawlJobStatus(jobId, includeDetails = false) {
+    const response = await api.get(`/api/knowledge/crawl/${jobId}`, {
+      params: { include_details: includeDetails }
+    });
+    return response.data;
+  },
+
+  // Cancel a crawl job
+  async cancelCrawlJob(jobId) {
+    const response = await api.delete(`/api/knowledge/crawl/${jobId}`);
+    return response.data;
+  },
+
+  // Retry a failed crawl job
+  async retryCrawlJob(jobId) {
+    const response = await api.post(`/api/knowledge/crawl/${jobId}/retry`);
+    return response.data;
+  },
   
   // Get collection items
   async getCollectionItems(collectionId) {
