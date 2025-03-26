@@ -191,7 +191,7 @@ class WebCrawlerService:
                 # While we have pages to crawl and haven't exceeded the limit
                 while True:
                     # Get pending pages
-                    pending_pages = self.page_repo.get_pending_pages(self.db, job_id, limit=10)
+                    pending_pages = self.page_repo.get_pending_pages(self.db, job_id, limit=50)
                     
                     if not pending_pages:
                         # No more pages to process
@@ -267,6 +267,9 @@ class WebCrawlerService:
             job: Crawl job
             page: Page to process
         """
+        # Increment the pages_crawled counter when we actually process a page
+        self.job_repo.increment_counter(self.db, job.job_id, "pages_crawled")
+        
         try:
             # Fetch the page
             async with session.get(page.url, allow_redirects=True, timeout=30) as response:
@@ -563,8 +566,8 @@ class WebCrawlerService:
             
             new_pages.append(new_page_data)
             
-            # Increment crawled count
-            self.job_repo.increment_counter(self.db, job.job_id, "pages_crawled")
+            # REMOVED: Do not increment pages_crawled here
+            # Instead, pages_crawled is incremented in _process_page
         
         # Batch create pages
         for page_data in new_pages:

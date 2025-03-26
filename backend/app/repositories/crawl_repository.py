@@ -93,7 +93,7 @@ class CrawledPageRepository(BaseRepository[CrawledPage, dict, dict]):
             self.model.job_id == job_id
         ).first()
     
-    def get_pending_pages(self, db: Session, job_id: str, limit: int = 10) -> List[CrawledPage]:
+    def get_pending_pages(self, db: Session, job_id: str, limit: int = 50) -> List[CrawledPage]:
         """Get pending pages for a job."""
         return db.query(self.model).filter(
             self.model.job_id == job_id,
