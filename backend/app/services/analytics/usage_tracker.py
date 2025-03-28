@@ -713,3 +713,52 @@ class UsageTracker:
             
         except Exception as e:
             logger.exception(f"Error repairing subscription data: {str(e)}")
+            
+    def track_channel_message(
+        self,
+        db: Session,
+        client_id: str,
+        channel_id: str,
+        conversation_id: str,
+        message_content: str,
+        direction: str,
+        platform: str,
+        message_type: str = "text"
+    ) -> None:
+        """
+        Track a message sent through a social channel.
+        
+        Args:
+            db: Database session
+            client_id: Client ID
+            channel_id: Channel ID
+            conversation_id: Conversation ID
+            message_content: Message content
+            direction: Direction (inbound/outbound)
+            platform: Platform type
+            message_type: Message type
+        """
+        try:
+            # Make sure subscription usage is initialized
+            self.initialize_subscription_usage(db, client_id)
+            
+            # Track message in analytics
+            from app.services.analytics.social_channel_analytics import SocialChannelAnalytics
+            channel_analytics = SocialChannelAnalytics(db)
+            channel_analytics.track_channel_message(
+                client_id=client_id,
+                channel_id=channel_id,
+                conversation_id=conversation_id,
+                direction=direction,
+                platform=platform
+            )
+            
+            # Increment message counter for subscription tracking
+            self.subscription_usage_repo.increment_usage(db, client_id, "messages_used")
+            
+            # Update daily stats
+            self._update_daily_stats(db, client_id)
+            
+            logger.info(f"Tracked channel message for client {client_id} on {platform}")
+        except Exception as e:
+            logger.error(f"Error tracking channel message: {str(e)}", exc_info=True)            
