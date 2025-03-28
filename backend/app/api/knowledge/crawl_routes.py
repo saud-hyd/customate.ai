@@ -117,7 +117,7 @@ async def create_crawl_job(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating crawl job: {str(e)}"
         )
-        
+
 @router.get("/crawl/{job_id}")
 async def get_crawl_job_status(
     job_id: str,
@@ -264,16 +264,20 @@ async def list_crawl_jobs(
         )
 
 @router.delete("/crawl/{job_id}")
-async def cancel_crawl_job(
+async def delete_crawl_job(
     job_id: str,
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
     """
-    Cancel a website crawl job.
+    Delete a website crawl job and its associated data.
+    
+    Args:
+        job_id: The ID of the crawl job to delete
     """
     # Initialize repositories
     job_repo = WebsiteCrawlJobRepository()
+    page_repo = CrawledPageRepository()
     
     # Get job
     job = job_repo.get_by_job_id(db, job_id)
@@ -290,33 +294,63 @@ async def cancel_crawl_job(
             detail="Not authorized to access this crawl job"
         )
     
-    # Initialize services
-    llm_service = DeepSeekService()
-    embedding_service = EmbeddingService(llm_service)
-    crawler_service = WebCrawlerService(db, embedding_service)
-    
-    try:
-        # Cancel job
+    # If the job is still running, cancel it first
+    if job.status in ["pending", "in_progress"]:
+        llm_service = DeepSeekService()
+        embedding_service = EmbeddingService(llm_service)
+        crawler_service = WebCrawlerService(db, embedding_service)
         success = await crawler_service.cancel_job(job_id)
-        
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to cancel job. Job may be already completed or cancelled."
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to cancel running crawl job before deletion."
             )
+    
+    try:
+        # Get crawled pages with knowledge items
+        from app.domain.knowledge.crawl_entities import CrawledPage
+        from app.domain.knowledge.entities import KnowledgeItem, VectorEmbedding
         
-        return {"message": "Crawl job cancelled successfully"}
+        # Find knowledge items created by this crawl job
+        crawled_pages = db.query(CrawledPage).filter(
+            CrawledPage.job_id == job_id,
+            CrawledPage.knowledge_item_id.isnot(None)
+        ).all()
         
-    except HTTPException:
-        # Re-raise HTTP exceptions
-        raise
+        # Extract knowledge item IDs
+        knowledge_item_ids = [page.knowledge_item_id for page in crawled_pages if page.knowledge_item_id]
+        
+        # Delete associated vector embeddings and knowledge items
+        if knowledge_item_ids:
+            # Delete embeddings first (foreign key constraint)
+            db.query(VectorEmbedding).filter(
+                VectorEmbedding.item_id.in_(knowledge_item_ids)
+            ).delete(synchronize_session=False)
+            
+            # Delete knowledge items
+            db.query(KnowledgeItem).filter(
+                KnowledgeItem.item_id.in_(knowledge_item_ids)
+            ).delete(synchronize_session=False)
+        
+        # Delete crawled pages
+        page_repo.delete_by_job_id(db, job_id)
+        
+        # Delete the job itself
+        job_repo.delete_by_job_id(db, job_id)
+        
+        # Commit the transaction
+        db.commit()
+        
+        return {"message": f"Crawl job {job_id} and its associated data deleted successfully"}
+        
     except Exception as e:
-        logger.exception(f"Error cancelling crawl job: {str(e)}")
+        db.rollback()
+        logger.exception(f"Error deleting crawl job: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error cancelling crawl job: {str(e)}"
+            detail=f"Error deleting crawl job: {str(e)}"
         )
-
+        
 @router.post("/crawl/{job_id}/retry", status_code=status.HTTP_202_ACCEPTED)
 async def retry_crawl_job(
     job_id: str,

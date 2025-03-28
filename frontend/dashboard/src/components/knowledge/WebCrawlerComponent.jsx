@@ -1,4 +1,4 @@
-// frontend/dashboard/src/components/knowledge/WebsiteCrawler.jsx
+// frontend/dashboard/src/components/knowledge/WebCrawlerComponent.jsx
 import React, { useState, useEffect } from 'react';
 import knowledgeService from '../../services/knowledgeService';
 import { useToast } from '../../context/ToastContext';
@@ -9,10 +9,10 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ClockIcon
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 
-const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
+const WebCrawlerComponent = ({ collections, onJobCreated }) => {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState('');
@@ -21,6 +21,8 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
   const [crawlJobs, setCrawlJobs] = useState([]);
   const [refreshingJobs, setRefreshingJobs] = useState(false);
   const [advancedOptions, setAdvancedOptions] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
   
   const { success, error: showError } = useToast();
   
@@ -67,7 +69,7 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
       await fetchCrawlJobs();
       
       // Notify parent component
-      if (onCrawlComplete) onCrawlComplete();
+      if (onJobCreated) onJobCreated();
       
     } catch (err) {
       console.error('Error starting crawl job:', err);
@@ -77,14 +79,21 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
     }
   };
   
+
   const handleDeleteJob = async (jobId) => {
     try {
+      // Use the DELETE endpoint for all jobs
       await knowledgeService.cancelCrawlJob(jobId);
-      success('Crawl job cancelled');
+      success('Crawl job deleted successfully');
+      
+      // Refresh the jobs list to reflect the changes
       await fetchCrawlJobs();
     } catch (err) {
-      console.error('Error cancelling crawl job:', err);
-      if (showError) showError('Failed to cancel crawl job');
+      console.error('Error deleting crawl job:', err);
+      if (showError) showError('Failed to delete job');
+      
+      // Refresh to ensure UI is in sync
+      await fetchCrawlJobs();
     }
   };
   
@@ -296,7 +305,7 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
       {/* Crawl Jobs List */}
       <div className="bg-white shadow-sm rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Crawl Jobs</h3>
+          <h3 className="text-lg font-medium text-gray-900">Recent Crawl Jobs</h3>
           <button
             onClick={fetchCrawlJobs}
             className="p-2 rounded-full text-gray-400 hover:text-gray-500"
@@ -330,10 +339,13 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {crawlJobs.map((job) => (
+                {/* Display only the most recent 5 jobs */}
+                {crawlJobs.slice(0, 5).map((job) => (
                   <tr key={job.job_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatDomain(job.base_url)}
+                      <a href={job.base_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-900">
+                        {formatDomain(job.base_url)}
+                      </a>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {getStatusBadge(job.status)}
@@ -341,6 +353,11 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="text-xs">
                         {job.pages_crawled || 0} / {job.max_pages} pages
+                        {job.pages_failed > 0 && (
+                          <span className="ml-2 text-red-500">
+                            ({job.pages_failed} failed)
+                          </span>
+                        )}
                       </div>
                       {getProgressBar(job)}
                     </td>
@@ -353,18 +370,27 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                           <button
                             onClick={() => handleRetryJob(job.job_id)}
                             className="text-indigo-600 hover:text-indigo-900"
+                            title="Retry job"
                           >
                             <PlayIcon className="h-5 w-5" aria-hidden="true" />
                           </button>
                         )}
-                        {(job.status === 'pending' || job.status === 'in_progress') && (
-                          <button
-                            onClick={() => handleDeleteJob(job.job_id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <TrashIcon className="h-5 w-5" aria-hidden="true" />
-                          </button>
-                        )}
+                        
+                        {/* Show delete/cancel button for all jobs */}
+                        <button
+                          onClick={() => {
+                            setJobToDelete(job);
+                            setDeleteConfirmOpen(true);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                          title={
+                            job.status === 'pending' || job.status === 'in_progress' 
+                              ? 'Cancel job' 
+                              : 'Delete job'
+                          }
+                        >
+                          <TrashIcon className="h-5 w-5" aria-hidden="true" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -374,8 +400,61 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
           </div>
         )}
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmOpen && jobToDelete && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setDeleteConfirmOpen(false)}></div>
+          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress' 
+                    ? 'Cancel Crawl Job' 
+                    : 'Delete Crawl Job'}
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress'
+                      ? `Are you sure you want to cancel the crawl job for ${formatDomain(jobToDelete.base_url)}?`
+                      : `Are you sure you want to remove this crawl job for ${formatDomain(jobToDelete.base_url)}?`}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={() => {
+                  handleDeleteJob(jobToDelete.job_id);
+                  setDeleteConfirmOpen(false);
+                  setJobToDelete(null);
+                }}
+              >
+                {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress' 
+                  ? 'Cancel Job' 
+                  : 'Delete Job'}
+              </button>
+              <button
+                type="button"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setJobToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default WebsiteCrawler;
+export default WebCrawlerComponent;

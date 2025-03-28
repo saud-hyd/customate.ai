@@ -10,10 +10,9 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-  EyeIcon
 } from '@heroicons/react/24/outline';
 
-const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
+const WebsiteCrawler = ({ collections, onJobCreated }) => {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState('');
@@ -24,21 +23,10 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
   const [advancedOptions, setAdvancedOptions] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
-  // Array of hidden job IDs stored in state
-  const [hiddenJobIds, setHiddenJobIds] = useState(() => {
-    // Initialize from localStorage if available
-    const saved = localStorage.getItem('hiddenCrawlJobs');
-    return saved ? JSON.parse(saved) : [];
-  });
   
   const { success, error: showError } = useToast();
   
-  // Effect to load hidden jobs from localStorage when component mounts
   useEffect(() => {
-    const savedHiddenJobs = localStorage.getItem('hiddenCrawlJobs');
-    if (savedHiddenJobs) {
-      setHiddenJobIds(JSON.parse(savedHiddenJobs));
-    }
     fetchCrawlJobs();
   }, []);
   
@@ -46,10 +34,8 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
     try {
       setRefreshingJobs(true);
       const response = await knowledgeService.getCrawlJobs();
-      // Filter out jobs that have been marked as hidden
       const allJobs = response.jobs || response;
-      const filteredJobs = allJobs.filter(job => !hiddenJobIds.includes(job.job_id));
-      setCrawlJobs(filteredJobs);
+      setCrawlJobs(allJobs);
     } catch (err) {
       console.error('Error fetching crawl jobs:', err);
       if (showError) showError('Failed to load crawl jobs');
@@ -84,7 +70,7 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
       await fetchCrawlJobs();
       
       // Notify parent component
-      if (onCrawlComplete) onCrawlComplete();
+      if (onJobCreated) onJobCreated();
       
     } catch (err) {
       console.error('Error starting crawl job:', err);
@@ -94,46 +80,25 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
     }
   };
   
-  const handleDeleteJob = async (jobId) => {
-    try {
-      const jobToDelete = crawlJobs.find(job => job.job_id === jobId);
-      const isActive = jobToDelete?.status === 'pending' || jobToDelete?.status === 'in_progress';
-      
-      // Remove from UI first
-      setCrawlJobs(prevJobs => prevJobs.filter(job => job.job_id !== jobId));
-      
-      if (isActive) {
-        // For active jobs, cancel via API
+// frontend/dashboard/src/components/knowledge/WebsiteCrawler.jsx
+// Update the handleDeleteJob function:
+
+    const handleDeleteJob = async (jobId) => {
+        try {
+        // Use the DELETE endpoint for all jobs, regardless of status
         await knowledgeService.cancelCrawlJob(jobId);
-        success('Crawl job cancelled successfully');
+        success('Crawl job deleted successfully');
         
-        // Refresh job list after cancellation
+        // Refresh the jobs list to reflect the changes
         await fetchCrawlJobs();
-      } else {
-        // For completed jobs, add to hidden list in localStorage
-        const updatedHiddenJobs = [...hiddenJobIds, jobId];
-        setHiddenJobIds(updatedHiddenJobs);
+        } catch (err) {
+        console.error('Error deleting crawl job:', err);
+        if (showError) showError('Failed to delete job');
         
-        // Store in localStorage for persistence
-        localStorage.setItem('hiddenCrawlJobs', JSON.stringify(updatedHiddenJobs));
-        
-        success('Crawl job removed from list');
-      }
-    } catch (err) {
-      console.error('Error deleting/cancelling crawl job:', err);
-      
-      // Restore the job in the UI if there was an error
-      await fetchCrawlJobs();
-      
-      if (showError) {
-        if (err.response && err.response.status === 400) {
-          showError('This job cannot be deleted. Only active jobs can be cancelled.');
-        } else {
-          showError('Failed to delete job');
+        // Still refresh to ensure UI is in sync
+        await fetchCrawlJobs();
         }
-      }
-    }
-  };
+    };
   
   const handleRetryJob = async (jobId) => {
     try {
@@ -143,6 +108,24 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
     } catch (err) {
       console.error('Error retrying crawl job:', err);
       if (showError) showError('Failed to retry crawl job');
+    }
+  };
+  
+  const handleRefreshJob = async (jobId) => {
+    try {
+      const response = await knowledgeService.getCrawlJobStatus(jobId, true);
+      
+      // Update the job in the local state
+      setCrawlJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.job_id === jobId ? { ...job, ...response } : job
+        )
+      );
+      
+      success('Job status refreshed');
+    } catch (err) {
+      console.error('Error refreshing job status:', err);
+      if (showError) showError('Failed to refresh job status');
     }
   };
   
@@ -380,7 +363,9 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                 {crawlJobs.map((job) => (
                   <tr key={job.job_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatDomain(job.base_url)}
+                      <a href={job.base_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-900">
+                        {formatDomain(job.base_url)}
+                      </a>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {getStatusBadge(job.status)}
@@ -388,6 +373,11 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="text-xs">
                         {job.pages_crawled || 0} / {job.max_pages} pages
+                        {job.pages_failed > 0 && (
+                          <span className="ml-2 text-red-500">
+                            ({job.pages_failed} failed)
+                          </span>
+                        )}
                       </div>
                       {getProgressBar(job)}
                     </td>
@@ -396,6 +386,15 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
+                        {/* Refresh button for all jobs */}
+                        <button
+                          onClick={() => handleRefreshJob(job.job_id)}
+                          className="text-gray-500 hover:text-gray-700"
+                          title="Refresh status"
+                        >
+                          <ArrowPathIcon className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                        
                         {job.status === 'failed' && (
                           <button
                             onClick={() => handleRetryJob(job.job_id)}
@@ -405,14 +404,19 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                             <PlayIcon className="h-5 w-5" aria-hidden="true" />
                           </button>
                         )}
-                        {/* Show delete button for all jobs */}
+                        
+                        {/* Delete button for all jobs */}
                         <button
                           onClick={() => {
                             setJobToDelete(job);
                             setDeleteConfirmOpen(true);
                           }}
                           className="text-red-600 hover:text-red-900"
-                          title={job.status === 'completed' ? 'Delete job' : 'Cancel job'}
+                          title={
+                            job.status === 'pending' || job.status === 'in_progress' 
+                              ? 'Cancel job' 
+                              : 'Delete job'
+                          }
                         >
                           <TrashIcon className="h-5 w-5" aria-hidden="true" />
                         </button>
@@ -427,7 +431,7 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
       </div>
       
       {/* Delete Confirmation Dialog */}
-      {deleteConfirmOpen && (
+      {deleteConfirmOpen && jobToDelete && (
         <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setDeleteConfirmOpen(false)}></div>
           <div className="relative bg-white rounded-lg max-w-md w-full p-6">
@@ -437,20 +441,21 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
               </div>
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {jobToDelete?.status === 'pending' || jobToDelete?.status === 'in_progress' 
+                  {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress' 
                     ? 'Cancel Crawl Job' 
-                    : 'Remove Crawl Job'}
+                    : 'Delete Crawl Job'}
                 </h3>
                 <div className="mt-2">
                   <p className="text-sm text-gray-500">
-                    {jobToDelete?.status === 'pending' || jobToDelete?.status === 'in_progress'
-                      ? `Are you sure you want to cancel the crawl job for ${formatDomain(jobToDelete?.base_url || '')}?`
-                      : `Are you sure you want to remove this job from your list? The job for ${formatDomain(jobToDelete?.base_url || '')} is already ${jobToDelete?.status}.`}
-                    {' '}
-                    {jobToDelete?.status === 'pending' || jobToDelete?.status === 'in_progress'
-                      ? 'This will stop the crawling process.'
-                      : 'This will only remove it from your view.'}
+                    {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress'
+                      ? `Are you sure you want to cancel the crawl job for ${formatDomain(jobToDelete.base_url)}?`
+                      : `Are you sure you want to remove this crawl job for ${formatDomain(jobToDelete.base_url)}?`}
                   </p>
+                  {jobToDelete.status === 'completed' && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      The crawled content will remain in your knowledge base.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -459,14 +464,14 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
                 onClick={() => {
-                  if (jobToDelete) {
-                    handleDeleteJob(jobToDelete.job_id);
-                  }
+                  handleDeleteJob(jobToDelete.job_id);
                   setDeleteConfirmOpen(false);
                   setJobToDelete(null);
                 }}
               >
-                {jobToDelete?.status === 'pending' || jobToDelete?.status === 'in_progress' ? 'Cancel Job' : 'Remove Job'}
+                {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress' 
+                  ? 'Cancel Job' 
+                  : 'Delete Job'}
               </button>
               <button
                 type="button"
@@ -476,7 +481,7 @@ const WebsiteCrawler = ({ collections, onCrawlComplete }) => {
                   setJobToDelete(null);
                 }}
               >
-                Go Back
+                Cancel
               </button>
             </div>
           </div>

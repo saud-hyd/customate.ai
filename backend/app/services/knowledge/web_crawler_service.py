@@ -14,7 +14,8 @@ from app.repositories.crawl_repository import WebsiteCrawlJobRepository, Crawled
 from app.repositories.knowledge_repository import KnowledgeItemRepository, KnowledgeCollectionRepository
 from app.domain.knowledge.crawl_entities import WebsiteCrawlJob, CrawledPage
 from app.services.knowledge.embedding_service import EmbeddingService
-from app.services.analytics.usage_tracker import UsageTracker  # Import UsageTracker
+from app.services.analytics.usage_tracker import UsageTracker  
+from app.services.knowledge.content_extractor import EnhancedContentExtractor
 from app.core import logger
 
 class WebCrawlerService:
@@ -268,20 +269,7 @@ class WebCrawlerService:
                 }
             )
     
-    async def _process_page(
-        self, 
-        session: aiohttp.ClientSession, 
-        job: WebsiteCrawlJob, 
-        page: CrawledPage
-    ) -> None:
-        """
-        Process a single page.
-        
-        Args:
-            session: HTTP session
-            job: Crawl job
-            page: Page to process
-        """
+    async def _process_page(self, session: aiohttp.ClientSession, job: WebsiteCrawlJob, page: CrawledPage) -> None:
         # Increment the pages_crawled counter when we actually process a page
         self.job_repo.increment_counter(self.db, job.job_id, "pages_crawled")
         
@@ -314,26 +302,32 @@ class WebCrawlerService:
                 # Read the HTML content
                 html_content = await response.text()
                 
-                # Process the page content
-                soup = BeautifulSoup(html_content, 'html.parser')
+                # Use the enhanced content extractor
+                content_extractor = EnhancedContentExtractor()
+                extracted_data = content_extractor.extract_content(html_content, page.url)
                 
-                # Extract title
-                title = self._extract_title(soup, job.extraction_rules)
-                
-                # Extract content
-                extracted_content = self._extract_content(soup, job.extraction_rules)
-                
-                if not extracted_content:
+                if not extracted_data or not extracted_data.get("text"):
                     # No content extracted
                     self.page_repo.update(
                         self.db,
                         db_obj=page,
-                        obj_in={"status": "skipped", "title": title or "No content extracted"}
+                        obj_in={"status": "skipped", "title": extracted_data.get("title", "No content extracted")}
                     )
                     return
                 
+                # Create a BeautifulSoup object for link extraction
+                soup = BeautifulSoup(html_content, 'html.parser')
+                
+                # Extract relevant fields
+                title = extracted_data.get("title", "")
+                content = extracted_data.get("text", "")
+                html = extracted_data.get("html", "")
+                metadata = extracted_data.get("metadata", {})
+                images = extracted_data.get("images", [])
+                tables = extracted_data.get("tables", [])
+                
                 # Calculate content hash for deduplication
-                content_hash = hashlib.sha256(extracted_content.encode('utf-8')).hexdigest()
+                content_hash = hashlib.sha256(content.encode('utf-8')).hexdigest()
                 
                 # Update page
                 self.page_repo.update(
@@ -346,14 +340,17 @@ class WebCrawlerService:
                     }
                 )
                 
-                # Create knowledge item
-                knowledge_item = self._create_knowledge_item(
+                # Create knowledge item with enhanced metadata
+                knowledge_item = self._create_knowledge_item_enhanced(
                     job, 
                     page, 
                     title, 
-                    extracted_content
+                    content,
+                    html,
+                    metadata,
+                    images,
+                    tables
                 )
-                
                 if knowledge_item:
                     # Update page with knowledge item reference
                     self.page_repo.update(
@@ -585,6 +582,66 @@ class WebCrawlerService:
         for page_data in new_pages:
             self.page_repo.create(self.db, obj_in=page_data)
     
+    def _create_knowledge_item_enhanced(
+        self, 
+        job: WebsiteCrawlJob, 
+        page: CrawledPage, 
+        title: str, 
+        content: str,
+        html: str,
+        metadata: Dict[str, Any],
+        images: List[Dict[str, str]],
+        tables: List[Dict[str, Any]]
+    ) -> Any:
+        """
+        Create an enhanced knowledge item from the page content.
+        
+        Args:
+            job: Crawl job
+            page: Crawled page
+            title: Page title
+            content: Extracted text content
+            html: Extracted HTML content
+            metadata: Extracted metadata
+            images: Extracted images
+            tables: Extracted tables
+            
+        Returns:
+            Created knowledge item
+        """
+        # Check if we have enough content
+        if len(content) < 50:  # Arbitrary minimum content length
+            return None
+        
+        # Create enhanced metadata
+        enhanced_metadata = {
+            "source_url": page.url,
+            "crawl_job_id": job.job_id,
+            "page_id": page.page_id,
+            "crawled_at": datetime.utcnow().isoformat(),
+            "html_content": html if len(html) < 100000 else html[:100000],  # Limit HTML size
+            "page_metadata": metadata,
+        }
+        
+        # Add images if available
+        if images:
+            enhanced_metadata["images"] = images[:10]  # Limit to first 10 images
+        
+        # Add tables if available
+        if tables:
+            enhanced_metadata["tables"] = tables[:5]  # Limit to first 5 tables
+        
+        # Create knowledge item
+        item_data = {
+            "collection_id": job.collection_id,
+            "title": title,
+            "content": content,
+            "source_document_id": None,  # No document source for website content
+            "item_metadata": enhanced_metadata
+        }
+        
+        return self.item_repo.create(self.db, obj_in=item_data)    
+    
     def _matches_any_pattern(self, url: str, patterns: List[str]) -> bool:
         """
         Check if URL matches any pattern.
@@ -656,3 +713,4 @@ class WebCrawlerService:
         )
         
         return True
+    

@@ -4,7 +4,8 @@ from sqlalchemy import func, desc
 
 from app.repositories.base_repository import BaseRepository
 from app.domain.knowledge.crawl_entities import WebsiteCrawlJob, CrawledPage
-
+from app.repositories.knowledge_repository import KnowledgeItem
+from app.repositories.vector_repository import VectorEmbedding
 class WebsiteCrawlJobRepository(BaseRepository[WebsiteCrawlJob, dict, dict]):
     """Repository for website crawl job entities."""
     
@@ -71,6 +72,25 @@ class WebsiteCrawlJobRepository(BaseRepository[WebsiteCrawlJob, dict, dict]):
         db.commit()
         db.refresh(job)
         return job
+    
+        # Add this method to the WebsiteCrawlJobRepository class
+
+    def delete_by_job_id(self, db: Session, job_id: str) -> bool:
+        """Delete a job by job_id.
+        
+        Args:
+            db: Database session
+            job_id: Job ID
+            
+        Returns:
+            Boolean indicating success
+        """
+        job = self.get_by_job_id(db, job_id)
+        if not job:
+            return False
+        
+        db.delete(job)
+        return True
 
 class CrawledPageRepository(BaseRepository[CrawledPage, dict, dict]):
     """Repository for crawled page entities."""
@@ -122,3 +142,60 @@ class CrawledPageRepository(BaseRepository[CrawledPage, dict, dict]):
         ).group_by(self.model.status).all()
         
         return {status: count for status, count in result}
+    
+    # Add this method to the CrawledPageRepository class
+
+    def delete_by_job_id(self, db: Session, job_id: str) -> int:
+        """Delete all crawled pages for a job.
+        
+        Args:
+            db: Database session
+            job_id: Job ID
+            
+        Returns:
+            Number of pages deleted
+        """
+        # Get count before deletion
+        count = db.query(CrawledPage).filter(CrawledPage.job_id == job_id).count()
+        
+        # Delete pages
+        db.query(CrawledPage).filter(CrawledPage.job_id == job_id).delete(synchronize_session=False)
+        
+        return count
+    
+    def delete_content_by_job_id(self, db: Session, job_id: str) -> int:
+        """
+        Delete knowledge items associated with a crawl job.
+        
+        Args:
+            db: Database session
+            job_id: Crawl job ID
+            
+        Returns:
+            Number of items deleted
+        """
+        from app.domain.knowledge.crawl_entities import CrawledPage
+        
+        # Find all knowledge_item_ids from crawled pages
+        knowledge_item_ids = db.query(CrawledPage.knowledge_item_id).filter(
+            CrawledPage.job_id == job_id,
+            CrawledPage.knowledge_item_id.isnot(None)
+        ).all()
+        
+        # Extract IDs from result tuples
+        item_ids = [item_id for (item_id,) in knowledge_item_ids if item_id]
+        
+        if not item_ids:
+            return 0
+        
+        # Delete vector embeddings first (due to foreign key constraints)
+        embedding_count = db.query(VectorEmbedding).filter(
+            VectorEmbedding.item_id.in_(item_ids)
+        ).delete(synchronize_session=False)
+        
+        # Delete knowledge items
+        item_count = db.query(KnowledgeItem).filter(
+            KnowledgeItem.item_id.in_(item_ids)
+        ).delete(synchronize_session=False)
+        
+        return item_count

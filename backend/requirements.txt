@@ -1,2 +1,5 @@
 beautifulsoup4>=4.12.2
 aiohttp>=3.8.5
+# Add these to your existing requirements.txt
+trafilatura>=1.6.0
+readability-lxml>=0.8.1
