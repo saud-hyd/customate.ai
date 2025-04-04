@@ -10,10 +10,10 @@ const PlanComparisonModal = ({ isOpen, onClose, plans, currentPlan, onSelectPlan
     messages: {
       title: 'Monthly Messages',
       values: {
-        free: '500',
-        basic: '5,000',
-        professional: '20,000',
-        enterprise: '100,000'
+        free: '100',
+        basic: '2,000',
+        professional: '5,000',
+        enterprise: '12,000'
       }
     },
     users: {
@@ -28,10 +28,10 @@ const PlanComparisonModal = ({ isOpen, onClose, plans, currentPlan, onSelectPlan
     storage: {
       title: 'Storage',
       values: {
-        free: '50 MB',
-        basic: '500 MB',
-        professional: '2 GB',
-        enterprise: '10 GB'
+        free: '500 KB',
+        basic: '5 MB',
+        professional: '25 MB',
+        enterprise: '100 MB'
       }
     },
     collections: {
@@ -127,7 +127,7 @@ const PlanComparisonModal = ({ isOpen, onClose, plans, currentPlan, onSelectPlan
   };
 
   // All plan types
-  const planTypes = ['free', 'basic', 'professional', 'enterprise'];
+  const planTypes = ['free', 'basic', 'standard', 'professional'];
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">

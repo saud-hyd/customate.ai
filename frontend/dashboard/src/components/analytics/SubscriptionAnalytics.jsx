@@ -50,14 +50,14 @@ const SubscriptionAnalytics = ({ data, dateRange }) => {
 
   // Add fallbacks for missing data
   const current = data.current || {
-    messages: { used: 0, limit: 500, percentage: 0 },
+    messages: { used: 0, limit: 100, percentage: 0 },
     users: { used: 0, limit: 5, percentage: 0 },
     storage: { 
       used_bytes: 0, 
-      limit_bytes: 52428800, // 50MB
+      limit_bytes: 524288, 
       percentage: 0,
       used_mb: 0,
-      limit_mb: 50
+      limit_mb: 0.5
     }
   };
 

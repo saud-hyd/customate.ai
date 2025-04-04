@@ -139,7 +139,12 @@ class UsageTracker:
             if is_user_message:
                 metrics_data["total_user_messages"] = chat_metrics.total_user_messages + 1
             else:
+                # This is an assistant message
                 metrics_data["total_assistant_messages"] = chat_metrics.total_assistant_messages + 1
+                
+                # Only increment subscription usage for assistant messages
+                self._increment_message_count(db, client_id)
+                
                 # Track response time
                 if response_time_ms:
                     # Calculate new average
@@ -170,14 +175,10 @@ class UsageTracker:
             
             # Update daily stats
             self._update_daily_stats(db, client_id)
-            
-            # If this is an assistant message, increment message count for subscription
-            if not is_user_message:
-                self._increment_message_count(db, client_id)
                 
         except Exception as e:
             logger.exception(f"Error tracking chat message: {str(e)}")
-    
+                
     def track_knowledge_search(
         self, 
         db: Session,
@@ -552,6 +553,16 @@ class UsageTracker:
                     "messages_used": usage.messages_used + 1,
                     "last_updated": datetime.utcnow()
                 })
+            else:
+                # Initialize usage if it doesn't exist
+                self.initialize_subscription_usage(db, client_id)
+                # Then try to increment again
+                usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
+                if usage:
+                    self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
+                        "messages_used": 1,  # Start with 1
+                        "last_updated": datetime.utcnow()
+                    })
             
         except Exception as e:
             logger.exception(f"Error incrementing message count: {str(e)}")
@@ -565,9 +576,8 @@ class UsageTracker:
             subscription = sub_repo.get_active_subscription(db, client_id)
             
             # Default limits if no subscription
-            message_limit = 500  # Free tier default
-            user_limit = 5      # Free tier default
-            storage_limit = 50 * 1024 * 1024  # 50 MB
+            message_limit = 100  # Free tier default
+            storage_limit = 0.5 * 1024 * 1024  # 500 kb
             
             if subscription:
                 message_limit = subscription.message_limit or message_limit
@@ -691,8 +701,8 @@ class UsageTracker:
                 # Update message count from chat metrics
                 current_month = datetime.utcnow().strftime("%Y-%m")
                 month_start = f"{current_month}-01"
-                
-                # Get total messages from chat metrics
+
+                # Get total messages from chat metrics - only count assistant messages
                 from app.domain.analytics.entities import ChatMetrics
                 total_messages = db.query(func.sum(ChatMetrics.total_assistant_messages))\
                     .filter(
@@ -700,7 +710,7 @@ class UsageTracker:
                         ChatMetrics.date >= month_start
                     )\
                     .scalar() or 0
-                
+
                 # Update subscription usage
                 usage = self.subscription_usage_repo.get_by_month(db, client.client_id, current_month)
                 if usage:

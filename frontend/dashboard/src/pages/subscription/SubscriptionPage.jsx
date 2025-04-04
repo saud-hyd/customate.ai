@@ -20,14 +20,14 @@ const SubscriptionPage = () => {
       name: 'Free',
       price: '$0',
       description: 'Get started with basic chatbot',
-      messageLimit: 500,
+      messageLimit: 100,  // Updated from 500
       userLimit: 5,
-      storageLimit: '50 MB',
+      storageLimit: '500 KB',  // Updated from 50 MB
       collectionLimit: 3,
       features: [
-        { name: '500 messages per month', included: true },
+        { name: '100 messages per month', included: true },  // Updated
         { name: '5 active users', included: true },
-        { name: '50 MB storage', included: true },
+        { name: '500 KB storage', included: true },  // Updated
         { name: '3 knowledge collections', included: true },
         { name: 'Basic chat functionality', included: true },
         { name: 'Community support', included: true },
@@ -41,14 +41,14 @@ const SubscriptionPage = () => {
       name: 'Basic',
       price: '$29',
       description: 'Essential features for small businesses',
-      messageLimit: 5000,
+      messageLimit: 2000,  // Updated from 5000
       userLimit: 25, 
-      storageLimit: '500 MB',
+      storageLimit: '5 MB',  // Updated from 500 MB
       collectionLimit: 10,
       features: [
-        { name: '5,000 messages per month', included: true },
+        { name: '2,000 messages per month', included: true },  // Updated
         { name: '25 active users', included: true },
-        { name: '500 MB storage', included: true },
+        { name: '5 MB storage', included: true },  // Updated
         { name: '10 knowledge collections', included: true },
         { name: 'Basic chat functionality', included: true },
         { name: 'Knowledge integration', included: true },
@@ -58,48 +58,46 @@ const SubscriptionPage = () => {
         { name: 'External integrations', included: false },
       ]
     },
-    professional: {
-      name: 'Professional',
-      price: '$99',
+    standard: {  // New tier
+      name: 'Standard',
+      price: '$69',
       description: 'Advanced features for growing teams',
-      messageLimit: 20000,
-      userLimit: 100,
-      storageLimit: '2 GB',
-      collectionLimit: 50,
+      messageLimit: 5000,
+      userLimit: 50,
+      storageLimit: '25 MB',
+      collectionLimit: 25,
       features: [
-        { name: '20,000 messages per month', included: true },
-        { name: '100 active users', included: true },
-        { name: '2 GB storage', included: true },
+        { name: '5,000 messages per month', included: true },
+        { name: '50 active users', included: true },
+        { name: '25 MB storage', included: true },
+        { name: '25 knowledge collections', included: true },
+        { name: 'Basic chat functionality', included: true },
+        { name: 'Knowledge integration', included: true },
+        { name: 'Analytics dashboard', included: true },
+        { name: 'Email support', included: true },
+        { name: 'Custom domain', included: true },
+        { name: 'External integrations', included: true },
+      ]
+    },
+    professional: {  // Renamed from enterprise
+      name: 'Professional',
+      price: '$149',
+      description: 'Ultimate solution for businesses',
+      messageLimit: 12000,  // Updated from 100000
+      userLimit: 100,  // Updated from 500
+      storageLimit: '100 MB',  // Updated from 10 GB
+      collectionLimit: 50,  // Updated from 250
+      features: [
+        { name: '12,000 messages per month', included: true },  // Updated
+        { name: '100 active users', included: true },  // Updated
+        { name: '100 MB storage', included: true },  // Updated
         { name: '50 knowledge collections', included: true },
         { name: 'Advanced chat functionality', included: true },
         { name: 'Knowledge integration', included: true },
         { name: 'Advanced analytics', included: true },
         { name: 'Custom domain', included: true },
         { name: 'External integrations', included: true },
-        { name: 'Priority email support', included: true },
-      ]
-    },
-    enterprise: {
-      name: 'Enterprise',
-      price: '$349',
-      description: 'Ultimate solution for large organizations',
-      messageLimit: 100000,
-      userLimit: 500,
-      storageLimit: '10 GB',
-      collectionLimit: 250,
-      features: [
-        { name: '100,000 messages per month', included: true },
-        { name: '500 active users', included: true },
-        { name: '10 GB storage', included: true },
-        { name: '250 knowledge collections', included: true },
-        { name: 'Advanced chat functionality', included: true },
-        { name: 'Knowledge integration', included: true },
-        { name: 'Advanced analytics', included: true },
-        { name: 'Custom domain', included: true },
-        { name: 'External integrations', included: true },
-        { name: 'Dedicated account manager', included: true },
-        { name: 'SLA guarantees', included: true },
-        { name: 'Phone support', included: true },
+        { name: 'Priority support', included: true },
       ]
     }
   };
@@ -119,8 +117,6 @@ const SubscriptionPage = () => {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
-
-// Path: frontend/dashboard/src/pages/subscription/SubscriptionPage.jsx
 
 // Update the fetchData function:
 const fetchData = async () => {
@@ -331,7 +327,7 @@ const fetchData = async () => {
     },
     storage: {
       used_bytes: 0,
-      limit_bytes: 50 * 1024 * 1024, // 50MB default
+      limit_bytes: 0.5 * 1024 * 1024, 
       percentage: 0
     }
   };
@@ -526,7 +522,7 @@ const fetchData = async () => {
                   ) : (
                     <button
                       onClick={() => handleUpgrade(planType)}
-                      disabled={processingPlan !== null} // Disable all buttons when any is processing
+                      disabled={processingPlan !== null}
                       className={`w-full py-2 px-4 border border-transparent rounded-md font-medium text-center text-white ${
                         planType === 'free' 
                           ? 'bg-gray-600 hover:bg-gray-700' 

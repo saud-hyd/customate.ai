@@ -1,6 +1,7 @@
 # backend/app/services/subscription/stripe_service.py
 import stripe
 import logging
+import random
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status
@@ -18,42 +19,42 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
 stripe.api_version = "2023-10-16"  # Use latest stable API version
 
-# Define plan mapping between internal plans and Stripe price IDs
+# Update PLAN_MAPPING to include standard tier and remove enterprise
 PLAN_MAPPING = {
     "free": settings.STRIPE_FREE_PLAN_ID,
     "basic": settings.STRIPE_BASIC_PLAN_ID,
-    "professional": settings.STRIPE_PRO_PLAN_ID,
-    "enterprise": settings.STRIPE_ENTERPRISE_PLAN_ID
+    "standard": settings.STRIPE_STANDARD_PLAN_ID,  # New tier
+    "professional": settings.STRIPE_PRO_PLAN_ID    # Renamed from enterprise
 }
 
-# Define plan limits
+# Update PLAN_LIMITS with new limits
 PLAN_LIMITS = {
     "free": {
-        "message_limit": 500,
+        "message_limit": 100,  # Updated from 500
         "user_limit": 5,
-        "storage_limit_mb": 50,
+        "storage_limit_mb": 0.5,  # 500KB
         "collections_limit": 3,
         "features": ["basic_chat", "knowledge_integration"]
     },
     "basic": {
-        "message_limit": 5000,
+        "message_limit": 2000,  # Updated from 5000
         "user_limit": 25,
-        "storage_limit_mb": 500,
+        "storage_limit_mb": 5,  # 5MB
         "collections_limit": 10,
         "features": ["basic_chat", "knowledge_integration", "analytics"]
     },
-    "professional": {
-        "message_limit": 20000,
-        "user_limit": 100,
-        "storage_limit_mb": 2000,
-        "collections_limit": 50,
-        "features": ["advanced_chat", "knowledge_integration", "analytics", "integrations"]
+    "standard": {  # New tier
+        "message_limit": 5000,
+        "user_limit": 50,
+        "storage_limit_mb": 25,  # 25MB
+        "collections_limit": 25,
+        "features": ["basic_chat", "knowledge_integration", "analytics", "integrations"]
     },
-    "enterprise": {
-        "message_limit": 100000,
-        "user_limit": 500,
-        "storage_limit_mb": 10000,
-        "collections_limit": 250,
+    "professional": {  # Updated from enterprise
+        "message_limit": 12000,  # Updated from 100000
+        "user_limit": 100,  # Updated from 500
+        "storage_limit_mb": 100,  # 100MB, updated from 10000
+        "collections_limit": 50,
         "features": ["advanced_chat", "knowledge_integration", "analytics", "integrations", "priority_support"]
     }
 }

@@ -6,6 +6,13 @@ import api from './api';
 const analyticsService = {
   getDashboardOverview: async () => {
     try {
+      // First sync the data to ensure metrics are accurate
+      await analyticsService.syncDashboardData();
+      
+      // Then fix message counts to ensure correct values
+      await analyticsService.fixMessageCounts();
+      
+      // Now fetch the overview with corrected data
       const response = await api.get('/api/analytics/dashboard');
       return response.data;
     } catch (error) {
@@ -16,6 +23,9 @@ const analyticsService = {
 
   getChatPerformance: async (days = 30) => {
     try {
+      // First fix message counts to ensure correct metrics
+      await analyticsService.fixMessageCounts();
+      
       const response = await api.get('/api/analytics/chat', {
         params: { days }
       });
@@ -41,6 +51,9 @@ const analyticsService = {
 
   getSubscriptionUsage: async (months = 6) => {
     try {
+      // First fix message counts to ensure correct metrics
+      await analyticsService.fixMessageCounts();
+      
       const response = await api.get('/api/analytics/subscription', {
         params: { months }
       });
@@ -65,6 +78,9 @@ const analyticsService = {
 
   getSubscriptionLimits: async () => {
     try {
+      // First fix message counts to ensure correct metrics
+      await analyticsService.fixMessageCounts();
+      
       const response = await api.get('/api/analytics/subscription/limits');
       return response.data;
     } catch (error) {
@@ -72,7 +88,27 @@ const analyticsService = {
       throw error;
     }
   },
-
+  
+  syncSubscriptionMessages: async () => {
+    try {
+      const response = await api.post('/api/client/sync-subscription-messages');
+      return response.data;
+    } catch (error) {
+      console.error('Error syncing subscription messages:', error);
+      throw error;
+    }
+  },
+  
+  fixMessageCounts: async () => {
+    try {
+      const response = await api.post('/api/client/fix-message-counts');
+      return response.data;
+    } catch (error) {
+      console.error('Error fixing message counts:', error);
+      throw error;
+    }
+  },
+  
   resetAnalytics: async () => {
     try {
       const response = await api.post('/api/analytics/reset');
@@ -83,7 +119,6 @@ const analyticsService = {
     }
   },
   
-  // New function to get more detailed usage statistics
   getDetailedUsageStats: async (days = 30) => {
     try {
       const response = await api.get('/api/analytics/performance', {
@@ -96,10 +131,9 @@ const analyticsService = {
     }
   },
   
-  // Function to sync subscription usage with analytics data
   syncSubscriptionUsage: async () => {
     try {
-      const response = await api.post('/api/analytics/sync-subscription-usage');
+      const response = await api.post('/api/client/sync-message-counts');
       return response.data;
     } catch (error) {
       console.error('Error syncing subscription usage:', error);
@@ -107,7 +141,6 @@ const analyticsService = {
     }
   },
   
-  // Function to update usage data
   updateUsageData: async () => {
     try {
       const response = await api.post('/api/analytics/update-usage');
@@ -118,7 +151,16 @@ const analyticsService = {
     }
   },
   
-  // New function to get detailed storage statistics
+  syncDashboardData: async () => {
+    try {
+      const response = await api.post('/api/client/sync-dashboard-data');
+      return response.data;
+    } catch (error) {
+      console.error('Error syncing dashboard data:', error);
+      throw error;
+    }
+  },
+  
   getStorageStatistics: async () => {
     try {
       const response = await api.get('/api/analytics/storage');

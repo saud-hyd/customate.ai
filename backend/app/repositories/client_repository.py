@@ -110,18 +110,23 @@ class ClientRepository(BaseRepository[Client, Dict[str, Any], Dict[str, Any]]):
         settings_repo = ClientSettingsRepository()
         settings_repo.create(db, obj_in={"client_id": db_obj.client_id})
         
-        # Create a default trial subscription
+        # Create a free subscription instead of trial
         sub_repo = SubscriptionRepository()
-        from datetime import datetime, timedelta
+        
+        # Get free plan limits
+        plan_type = "free"
+        storage_bytes = int(0.5 * 1024 * 1024)  # 500KB in bytes
         
         sub_repo.create(db, obj_in={
             "client_id": db_obj.client_id,
-            "plan_type": "trial",
+            "plan_type": plan_type,  # Changed from "trial"
             "status": "active",
-            "message_limit": 1000,
-            "user_limit": 10,
+            "message_limit": 100,  # New free tier limit
+            "user_limit": 5,
+            "storage_limit_bytes": storage_bytes,
             "starts_at": datetime.utcnow(),
-            "expires_at": datetime.utcnow() + timedelta(days=30)
+            "expires_at": None,  # Free plans don't expire
+            "is_trial": False
         })
         
         return db_obj

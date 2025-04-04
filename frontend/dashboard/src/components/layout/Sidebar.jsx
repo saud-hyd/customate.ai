@@ -4,10 +4,12 @@ import { NavLink } from 'react-router-dom';
 const Sidebar = () => {
   return (
     <div className="w-64 min-h-screen bg-indigo-700 text-white flex flex-col">
-      {/* Logo Header */}
-      <div className="p-4 flex items-center">
-        <img src="/customate-ai.svg" alt="Customate.ai" className="h-8 w-8" />
-        <h1 className="ml-3 text-xl font-bold">Customate.ai</h1>
+      {/* Enhanced Logo Header */}
+      <div className="bg-indigo-800 p-4 flex items-center border-b border-indigo-600 shadow-sm">
+        <div className="flex items-center">
+          <img src="/images/customate.ai/jose_logo.svg" alt="Customate.ai" className="h-9 w-9 bg-white p-1.5 rounded-full" />
+          <h1 className="ml-3 text-xl font-bold text-white">Customate.ai</h1>
+        </div>
       </div>
       
       {/* Navigation Links */}

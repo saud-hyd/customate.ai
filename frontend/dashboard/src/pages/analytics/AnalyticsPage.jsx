@@ -21,11 +21,12 @@ const AnalyticsPage = () => {
     chat: null,
     knowledge: null,
     subscription: null,
-    subscriptionLimits: null, // Add this to store limits data
+    subscriptionLimits: null,
     api: null
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(null);
 
   // Tabs configuration
   const tabs = [
@@ -56,6 +57,22 @@ const AnalyticsPage = () => {
     }
   }, [activeTab, dateRange]);
 
+  // Sync data and fix message counts before fetching analytics
+  const syncDataBeforeFetch = async () => {
+    try {
+      // Sync dashboard data first to get up-to-date metrics
+      await analyticsService.syncDashboardData();
+      
+      // Fix message counts to ensure accurate metrics
+      await analyticsService.fixMessageCounts();
+      
+      return true;
+    } catch (err) {
+      console.warn('Data sync failed - continuing with data fetch:', err);
+      return false;
+    }
+  };
+
   // Fetch analytics data based on active tab and date range
   const fetchAnalyticsData = async () => {
     try {
@@ -64,6 +81,9 @@ const AnalyticsPage = () => {
   
       // Calculate days between start and end dates
       const days = Math.round((dateRange.end - dateRange.start) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // Always sync data first
+      await syncDataBeforeFetch();
       
       switch (activeTab) {
         case 'overview':
@@ -170,6 +190,9 @@ const AnalyticsPage = () => {
           
         case 'engagement':
           try {
+            // First sync data to get accurate metrics
+            await analyticsService.fixMessageCounts();
+            
             const chatData = await analyticsService.getChatPerformance(days);
             setAnalyticsData({
               ...analyticsData,
@@ -196,6 +219,9 @@ const AnalyticsPage = () => {
           
         case 'subscription':
           try {
+            // First sync data to get accurate metrics
+            await analyticsService.fixMessageCounts();
+            
             const subscriptionData = await analyticsService.getSubscriptionUsage(
               Math.ceil(days / 30) // Convert days to months
             );
@@ -257,6 +283,9 @@ const AnalyticsPage = () => {
         default:
           console.warn(`Unknown tab: ${activeTab}`);
       }
+      
+      // Update last refresh timestamp
+      setLastRefresh(new Date());
     } catch (err) {
       console.error('Error fetching analytics data:', err);
       setError('Failed to load analytics data. Please try again later.');
@@ -356,36 +385,16 @@ const AnalyticsPage = () => {
     <div className="space-y-6">
       {/* Page header */}
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Monitor your chatbot performance and usage metrics
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Monitor your chatbot performance and usage metrics
+          </p>
+          {lastRefresh && (
+            <p className="mt-2 text-xs text-gray-500">
+              Last updated: {lastRefresh.toLocaleTimeString()}
             </p>
-          </div>
-          
-          {/* Date range picker button */}
-          <div className="mt-4 md:mt-0 relative">
-            <button
-              type="button"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-            >
-              <CalendarIcon className="-ml-1 mr-2 h-5 w-5 text-gray-500" />
-              {dateRange.label || `${dateRange.start?.toLocaleDateString()} - ${dateRange.end?.toLocaleDateString()}`}
-            </button>
-            
-            {/* Date range picker dropdown */}
-            {isDatePickerOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                <DateRangePicker 
-                  currentRange={dateRange}
-                  onRangeSelect={handleDateRangeChange}
-                  onClose={() => setIsDatePickerOpen(false)}
-                />
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
