@@ -20,6 +20,8 @@ sqlalchemy-utils>=0.38.2
 pydantic-settings>=2.0.0
 aiofiles>=0.8.0
 PyPDF2
+python-docx
+
 
 
 
