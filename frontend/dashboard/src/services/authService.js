@@ -1,4 +1,8 @@
+// frontend/dashboard/src/services/authService.js
 import api from './api';
+
+// Use environment variable with fallback to the production URL
+const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
 
 const authService = {
   // Login with email and password
@@ -69,7 +73,8 @@ const authService = {
   async initiateGoogleAuth(isRegistration = false) {
     // This will redirect the browser to Google's OAuth page
     const redirectUri = `${window.location.origin}/auth/callback`;
-    window.location.href = `/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=${isRegistration}`;
+    // FIXED: Use absolute URL with API_URL instead of relative URL
+    window.location.href = `${API_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=${isRegistration}`;
     return true;
   },
   
