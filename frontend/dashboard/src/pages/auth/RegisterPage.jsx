@@ -1,8 +1,12 @@
+// frontend/dashboard/src/pages/auth/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { useToast } from '../../context/ToastContext';
 import useAuth from '../../hooks/useAuth';
+
+// Use environment variable with fallback to the production URL
+const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -57,7 +61,8 @@ const RegisterPage = () => {
   const handleGoogleLogin = () => {
     console.log('Initiating Google login...');
     const redirectUri = `${window.location.origin}/auth/callback`;
-    const authUrl = `http://localhost:8000/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=false`;
+    // FIXED: Use API_URL instead of hardcoded localhost URL and set is_registration to true
+    const authUrl = `${API_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=true`;
     console.log('Redirecting to:', authUrl);
     window.location.href = authUrl;
   };
