@@ -29,7 +29,7 @@ const TestChatbotPage = () => {
     resetOnPageRefresh: true,
     sessionTimeout: 30,
     apiKey: "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50", // Default API key (will be replaced)
-    apiUrl: 'http://localhost:8000', // Backend URL
+    apiUrl: process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com', // Backend URL
     // Initial message to show
     greeting: "Hi there! I'm your Customate.AI assistant. How can I help you today?",
     // LLM settings
