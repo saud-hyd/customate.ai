@@ -69,12 +69,28 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:5173", "test:1"],
+    allow_origins=[
+        # Local development URLs
+        "http://localhost:3000", 
+        "http://localhost:3001", 
+        "http://localhost:3002", 
+        "http://localhost:5173",
+        
+        # Vercel deployment URLs
+        "https://customate-g3wug6ubm-saud-hyds-projects.vercel.app",  # Login page URL
+        "https://customate-16bvgs9s9-saud-hyds-projects.vercel.app",  # Register page URL
+        "https://customate.vercel.app",                               # In case you use a custom domain
+        "https://customate-ai-1.onrender.com",                        # Your Render URL
+        
+        # For testing/development
+        "test:1"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"]
 )
+
 
 # Add middleware (order matters)
 app.add_middleware(ClientContextMiddleware) 
