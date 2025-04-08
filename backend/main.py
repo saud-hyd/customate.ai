@@ -77,13 +77,19 @@ app.add_middleware(
         "http://localhost:5173",
         
         # Vercel deployment URLs
-        "https://customate-g3wug6ubm-saud-hyds-projects.vercel.app",  # Login page URL
-        "https://customate-16bvgs9s9-saud-hyds-projects.vercel.app",  # Register page URL
-        "https://customate.vercel.app",                               # In case you use a custom domain
-        "https://customate-ai-1.onrender.com",                        # Your Render URL
+        "https://customate.vercel.app",
+        "https://customate-ai.vercel.app",
+        "https://customate-ai-git-develop-saud-hyds-projects.vercel.app",
+        "https://customate-ai-git-develop-saud-hyds-projects.vercel.app",
+        "https://customate-lyw0rsjn0-saud-hyds-projects.vercel.app",
+        "https://customate-16bvgs9s9-saud-hyds-projects.vercel.app",
+        "https://customate-g3wug6ubm-saud-hyds-projects.vercel.app",
         
-        # For testing/development
-        "test:1"
+        # Render backend URL for same-origin requests
+        "https://customate-ai-1.onrender.com",
+        
+        # Accept all subdomains as a fallback
+        "https://*.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
