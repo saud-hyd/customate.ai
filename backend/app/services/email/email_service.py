@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any
 import logging
 from datetime import datetime
+import os
 
 from app.core.config.settings import settings
 
@@ -29,12 +30,19 @@ class EmailService:
         """Send an email using SMTP."""
         try:
             # For development/debugging - log instead of sending
-            if settings.DEBUG:
-                logger.info(f"[DEBUG] Email to: {recipient}")
-                logger.info(f"[DEBUG] Subject: {subject}")
-                logger.info(f"[DEBUG] Body HTML: {body_html[:100]}...")
+            # Check if we're in production environment (on Render)
+            in_production = os.environ.get('RENDER', False) or os.environ.get('PRODUCTION', False)
+            
+            # Always log email details
+            logger.info(f"Email to: {recipient}")
+            logger.info(f"Subject: {subject}")
+            
+            # If in development and not in production, only log
+            if settings.DEBUG and not in_production:
+                logger.info(f"[DEBUG] Email NOT sent (debug mode). Body HTML: {body_html[:100]}...")
                 return True
                 
+            # In production or when DEBUG is False, actually send the email
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
             message["From"] = self.sender_email
