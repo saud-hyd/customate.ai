@@ -1,4 +1,4 @@
-// frontend/dashboard/src/services/authService.js
+// Path: frontend/dashboard/src/services/authService.js
 import api from './api';
 
 // Use environment variable with fallback to the production URL
@@ -55,7 +55,9 @@ const authService = {
   // Verify magic link token
   async verifyMagicLink(token) {
     try {
+      console.log('Verifying magic link token:', token);
       const response = await api.get(`/api/auth/magic-link/verify?token=${token}`);
+      console.log('Magic link verification response:', response.data);
       
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
@@ -73,7 +75,7 @@ const authService = {
   async initiateGoogleAuth(isRegistration = false) {
     // This will redirect the browser to Google's OAuth page
     const redirectUri = `${window.location.origin}/auth/callback`;
-    // FIXED: Use absolute URL with API_URL instead of relative URL
+    // Use absolute URL with API_URL
     window.location.href = `${API_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=${isRegistration}`;
     return true;
   },

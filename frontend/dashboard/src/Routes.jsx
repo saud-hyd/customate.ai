@@ -1,3 +1,4 @@
+// Path: frontend/dashboard/src/Routes.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
@@ -8,6 +9,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 // Page components
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import VerifyMagicLinkPage from './pages/auth/VerifyMagicLinkPage'; // Import the new component
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ChatPage from './pages/chat/ChatPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
@@ -84,6 +86,15 @@ const AppRoutes = () => {
         element={
           <GuestRoute>
             <RegisterPage />
+          </GuestRoute>
+        } 
+      />
+      {/* Add new route for magic link verification */}
+      <Route 
+        path="/auth/verify" 
+        element={
+          <GuestRoute>
+            <VerifyMagicLinkPage />
           </GuestRoute>
         } 
       />
