@@ -172,3 +172,58 @@ class EmailService:
         """
         
         return self.send_email(recipient, subject, html, text)
+    
+    def send_password_reset_email(self, recipient: str, reset_link_url: str) -> bool:
+        """
+        Send password reset email.
+        
+        Args:
+            recipient: Email address to send to
+            reset_link_url: The full URL for the password reset link
+            
+        Returns:
+            Boolean indicating success
+        """
+        subject = "Reset Your Password - Customate.ai"
+        
+        # HTML body
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #4f46e5;">Customate.ai</h1>
+                </div>
+                <div style="background-color: #f9fafb; padding: 20px; border-radius: 5px;">
+                    <h2>Reset Your Password</h2>
+                    <p>You requested to reset your password. Click the button below to set a new password:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{reset_link_url}" style="background-color: #4f46e5; color: white; font-size: 16px; font-weight: bold; padding: 12px 24px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p>This link will expire in 15 minutes for security reasons.</p>
+                    <p>If you didn't request a password reset, you can safely ignore this email.</p>
+                </div>
+                <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280;">
+                    <p>© 2025 Customate.ai. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text body
+        text = f"""
+        Reset Your Password - Customate.ai
+        
+        You requested to reset your password. Use the following link to set a new password:
+        
+        {reset_link_url}
+        
+        This link will expire in 15 minutes for security reasons.
+        
+        If you didn't request a password reset, you can safely ignore this email.
+        """
+        
+        return self.send_email(recipient, subject, html, text)

@@ -8,6 +8,8 @@ const authService = {
   // Login with email and password
   async login(email, password) {
     try {
+      console.log('Attempting login for:', email);
+      
       const response = await api.post('/api/auth/token', 
         new URLSearchParams({
           'username': email,
@@ -23,11 +25,19 @@ const authService = {
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('apiKey', response.data.api_key || password);
+        console.log('Login successful, stored token and API key');
       }
       
       return response.data;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error details:', error.response?.data || error.message);
+      
+      // If the error is 401 Unauthorized, try to get the API key via magic link
+      if (error.response?.status === 401 && email) {
+        console.log('Login failed, suggesting magic link instead');
+        throw new Error('Login failed. Try using "Magic Link" login option instead, or reset your password.');
+      }
+      
       throw error;
     }
   },
@@ -35,6 +45,8 @@ const authService = {
   // Request magic link
   async requestMagicLink(email, isRegistration = false) {
     try {
+      console.log('Requesting magic link for:', email, 'isRegistration:', isRegistration);
+      
       const formData = new URLSearchParams();
       formData.append('email', email);
       formData.append('is_registration', isRegistration);
@@ -45,9 +57,10 @@ const authService = {
         }
       });
       
+      console.log('Magic link requested successfully');
       return response.data;
     } catch (error) {
-      console.error('Error requesting magic link:', error);
+      console.error('Error requesting magic link:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -55,24 +68,27 @@ const authService = {
   // Verify magic link token
   async verifyMagicLink(token) {
     try {
-      console.log('Verifying magic link token:', token);
+      console.log('Verifying magic link token');
       const response = await api.get(`/api/auth/magic-link/verify?token=${token}`);
       console.log('Magic link verification response:', response.data);
       
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('clientId', response.data.client_id);
+        console.log('Stored auth data from magic link');
       }
       
       return response.data;
     } catch (error) {
-      console.error('Error verifying magic link:', error);
+      console.error('Error verifying magic link:', error.response?.data || error.message);
       throw error;
     }
   },
   
   // Initiate Google OAuth flow
   async initiateGoogleAuth(isRegistration = false) {
+    console.log('Initiating Google auth, isRegistration:', isRegistration);
     // This will redirect the browser to Google's OAuth page
     const redirectUri = `${window.location.origin}/auth/callback`;
     // Use absolute URL with API_URL
@@ -83,16 +99,19 @@ const authService = {
   // Handle OAuth callback
   async handleOAuthCallback(params) {
     try {
+      console.log('Handling OAuth callback');
       const response = await api.get(`/api/auth/oauth/callback?${new URLSearchParams(params).toString()}`);
       
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('clientId', response.data.client_id);
+        console.log('OAuth login successful');
       }
       
       return response.data;
     } catch (error) {
-      console.error('OAuth callback error:', error);
+      console.error('OAuth callback error:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -100,6 +119,7 @@ const authService = {
   // Register with email and password
   async register(userData) {
     try {
+      console.log('Registering user:', userData.email);
       // Format data for API
       const formData = new URLSearchParams();
       formData.append('email', userData.email);
@@ -118,11 +138,33 @@ const authService = {
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('clientId', response.data.client_id);
+        console.log('Registration successful');
       }
       
       return response.data;
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+  
+  // Request password reset
+  async requestPasswordReset(email) {
+    try {
+      console.log('Requesting password reset for:', email);
+      const formData = new URLSearchParams();
+      formData.append('email', email);
+      
+      const response = await api.post('/api/auth/password-reset/request', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error requesting password reset:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -130,9 +172,12 @@ const authService = {
   // Get current logged-in client information
   async getCurrentClient() {
     try {
+      console.log('Getting current client info');
       const response = await api.get('/api/client');
+      console.log('Current client info retrieved');
       return response.data;
     } catch (error) {
+      console.error('Error getting client info:', error.response?.data || error.message);
       // If API call fails, we're not logged in
       throw error;
     }
@@ -140,6 +185,7 @@ const authService = {
   
   // Logout
   logout() {
+    console.log('Logging out');
     localStorage.removeItem('token');
     localStorage.removeItem('apiKey');
     localStorage.removeItem('clientId');

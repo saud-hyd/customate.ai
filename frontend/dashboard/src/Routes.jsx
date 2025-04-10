@@ -9,7 +9,9 @@ import DashboardLayout from './components/layout/DashboardLayout';
 // Page components
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import VerifyMagicLinkPage from './pages/auth/VerifyMagicLinkPage'; // Import the new component
+import VerifyMagicLinkPage from './pages/auth/VerifyMagicLinkPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ChatPage from './pages/chat/ChatPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
@@ -95,6 +97,22 @@ const AppRoutes = () => {
         element={
           <GuestRoute>
             <VerifyMagicLinkPage />
+          </GuestRoute>
+        } 
+      />
+      <Route 
+        path="/forgot-password" 
+        element={
+          <GuestRoute>
+            <ForgotPasswordPage />
+          </GuestRoute>
+        } 
+      />
+      <Route 
+        path="/reset-password" 
+        element={
+          <GuestRoute>
+            <ResetPasswordPage />
           </GuestRoute>
         } 
       />

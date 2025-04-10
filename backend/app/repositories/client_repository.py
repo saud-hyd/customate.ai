@@ -286,3 +286,35 @@ class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[s
             "total_day": daily,
             "active_subscriptions": len(active_subs)
         }
+        
+    # Add this method to backend/app/repositories/client_repository.py
+
+    def update_api_key(self, db: Session, client_id: str, new_api_key: str) -> bool:
+        """
+        Update the API key (password) for a client.
+        
+        Args:
+            db: Database session
+            client_id: Client ID
+            new_api_key: New API key
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            client = db.query(Client).filter(Client.client_id == client_id).first()
+            
+            if not client:
+                return False
+            
+            client.api_key = new_api_key
+            client.updated_at = datetime.utcnow()
+            
+            db.add(client)
+            db.commit()
+            
+            return True
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error updating API key: {str(e)}")
+            return False        
