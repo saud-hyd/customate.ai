@@ -1,7 +1,7 @@
 // Path: frontend/dashboard/src/pages/auth/ResetPasswordPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import api from '../../services/api';
+import authService from '../../services/authService';
 import { useToast } from '../../context/ToastContext';
 
 const ResetPasswordPage = () => {
@@ -38,21 +38,8 @@ const ResetPasswordPage = () => {
     setIsResetting(true);
     
     try {
-      const formData = new URLSearchParams();
-      formData.append('token', token);
-      formData.append('new_password', password);
-      
-      const response = await api.post('/api/auth/password-reset/verify', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-      
-      // Store auth tokens
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
-      }
+      // Use authService instead of direct API call
+      const response = await authService.verifyPasswordReset(token, password);
       
       toast.success('Password reset successful! Redirecting to dashboard...');
       

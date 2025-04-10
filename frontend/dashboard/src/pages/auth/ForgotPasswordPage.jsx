@@ -21,11 +21,15 @@ const ForgotPasswordPage = () => {
     setIsSubmitting(true);
     
     try {
+      // Use authService instead of direct API call
       await authService.requestPasswordReset(email);
       setIsRequestSent(true);
+      toast.success(`Password reset link sent to ${email}`);
     } catch (error) {
       console.error('Error requesting password reset:', error);
-      toast.error('Failed to send password reset email. Please try again.');
+      // Don't reveal if the email exists or not for security
+      // Still show success message to prevent enumeration attacks
+      setIsRequestSent(true);
     } finally {
       setIsSubmitting(false);
     }

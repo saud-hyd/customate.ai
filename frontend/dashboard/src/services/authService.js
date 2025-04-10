@@ -168,6 +168,33 @@ const authService = {
       throw error;
     }
   },
+
+  async verifyPasswordReset(token, newPassword) {
+    try {
+      console.log('Verifying password reset token and setting new password');
+      const formData = new URLSearchParams();
+      formData.append('token', token);
+      formData.append('new_password', newPassword);
+      
+      const response = await api.post('/api/auth/password-reset/verify', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('clientId', response.data.client_id);
+        console.log('Password reset successful, stored auth data');
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error verifying password reset:', error.response?.data || error.message);
+      throw error;
+    }
+  },
   
   // Get current logged-in client information
   async getCurrentClient() {

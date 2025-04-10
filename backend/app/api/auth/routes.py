@@ -475,7 +475,7 @@ async def request_password_reset(
             detail="Failed to process password reset request"
         )
 
-@router.post("/password-reset/reset", response_model=Dict[str, Any])
+@router.post("/password-reset/verify", response_model=Dict[str, Any])
 async def reset_password(
     token: str = Form(...),
     new_password: str = Form(...),
@@ -514,18 +514,29 @@ async def reset_password(
                 detail="User not found"
             )
         
-        # Update password (API key)
-        client.api_key = new_password
-        db.add(client)
-        db.commit()
+        # Use the update_api_key method instead of direct database manipulation
+        success = client_repo.update_api_key(db, client.client_id, new_password)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update password"
+            )
         
         # Mark token as used
         token_repo.use_token(db, email, token)
         
         logger.info(f"Password reset successful for {email}")
         
+        # Create access token for auto-login
+        access_token = create_access_token(data={"sub": client.client_id, "email": client.email})
+        
         return {
-            "message": "Password reset successful. You can now log in with your new password."
+            "message": "Password reset successful. You can now log in with your new password.",
+            "access_token": access_token,
+            "token_type": "bearer",
+            "client_id": client.client_id,
+            "api_key": new_password
         }
     except HTTPException:
         raise
@@ -534,4 +545,4 @@ async def reset_password(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to reset password"
-        )        
+        )
