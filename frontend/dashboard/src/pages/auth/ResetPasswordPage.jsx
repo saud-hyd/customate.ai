@@ -1,7 +1,7 @@
 // Path: frontend/dashboard/src/pages/auth/ResetPasswordPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import authService from '../../services/authService';
+import api from '../../services/api'; // Add this import for direct API calls
 import { useToast } from '../../context/ToastContext';
 
 const ResetPasswordPage = () => {

@@ -165,21 +165,34 @@ async def verify_magic_link(
     client_repo = ClientRepository()
     
     try:
+        logger.info(f"Verifying magic link token: {token[:10]}...")
+        
         # Verify token JWT
-        token_data = verify_magic_link_token(token)
+        try:
+            token_data = verify_magic_link_token(token)
+            logger.info(f"Token data decoded: {token_data}")
+        except Exception as e:
+            logger.error(f"Magic link token verification failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid magic link - token verification failed"
+            )
+        
         email = token_data.get("sub")
         is_registration = token_data.get("is_registration", False)
         
         if not email:
+            logger.error("Magic link token missing subject (email) claim")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid magic link"
+                detail="Invalid magic link - missing email"
             )
         
         # Check if token exists in database and is valid
         if not token_repo.verify_token(db, email, token):
+            logger.error(f"Magic link token not found in database or expired: {token[:10]}...")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired magic link"
             )
         
@@ -202,6 +215,7 @@ async def verify_magic_link(
             client = client_repo.create(db, obj_in=client_data)
             logger.info(f"Created new client via magic link: {client.client_id}")
         elif not client:
+            logger.error(f"No account found with email: {email}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No account found with this email"
@@ -219,13 +233,15 @@ async def verify_magic_link(
             "name": client.name
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error verifying magic link: {str(e)}")
+        logger.error(f"Error verifying magic link: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired magic link"
         )
-
+        
 @router.get("/google/login")
 async def login_with_google(
     redirect_uri: str,
