@@ -38,8 +38,35 @@ const ResetPasswordPage = () => {
     setIsResetting(true);
     
     try {
-      // Use authService instead of direct API call
-      const response = await authService.verifyPasswordReset(token, password);
+      console.log('Starting password reset with token:', token);
+      
+      // Check that token exists
+      if (!token) {
+        throw new Error('Missing reset token');
+      }
+      
+      // Prepare form data
+      const formData = new URLSearchParams();
+      formData.append('token', token);
+      formData.append('new_password', password);
+      
+      console.log('Making API call to verify reset token and set password');
+      
+      const response = await api.post('/api/auth/password-reset/verify', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      
+      console.log('Reset password response:', response.data);
+      
+      // Store tokens for automatic login
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('clientId', response.data.client_id || '');
+        console.log('Stored authentication data from response');
+      }
       
       toast.success('Password reset successful! Redirecting to dashboard...');
       
@@ -50,8 +77,19 @@ const ResetPasswordPage = () => {
       
     } catch (error) {
       console.error('Error resetting password:', error);
-      setIsTokenValid(false);
-      toast.error('Failed to reset password. The link may be expired or invalid.');
+      
+      // Extract error message if available
+      const errorMsg = error.response?.data?.detail || 
+                       error.message || 
+                       'Failed to reset password. The link may be expired or invalid.';
+      
+      // Show specific error message
+      toast.error(errorMsg);
+      
+      // If it's an authentication or token issue, mark token as invalid
+      if (error.response?.status === 401 || error.response?.status === 400 || errorMsg.includes('token')) {
+        setIsTokenValid(false);
+      }
     } finally {
       setIsResetting(false);
     }

@@ -100,16 +100,40 @@ def create_magic_link_token(data: Dict[str, Any]) -> str:
 def verify_magic_link_token(token: str) -> Dict[str, Any]:
     """
     Verify a magic link token.
+    
+    Args:
+        token: JWT token to verify
+        
+    Returns:
+        Dict containing token claims
+        
+    Raises:
+        HTTPException: If token is invalid or expired
     """
     try:
+        # Use a more explicit expiration error handling
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        
+        # Log successful token verification
+        logger.info(f"Successfully verified token: {token[:10]}...")
+        logger.debug(f"Token payload: {payload}")
+        
         return payload
-    except JWTError:
+    except jwt.ExpiredSignatureError:
+        logger.error(f"Token expired: {token[:10]}...")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
+            detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    except jwt.InvalidTokenError as e:
+        logger.error(f"Invalid token: {token[:10]}... Error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
 
 def encode_state_data(data: Dict[str, Any]) -> str:
     """
