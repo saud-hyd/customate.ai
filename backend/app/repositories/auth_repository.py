@@ -37,44 +37,38 @@ class MagicLinkTokenRepository:
         logger.info(f"Verifying token for email: {email}, token: {token[:10]}...")
         
         try:
-            token_entity = db.query(MagicLinkToken).filter(
+            # First check if token exists at all
+            any_token = db.query(MagicLinkToken).filter(
+                MagicLinkToken.email == email,
+                MagicLinkToken.token == token
+            ).first()
+            
+            if not any_token:
+                logger.error(f"No token found for email: {email}")
+                return False
+                
+            # Now check if it's valid (not used and not expired)
+            valid_token = db.query(MagicLinkToken).filter(
                 MagicLinkToken.email == email,
                 MagicLinkToken.token == token,
                 MagicLinkToken.used == False,
                 MagicLinkToken.expires_at > datetime.utcnow()
             ).first()
             
-            if token_entity:
-                logger.info(f"Token found and valid for {email}")
+            if valid_token:
                 return True
-            
-            # Check if token exists but is used or expired for better error messages
-            used_token = db.query(MagicLinkToken).filter(
-                MagicLinkToken.email == email,
-                MagicLinkToken.token == token,
-                MagicLinkToken.used == True
-            ).first()
-            
-            if used_token:
-                logger.error(f"Token found but already used for {email}")
-                return False
-            
-            expired_token = db.query(MagicLinkToken).filter(
-                MagicLinkToken.email == email,
-                MagicLinkToken.token == token,
-                MagicLinkToken.expires_at <= datetime.utcnow()
-            ).first()
-            
-            if expired_token:
-                logger.error(f"Token found but expired for {email}, expired at: {expired_token.expires_at}")
-                return False
-            
-            logger.error(f"No matching token found for {email}")
+                
+            # Token exists but is either used or expired
+            if any_token.used:
+                logger.error(f"Token for {email} has already been used")
+            if any_token.expires_at <= datetime.utcnow():
+                logger.error(f"Token for {email} expired at {any_token.expires_at}")
+                
             return False
         except Exception as e:
-            logger.error(f"Error verifying token: {str(e)}")
-            return False
-    
+            logger.error(f"Error verifying token: {str(e)}", exc_info=True)
+            return False    
+        
     def use_token(self, db: Session, email: str, token: str) -> bool:
         """Mark token as used."""
         token_entity = db.query(MagicLinkToken).filter(

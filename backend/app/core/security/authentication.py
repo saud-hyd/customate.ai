@@ -139,7 +139,6 @@ def verify_magic_link_token(token: str) -> Dict[str, Any]:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
 def encode_state_data(data: Dict[str, Any]) -> str:
     """
     Encode state data for OAuth flow.

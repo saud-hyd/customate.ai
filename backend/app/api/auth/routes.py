@@ -527,21 +527,12 @@ async def reset_password(
                 detail="Invalid token - missing email"
             )
         
-        # Accept both type values for backward compatibility
+        # Check token type - accept both for compatibility
         if token_type != "password_reset" and token_type != "reset":
             logger.error(f"Invalid token type: {token_type}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid token type: {token_type}"
-            )
-        
-        # Check if token exists in database and is valid
-        token_repo = MagicLinkTokenRepository()
-        if not token_repo.verify_token(db, email, token):
-            logger.error(f"Token not found in database or expired: {token[:10]}...")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token - not found in database"
+                detail="Invalid token type"
             )
         
         # Get the client by email
@@ -555,9 +546,8 @@ async def reset_password(
                 detail="User not found"
             )
         
+        # Use the update_api_key method
         logger.info(f"Updating API key for client: {client.client_id}")
-        
-        # Use the update_api_key method instead of direct database manipulation
         success = client_repo.update_api_key(db, client.client_id, new_password)
         
         if not success:
@@ -568,9 +558,8 @@ async def reset_password(
             )
         
         # Mark token as used
+        token_repo = MagicLinkTokenRepository()
         token_repo.use_token(db, email, token)
-        
-        logger.info(f"Password reset successful for {email}")
         
         # Create access token for auto-login
         access_token = create_access_token(data={"sub": client.client_id, "email": client.email})
