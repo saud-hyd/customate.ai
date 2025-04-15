@@ -1,5 +1,6 @@
 // Path: frontend/dashboard/src/services/authService.js
 import api from './api';
+import axios from 'axios';
 
 // Use environment variable with fallback to the production URL
 const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
@@ -24,7 +25,7 @@ const authService = {
           }
         }
       );
-            
+
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('apiKey', response.data.api_key || password);
