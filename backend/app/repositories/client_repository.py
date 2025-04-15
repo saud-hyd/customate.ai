@@ -289,36 +289,36 @@ class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[s
         
     # Add this method to backend/app/repositories/client_repository.py
 
-def update_api_key(self, db: Session, client_id: str, new_api_key: str) -> bool:
-    """
-    Update a client's API key (password).
-    
-    Args:
-        db: Database session
-        client_id: Client ID to update
-        new_api_key: New API key to set
+    def update_api_key(self, db: Session, client_id: str, new_api_key: str) -> bool:
+        """
+        Update a client's API key (password).
         
-    Returns:
-        Boolean indicating success or failure
-    """
-    try:
-        # Find the client by client_id
-        client = self.get_by_client_id(db, client_id)
-        
-        if not client:
-            logger.error(f"No client found with ID: {client_id}")
+        Args:
+            db: Database session
+            client_id: Client ID to update
+            new_api_key: New API key to set
+            
+        Returns:
+            Boolean indicating success or failure
+        """
+        try:
+            # Find the client by client_id
+            client = self.get_by_client_id(db, client_id)
+            
+            if not client:
+                logger.error(f"No client found with ID: {client_id}")
+                return False
+            
+            # Update the API key
+            client.api_key = new_api_key
+            
+            # Save to database
+            db.add(client)
+            db.commit()
+            
+            logger.info(f"Successfully updated API key for client: {client_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error updating API key: {str(e)}")
+            db.rollback()
             return False
-        
-        # Update the API key
-        client.api_key = new_api_key
-        
-        # Save to database
-        db.add(client)
-        db.commit()
-        
-        logger.info(f"Successfully updated API key for client: {client_id}")
-        return True
-    except Exception as e:
-        logger.error(f"Error updating API key: {str(e)}")
-        db.rollback()
-        return False
