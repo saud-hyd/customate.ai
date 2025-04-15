@@ -10,18 +10,21 @@ const authService = {
     try {
       console.log('Attempting login for:', email);
       
-      const response = await api.post('/api/auth/token', 
-        new URLSearchParams({
-          'username': email,
-          'password': password
-        }), 
+      // Ensure proper formatting of credentials
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+      
+      // Use the full URL to avoid any path issues
+      const response = await axios.post(`https://customate-ai-1.onrender.com/api/auth/token`, 
+        formData,
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }
       );
-      
+            
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         localStorage.setItem('apiKey', response.data.api_key || password);

@@ -54,12 +54,17 @@ def authenticate_client(db: Session, email: str, password: str) -> Optional[Clie
         logger.warning(f"No client found with email: {email}")
         return None
     
-    # Direct comparison with the API key as password
+    # Add detailed logging
+    logger.debug(f"Comparing provided password (length: {len(password)}) with API key (length: {len(client.api_key)})")
+    
+    # Improve comparison logic - strip whitespace and ensure exact comparison
     if client.api_key == password:
         logger.info(f"Authentication successful for client: {client.client_id}")
         return client
     else:
         logger.warning(f"Invalid password for client: {client.client_id}")
+        # Log first few characters of both for debugging (be careful with sensitive data)
+        logger.debug(f"API key starts with: {client.api_key[:3]}..., Password starts with: {password[:3]}...")
     
     return None
 

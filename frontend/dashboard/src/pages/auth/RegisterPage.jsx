@@ -1,9 +1,10 @@
-// frontend/dashboard/src/pages/auth/RegisterPage.jsx
+// Path: frontend/dashboard/src/pages/auth/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { useToast } from '../../context/ToastContext';
 import useAuth from '../../hooks/useAuth';
+import api from '../../services/api'; // Add direct API import
 
 // Use environment variable with fallback to the production URL
 const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
@@ -16,7 +17,7 @@ const RegisterPage = () => {
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
-  const { registerWithEmailPassword, loginWithGoogle, sendMagicLink } = useAuth();
+  const { registerWithEmailPassword, loginWithGoogle } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -47,12 +48,50 @@ const RegisterPage = () => {
     
     setIsLoading(true);
     try {
-      await sendMagicLink(email, true); // 'true' indicates this is for registration
+      console.log('Requesting magic link for registration:', email);
+      
+      // Create form data
+      const formData = new URLSearchParams();
+      formData.append('email', email);
+      formData.append('is_registration', true);
+      
+      // Make the API call directly for better error handling
+      const response = await api.post('/api/auth/magic-link/request', 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      );
+      
+      console.log('Magic link response:', response.data);
+      
       setIsMagicLinkSent(true);
       toast.success('Magic link sent to your email!');
+      
+      // Check if this was treated as a login instead of registration
+      if (response.data.is_registration === false) {
+        toast.info('An account already exists with this email. We sent a login link instead.');
+      }
     } catch (error) {
-      toast.error('Failed to send magic link. Please try again.');
       console.error('Magic link error:', error);
+      
+      // Extract the error message
+      const errorMessage = error.response?.data?.detail || 
+                           error.message || 
+                           'Failed to send magic link. Please try again.';
+      
+      // Handle specific error cases
+      if (errorMessage.includes('already exists')) {
+        toast.error('An account with this email already exists. Try logging in instead.');
+      } else if (error.response?.status === 404) {
+        toast.error('No account found with this email.');
+      } else if (error.response?.status === 429) {
+        toast.error('Too many requests. Please try again later.');
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

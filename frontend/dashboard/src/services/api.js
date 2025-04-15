@@ -1,8 +1,8 @@
 // frontend/dashboard/src/services/api.js
 import axios from 'axios';
 
-// Use environment variable with fallback to the production URL
-const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
+// Explicitly set to your Render backend URL
+const API_URL = 'https://customate-ai-1.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
