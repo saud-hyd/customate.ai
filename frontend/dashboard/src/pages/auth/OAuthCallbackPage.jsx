@@ -12,6 +12,8 @@ const OAuthCallbackPage = () => {
   const toast = useToast();
 
   useEffect(() => {
+    console.log('OAuth callback page loaded with search params:', location.search);
+    
     const processCallback = async () => {
       try {
         // Get the query parameters
@@ -19,18 +21,35 @@ const OAuthCallbackPage = () => {
         
         // Check for error parameter
         if (queryParams.get('error')) {
-          throw new Error(queryParams.get('error_description') || 'Authentication failed');
+          const errorDescription = queryParams.get('error_description') || 'Authentication failed';
+          console.error('OAuth error from provider:', errorDescription);
+          throw new Error(errorDescription);
         }
+        
+        // Check if code parameter exists
+        if (!queryParams.get('code')) {
+          console.error('No authorization code found in callback');
+          throw new Error('Missing authorization code');
+        }
+        
+        console.log('Processing OAuth callback with code:', queryParams.get('code'));
         
         // Process the callback
         const result = await handleOAuthCallback(queryParams);
+        console.log('OAuth callback processed successfully:', result);
         
-        // Navigate to dashboard on success
+        // Show success message
         toast.success('Successfully authenticated!');
-        navigate('/dashboard');
+        
+        // Navigate to dashboard or onboarding based on whether this is a new user
+        const destination = result.is_new_user ? '/onboarding' : '/dashboard';
+        console.log(`Redirecting to ${destination}`);
+        navigate(destination);
       } catch (err) {
         console.error('OAuth callback error:', err);
         setError(err.message || 'Authentication failed');
+        
+        // Redirect to login after a delay
         setTimeout(() => {
           navigate('/login');
         }, 3000);
@@ -48,6 +67,7 @@ const OAuthCallbackPage = () => {
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
           <h2 className="text-2xl font-bold mb-4">Authenticating...</h2>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Please wait while we complete your authentication...</p>
         </div>
       </div>
     );

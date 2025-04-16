@@ -5,9 +5,6 @@ import useAuth from '../../hooks/useAuth';
 import { FcGoogle } from 'react-icons/fc';
 import { useToast } from '../../context/ToastContext';
 
-// Use environment variable with fallback to the production URL
-const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
-
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,11 +23,13 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
+      console.log('Attempting password login for:', email);
       await loginWithEmailPassword(email, password);
+      console.log('Login successful, redirecting to dashboard');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
       console.error('Login error:', error);
+      toast.error('Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -45,12 +44,13 @@ const LoginPage = () => {
     
     setIsLoading(true);
     try {
+      console.log('Requesting magic link for:', email);
       await sendMagicLink(email);
       setIsMagicLinkSent(true);
       toast.success('Magic link sent to your email!');
     } catch (error) {
-      toast.error('Failed to send magic link. Please try again.');
       console.error('Magic link error:', error);
+      toast.error('Failed to send magic link. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -58,11 +58,7 @@ const LoginPage = () => {
 
   const handleGoogleLogin = () => {
     console.log('Initiating Google login...');
-    const redirectUri = `${window.location.origin}/auth/callback`;
-    // Use the API_URL instead of the hardcoded localhost URL
-    const authUrl = `${API_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=false`;
-    console.log('Redirecting to:', authUrl);
-    window.location.href = authUrl;
+    loginWithGoogle(false); // false indicates this is not for registration
   };
 
   if (isMagicLinkSent) {
@@ -124,9 +120,9 @@ const LoginPage = () => {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
-              <a href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
+              <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <input
               type="password"
@@ -146,6 +142,16 @@ const LoginPage = () => {
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
           
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleMagicLinkRequest}
+              className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+              disabled={isLoading}
+            >
+              Sign in with magic link instead
+            </button>
+          </div>
         </form>
         
         <div className="mt-6">
