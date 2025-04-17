@@ -43,3 +43,5 @@ storage/*
 *.log
 backend/app.log.*
 backend/.env
+.env*
+
