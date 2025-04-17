@@ -88,6 +88,12 @@ app.add_middleware(
         # Render backend URL for same-origin requests
         "https://customate-ai-1.onrender.com",
         
+        # Custom domains - ADD THESE LINES
+        "https://customate.ai",
+        "https://app.customate.ai",
+        "http://customate.ai",
+        "http://app.customate.ai",
+        
         # Accept all subdomains as a fallback
         "https://*.vercel.app"
     ],
