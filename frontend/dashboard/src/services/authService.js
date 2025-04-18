@@ -20,8 +20,11 @@ const authService = {
       );
       
       if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key || password);
+        // Use api.updateAuthData instead of directly manipulating localStorage
+        api.updateAuthData(
+          response.data.access_token,
+          response.data.api_key || password
+        );
         console.log('Login successful, stored token and API key');
       }
       
@@ -61,8 +64,13 @@ const authService = {
       console.log('Magic link verification response:', response.data);
       
       if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
+        // Update auth data via api service
+        api.updateAuthData(
+          response.data.access_token,
+          response.data.api_key
+        );
+        
+        // Still store clientId in localStorage since our API service doesn't handle it
         localStorage.setItem('clientId', response.data.client_id);
         console.log('Stored auth data from magic link');
       }
@@ -94,8 +102,13 @@ const authService = {
       const response = await api.get(`/api/auth/oauth/callback?${queryString}`);
       
       if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
+        // Update auth data via api service
+        api.updateAuthData(
+          response.data.access_token,
+          response.data.api_key
+        );
+        
+        // Still store clientId in localStorage
         localStorage.setItem('clientId', response.data.client_id);
         console.log('OAuth login successful');
       }
@@ -126,8 +139,13 @@ const authService = {
       });
       
       if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
+        // Update auth data via api service
+        api.updateAuthData(
+          response.data.access_token,
+          response.data.api_key
+        );
+        
+        // Still store clientId in localStorage
         localStorage.setItem('clientId', response.data.client_id);
         console.log('Registration successful');
       }
@@ -153,13 +171,17 @@ const authService = {
   
   logout() {
     console.log('Logging out');
-    localStorage.removeItem('token');
-    localStorage.removeItem('apiKey');
+    // Use api.updateAuthData to clear auth data
+    api.updateAuthData(null, null);
+    
+    // Also clear clientId from localStorage
     localStorage.removeItem('clientId');
+    
     window.location.href = '/login';
   },
   
   isAuthenticated() {
+    // No need to change this since it just checks authentication status
     return !!localStorage.getItem('token') || !!localStorage.getItem('apiKey');
   }
 };

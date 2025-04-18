@@ -23,15 +23,44 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
+// FIX: Store a local reference to avoid reading from localStorage on every request
+let cachedApiKey = null;
+let cachedToken = null;
+
+// Load initial values
+try {
+  cachedApiKey = localStorage.getItem('apiKey');
+  cachedToken = localStorage.getItem('token');
+} catch (error) {
+  console.error('Error reading auth data from localStorage:', error);
+}
+
 api.interceptors.request.use(config => {
-  const apiKey = localStorage.getItem('apiKey');
-  if (apiKey) {
-    config.headers['X-API-Key'] = apiKey;
+  // Only read from localStorage if we don't have a cached value
+  if (!cachedApiKey) {
+    try {
+      cachedApiKey = localStorage.getItem('apiKey');
+    } catch (error) {
+      console.error('Error reading apiKey from localStorage:', error);
+    }
   }
   
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+  if (!cachedToken) {
+    try {
+      cachedToken = localStorage.getItem('token');
+    } catch (error) {
+      console.error('Error reading token from localStorage:', error);
+    }
+  }
+  
+  // Check if we have an API key now and add it to headers
+  if (cachedApiKey) {
+    config.headers['X-API-Key'] = cachedApiKey;
+  }
+  
+  // Check if we have a token now and add it to headers
+  if (cachedToken) {
+    config.headers['Authorization'] = `Bearer ${cachedToken}`;
   }
   
   return config;
@@ -39,19 +68,52 @@ api.interceptors.request.use(config => {
   return Promise.reject(error);
 });
 
+// Also update the response interceptor to update our cached values if they change
 api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
       console.error('Authentication error:', error);
+      
+      // Clear cached values
+      cachedApiKey = null;
+      cachedToken = null;
+      
       if (!window.location.pathname.includes('/login')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('apiKey');
+        try {
+          localStorage.removeItem('token');
+          localStorage.removeItem('apiKey');
+        } catch (err) {
+          console.error('Error clearing localStorage:', err);
+        }
         window.location.href = '/login';
       }
     }
     return Promise.reject(error);
   }
 );
+
+// Add method to update cached values when login/logout happens
+api.updateAuthData = (token, apiKey) => {
+  cachedToken = token;
+  cachedApiKey = apiKey;
+  
+  // Also update localStorage
+  try {
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
+    
+    if (apiKey) {
+      localStorage.setItem('apiKey', apiKey);
+    } else {
+      localStorage.removeItem('apiKey');
+    }
+  } catch (error) {
+    console.error('Error updating localStorage:', error);
+  }
+};
 
 export default api;

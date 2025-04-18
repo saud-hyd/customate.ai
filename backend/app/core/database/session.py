@@ -14,7 +14,7 @@ ssl_required = settings.DB_HOST != "localhost" and settings.DB_SSLMODE == "requi
 
 # Create SQLAlchemy engine with SSL if needed
 engine_args = {
-    "echo": settings.DEBUG,
+    "echo": False,
     "pool_pre_ping": True,
     "pool_recycle": 300,  # Recycle connections every 5 minutes
     "pool_timeout": 30,   # Connection timeout after 30 seconds

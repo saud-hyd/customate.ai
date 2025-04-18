@@ -4,7 +4,7 @@ import analyticsService from '../../services/analyticsService';
 import subscriptionService from '../../services/subscriptionService';
 import clientService from '../../services/clientService';
 import { formatNumber, formatPercentage, formatBytes } from '../../utils/formatters';
-import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
+import { ArrowUpIcon, ArrowDownIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 import { ExclamationTriangleIcon, CreditCardIcon, DocumentTextIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 
 const DashboardPage = () => {
@@ -44,48 +44,37 @@ const DashboardPage = () => {
   
   const [clientInfo, setClientInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [lastRefresh, setLastRefresh] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(analyticsService.lastSyncTime || null);
 
   useEffect(() => {
-    // Initial data fetch
-    fetchAllData();
-    
-    // Set up auto-refresh every 5 minutes
-    const refreshInterval = setInterval(() => {
-      fetchAllData();
-    }, 300000);
-    
-    // Cleanup interval when component unmounts
-    return () => {
-      clearInterval(refreshInterval);
-    };
+    // Initial data fetch without heavy operations
+    fetchAllData(false);
   }, []);
 
-  const fetchAllData = async () => {
+  const fetchAllData = async (forceSync = false) => {
     try {
       setLoading(true);
       setError(null);
       
-      // First get the fixed message counts using the correct API
-      let messageCountsFixed = null;
-      try {
-        // Use the sync dashboard data endpoint to get the most up-to-date metrics including today's activity
-        const syncResult = await analyticsService.syncDashboardData();
-        console.log('Dashboard data synced:', syncResult);
-        
-        // Store this so we can access the real-time today metrics
-        window.syncedDashboardData = syncResult;
-        
-        // Then get the fixed message counts
-        messageCountsFixed = await analyticsService.fixMessageCounts();
-        console.log('Message counts fixed:', messageCountsFixed);
-      } catch (err) {
-        console.warn('Automatic message count fix failed, continuing with regular data fetch:', err);
+      // Only perform heavy sync operations if forceSync is true
+      if (forceSync) {
+        setRefreshing(true);
+        try {
+          await analyticsService.refreshAllData();
+          setSuccess("Data refreshed successfully");
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err) {
+          console.error('Error refreshing data:', err);
+          setError('Failed to refresh data. Using cached data instead.');
+        } finally {
+          setRefreshing(false);
+        }
       }
       
-      // Fetch all necessary data 
+      // Fetch all necessary data using cached approach when possible
       const [overviewData, subscriptionInfo, clientData, storageData] = await Promise.all([
         analyticsService.getDashboardOverview(),
         subscriptionService.getCurrentSubscription(),
@@ -93,82 +82,13 @@ const DashboardPage = () => {
         analyticsService.getStorageStatistics()
       ]);
       
-      // Make sure we have the correct message counts from the fixed API
-      if (messageCountsFixed && messageCountsFixed.status === 'success') {
-        const assistantCount = messageCountsFixed.data.assistant_message_count;
-        
-        // For today's messages, check if we received today's metrics from syncDashboardData
-        let todayMessages = 0;
-        
-        // If we have syncDashboardData result from earlier, use it (it has the most accurate today values)
-        if (window.syncedDashboardData && window.syncedDashboardData.today && window.syncedDashboardData.today.messages) {
-          todayMessages = window.syncedDashboardData.today.messages;
-        } 
-        // Otherwise calculate based on ratio from original data
-        else if (overviewData && overviewData.today && overviewData.monthly) {
-          // If today is active (you've been using the chatbot today), ensure we show that activity
-          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-          const hasActivityToday = overviewData.today.messages > 0;
-          
-          if (hasActivityToday) {
-            // Use the original today value, but ensure it's not greater than the total
-            todayMessages = Math.min(overviewData.today.messages, assistantCount);
-          } else {
-            // Calculate proportionally if no activity today
-            const originalTotal = overviewData.monthly.total_messages || 1; // Avoid division by zero
-            const originalDailyRatio = (overviewData.today.messages || 0) / originalTotal;
-            todayMessages = Math.round(assistantCount * originalDailyRatio);
-            
-            // Ensure today's count doesn't exceed the monthly total
-            todayMessages = Math.min(todayMessages, assistantCount);
-          }
-        }
-        
-        // Update dashboard data with the correct message counts for both daily and monthly
-        setDashboardData({
-          ...overviewData,
-          today: {
-            ...overviewData.today,
-            messages: todayMessages
-          },
-          monthly: {
-            ...overviewData.monthly,
-            total_messages: assistantCount
-          }
-        });
-        
-        // Update subscription info with the correct count
-        if (subscriptionInfo) {
-          // Make sure the usage object exists and has the messages property
-          if (!subscriptionInfo.usage) {
-            subscriptionInfo.usage = {};
-          }
-          
-          if (!subscriptionInfo.usage.messages) {
-            subscriptionInfo.usage.messages = {
-              limit: 100, // Default limit
-              percentage: 0
-            };
-          }
-          
-          // Override the message count and recalculate percentage
-          subscriptionInfo.usage.messages.used = assistantCount;
-          const limit = subscriptionInfo.usage.messages.limit || 100;
-          subscriptionInfo.usage.messages.percentage = Math.min(100, (assistantCount / limit) * 100);
-          
-          console.log('Updated subscription info with fixed count:', assistantCount);
-        }
-      } else {
-        // If the fix didn't work, just use the original data
-        setDashboardData(overviewData);
-      }
-      
+      setDashboardData(overviewData);
       setSubscriptionData(subscriptionInfo);
       setClientInfo(clientData);
       setStorageStats(storageData);
       
-      // Update last refresh timestamp
-      setLastRefresh(new Date());
+      // Update last refresh timestamp to match the service's timestamp
+      setLastRefresh(analyticsService.lastSyncTime || new Date());
       
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -178,37 +98,9 @@ const DashboardPage = () => {
     }
   };
 
-  const syncMessageCounts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // First sync dashboard data to get the most up-to-date metrics including today's activity
-      await analyticsService.syncDashboardData();
-      
-      // Then call the fix-message-counts endpoint
-      const fixResult = await analyticsService.fixMessageCounts();
-      
-      if (fixResult.status === 'success') {
-        // Log the updated message count
-        console.log('Updated message count:', fixResult.data.assistant_message_count);
-        
-        // Force refresh all data immediately after the fix
-        await fetchAllData();
-        
-        // Show success message with the actual count
-        setSuccess(`Message counts updated to ${fixResult.data.assistant_message_count} assistant messages`);
-        
-        // Set a timeout to clear the success message
-        setTimeout(() => setSuccess(null), 3000);
-      }
-      
-    } catch (err) {
-      console.error('Error fixing message counts:', err);
-      setError('Failed to update message counts');
-    } finally {
-      setLoading(false);
-    }
+  const handleRefreshData = async () => {
+    // Trigger a full data refresh with sync operations
+    await fetchAllData(true);
   };
 
   const getUsageColor = (percentage) => {
@@ -257,16 +149,35 @@ const DashboardPage = () => {
     <div className="space-y-6">
       {/* Page header with refresh button */}
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Overview of your chatbot performance and subscription status.
-          </p>
-          {lastRefresh && (
-            <p className="mt-2 text-xs text-gray-500">
-              Last updated: {lastRefresh.toLocaleTimeString()}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Overview of your chatbot performance and subscription status.
             </p>
-          )}
+            {lastRefresh && (
+              <p className="mt-2 text-xs text-gray-500">
+                Last updated: {lastRefresh.toLocaleTimeString()}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={handleRefreshData}
+            disabled={refreshing}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 flex items-center"
+          >
+            {refreshing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <ArrowPathIcon className="h-4 w-4 mr-2" />
+                Refresh Data
+              </>
+            )}
+          </button>
         </div>
       </div>
 
