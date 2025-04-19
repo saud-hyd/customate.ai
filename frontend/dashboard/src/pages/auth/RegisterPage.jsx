@@ -4,10 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { useToast } from '../../context/ToastContext';
 import useAuth from '../../hooks/useAuth';
-import api from '../../services/api'; // Add direct API import
-
-// Use environment variable with fallback to the production URL
-const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
+import authService from '../../services/authService';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -17,9 +14,10 @@ const RegisterPage = () => {
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
-  const { registerWithEmailPassword, loginWithGoogle } = useAuth();
+  const { registerWithEmailPassword } = useAuth();
 
-  const handleRegister = async (e) => {
+  // Password registration handler (alternative to magic link)
+  const handlePasswordRegister = async (e) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
@@ -30,7 +28,7 @@ const RegisterPage = () => {
     setIsLoading(true);
     try {
       await registerWithEmailPassword(email, password);
-      navigate('/onboarding');
+      navigate('/dashboard');
     } catch (error) {
       toast.error('Registration failed. Please try again.');
       console.error('Registration error:', error);
@@ -39,6 +37,7 @@ const RegisterPage = () => {
     }
   };
 
+  // Magic link registration handler (primary method)
   const handleMagicLinkRequest = async (e) => {
     e.preventDefault();
     if (!email) {
@@ -50,37 +49,21 @@ const RegisterPage = () => {
     try {
       console.log('Requesting magic link for registration:', email);
       
-      // Create form data
-      const formData = new URLSearchParams();
-      formData.append('email', email);
-      formData.append('is_registration', true);
+      // Use authService instead of direct API calls
+      const response = await authService.requestMagicLink(email, true);
       
-      // Make the API call directly for better error handling
-      const response = await api.post('/api/auth/magic-link/request', 
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }
-      );
-      
-      console.log('Magic link response:', response.data);
+      console.log('Magic link response:', response);
       
       setIsMagicLinkSent(true);
       toast.success('Magic link sent to your email!');
       
-      // Check if this was treated as a login instead of registration
-      if (response.data.is_registration === false) {
-        toast.info('An account already exists with this email. We sent a login link instead.');
-      }
     } catch (error) {
       console.error('Magic link error:', error);
       
       // Extract the error message
       const errorMessage = error.response?.data?.detail || 
-                           error.message || 
-                           'Failed to send magic link. Please try again.';
+                          error.message || 
+                          'Failed to send magic link. Please try again.';
       
       // Handle specific error cases
       if (errorMessage.includes('already exists')) {
@@ -97,15 +80,13 @@ const RegisterPage = () => {
     }
   };
 
+  // Google OAuth registration
   const handleGoogleLogin = () => {
-    console.log('Initiating Google login...');
-    const redirectUri = `${window.location.origin}/auth/callback`;
-    // FIXED: Use API_URL instead of hardcoded localhost URL and set is_registration to true
-    const authUrl = `${API_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=true`;
-    console.log('Redirecting to:', authUrl);
-    window.location.href = authUrl;
+    console.log('Initiating Google registration...');
+    authService.initiateGoogleAuth(true); // true = registration mode
   };
 
+  // Show email sent screen if magic link was requested
   if (isMagicLinkSent) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -138,7 +119,8 @@ const RegisterPage = () => {
           <h1 className="text-2xl font-bold text-center">Get started for free</h1>
         </div>
         
-        <form onSubmit={handleRegister} className="space-y-6">
+        {/* Registration form - now with consistent submission handling */}
+        <form onSubmit={handleMagicLinkRequest} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -154,6 +136,7 @@ const RegisterPage = () => {
             />
           </div>
           
+          {/* Password fields - optional for magic link flow but required for password registration */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -182,15 +165,25 @@ const RegisterPage = () => {
             />
           </div>
           
-          <button
-            type="submit"
-            onClick={handleMagicLinkRequest}
-            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Signing up...' : 'Sign up'}
-          </button>
-          
+          {/* Registration buttons */}
+          <div className="flex flex-col space-y-3">
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Sending verification...' : 'Sign up with Magic Link'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={handlePasswordRegister}
+              className="w-full bg-white text-indigo-600 border border-indigo-600 py-2 rounded hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Processing...' : 'Sign up with Password'}
+            </button>
+          </div>
         </form>
         
         <div className="mt-6">

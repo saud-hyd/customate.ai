@@ -1,78 +1,56 @@
-# backend/app/api/auth/dependencies.py
 from fastapi import Depends, HTTPException, status, Header
-from fastapi.security import APIKeyHeader
+from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 import logging
 
 from app.core.database.dependencies import get_db
 from app.repositories.client_repository import ClientRepository
+from app.core.security.authentication import verify_token
 
-# Create a simple API key header - no OAuth fallback for now
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+security = HTTPBearer()
 logger = logging.getLogger("customate")
 
 async def get_current_client(
     db: Session = Depends(get_db),
-    api_key: str = Depends(api_key_header)
+    token: str = Depends(security)
 ):
-    """Simple API key authentication."""
-    logger.info(f"Auth attempt with API key: {api_key[:8] + '...' if api_key and len(api_key) > 8 else 'None'}")
-    
-    if not api_key:
-        logger.error("No API key provided in request header")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required: Missing API key",
-            headers={"WWW-Authenticate": "ApiKey"},
-        )
-    
-    # Directly query the client
-    client_repo = ClientRepository()
-    client = client_repo.get_by_api_key(db, api_key)
-    
-    if not client:
-        logger.error(f"No client found with provided API key")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication failed: Invalid API key",
-            headers={"WWW-Authenticate": "ApiKey"},
-        )
+    """Get current authenticated client from JWT token."""
+    try:
+        # Get token payload
+        payload = verify_token(token.credentials)
+        client_id = payload.get("sub")
         
-    if not client.active:
-        logger.error(f"Client {client.client_id} is inactive")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Authentication failed: Client account is inactive",
-        )
-    
-    logger.info(f"Successfully authenticated client: {client.client_id}")
-    return client
-
-# Optional: Alternative direct header approach
-async def get_current_client_direct(
-    x_api_key: str = Header(None, description="API Key for authentication"),
-    db: Session = Depends(get_db)
-):
-    """Direct header extraction approach (alternative to APIKeyHeader)."""
-    logger.info(f"Auth attempt with direct API key: {x_api_key[:8] + '...' if x_api_key and len(x_api_key) > 8 else 'None'}")
-    
-    if not x_api_key:
-        logger.error("No API key provided in direct header")
+        if not client_id:
+            logger.error("Token missing client_id claim")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+        
+        # Get client from database
+        client_repo = ClientRepository()
+        client = client_repo.get_by_client_id(db, client_id)
+        
+        if not client:
+            logger.error(f"No client found with ID: {client_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
+            
+        if not client.active:
+            logger.error(f"Client {client_id} is inactive")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is inactive",
+            )
+            
+        return client
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Authentication error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required: Missing API key",
+            detail="Invalid authentication credentials",
         )
-    
-    # Directly query the client
-    client_repo = ClientRepository()
-    client = client_repo.get_by_api_key(db, x_api_key)
-    
-    if client and client.active:
-        logger.info(f"Successfully authenticated client via direct header: {client.client_id}")
-        return client
-    
-    logger.error(f"Invalid direct API key or client not active")
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication failed: Invalid API key or inactive client",
-    )

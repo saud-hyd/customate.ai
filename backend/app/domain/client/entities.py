@@ -1,4 +1,3 @@
-# backend/app/domain/client/entities.py - Add integration relationship
 from datetime import datetime
 import uuid
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Integer, JSON
@@ -23,6 +22,7 @@ class Client(Base):
     website = Column(String(255), nullable=True)
     phone = Column(String(50), nullable=True)
     api_key = Column(String(255), unique=True, nullable=False, default=generate_uuid)
+    password_hash = Column(String(255), nullable=True)
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

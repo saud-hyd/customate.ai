@@ -35,16 +35,10 @@ async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """
-    Authenticate client and provide an access token.
-    """
-    logger.debug(f"Login attempt for: {form_data.username}")
-    
-    # Try to authenticate using provided credentials
+    """Authenticate client and provide an access token."""
     client = authenticate_client(db, form_data.username, form_data.password)
     
     if not client:
-        logger.warning(f"Authentication failed for: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -54,15 +48,14 @@ async def login_for_access_token(
     # Create access token with client details
     access_token = create_access_token(data={"sub": client.client_id, "email": client.email})
     
-    logger.info(f"Successful login for client: {client.client_id}")
-    
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "client_id": client.client_id,
-        "api_key": client.api_key
+        "email": client.email,
+        "name": client.name
     }
-
+    
 @router.post("/magic-link/request", response_model=Dict[str, Any])
 async def request_magic_link(
     request: Request,

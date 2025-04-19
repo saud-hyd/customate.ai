@@ -1,66 +1,26 @@
-// frontend/dashboard/src/services/api.js
 import axios from 'axios';
 
-// Determine API URL without /api suffix
-const API_URL = (() => {
-  if (process.env.REACT_APP_API_URL) {
-    // Remove /api if present to avoid duplication
-    return process.env.REACT_APP_API_URL.replace(/\/api$/, '');
-  }
-  
-  const isProduction = 
-    window.location.hostname !== 'localhost' && 
-    window.location.hostname !== '127.0.0.1';
-  
-  return isProduction 
-    ? 'https://customate-ai-1.onrender.com'
-    : 'http://localhost:8000';
-})();
+// Add explicit debug logging 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+console.log('API Base URL configured as:', API_URL);
 
-console.log(`API URL configured as: ${API_URL}`);
+// Check if API_URL already ends with /api
+const baseURL = API_URL.endsWith('/api') 
+  ? API_URL.substring(0, API_URL.length - 4) // Remove trailing /api
+  : API_URL;
+
+console.log('Using corrected baseURL:', baseURL);
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: baseURL,
 });
 
-// FIX: Store a local reference to avoid reading from localStorage on every request
-let cachedApiKey = null;
-let cachedToken = null;
-
-// Load initial values
-try {
-  cachedApiKey = localStorage.getItem('apiKey');
-  cachedToken = localStorage.getItem('token');
-} catch (error) {
-  console.error('Error reading auth data from localStorage:', error);
-}
-
+// Request interceptor to add auth token
 api.interceptors.request.use(config => {
-  // Only read from localStorage if we don't have a cached value
-  if (!cachedApiKey) {
-    try {
-      cachedApiKey = localStorage.getItem('apiKey');
-    } catch (error) {
-      console.error('Error reading apiKey from localStorage:', error);
-    }
-  }
+  const token = localStorage.getItem('token');
   
-  if (!cachedToken) {
-    try {
-      cachedToken = localStorage.getItem('token');
-    } catch (error) {
-      console.error('Error reading token from localStorage:', error);
-    }
-  }
-  
-  // Check if we have an API key now and add it to headers
-  if (cachedApiKey) {
-    config.headers['X-API-Key'] = cachedApiKey;
-  }
-  
-  // Check if we have a token now and add it to headers
-  if (cachedToken) {
-    config.headers['Authorization'] = `Bearer ${cachedToken}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   
   return config;
@@ -68,52 +28,20 @@ api.interceptors.request.use(config => {
   return Promise.reject(error);
 });
 
-// Also update the response interceptor to update our cached values if they change
+// Response interceptor for authentication errors
 api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      console.error('Authentication error:', error);
-      
-      // Clear cached values
-      cachedApiKey = null;
-      cachedToken = null;
-      
+      // If not already on login page, redirect to login
       if (!window.location.pathname.includes('/login')) {
-        try {
-          localStorage.removeItem('token');
-          localStorage.removeItem('apiKey');
-        } catch (err) {
-          console.error('Error clearing localStorage:', err);
-        }
+        localStorage.removeItem('token');
+        localStorage.removeItem('clientId');
         window.location.href = '/login';
       }
     }
     return Promise.reject(error);
   }
 );
-
-// Add method to update cached values when login/logout happens
-api.updateAuthData = (token, apiKey) => {
-  cachedToken = token;
-  cachedApiKey = apiKey;
-  
-  // Also update localStorage
-  try {
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
-    
-    if (apiKey) {
-      localStorage.setItem('apiKey', apiKey);
-    } else {
-      localStorage.removeItem('apiKey');
-    }
-  } catch (error) {
-    console.error('Error updating localStorage:', error);
-  }
-};
 
 export default api;
