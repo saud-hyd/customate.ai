@@ -1,4 +1,4 @@
-// Path: frontend/dashboard/src/pages/auth/RegisterPage.jsx
+// frontend/dashboard/src/pages/auth/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
@@ -7,71 +7,66 @@ import useAuth from '../../hooks/useAuth';
 import authService from '../../services/authService';
 
 const RegisterPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
+    industry: 'e-commerce',
+    website: ''
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
-  const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
+  const [isVerificationSent, setIsVerificationSent] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
   const { registerWithEmailPassword } = useAuth();
 
-  // Password registration handler (alternative to magic link)
-  const handlePasswordRegister = async (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Unified registration handler
+  const handleRegister = async (e) => {
     e.preventDefault();
+    
+    const { email, password, confirmPassword } = formData;
+    
+    // Validate
+    if (!email || !password) {
+      toast.error('Email and password are required');
+      return;
+    }
     
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
-
-    setIsLoading(true);
-    try {
-      await registerWithEmailPassword(email, password);
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Registration failed. Please try again.');
-      console.error('Registration error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Magic link registration handler (primary method)
-  const handleMagicLinkRequest = async (e) => {
-    e.preventDefault();
-    if (!email) {
-      toast.error('Please enter your email address');
-      return;
-    }
     
     setIsLoading(true);
+    
     try {
-      console.log('Requesting magic link for registration:', email);
+      // Use the unified registration method
+      const response = await authService.register(formData);
       
-      // Use authService instead of direct API calls
-      const response = await authService.requestMagicLink(email, true);
-      
-      console.log('Magic link response:', response);
-      
-      setIsMagicLinkSent(true);
-      toast.success('Magic link sent to your email!');
-      
+      // Always show verification screen
+      setIsVerificationSent(true);
+      toast.success('Registration successful! Please check your email to verify your account.');
     } catch (error) {
-      console.error('Magic link error:', error);
+      console.error('Registration error:', error);
       
-      // Extract the error message
+      // Extract error message
       const errorMessage = error.response?.data?.detail || 
                           error.message || 
-                          'Failed to send magic link. Please try again.';
+                          'Registration failed. Please try again.';
       
       // Handle specific error cases
       if (errorMessage.includes('already exists')) {
         toast.error('An account with this email already exists. Try logging in instead.');
-      } else if (error.response?.status === 404) {
-        toast.error('No account found with this email.');
-      } else if (error.response?.status === 429) {
-        toast.error('Too many requests. Please try again later.');
       } else {
         toast.error(errorMessage);
       }
@@ -86,18 +81,18 @@ const RegisterPage = () => {
     authService.initiateGoogleAuth(true); // true = registration mode
   };
 
-  // Show email sent screen if magic link was requested
-  if (isMagicLinkSent) {
+  // Show email sent screen if verification was sent
+  if (isVerificationSent) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6 text-center">Check Your Email</h2>
           <p className="mb-6 text-center text-gray-600">
-            We've sent a magic link to <strong>{email}</strong>. 
-            Click the link in the email to create your account.
+            We've sent a verification link to <strong>{formData.email}</strong>. 
+            Click the link in the email to activate your account.
           </p>
           <button
-            onClick={() => setIsMagicLinkSent(false)}
+            onClick={() => setIsVerificationSent(false)}
             className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
           >
             Back to Sign Up
@@ -119,8 +114,8 @@ const RegisterPage = () => {
           <h1 className="text-2xl font-bold text-center">Get started for free</h1>
         </div>
         
-        {/* Registration form - now with consistent submission handling */}
-        <form onSubmit={handleMagicLinkRequest} className="space-y-6">
+        {/* Unified registration form */}
+        <form onSubmit={handleRegister} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -128,15 +123,50 @@ const RegisterPage = () => {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="name@example.com"
               required
             />
           </div>
           
-          {/* Password fields - optional for magic link flow but required for password registration */}
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Company Name (Optional)
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Your Company"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
+              Industry
+            </label>
+            <select
+              id="industry"
+              name="industry"
+              value={formData.industry}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="e-commerce">E-commerce</option>
+              <option value="saas">SaaS</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="finance">Finance</option>
+              <option value="education">Education</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -144,8 +174,9 @@ const RegisterPage = () => {
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
               required
             />
@@ -158,32 +189,22 @@ const RegisterPage = () => {
             <input
               type="password"
               id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
               required
             />
           </div>
           
-          {/* Registration buttons */}
-          <div className="flex flex-col space-y-3">
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Sending verification...' : 'Sign up with Magic Link'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handlePasswordRegister}
-              className="w-full bg-white text-indigo-600 border border-indigo-600 py-2 rounded hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Processing...' : 'Sign up with Password'}
-            </button>
-          </div>
+          {/* Single unified registration button */}
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Creating Account...' : 'Create Account'}
+          </button>
         </form>
         
         <div className="mt-6">

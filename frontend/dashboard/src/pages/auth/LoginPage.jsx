@@ -29,7 +29,13 @@ const LoginPage = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Login failed. Please check your credentials.');
+      
+      // Check for verification required error
+      if (error.message && error.message.includes('verification required')) {
+        toast.error('Please verify your email address. Check your inbox for a verification link.');
+      } else {
+        toast.error('Login failed. Please check your credentials.');
+      }
     } finally {
       setIsLoading(false);
     }

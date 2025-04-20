@@ -1,6 +1,5 @@
-// Path: frontend/dashboard/src/services/authService.js
+// frontend/dashboard/src/services/authService.js
 import api from './api';
-import axios from 'axios';
 
 // Use environment variable with fallback to the production URL
 const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
@@ -16,19 +15,17 @@ const authService = {
       formData.append('username', email);
       formData.append('password', password);
       
-      // Use the full URL to avoid any path issues
-      const response = await axios.post(`https://customate-ai-1.onrender.com/api/auth/token`, 
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
+      // Use the configured API URL
+      const response = await api.post('/api/auth/token', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
         }
-      );
-
+      });
+  
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key || password);
+        localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('clientId', response.data.client_id);
         console.log('Login successful, stored token and API key');
       }
       
@@ -36,10 +33,12 @@ const authService = {
     } catch (error) {
       console.error('Login error details:', error.response?.data || error.message);
       
-      // If the error is 401 Unauthorized, try to get the API key via magic link
-      if (error.response?.status === 401 && email) {
-        console.log('Login failed, suggesting magic link instead');
-        throw new Error('Login failed. Try using "Magic Link" login option instead, or reset your password.');
+      // If the error is 401 Unauthorized, check for verification required
+      if (error.response?.status === 401 && 
+          error.response?.data?.detail?.includes('inactive')) {
+        throw new Error('Email verification required. Please check your inbox and verify your account.');
+      } else if (error.response?.status === 401) {
+        throw new Error('Invalid credentials. Please check your email and password.');
       }
       
       throw error;
@@ -123,36 +122,47 @@ const authService = {
   // Register with email and password
   async register(userData) {
     try {
-      console.log('Registering user:', userData.email);
+      console.log('Registering user with unified method:', userData.email);
       // Format data for API
       const formData = new URLSearchParams();
       formData.append('email', userData.email);
       formData.append('password', userData.password);
       
       if (userData.name) formData.append('name', userData.name);
-      if (userData.industry) formData.append('industry', userData.industry);
+      if (userData.industry) formData.append('industry', userData.industry || 'other');
       if (userData.website) formData.append('website', userData.website);
       
-      const response = await api.post('/api/auth/register', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+      try {
+        // Try standard registration first
+        const response = await api.post('/api/auth/register', formData, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
+        return response.data;
+      } catch (err) {
+        // If 404, the endpoint might not exist, try magic link registration
+        if (err.response?.status === 404) {
+          console.log('Falling back to magic link registration');
+          formData.append('is_registration', 'true');
+          const response = await api.post('/api/auth/magic-link/request', formData, {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          });
+          return {
+            ...response.data,
+            requires_verification: true
+          };
         }
-      });
-      
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
-        localStorage.setItem('clientId', response.data.client_id);
-        console.log('Registration successful');
+        throw err;
       }
-      
-      return response.data;
     } catch (error) {
       console.error('Registration error:', error.response?.data || error.message);
       throw error;
     }
   },
-  
+    
   // Request password reset
   async requestPasswordReset(email) {
     try {

@@ -18,7 +18,8 @@ from app.core.database.dependencies import get_db
 from app.core.security.authentication import (
     authenticate_client, create_access_token, 
     create_magic_link_token, verify_magic_link_token,
-    encode_state_data, decode_state_data
+    encode_state_data, decode_state_data,
+    get_password_hash
 )
 from app.repositories.client_repository import ClientRepository
 from app.repositories.auth_repository import MagicLinkTokenRepository
@@ -196,17 +197,26 @@ async def verify_magic_link(
         client = client_repo.get_by_email(db, email)
         
         if is_registration and not client:
-            # Create new client for registration
+            # Create new client for registration with random API key
+            api_key = secrets.token_urlsafe(32)
             client_data = {
                 "email": email,
                 "name": email.split('@')[0],  # Default name from email
-                "api_key": secrets.token_urlsafe(32),
+                "api_key": api_key,
                 "client_id": str(uuid.uuid4()),
-                "industry": "other"  # Default industry
+                "industry": "other",  # Default industry
+                "active": True  # Account is active because it's verified via magic link
             }
             
             client = client_repo.create(db, obj_in=client_data)
             logger.info(f"Created new client via magic link: {client.client_id}")
+        elif is_registration and client and not client.active:
+            # This is a verification for an existing registration
+            client.active = True
+            db.add(client)
+            db.commit()
+            db.refresh(client)
+            logger.info(f"Activated existing client account: {client.client_id}")
         elif not client:
             logger.error(f"No account found with email: {email}")
             raise HTTPException(
@@ -223,7 +233,8 @@ async def verify_magic_link(
             "client_id": client.client_id,
             "api_key": client.api_key,
             "email": client.email,
-            "name": client.name
+            "name": client.name,
+            "is_new_user": is_registration
         }
     
     except HTTPException:
@@ -234,7 +245,7 @@ async def verify_magic_link(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired magic link"
         )
-        
+                
 @router.get("/google/login")
 async def login_with_google(
     redirect_uri: str,
@@ -370,6 +381,7 @@ async def oauth_callback(
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=Dict[str, Any])
 async def register_client(
+    request: Request,
     name: str = Form(...),
     email: str = Form(...),
     industry: str = Form(...),
@@ -378,8 +390,8 @@ async def register_client(
     db: Session = Depends(get_db)
 ):
     """
-    Register a new client directly with email/password.
-    This is an alternative to magic link registration.
+    Register a new client and send verification email.
+    This requires email verification before the account is fully activated.
     """
     # Check if client with this email already exists
     client_repo = ClientRepository()
@@ -391,29 +403,72 @@ async def register_client(
             detail="A client with this email already exists"
         )
     
-    # Create new client
-    client_data = {
-        "name": name,
-        "email": email,
-        "industry": industry,
-        "website": website,
-        "api_key": password
-    }
-    
     try:
+        # Hash the password
+        password_hash = get_password_hash(password)
+        
+        # Create new client with hashed password and random API key
+        client_data = {
+            "name": name,
+            "email": email,
+            "industry": industry,
+            "website": website,
+            "api_key": secrets.token_urlsafe(32),  # Generate random API key
+            "password_hash": password_hash,        # Store hashed password
+            "active": False  # Account starts as inactive until verified
+        }
+        
+        # Create the client
         new_client = client_repo.create(db, obj_in=client_data)
         
-        # Create access token for auto-login
-        access_token = create_access_token(data={"sub": new_client.client_id, "email": new_client.email})
+        # Generate verification token
+        token_data = {
+            "sub": email,
+            "is_registration": True,
+            "jti": secrets.token_hex(8)
+        }
+        
+        verification_token = create_magic_link_token(token_data)
+        
+        # Store token in database
+        token_repo = MagicLinkTokenRepository()
+        token_repo.create_token(db, email, verification_token)
+        
+        # Determine frontend URL for verification link
+        frontend_url = settings.FRONTEND_URL
+        if (not frontend_url or frontend_url == "http://localhost:3000") and os.environ.get('RENDER', False):
+            origin = request.headers.get('origin')
+            referer = request.headers.get('referer')
+            
+            if origin and 'localhost' not in origin:
+                frontend_url = origin.rstrip('/')
+            elif referer and 'localhost' not in referer:
+                from urllib.parse import urlparse
+                parsed_url = urlparse(referer)
+                frontend_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+            else:
+                frontend_url = "https://customate-ai.vercel.app"
+        
+        # Generate verification link
+        verification_link = f"{frontend_url}/auth/verify?token={verification_token}"
+        
+        # Send verification email
+        email_service = EmailService()
+        if not email_service.send_magic_link_email(email, verification_link, True):
+            # If email fails, delete the created client to avoid orphaned accounts
+            db.delete(new_client)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email"
+            )
         
         return {
             "client_id": new_client.client_id,
             "name": new_client.name,
             "email": new_client.email,
-            "message": "Registration successful",
-            "access_token": access_token,
-            "token_type": "bearer",
-            "api_key": new_client.api_key
+            "message": "Registration initiated. Please check your email to verify your account.",
+            "requires_verification": True
         }
     except Exception as e:
         logger.error(f"Error during registration: {str(e)}")
@@ -421,7 +476,7 @@ async def register_client(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed due to an internal error"
         )
-        
+                
 @router.post("/password-reset/request", response_model=Dict[str, Any])
 async def request_password_reset(
     request: Request,

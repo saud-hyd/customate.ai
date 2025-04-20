@@ -1,18 +1,13 @@
+// frontend/dashboard/src/services/api.js
 import axios from 'axios';
 
-// Add explicit debug logging 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Define the API URL with clear logic
+const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com/api';
 console.log('API Base URL configured as:', API_URL);
 
-// Check if API_URL already ends with /api
-const baseURL = API_URL.endsWith('/api') 
-  ? API_URL.substring(0, API_URL.length - 4) // Remove trailing /api
-  : API_URL;
-
-console.log('Using corrected baseURL:', baseURL);
-
+// Create API instance WITHOUT /api at the end - this is critical
 const api = axios.create({
-  baseURL: baseURL,
+  baseURL: API_URL,
 });
 
 // Request interceptor to add auth token
@@ -27,21 +22,5 @@ api.interceptors.request.use(config => {
 }, error => {
   return Promise.reject(error);
 });
-
-// Response interceptor for authentication errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response && error.response.status === 401) {
-      // If not already on login page, redirect to login
-      if (!window.location.pathname.includes('/login')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('clientId');
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 export default api;

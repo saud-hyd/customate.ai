@@ -54,12 +54,19 @@ def authenticate_client(db, email: str, password: str) -> Optional[Client]:
     if not client:
         return None
     
+    # Check if account is active
+    if not client.active:
+        logger.warning(f"Login attempt for inactive account: {email}")
+        return None
+    
     # If client has password_hash, use it
     if hasattr(client, 'password_hash') and client.password_hash:
         if not verify_password(password, client.password_hash):
+            logger.warning(f"Password verification failed for: {email}")
             return None
     # Fall back to API key for backward compatibility
     elif client.api_key != password:
+        logger.warning(f"API key verification failed for: {email}")
         return None
         
     return client
