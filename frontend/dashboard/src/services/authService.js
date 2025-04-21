@@ -1,11 +1,15 @@
-// frontend/dashboard/src/services/authService.js
+// Path: frontend/dashboard/src/services/authService.js
+// This service handles all authentication API calls
+
 import api from './api';
 
 // Use environment variable with fallback to the production URL
 const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
 
 const authService = {
-  // Login with email and password
+// Path: frontend/dashboard/src/services/authService.js
+
+// Update the login method 
   async login(email, password) {
     try {
       console.log('Attempting login for:', email);
@@ -21,30 +25,30 @@ const authService = {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-  
+
       if (response.data.access_token) {
+        // Store JWT token for user authentication
         localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
-        localStorage.setItem('clientId', response.data.client_id);
-        console.log('Login successful, stored token and API key');
+        
+        // If API key is included, store it separately for widget use
+        if (response.data.api_key) {
+          localStorage.setItem('apiKey', response.data.api_key);
+          console.log('Stored API key for widget use');
+        }
+        
+        if (response.data.client_id) {
+          localStorage.setItem('clientId', response.data.client_id);
+        }
+        
+        console.log('Login successful with password');
       }
       
       return response.data;
     } catch (error) {
       console.error('Login error details:', error.response?.data || error.message);
-      
-      // If the error is 401 Unauthorized, check for verification required
-      if (error.response?.status === 401 && 
-          error.response?.data?.detail?.includes('inactive')) {
-        throw new Error('Email verification required. Please check your inbox and verify your account.');
-      } else if (error.response?.status === 401) {
-        throw new Error('Invalid credentials. Please check your email and password.');
-      }
-      
       throw error;
     }
-  },
-  
+  },  
   // Request magic link
   async requestMagicLink(email, isRegistration = false) {
     try {
@@ -54,7 +58,7 @@ const authService = {
       formData.append('email', email);
       formData.append('is_registration', isRegistration);
       
-      const response = await api.post('/api/auth/magic-link/request', formData, {
+      const response = await api.post('/auth/magic-link/request', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -72,7 +76,7 @@ const authService = {
   async verifyMagicLink(token) {
     try {
       console.log('Verifying magic link token');
-      const response = await api.get(`/api/auth/magic-link/verify?token=${token}`);
+      const response = await api.get(`/auth/magic-link/verify?token=${token}`);
       console.log('Magic link verification response:', response.data);
       
       if (response.data.access_token) {
@@ -103,7 +107,7 @@ const authService = {
   async handleOAuthCallback(params) {
     try {
       console.log('Handling OAuth callback');
-      const response = await api.get(`/api/auth/oauth/callback?${new URLSearchParams(params).toString()}`);
+      const response = await api.get(`/auth/oauth/callback?${new URLSearchParams(params).toString()}`);
       
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
@@ -128,57 +132,29 @@ const authService = {
       formData.append('email', userData.email);
       formData.append('password', userData.password);
       
+      // Optional fields - only include if they have values
       if (userData.name) formData.append('name', userData.name);
-      if (userData.industry) formData.append('industry', userData.industry || 'other');
+      if (userData.industry) formData.append('industry', userData.industry);
       if (userData.website) formData.append('website', userData.website);
       
-      try {
-        // Try standard registration first
-        const response = await api.post('/api/auth/register', formData, {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        });
-        return response.data;
-      } catch (err) {
-        // If 404, the endpoint might not exist, try magic link registration
-        if (err.response?.status === 404) {
-          console.log('Falling back to magic link registration');
-          formData.append('is_registration', 'true');
-          const response = await api.post('/api/auth/magic-link/request', formData, {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
-          });
-          return {
-            ...response.data,
-            requires_verification: true
-          };
-        }
-        throw err;
-      }
-    } catch (error) {
-      console.error('Registration error:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-    
-  // Request password reset
-  async requestPasswordReset(email) {
-    try {
-      console.log('Requesting password reset for:', email);
-      const formData = new URLSearchParams();
-      formData.append('email', email);
-      
-      const response = await api.post('/api/auth/password-reset/request', formData, {
+      // Use the correct path - fix URL to match backend
+      const response = await api.post('/auth/register', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
       
+      // Store auth tokens if they're in the response
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('clientId', response.data.client_id);
+        console.log('Registration successful, stored auth data');
+      }
+      
       return response.data;
     } catch (error) {
-      console.error('Error requesting password reset:', error.response?.data || error.message);
+      console.error('Registration error:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -190,7 +166,7 @@ const authService = {
       formData.append('token', token);
       formData.append('new_password', newPassword);
       
-      const response = await api.post('/api/auth/password-reset/verify', formData, {
+      const response = await api.post('/auth/password-reset/verify', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -214,7 +190,7 @@ const authService = {
   async getCurrentClient() {
     try {
       console.log('Getting current client info');
-      const response = await api.get('/api/client');
+      const response = await api.get('/client');
       console.log('Current client info retrieved');
       return response.data;
     } catch (error) {

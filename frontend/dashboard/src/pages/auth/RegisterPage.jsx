@@ -1,5 +1,6 @@
 // frontend/dashboard/src/pages/auth/RegisterPage.jsx
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { useToast } from '../../context/ToastContext';
@@ -10,10 +11,7 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
-    name: '',
-    industry: 'e-commerce',
-    website: ''
+    confirmPassword: '' 
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +32,7 @@ const RegisterPage = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     
-    const { email, password, confirmPassword } = formData;
+    const { email, password, confirmPassword, name, industry, website } = formData;
     
     // Validate
     if (!email || !password) {
@@ -47,34 +45,65 @@ const RegisterPage = () => {
       return;
     }
     
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      // Use the unified registration method
-      const response = await authService.register(formData);
+      // Create form data properly
+      const formDataObj = new FormData();
+      formDataObj.append('email', email);
+      formDataObj.append('password', password);
+      formDataObj.append('name', name || email.split('@')[0]); // Use part of email if no name
+      formDataObj.append('industry', industry || 'other');
+      if (website) formDataObj.append('website', website);
       
-      // Always show verification screen
-      setIsVerificationSent(true);
-      toast.success('Registration successful! Please check your email to verify your account.');
+      // Send request directly with axios to ensure proper form data handling
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/register`, 
+        formDataObj
+      );
+      
+      // Handle success
+      toast.success('Registration successful! You can now log in.');
+      
+      // Store API key or redirect to login page
+      if (response.data.api_key) {
+        localStorage.setItem('tempApiKey', response.data.api_key); // Store temporarily
+      }
+      
+      // Navigate to login page
+      navigate('/login', { 
+        state: { 
+          message: 'Account created successfully! Please log in with your email and password.' 
+        } 
+      });
+      
     } catch (error) {
       console.error('Registration error:', error);
       
-      // Extract error message
-      const errorMessage = error.response?.data?.detail || 
-                          error.message || 
-                          'Registration failed. Please try again.';
-      
-      // Handle specific error cases
-      if (errorMessage.includes('already exists')) {
-        toast.error('An account with this email already exists. Try logging in instead.');
+      // Handle different error types
+      if (error.response) {
+        // Extract the error message from the response
+        const errorDetail = error.response.data?.detail;
+        
+        if (typeof errorDetail === 'string') {
+          toast.error(errorDetail);
+        } else if (error.response.status === 422) {
+          toast.error('Invalid input data. Please check the form and try again.');
+        } else {
+          toast.error('Registration failed. Please try again.');
+        }
       } else {
-        toast.error(errorMessage);
+        toast.error('Network error. Please check your connection and try again.');
       }
     } finally {
       setIsLoading(false);
     }
   };
-
   // Google OAuth registration
   const handleGoogleLogin = () => {
     console.log('Initiating Google registration...');

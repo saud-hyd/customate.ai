@@ -1,3 +1,5 @@
+# Path: backend/app/api/auth/routes.py
+
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
@@ -36,7 +38,7 @@ async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """Authenticate client and provide an access token."""
+    """Authenticate client with password and provide access token."""
     client = authenticate_client(db, form_data.username, form_data.password)
     
     if not client:
@@ -49,13 +51,15 @@ async def login_for_access_token(
     # Create access token with client details
     access_token = create_access_token(data={"sub": client.client_id, "email": client.email})
     
+    # Return both JWT token and API key
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "client_id": client.client_id,
+        "api_key": client.api_key,  # Include API key for widget use
         "email": client.email,
         "name": client.name
-    }
+    }    
     
 @router.post("/magic-link/request", response_model=Dict[str, Any])
 async def request_magic_link(
@@ -349,7 +353,8 @@ async def oauth_callback(
                 "name": name,
                 "api_key": secrets.token_urlsafe(32),
                 "client_id": str(uuid.uuid4()),
-                "industry": "other"  # Default industry
+                "industry": "other",  # Default industry
+                "active": True  # Google OAuth users are auto-verified
             }
             
             client = client_repo.create(db, obj_in=client_data)
@@ -379,104 +384,91 @@ async def oauth_callback(
             detail=f"OAuth callback error: {str(e)}"
         )
 
+# Path: backend/app/api/auth/routes.py
+
+# Path: backend/app/api/auth/routes.py
+
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=Dict[str, Any])
 async def register_client(
     request: Request,
+    db: Session = Depends(get_db),
     name: str = Form(...),
     email: str = Form(...),
     industry: str = Form(...),
-    website: str = Form(None),
     password: str = Form(...),
-    db: Session = Depends(get_db)
+    website: str = Form(None)
 ):
     """
-    Register a new client and send verification email.
-    This requires email verification before the account is fully activated.
+    Register a new client with separate password and API key.
+    Password is for login, API key is for widget deployment.
     """
-    # Check if client with this email already exists
-    client_repo = ClientRepository()
-    existing_client = client_repo.get_by_email(db, email)
-    
-    if existing_client:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A client with this email already exists"
-        )
-    
     try:
-        # Hash the password
+        # Log received data (excluding password)
+        logger.info(f"Registration attempt: email={email}, name={name}, industry={industry}")
+        
+        # Validate email format
+        if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid email format"
+            )
+            
+        # Check if client with this email already exists
+        client_repo = ClientRepository()
+        existing_client = client_repo.get_by_email(db, email)
+        
+        if existing_client:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A client with this email already exists"
+            )
+        
+        # Validate password length
+        if len(password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Password must be at least 6 characters long"
+            )
+        
+        # Hash the password for login
         password_hash = get_password_hash(password)
         
-        # Create new client with hashed password and random API key
+        # Generate a separate random API key for widget
+        api_key = secrets.token_urlsafe(32)
+        
+        # Create new client with separate credentials
         client_data = {
             "name": name,
             "email": email,
             "industry": industry,
             "website": website,
-            "api_key": secrets.token_urlsafe(32),  # Generate random API key
-            "password_hash": password_hash,        # Store hashed password
-            "active": False  # Account starts as inactive until verified
+            "api_key": api_key,           # For widget
+            "password_hash": password_hash,  # For login
+            "active": True  # Set as active immediately
         }
         
         # Create the client
         new_client = client_repo.create(db, obj_in=client_data)
+        logger.info(f"Successfully registered new client: {new_client.client_id}")
         
-        # Generate verification token
-        token_data = {
-            "sub": email,
-            "is_registration": True,
-            "jti": secrets.token_hex(8)
-        }
-        
-        verification_token = create_magic_link_token(token_data)
-        
-        # Store token in database
-        token_repo = MagicLinkTokenRepository()
-        token_repo.create_token(db, email, verification_token)
-        
-        # Determine frontend URL for verification link
-        frontend_url = settings.FRONTEND_URL
-        if (not frontend_url or frontend_url == "http://localhost:3000") and os.environ.get('RENDER', False):
-            origin = request.headers.get('origin')
-            referer = request.headers.get('referer')
-            
-            if origin and 'localhost' not in origin:
-                frontend_url = origin.rstrip('/')
-            elif referer and 'localhost' not in referer:
-                from urllib.parse import urlparse
-                parsed_url = urlparse(referer)
-                frontend_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            else:
-                frontend_url = "https://customate-ai.vercel.app"
-        
-        # Generate verification link
-        verification_link = f"{frontend_url}/auth/verify?token={verification_token}"
-        
-        # Send verification email
-        email_service = EmailService()
-        if not email_service.send_magic_link_email(email, verification_link, True):
-            # If email fails, delete the created client to avoid orphaned accounts
-            db.delete(new_client)
-            db.commit()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send verification email"
-            )
-        
+        # Return success with clear explanation
         return {
             "client_id": new_client.client_id,
             "name": new_client.name,
             "email": new_client.email,
-            "message": "Registration initiated. Please check your email to verify your account.",
-            "requires_verification": True
+            "api_key": api_key,  # Include API key for widget deployment
+            "message": "Registration successful! Use your email and password to log in. Save your API key for widget deployment."
         }
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
-        logger.error(f"Error during registration: {str(e)}")
+        logger.error(f"Error during registration: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed due to an internal error"
+            detail="Registration failed due to a server error"
         )
-                
+                                
 @router.post("/password-reset/request", response_model=Dict[str, Any])
 async def request_password_reset(
     request: Request,

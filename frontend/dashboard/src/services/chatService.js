@@ -1,7 +1,7 @@
 // frontend/dashboard/src/services/chatService.js
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
 
 class ChatService {
   constructor() {
@@ -168,7 +168,7 @@ class ChatService {
     const headers = this.getHeaders();
     
     // Start the fetch request
-    fetch(`${API_URL}/chatbot/message/stream`, {
+    fetch(`${API_URL}/api/chatbot/message/stream`, {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(requestData),

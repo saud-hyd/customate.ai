@@ -1,3 +1,6 @@
+# Path: backend/app/services/email/email_service.py
+# This class handles email sending functionality
+
 import smtplib
 import ssl
 import random
@@ -114,17 +117,12 @@ class EmailService:
         
         return self.send_email(recipient, subject, html, text)
         
+# Path: backend/app/services/email/email_service.py
+# Fix the method name issue in send_magic_link_email method
+
     def send_magic_link_email(self, recipient_email: str, magic_link_url: str, is_registration: bool = False) -> bool:
         """
         Send magic link email for login or registration verification.
-        
-        Args:
-            recipient_email: Email address to send to
-            magic_link_url: URL with the magic link token
-            is_registration: Whether this is for registration verification
-            
-        Returns:
-            Boolean indicating success or failure
         """
         try:
             subject = "Verify Your Email - Customate.ai" if is_registration else "Login Link - Customate.ai"
@@ -163,11 +161,12 @@ class EmailService:
                 </html>
                 """
             
-            return self._send_email(recipient_email, subject, html_content)
+            # FIX: Changed method call from _send_email to send_email
+            return self.send_email(recipient_email, subject, html_content)
         except Exception as e:
             logger.error(f"Error sending magic link email: {str(e)}")
             return False
-            
+                    
     def send_password_reset_email(self, recipient: str, reset_link_url: str) -> bool:
         """
         Send password reset email.

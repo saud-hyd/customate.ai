@@ -1,8 +1,9 @@
 // frontend/dashboard/src/components/chat/ChatInterface.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import chatService from '../../services/chatService';
+import PropTypes from 'prop-types';
 
-const ChatInterface = (props) => {
+const ChatInterface = ({ config }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
@@ -30,9 +31,9 @@ const ChatInterface = (props) => {
     if (config && config.llmProvider) {
       llmSettings = {
         llm_provider: config.llmProvider,
-        llm_model: config.llmModel
+        llm_model: config.llmModel,
+        temperature: config.temperature
       };
-      console.log("Using LLM settings:", llmSettings);
     }
     
     // Add user message to state
@@ -91,7 +92,7 @@ const ChatInterface = (props) => {
                   isStreaming: false,
                 };
               } else {
-                // Update the content (not append - the backend sends cumulative text)
+                // Update the content
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
                   content: chunk,
@@ -199,23 +200,24 @@ const ChatInterface = (props) => {
 
   // Reset the chat when the resetSession prop changes
   useEffect(() => {
-    if (props.resetSession) {
+    if (config && config.resetSession) {
       setMessages([]);
       setSessionId(null);
     }
-  }, [props.resetSession]);
+  }, [config]);
 
   // Message component with blinking cursor for streaming
   const Message = ({ message }) => {
     const isUser = message.role === 'user';
+    const accentColor = config?.primaryColor || '#4f46e5';
     
     return (
       <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
         <div
           className={`${
-            isUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
-          } ${message.isError ? 'bg-red-100 text-red-800' : ''} 
-            rounded-lg py-2 px-4 max-w-[80%]`}
+            isUser ? 'text-white rounded-lg py-2 px-4 max-w-[80%]' : 'bg-gray-100 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]'
+          } ${message.isError ? 'bg-red-100 text-red-800' : ''}`}
+          style={isUser ? { backgroundColor: accentColor } : {}}
         >
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
           {message.isStreaming && (
@@ -227,7 +229,7 @@ const ChatInterface = (props) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-md shadow-md">
+    <div className="flex flex-col h-full bg-white rounded-md">
       <div className="flex-1 p-4 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -250,17 +252,17 @@ const ChatInterface = (props) => {
             onKeyPress={handleKeyPress}
             disabled={isLoading}
             placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className={`px-4 py-2 bg-blue-500 text-white rounded-r-md 
-              ${
-                isLoading || !input.trim()
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-blue-600'
-              }`}
+            className={`px-4 py-2 text-white rounded-r-md ${
+              isLoading || !input.trim()
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:opacity-90'
+            }`}
+            style={{ backgroundColor: config?.primaryColor || '#4f46e5' }}
           >
             {isLoading ? 'Sending...' : 'Send'}
           </button>
@@ -268,6 +270,25 @@ const ChatInterface = (props) => {
       </form>
     </div>
   );
+};
+
+ChatInterface.propTypes = {
+  config: PropTypes.shape({
+    primaryColor: PropTypes.string,
+    chatbotName: PropTypes.string,
+    resetSession: PropTypes.bool,
+    llmProvider: PropTypes.string,
+    llmModel: PropTypes.string,
+    temperature: PropTypes.number,
+    customData: PropTypes.object
+  })
+};
+
+ChatInterface.defaultProps = {
+  config: {
+    primaryColor: '#4f46e5',
+    temperature: 0.4
+  }
 };
 
 export default ChatInterface;

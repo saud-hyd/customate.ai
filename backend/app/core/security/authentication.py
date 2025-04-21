@@ -46,12 +46,18 @@ def get_password_hash(password: str) -> str:
     """Get hash of password."""
     return pwd_context.hash(password)
 
+# Path: backend/app/core/security/authentication.py
+
 def authenticate_client(db, email: str, password: str) -> Optional[Client]:
-    """Authenticate a client by email and password."""
+    """
+    Authenticate a client by email and password.
+    This method is ONLY for user login via password, NOT for API key authentication.
+    """
     client_repo = ClientRepository()
     client = client_repo.get_by_email(db, email)
     
     if not client:
+        logger.warning(f"No client found with email: {email}")
         return None
     
     # Check if account is active
@@ -59,17 +65,13 @@ def authenticate_client(db, email: str, password: str) -> Optional[Client]:
         logger.warning(f"Login attempt for inactive account: {email}")
         return None
     
-    # If client has password_hash, use it
-    if hasattr(client, 'password_hash') and client.password_hash:
-        if not verify_password(password, client.password_hash):
-            logger.warning(f"Password verification failed for: {email}")
-            return None
-    # Fall back to API key for backward compatibility
-    elif client.api_key != password:
-        logger.warning(f"API key verification failed for: {email}")
-        return None
-        
-    return client
+    # Only check password_hash - NEVER use API key for login
+    if client.password_hash and verify_password(password, client.password_hash):
+        logger.info(f"Password authentication successful for: {email}")
+        return client
+    
+    logger.warning(f"Password authentication failed for: {email}")
+    return None
 
 def create_magic_link_token(data: Dict[str, Any]) -> str:
     """Create a token for magic link authentication."""
