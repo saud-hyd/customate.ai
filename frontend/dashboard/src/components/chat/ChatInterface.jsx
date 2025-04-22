@@ -92,10 +92,11 @@ const ChatInterface = ({ config }) => {
                   isStreaming: false,
                 };
               } else {
-                // Update the content
+                // FIXED: Append the chunk to existing content instead of replacing
+                const currentContent = updatedMessages[botMessageIndex].content;
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
-                  content: chunk,
+                  content: currentContent + chunk,  // This is the key fix - append instead of replace
                   id: messageId || tempBotMessageId,
                 };
               }
@@ -106,8 +107,7 @@ const ChatInterface = ({ config }) => {
           
           // Scroll to bottom with each new chunk
           setTimeout(scrollToBottom, 50);
-        },
-        // On done
+        },        // On done
         (response) => {
           setIsLoading(false);
           if (response && response.session_id) {

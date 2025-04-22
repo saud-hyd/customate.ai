@@ -1,24 +1,26 @@
-// frontend/dashboard/src/pages/auth/RegisterPage.jsx
+// Path: frontend/dashboard/src/pages/auth/RegisterPage.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { useToast } from '../../context/ToastContext';
 import useAuth from '../../hooks/useAuth';
-import authService from '../../services/authService';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '' 
+    confirmPassword: '',
+    name: '',
+    industry: 'e-commerce'
   });
   
   const [isLoading, setIsLoading] = useState(false);
-  const [isVerificationSent, setIsVerificationSent] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
-  const { registerWithEmailPassword } = useAuth();
+  const { loginWithGoogle } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,108 +30,88 @@ const RegisterPage = () => {
     }));
   };
 
-  // Unified registration handler
   const handleRegister = async (e) => {
     e.preventDefault();
     
-    const { email, password, confirmPassword, name, industry, website } = formData;
-    
-    // Validate
-    if (!email || !password) {
+    // Basic validation
+    if (!formData.email || !formData.password) {
       toast.error('Email and password are required');
       return;
     }
     
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
     
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
       return;
     }
     
     setIsLoading(true);
     
     try {
-      // Create form data properly
-      const formDataObj = new FormData();
-      formDataObj.append('email', email);
-      formDataObj.append('password', password);
-      formDataObj.append('name', name || email.split('@')[0]); // Use part of email if no name
-      formDataObj.append('industry', industry || 'other');
-      if (website) formDataObj.append('website', website);
+      // Create FormData for multipart/form-data submission
+      const data = new FormData();
+      data.append('email', formData.email);
+      data.append('password', formData.password);
+      data.append('name', formData.name || formData.email.split('@')[0]); // Use part of email if no name provided
+      data.append('industry', formData.industry);
       
-      // Send request directly with axios to ensure proper form data handling
+      // Make direct axios call to ensure proper form data handling
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/auth/register`, 
-        formDataObj
+        `${API_URL}/api/auth/register`, 
+        data
       );
       
-      // Handle success
-      toast.success('Registration successful! You can now log in.');
+      console.log('Registration successful:', response.data);
       
-      // Store API key or redirect to login page
-      if (response.data.api_key) {
-        localStorage.setItem('tempApiKey', response.data.api_key); // Store temporarily
+      // Store API key if available
+      if (response.data && response.data.api_key) {
+        localStorage.setItem('apiKey', response.data.api_key);
       }
       
-      // Navigate to login page
-      navigate('/login', { 
-        state: { 
-          message: 'Account created successfully! Please log in with your email and password.' 
-        } 
-      });
+      toast.success('Account created successfully! Redirecting to login...');
       
+      // Redirect to login with success message
+      navigate('/login', { 
+        state: { message: 'Account created successfully! Please log in with your email and password.' } 
+      });
     } catch (error) {
       console.error('Registration error:', error);
       
-      // Handle different error types
+      // Handle different types of errors
       if (error.response) {
-        // Extract the error message from the response
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
         const errorDetail = error.response.data?.detail;
-        
-        if (typeof errorDetail === 'string') {
+        if (errorDetail) {
           toast.error(errorDetail);
         } else if (error.response.status === 422) {
           toast.error('Invalid input data. Please check the form and try again.');
+        } else if (error.response.status === 400) {
+          toast.error('A user with this email already exists.');
         } else {
           toast.error('Registration failed. Please try again.');
         }
+      } else if (error.request) {
+        // The request was made but no response was received
+        toast.error('No response from server. Please check your connection.');
       } else {
-        toast.error('Network error. Please check your connection and try again.');
+        // Something happened in setting up the request that triggered an Error
+        toast.error('Error setting up the request. Please try again later.');
       }
     } finally {
       setIsLoading(false);
     }
   };
+
   // Google OAuth registration
   const handleGoogleLogin = () => {
     console.log('Initiating Google registration...');
-    authService.initiateGoogleAuth(true); // true = registration mode
+    loginWithGoogle(true); // true = registration mode
   };
-
-  // Show email sent screen if verification was sent
-  if (isVerificationSent) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <h2 className="text-2xl font-bold mb-6 text-center">Check Your Email</h2>
-          <p className="mb-6 text-center text-gray-600">
-            We've sent a verification link to <strong>{formData.email}</strong>. 
-            Click the link in the email to activate your account.
-          </p>
-          <button
-            onClick={() => setIsVerificationSent(false)}
-            className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-          >
-            Back to Sign Up
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -140,14 +122,13 @@ const RegisterPage = () => {
             alt="Customate.ai"
             className="h-8 mx-auto mb-2"
           />
-          <h1 className="text-2xl font-bold text-center">Get started for free</h1>
+          <h1 className="text-2xl font-bold text-center">Create Your Account</h1>
         </div>
         
-        {/* Unified registration form */}
         <form onSubmit={handleRegister} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Email *
             </label>
             <input
               type="email"
@@ -156,7 +137,7 @@ const RegisterPage = () => {
               value={formData.email}
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="name@example.com"
+              placeholder="you@example.com"
               required
             />
           </div>
@@ -198,7 +179,7 @@ const RegisterPage = () => {
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              Password *
             </label>
             <input
               type="password"
@@ -207,13 +188,15 @@ const RegisterPage = () => {
               value={formData.password}
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="••••••••"
               required
+              minLength={6}
             />
           </div>
           
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
+              Confirm Password *
             </label>
             <input
               type="password"
@@ -222,11 +205,12 @@ const RegisterPage = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="••••••••"
               required
+              minLength={6}
             />
           </div>
           
-          {/* Single unified registration button */}
           <button
             type="submit"
             className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -260,17 +244,6 @@ const RegisterPage = () => {
           <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
             Sign in
           </Link>
-        </p>
-        
-        <p className="mt-4 text-center text-xs text-gray-500">
-          By continuing, you agree to our{' '}
-          <a href="/terms" className="text-indigo-600 hover:text-indigo-500">
-            Terms of Service
-          </a>
-          {' '}and{' '}
-          <a href="/privacy" className="text-indigo-600 hover:text-indigo-500">
-            Privacy Policy
-          </a>.
         </p>
       </div>
     </div>

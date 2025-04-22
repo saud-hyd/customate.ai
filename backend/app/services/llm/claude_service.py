@@ -1,208 +1,239 @@
-# backend/app/services/llm/claude_service.py
-from typing import Dict, Any, List, Optional, AsyncGenerator
-import httpx
+import logging
 import json
 import asyncio
-import traceback
-
+from typing import Dict, Any, List, Optional, AsyncGenerator
+import anthropic
 from app.services.llm.llm_service import LLMService
 from app.core.config.settings import settings
-from app.core import logger
-from app.services.llm.mock_embedding_service import MockEmbeddingService
+
+logger = logging.getLogger(__name__)
 
 class ClaudeService(LLMService):
-    """Claude AI LLM service implementation with error handling and fallbacks."""
+    """Service for interacting with Anthropic's Claude API."""
     
-    def __init__(self, model_name="claude-3-opus-20240229"):
-        self.api_key = settings.CLAUDE_API_KEY
-        self.api_base_url = "https://api.anthropic.com/v1"
-        self.model = model_name
-        self._mock_service = None  # Lazy-loaded mock service
+    def __init__(self, api_key: Optional[str] = None, model: str = "claude-3-sonnet-20240229"):
+        """Initialize Claude service with API key and model."""
+        self.api_key = api_key or settings.CLAUDE_API_KEY
+        self.model = model
+        self.client = anthropic.Anthropic(api_key=self.api_key)
+        logger.info(f"Initialized Claude service with model: {model}")
+    
+    def _build_system_prompt(self, industry_context: Optional[Dict[str, Any]] = None) -> str:
+        """Build system prompt with optional industry context."""
+        base_prompt = "You are a helpful, accurate, and friendly AI assistant."
         
-        # Verify API key is set - but do not raise error to allow fallback
-        if not self.api_key:
-            logger.warning("Claude API key not configured. Will attempt to use service with fallbacks.")
-
+        if industry_context and isinstance(industry_context, dict):
+            intent = industry_context.get("intent", "")
+            industry = industry_context.get("industry", "")
+            
+            # Add industry-specific instructions
+            if industry == "e-commerce":
+                base_prompt += " You specialize in e-commerce customer support, helping with orders, products, and shipping inquiries."
+            elif industry == "saas":
+                base_prompt += " You specialize in software support, helping users understand features and troubleshoot issues."
+            elif industry == "healthcare":
+                base_prompt += " You provide general healthcare information while emphasizing that you're not a replacement for professional medical advice."
+                
+            # Add intent-specific instructions
+            if intent == "product_inquiry":
+                base_prompt += " Focus on providing detailed, accurate product information."
+            elif intent == "troubleshooting":
+                base_prompt += " Provide clear, step-by-step instructions for solving problems."
+        
+        # Add knowledge base instructions
+        base_prompt += " Base your responses on the knowledge context provided. If the knowledge context doesn't contain relevant information, acknowledge the limitations."
+        
+        return base_prompt
+    
     async def generate_response(
         self,
         user_message: str,
-        conversation_history: List[Dict[str, str]],
+        conversation_history: Optional[List[Dict[str, str]]] = None,
         knowledge_context: Optional[List[Dict[str, Any]]] = None,
         industry_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        """Generate a response using Claude."""
+        try:
+            logger.info(f"Generating Claude response for message: {user_message[:50]}...")
+            
+            # Build messages array
+            messages = []
+            
+            # Add system message
+            system_prompt = self._build_system_prompt(industry_context)
+            
+            # Add knowledge context
+            knowledge_text = ""
+            if knowledge_context and isinstance(knowledge_context, list):
+                knowledge_text = "KNOWLEDGE CONTEXT:\n\n"
+                for item in knowledge_context:
+                    title = item.get("title", "Untitled")
+                    content = item.get("content", "")
+                    source = item.get("source", "")
+                    knowledge_text += f"SOURCE: {source}\n"
+                    knowledge_text += f"TITLE: {title}\n"
+                    knowledge_text += f"CONTENT: {content}\n\n"
+            
+            # Add conversation history
+            if conversation_history and isinstance(conversation_history, list):
+                for message in conversation_history:
+                    role = message.get("role", "").lower()
+                    content = message.get("content", "")
+                    
+                    if role == "user":
+                        messages.append({"role": "user", "content": content})
+                    elif role == "assistant":
+                        messages.append({"role": "assistant", "content": content})
+            
+            # Add the current message
+            messages.append({"role": "user", "content": knowledge_text + user_message})
+            
+            # Call Claude API
+            response = self.client.messages.create(
+                model=self.model,
+                system=system_prompt,
+                messages=messages,
+                max_tokens=2048,
+                temperature=0.7,
+            )
+            
+            # Extract content from response
+            content = response.content[0].text
+            
+            return {
+                "content": content,
+                "model": self.model,
+                "provider": "claude"
+            }
+        
+        except Exception as e:
+            logger.error(f"Error generating Claude response: {str(e)}", exc_info=True)
+            return {
+                "content": "I'm sorry, but I encountered an issue while processing your request. Please try again later.",
+                "error": str(e)
+            }
+
+    # ADD THIS NEW METHOD FOR STREAMING
+    async def generate_response_stream(
+        self,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+        knowledge_context: Optional[List[Dict[str, Any]]] = None,
+        industry_context: Optional[Dict[str, Any]] = None,
+    ) -> AsyncGenerator[str, None]:
         """
-        Generate a response from Claude with robust error handling.
+        Generate a streaming response using Claude.
         
         Args:
             user_message: The user's message
             conversation_history: Previous conversation messages
-            knowledge_context: Relevant knowledge base items
+            knowledge_context: Relevant knowledge items
             industry_context: Industry-specific context
             
-        Returns:
-            Dict containing response content and any context updates
+        Yields:
+            String chunks of the generated response
         """
-        # Check if API key is available
-        if not self.api_key:
-            return {
-                "content": "I'm unable to process your request as the Claude API is not properly configured. Please try another AI provider or contact support.",
-                "context_updates": {"error": "claude_api_key_missing"}
-            }
-        
-        # Construct system prompt with knowledge context
-        system_prompt = self._build_system_prompt(knowledge_context, industry_context)
-        
-        # Format messages for API - this will be altered for Claude's format
-        formatted_messages = self._format_messages(None, conversation_history, user_message)
-        
-        # Make API request
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                
-                logger.info(f"Claude API request: URL={self.api_base_url}/messages, Model={self.model}")
-
-                # Create request body with system as a separate parameter
-                request_data = {
-                    "model": self.model,
-                    "messages": formatted_messages,
-                    "max_tokens": 1024,
-                    "temperature": 0.7,
-                }
-                
-                # Add system prompt as a separate parameter if it exists
-                if system_prompt:
-                    request_data["system"] = system_prompt
-                
-                # Log the request for debugging
-                logger.debug(f"Claude API request data: {json.dumps(request_data)}")
-                
-                response = await client.post(
-                    f"{self.api_base_url}/messages",
-                    headers={
-                        "x-api-key": self.api_key,
-                        "anthropic-version": "2023-06-01",
-                        "Content-Type": "application/json",
-                    },
-                    json=request_data,
-                )
-                
-                # Log response status and headers for debugging
-                logger.debug(f"Claude API response status: {response.status_code}")
-                logger.debug(f"Claude API response headers: {response.headers}")
-                
-                if response.status_code != 200:
-                    error_message = f"Claude API error: {response.status_code} - {response.text}"
-                    logger.error(error_message)
-                    return {
-                        "content": f"I'm sorry, but I'm having trouble generating a response. Please try again later or try another AI provider.",
-                        "context_updates": {"error": f"claude_api_error_{response.status_code}"}
-                    }
-                
-                result = response.json()
-                
-                # Safely extract content from the response
-                if "content" in result and len(result["content"]) > 0:
-                    content = result["content"][0].get("text", "")
-                else:
-                    logger.error(f"Claude API returned unexpected format: {result}")
-                    content = "I'm sorry, but I'm having trouble generating a response."
-                
-                return {
-                    "content": content,
-                    "context_updates": {}
-                }
-                
-        except httpx.HTTPError as http_err:
-            error_message = f"HTTP error with Claude API: {str(http_err)}"
-            logger.exception(error_message)
-            return {
-                "content": "I'm sorry, but I'm having trouble connecting to my backend services. Please try again later.",
-                "context_updates": {"error": "claude_http_error"}
-            }
-        except (json.JSONDecodeError, KeyError) as parse_err:
-            error_message = f"Error parsing Claude API response: {str(parse_err)}"
-            logger.exception(error_message)
-            return {
-                "content": "I'm sorry, but I received an unexpected response format. Please try again later.",
-                "context_updates": {"error": "claude_parse_error"}
-            }
+            logger.info(f"Generating Claude streaming response for: {user_message[:50]}...")
+            
+            # Build system prompt
+            system_prompt = self._build_system_prompt(industry_context)
+            
+            # Format knowledge context
+            knowledge_text = ""
+            if knowledge_context and isinstance(knowledge_context, list):
+                knowledge_text = "KNOWLEDGE CONTEXT:\n\n"
+                for item in knowledge_context:
+                    title = item.get("title", "Untitled")
+                    content = item.get("content", "")
+                    source = item.get("source", "")
+                    knowledge_text += f"SOURCE: {source}\n"
+                    knowledge_text += f"TITLE: {title}\n"
+                    knowledge_text += f"CONTENT: {content}\n\n"
+            
+            # Build messages array
+            messages = []
+            
+            # Add conversation history
+            if conversation_history and isinstance(conversation_history, list):
+                for message in conversation_history:
+                    role = message.get("role", "").lower()
+                    content = message.get("content", "")
+                    
+                    if role == "user":
+                        messages.append({"role": "user", "content": content})
+                    elif role == "assistant":
+                        messages.append({"role": "assistant", "content": content})
+            
+            # Add the current message with knowledge context
+            messages.append({"role": "user", "content": knowledge_text + user_message})
+            
+            # Create streaming response
+            with self.client.messages.stream(
+                model=self.model,
+                system=system_prompt,
+                messages=messages,
+                max_tokens=2048,
+                temperature=0.7,
+            ) as stream:
+                # Process the streaming response
+                for chunk in stream:
+                    if chunk.type == "content_block_delta" and hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
+                        # Extract and yield the text chunk
+                        yield chunk.delta.text
+                        # Small delay to control stream rate
+                        await asyncio.sleep(0.01)
+        
         except Exception as e:
-            error_message = f"Error calling Claude API: {str(e)}\n{traceback.format_exc()}"
-            logger.exception(error_message)
-            return {
-                "content": "I'm sorry, but I'm experiencing technical difficulties. Please try again later or try another AI provider.",
-                "context_updates": {"error": "claude_general_error"}
-            }
-    
-    async def generate_embeddings(self, text: str) -> List[float]:
+            logger.error(f"Error in Claude streaming response: {str(e)}", exc_info=True)
+            # Yield an error message that can be displayed to the user
+            yield "I'm sorry, but I encountered an issue while processing your request. Please try again."
+            
+    async def generate_embeddings(
+        self, 
+        texts: List[str],
+        batch_size: int = 5
+    ) -> List[List[float]]:
         """
-        Generate embeddings for text.
-        Claude doesn't have a dedicated embeddings API, so we use the mock service.
+        Generate embeddings for a list of texts.
+        
+        This is a partial implementation since Claude doesn't have a native embeddings API.
+        We'll generate basic embeddings or raise a warning.
         
         Args:
-            text: The text to generate embeddings for
+            texts: List of texts to generate embeddings for
+            batch_size: Number of texts to process in each batch
             
         Returns:
-            Vector embeddings as a list of floats
+            List of embeddings (each embedding is a list of floats)
         """
-        # Always use mock service for embeddings since Claude doesn't have an embeddings API
-        mock_service = self._get_mock_service()
-        return await mock_service.generate_embeddings(text)
-    
-    def _get_mock_service(self):
-        """Lazy-load the mock service."""
-        if self._mock_service is None:
-            self._mock_service = MockEmbeddingService()
-        return self._mock_service
-    
-    def _build_system_prompt(
-        self, 
-        knowledge_context: Optional[List[Dict[str, Any]]],
-        industry_context: Optional[Dict[str, Any]]
-    ) -> str:
-        """Build the system prompt with context information and formatting instructions."""
-        base_prompt = """You are a helpful AI assistant for customer support.
+        logger.warning("Claude doesn't provide a native embeddings API. Using fallback method.")
         
-Format your responses with proper Markdown:
-- Use **bold text** for important information, headings, or key points
-- Create proper lists with bullet points when listing items or steps
-- Use proper line breaks for readability
-- When presenting structured information like product features or pricing details, use clear formatting with headings and lists
-- For numerical lists, use proper numbered formatting
-"""
-        
-        # Enhance prompt with business focus and off-topic handling
-        enhanced_prompt = self.enhance_system_prompt(base_prompt, industry_context)
-        
-        # Add knowledge context if provided
-        if knowledge_context:
-            knowledge_text = "\n\nRelevant information:\n" + "\n".join([
-                f"- {item['title']}: {item['content']}" 
-                for item in knowledge_context
-            ])
-            enhanced_prompt += knowledge_text
-        
-        return enhanced_prompt
-    
-    def _format_messages(
-        self, 
-        system_prompt: Optional[str], 
-        conversation_history: List[Dict[str, str]],
-        current_message: str
-    ) -> List[Dict[str, Any]]:
-        """
-        Format messages for the Claude API.
-        Note: For Claude, system prompt is handled separately, not as a message.
-        """
-        messages = []
-        
-        # Add conversation history - skipping any system messages
-        for msg in conversation_history:
-            if msg["role"] != "system":  # Skip system messages as Claude handles them differently
-                role = "user" if msg["role"] == "user" else "assistant"
-                messages.append({"role": role, "content": msg["content"]})
-        
-        # Add current message
-        messages.append({"role": "user", "content": current_message})
-        
-        return messages
+        try:
+            # Import numpy if available for creating mock embeddings
+            import numpy as np
+            
+            # Create mock embeddings (384-dimensional, matching the dimension used in other services)
+            # This is just a placeholder - these are not semantically meaningful embeddings
+            embeddings = []
+            for text in texts:
+                # Create a deterministic but unique embedding based on text hash
+                seed = hash(text) % 10000
+                np.random.seed(seed)
+                # Generate a 384-dimensional vector normalized to unit length
+                embedding = np.random.randn(384)
+                embedding = embedding / np.linalg.norm(embedding)
+                embeddings.append(embedding.tolist())
+            
+            return embeddings
+            
+        except ImportError:
+            # If numpy is not available, return even simpler mock embeddings
+            logger.warning("NumPy not available, using very basic mock embeddings")
+            embeddings = []
+            for text in texts:
+                # Create a simple mock embedding (just 384 elements of 0)
+                embedding = [0.0] * 384
+                embeddings.append(embedding)
+            
+            return embeddings            
