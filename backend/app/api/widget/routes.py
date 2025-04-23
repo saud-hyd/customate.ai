@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Dict, Any
+from fastapi.responses import Response, HTMLResponse
+
 
 from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.repositories.client_repository import ClientSettingsRepository
+
 
 router = APIRouter(prefix="/widget", tags=["widget"])
 
@@ -81,3 +84,401 @@ async def update_widget_settings(
             "custom_settings": settings.custom_settings
         }
     }
+    
+
+@router.get("/widget.js", include_in_schema=False)
+async def serve_widget_js():
+    """Serve the widget JavaScript file without authentication."""
+    # The file content as a string - a simple version of the widget loader
+    widget_js = """
+// Customate.ai Widget Loader
+(function() {
+    // Configuration object to store settings
+    const config = window.customateConfig || {};
+    
+    // Default settings
+    const defaults = {
+        apiKey: null,
+        position: 'bottom-right',
+        primaryColor: '#4f46e5',
+        apiUrl: null
+    };
+    
+    // Merge configs
+    const settings = {...defaults, ...config};
+    
+    // Make sure we have an API key
+    if (!settings.apiKey) {
+        console.error('Customate.ai Widget: API key is required');
+        return;
+    }
+    
+    // Set the API URL to your backend
+    if (!settings.apiUrl) {
+        settings.apiUrl = 'https://customate-ai-1.onrender.com';
+    }
+    
+    // Create widget container
+    const container = document.createElement('div');
+    container.id = 'customate-chat-widget';
+    container.style.position = 'fixed';
+    container.style.zIndex = '9999';
+    container.style.overflow = 'hidden';
+    document.body.appendChild(container);
+    
+    // Position the widget
+    if (settings.position === 'bottom-right') {
+        container.style.bottom = '20px';
+        container.style.right = '20px';
+    } else if (settings.position === 'bottom-left') {
+        container.style.bottom = '20px';
+        container.style.left = '20px';
+    }
+    
+    // Create toggle button
+    const button = document.createElement('button');
+    button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill="currentColor"/></svg>';
+    button.style.width = '60px';
+    button.style.height = '60px';
+    button.style.borderRadius = '50%';
+    button.style.backgroundColor = settings.primaryColor;
+    button.style.color = 'white';
+    button.style.border = 'none';
+    button.style.cursor = 'pointer';
+    button.style.display = 'flex';
+    button.style.alignItems = 'center';
+    button.style.justifyContent = 'center';
+    button.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+    container.appendChild(button);
+    
+    // Widget state
+    let isOpen = false;
+    let chatFrame = null;
+    
+    // Toggle widget
+    button.addEventListener('click', function() {
+        if (isOpen) {
+            // Close widget
+            if (chatFrame) {
+                chatFrame.style.display = 'none';
+            }
+            isOpen = false;
+        } else {
+            // Open widget or create it if it doesn't exist
+            if (!chatFrame) {
+                // Create iframe for the chat interface
+                chatFrame = document.createElement('iframe');
+                chatFrame.style.width = '350px';
+                chatFrame.style.height = '500px';
+                chatFrame.style.border = 'none';
+                chatFrame.style.borderRadius = '10px';
+                chatFrame.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                chatFrame.style.backgroundColor = 'white';
+                chatFrame.style.position = 'absolute';
+                chatFrame.style.bottom = '80px';
+                chatFrame.style.right = '0';
+                
+                // Position the frame based on the settings
+                if (settings.position === 'bottom-left') {
+                    chatFrame.style.right = 'auto';
+                    chatFrame.style.left = '0';
+                }
+                
+                // Set the src to your chat interface URL with API key
+                const chatUrl = settings.apiUrl + '/api/widget/chat?apiKey=' + encodeURIComponent(settings.apiKey);
+                if (settings.customData) {
+                    chatFrame.src = chatUrl + '&config=' + encodeURIComponent(JSON.stringify(settings));
+                } else {
+                    chatFrame.src = chatUrl;
+                }
+                
+                container.appendChild(chatFrame);
+            } else {
+                chatFrame.style.display = 'block';
+            }
+            isOpen = true;
+        }
+    });
+})();
+    """
+    
+    return Response(
+        content=widget_js,
+        media_type="application/javascript"
+    )
+
+@router.get("/chat", include_in_schema=False)
+async def serve_chat_interface():
+    """Serve the chat interface HTML without authentication."""
+    html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: white;
+        }
+        
+        .chat-header {
+            padding: 12px 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .chat-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background-color: #f9fafb;
+        }
+        
+        .chat-input-container {
+            border-top: 1px solid #e5e7eb;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            background-color: white;
+        }
+        
+        .chat-input {
+            flex: 1;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            padding: 10px 16px;
+            max-height: 120px;
+            min-height: 44px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .chat-input:focus {
+            border-color: #6366f1;
+        }
+        
+        .chat-send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-message {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+        
+        .assistant-message {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-break: break-word;
+        }
+        
+        .user-bubble {
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .assistant-bubble {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header" id="chatHeader">
+            <h3 class="chat-title" id="chatTitle">AI Assistant</h3>
+            <button id="closeBtn" style="background: none; border: none; color: white; cursor: pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages"></div>
+        
+        <div class="chat-input-container">
+            <textarea id="chatInput" class="chat-input" placeholder="Type your message..." rows="1"></textarea>
+            <button id="sendBtn" class="chat-send-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get API key from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const apiKey = urlParams.get('apiKey');
+            
+            let configParam = urlParams.get('config');
+            let config = {};
+            
+            if (configParam) {
+                try {
+                    config = JSON.parse(decodeURIComponent(configParam));
+                } catch (e) {
+                    console.error('Error parsing config:', e);
+                }
+            }
+            
+            // Apply configuration
+            const primaryColor = config.primaryColor || '#4f46e5';
+            const chatTitle = config.chatbotName || 'AI Assistant';
+            
+            // Set the header color and title
+            document.getElementById('chatHeader').style.backgroundColor = primaryColor;
+            document.getElementById('chatTitle').textContent = chatTitle;
+            document.getElementById('sendBtn').style.backgroundColor = primaryColor;
+            
+            // Focus input on load
+            document.getElementById('chatInput').focus();
+            
+            // Auto-resize textarea
+            const chatInput = document.getElementById('chatInput');
+            chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            // Session ID for conversation tracking
+            let sessionId = null;
+            
+            // Add message to the chat
+            function addMessage(message, isUser) {
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = isUser ? 'user-message' : 'assistant-message';
+                
+                const bubble = document.createElement('div');
+                bubble.className = `message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'}`;
+                if (isUser) {
+                    bubble.style.backgroundColor = primaryColor;
+                }
+                bubble.textContent = message;
+                
+                messageDiv.appendChild(bubble);
+                messagesContainer.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
+            // Send message to backend
+            async function sendMessage(message) {
+                if (!message.trim()) return;
+                
+                // Add user message to chat
+                addMessage(message, true);
+                
+                try {
+                    // Send message to backend
+                    const response = await fetch(`${config.apiUrl || 'https://customate-ai-1.onrender.com'}/api/chatbot/message`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': apiKey
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            session_id: sessionId,
+                            llm_settings: config.customData || {}
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to send message');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Update session ID
+                    if (data.session_id) {
+                        sessionId = data.session_id;
+                    }
+                    
+                    // Add assistant response to chat
+                    addMessage(data.message.content, false);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessage('Sorry, there was an error processing your request.', false);
+                }
+            }
+            
+            // Send message on button click
+            document.getElementById('sendBtn').addEventListener('click', function() {
+                const message = chatInput.value;
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+                sendMessage(message);
+            });
+            
+            // Send message on Enter (but allow Shift+Enter for new line)
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const message = chatInput.value;
+                    chatInput.value = '';
+                    chatInput.style.height = 'auto';
+                    sendMessage(message);
+                }
+            });
+            
+            // Close button
+            document.getElementById('closeBtn').addEventListener('click', function() {
+                // Send a message to the parent window to close the chat
+                window.parent.postMessage('closeChat', '*');
+            });
+            
+            // Add welcome message
+            const greeting = config.greeting_message || 'Hello! How can I help you today?';
+            addMessage(greeting, false);
+        });
+    </script>
+</body>
+</html>
+    """
+    
+    return HTMLResponse(content=html_content)    

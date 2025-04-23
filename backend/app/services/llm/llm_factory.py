@@ -7,7 +7,7 @@ from app.services.llm.deepseek_service import DeepSeekService
 from app.services.llm.openai_service import OpenAIService
 from app.services.llm.claude_service import ClaudeService
 from app.repositories.client_repository import ClientSettingsRepository
-from app.core.config.settings import settings  # Add this import
+from app.core.config.settings import settings
 from app.core import logger
 
 class LLMFactory:
@@ -80,7 +80,8 @@ class LLMFactory:
                 logger.warning("Claude API key not configured. Falling back to DeepSeek.")
                 return DeepSeekService()
             if model:
-                return ClaudeService(model_name=model)
+                # FIX: Changed parameter name from model_name to model to match the ClaudeService constructor
+                return ClaudeService(model=model)
             return ClaudeService()
         else:
             # Default to DeepSeek

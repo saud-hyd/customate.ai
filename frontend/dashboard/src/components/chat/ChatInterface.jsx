@@ -92,11 +92,10 @@ const ChatInterface = ({ config }) => {
                   isStreaming: false,
                 };
               } else {
-                // FIXED: Append the chunk to existing content instead of replacing
-                const currentContent = updatedMessages[botMessageIndex].content;
+                // Update the content
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
-                  content: currentContent + chunk,  // This is the key fix - append instead of replace
+                  content: updatedMessages[botMessageIndex].content + chunk,
                   id: messageId || tempBotMessageId,
                 };
               }
@@ -107,7 +106,8 @@ const ChatInterface = ({ config }) => {
           
           // Scroll to bottom with each new chunk
           setTimeout(scrollToBottom, 50);
-        },        // On done
+        },
+        // On done
         (response) => {
           setIsLoading(false);
           if (response && response.session_id) {
@@ -206,7 +206,16 @@ const ChatInterface = ({ config }) => {
     }
   }, [config]);
 
-  // Message component with blinking cursor for streaming
+  // Typing indicator component
+  const TypingIndicator = () => (
+    <div className="flex space-x-1 items-center h-5">
+      <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }}></div>
+      <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }}></div>
+      <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }}></div>
+    </div>
+  );
+
+  // Message component with typing indicator
   const Message = ({ message }) => {
     const isUser = message.role === 'user';
     const accentColor = config?.primaryColor || '#4f46e5';
@@ -214,14 +223,21 @@ const ChatInterface = ({ config }) => {
     return (
       <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
         <div
-          className={`${
+          className={`relative ${
             isUser ? 'text-white rounded-lg py-2 px-4 max-w-[80%]' : 'bg-gray-100 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]'
           } ${message.isError ? 'bg-red-100 text-red-800' : ''}`}
           style={isUser ? { backgroundColor: accentColor } : {}}
         >
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-          {message.isStreaming && (
-            <span className="ml-1 inline-block h-4 w-[1px] bg-current animate-pulse">▌</span>
+          {/* Message content */}
+          <div className="text-sm whitespace-pre-wrap break-words">
+            {message.content || (message.isStreaming && <TypingIndicator />)}
+          </div>
+          
+          {/* Typing indicator shown while streaming */}
+          {message.isStreaming && message.content && (
+            <div className="mt-1 pt-1 border-t border-gray-200 dark:border-gray-700">
+              <TypingIndicator />
+            </div>
           )}
         </div>
       </div>
@@ -257,14 +273,22 @@ const ChatInterface = ({ config }) => {
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className={`px-4 py-2 text-white rounded-r-md ${
+            className={`px-4 py-2 text-white rounded-r-md transition-colors ${
               isLoading || !input.trim()
                 ? 'opacity-50 cursor-not-allowed'
                 : 'hover:opacity-90'
             }`}
             style={{ backgroundColor: config?.primaryColor || '#4f46e5' }}
           >
-            {isLoading ? 'Sending...' : 'Send'}
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending
+              </span>
+            ) : 'Send'}
           </button>
         </div>
       </form>
@@ -287,7 +311,7 @@ ChatInterface.propTypes = {
 ChatInterface.defaultProps = {
   config: {
     primaryColor: '#4f46e5',
-    temperature: 0.4
+    temperature: 0.7
   }
 };
 

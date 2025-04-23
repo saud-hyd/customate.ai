@@ -200,32 +200,29 @@ const TestChatbotPage = () => {
   
   // Generate embed code for installation
   const generateEmbedCode = () => {
+    const backendUrl = 'https://customate-ai-1.onrender.com'; // Your Render backend URL
+    
     return `<!-- Customate.ai Chat Widget -->
-<script>
-  (function(c,u,s,t,o,m,a,t,e){
-    c['CustomateWidget']=o;
-    c[o]=c[o]||function(){(c[o].q=c[o].q||[]).push(arguments)};
-    c[o].l=1*new Date();a=u.createElement(s);
-    t=u.getElementsByTagName(s)[0];a.async=1;a.src=t;
-    t.parentNode.insertBefore(a,t)
-  })(window,document,'script','https://cdn.customate.ai/widget.js','cw');
-  
-  cw('init', '${chatSettings.apiKey}', {
-    primaryColor: '${chatSettings.primaryColor}',
-    position: '${chatSettings.widgetPosition}',
-    chatbotName: '${chatSettings.chatbotName}',
-    showTypingIndicator: ${chatSettings.showTypingIndicator},
-    enableSuggestions: ${chatSettings.enableSuggestions},
-    resetOnPageRefresh: ${chatSettings.resetOnPageRefresh},
-    sessionTimeout: ${chatSettings.sessionTimeout}${chatSettings.llmProvider ? `,
-    customData: {
-      llmProvider: '${chatSettings.llmProvider}'${chatSettings.llmModel ? `,
-      llmModel: '${chatSettings.llmModel}'` : ''}
-    }` : ''}
-  });
-</script>`;
+  <script>
+    window.customateConfig = {
+      apiKey: '${chatSettings.apiKey}',
+      primaryColor: '${chatSettings.primaryColor}',
+      position: '${chatSettings.widgetPosition}',
+      chatbotName: '${chatSettings.chatbotName}',
+      showTypingIndicator: ${chatSettings.showTypingIndicator},
+      enableSuggestions: ${chatSettings.enableSuggestions},
+      resetOnPageRefresh: ${chatSettings.resetOnPageRefresh},
+      sessionTimeout: ${chatSettings.sessionTimeout},
+      apiUrl: '${backendUrl}'${chatSettings.llmProvider ? `,
+      customData: {
+        llmProvider: '${chatSettings.llmProvider}'${chatSettings.llmModel ? `,
+        llmModel: '${chatSettings.llmModel}'` : ''}
+      }` : ''}
+    };
+  </script>
+  <script src="${backendUrl}/api/widget/widget.js" async></script>`;
   };
-  
+    
   if (isLoading) {
     return <LoadingState message="Initializing chatbot test environment..." />;
   }
