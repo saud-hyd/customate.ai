@@ -45,3 +45,4 @@ backend/app.log.*
 backend/.env
 .env*
 
+backend/app/core/config/settings.py
