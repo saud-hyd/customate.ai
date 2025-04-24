@@ -89,9 +89,9 @@ async def update_widget_settings(
 @router.get("/widget.js", include_in_schema=False)
 async def serve_widget_js():
     """Serve the widget JavaScript file without authentication."""
-    # The file content as a string - a simple version of the widget loader
+    # The file content as a string - an improved version of the widget loader
     widget_js = """
-// Customate.ai Widget Loader
+// Improved Customate.ai Widget Loader
 (function() {
     // Configuration object to store settings
     const config = window.customateConfig || {};
@@ -101,21 +101,28 @@ async def serve_widget_js():
         apiKey: null,
         position: 'bottom-right',
         primaryColor: '#4f46e5',
-        apiUrl: null
+        apiUrl: 'https://customate-ai-1.onrender.com',
+        chatbotName: 'AI Assistant',
+        showTypingIndicator: true,
+        enableSuggestions: true
     };
     
     // Merge configs
     const settings = {...defaults, ...config};
     
+    // Log for debugging
+    console.log('Customate Chat: Initializing with settings', 
+      JSON.stringify({
+        apiKey: settings.apiKey ? '***' : 'not set',
+        position: settings.position,
+        apiUrl: settings.apiUrl
+      })
+    );
+    
     // Make sure we have an API key
     if (!settings.apiKey) {
         console.error('Customate.ai Widget: API key is required');
         return;
-    }
-    
-    // Set the API URL to your backend
-    if (!settings.apiUrl) {
-        settings.apiUrl = 'https://customate-ai-1.onrender.com';
     }
     
     // Create widget container
@@ -124,7 +131,6 @@ async def serve_widget_js():
     container.style.position = 'fixed';
     container.style.zIndex = '9999';
     container.style.overflow = 'hidden';
-    document.body.appendChild(container);
     
     // Position the widget
     if (settings.position === 'bottom-right') {
@@ -133,9 +139,17 @@ async def serve_widget_js():
     } else if (settings.position === 'bottom-left') {
         container.style.bottom = '20px';
         container.style.left = '20px';
+    } else if (settings.position === 'top-right') {
+        container.style.top = '20px';
+        container.style.right = '20px';
+    } else if (settings.position === 'top-left') {
+        container.style.top = '20px';
+        container.style.left = '20px';
     }
     
-    // Create toggle button
+    document.body.appendChild(container);
+    
+    // Create toggle button with explicit styling
     const button = document.createElement('button');
     button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill="currentColor"/></svg>';
     button.style.width = '60px';
@@ -149,23 +163,40 @@ async def serve_widget_js():
     button.style.alignItems = 'center';
     button.style.justifyContent = 'center';
     button.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+    button.style.padding = '0';
+    button.style.transition = 'transform 0.2s ease';
+    button.setAttribute('aria-label', 'Open chat widget');
     container.appendChild(button);
     
     // Widget state
     let isOpen = false;
     let chatFrame = null;
     
-    // Toggle widget
-    button.addEventListener('click', function() {
+    // Add hover effect
+    button.addEventListener('mouseover', function() {
+        button.style.transform = 'scale(1.05)';
+    });
+    
+    button.addEventListener('mouseout', function() {
+        button.style.transform = 'scale(1)';
+    });
+    
+    // Toggle widget with explicit debugging
+    button.addEventListener('click', function(e) {
+        console.log('Customate widget button clicked');
+        e.preventDefault();
+        
         if (isOpen) {
             // Close widget
             if (chatFrame) {
                 chatFrame.style.display = 'none';
             }
             isOpen = false;
+            console.log('Customate widget closed');
         } else {
             // Open widget or create it if it doesn't exist
             if (!chatFrame) {
+                console.log('Creating chat iframe');
                 // Create iframe for the chat interface
                 chatFrame = document.createElement('iframe');
                 chatFrame.style.width = '350px';
@@ -175,42 +206,64 @@ async def serve_widget_js():
                 chatFrame.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
                 chatFrame.style.backgroundColor = 'white';
                 chatFrame.style.position = 'absolute';
-                chatFrame.style.bottom = '80px';
-                chatFrame.style.right = '0';
+                chatFrame.style.overflow = 'hidden';
                 
                 // Position the frame based on the settings
-                if (settings.position === 'bottom-left') {
-                    chatFrame.style.right = 'auto';
+                if (settings.position === 'bottom-right') {
+                    chatFrame.style.bottom = '80px';
+                    chatFrame.style.right = '0';
+                } else if (settings.position === 'bottom-left') {
+                    chatFrame.style.bottom = '80px';
+                    chatFrame.style.left = '0';
+                } else if (settings.position === 'top-right') {
+                    chatFrame.style.top = '20px';
+                    chatFrame.style.right = '0';
+                } else if (settings.position === 'top-left') {
+                    chatFrame.style.top = '20px';
                     chatFrame.style.left = '0';
                 }
                 
                 // Set the src to your chat interface URL with API key
-                const chatUrl = settings.apiUrl + '/api/widget/chat?apiKey=' + encodeURIComponent(settings.apiKey);
-                if (settings.customData) {
-                    chatFrame.src = chatUrl + '&config=' + encodeURIComponent(JSON.stringify(settings));
-                } else {
-                    chatFrame.src = chatUrl;
-                }
+                const configString = encodeURIComponent(JSON.stringify(settings));
+                const chatUrl = `${settings.apiUrl}/api/widget/chat?apiKey=${encodeURIComponent(settings.apiKey)}&config=${configString}`;
+                
+                console.log('Loading chat iframe from:', chatUrl);
+                chatFrame.src = chatUrl;
+                chatFrame.setAttribute('title', 'Customate Chat Widget');
                 
                 container.appendChild(chatFrame);
+                
+                // Listen for close messages from the iframe
+                window.addEventListener('message', function(event) {
+                    if (event.data === 'closeChat') {
+                        chatFrame.style.display = 'none';
+                        isOpen = false;
+                    }
+                });
+                
             } else {
+                console.log('Showing existing chat iframe');
                 chatFrame.style.display = 'block';
             }
             isOpen = true;
         }
     });
+    
+    // Log successful initialization
+    console.log('Customate Chat Widget initialized successfully');
 })();
-    """
+"""
     
     return Response(
         content=widget_js,
         media_type="application/javascript"
     )
-
+    
 @router.get("/chat", include_in_schema=False)
 async def serve_chat_interface():
     """Serve the chat interface HTML without authentication."""
     html_content = """
+<!-- Path: backend/app/api/widget/routes.py - chat route HTML -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -321,6 +374,47 @@ async def serve_chat_interface():
             color: #1f2937;
             border-bottom-left-radius: 4px;
         }
+        
+        .error-message {
+            background-color: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 12px;
+            margin-bottom: 16px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #6b7280;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: typing-animation 1.5s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        
+        @keyframes typing-animation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
     </style>
 </head>
 <body>
@@ -358,6 +452,7 @@ async def serve_chat_interface():
             if (configParam) {
                 try {
                     config = JSON.parse(decodeURIComponent(configParam));
+                    console.log('Chat config loaded:', config);
                 } catch (e) {
                     console.error('Error parsing config:', e);
                 }
@@ -384,18 +479,54 @@ async def serve_chat_interface():
             
             // Session ID for conversation tracking
             let sessionId = null;
+            let isTyping = false;
+            let typingIndicator = null;
+            
+            // Create typing indicator
+            function showTypingIndicator() {
+                if (isTyping) return;
+                
+                const messagesContainer = document.getElementById('chatMessages');
+                typingIndicator = document.createElement('div');
+                typingIndicator.className = 'typing-indicator';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'typing-dot';
+                    typingIndicator.appendChild(dot);
+                }
+                
+                messagesContainer.appendChild(typingIndicator);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                isTyping = true;
+            }
+            
+            function hideTypingIndicator() {
+                if (!isTyping || !typingIndicator) return;
+                
+                typingIndicator.remove();
+                typingIndicator = null;
+                isTyping = false;
+            }
             
             // Add message to the chat
-            function addMessage(message, isUser) {
+            function addMessage(message, isUser, isError = false) {
+                hideTypingIndicator();
+                
                 const messagesContainer = document.getElementById('chatMessages');
                 const messageDiv = document.createElement('div');
                 messageDiv.className = isUser ? 'user-message' : 'assistant-message';
                 
                 const bubble = document.createElement('div');
                 bubble.className = `message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'}`;
+                if (isError) {
+                    bubble.className += ' error-message';
+                }
+                
                 if (isUser) {
                     bubble.style.backgroundColor = primaryColor;
                 }
+                
                 bubble.textContent = message;
                 
                 messageDiv.appendChild(bubble);
@@ -405,6 +536,10 @@ async def serve_chat_interface():
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
             
+            // Get backend URL from config
+            const backendUrl = config.apiUrl || 'https://customate-ai-1.onrender.com';
+            console.log('Using backend URL:', backendUrl);
+            
             // Send message to backend
             async function sendMessage(message) {
                 if (!message.trim()) return;
@@ -412,9 +547,23 @@ async def serve_chat_interface():
                 // Add user message to chat
                 addMessage(message, true);
                 
+                // Show typing indicator
+                showTypingIndicator();
+                
+                // Disable input while processing
+                chatInput.disabled = true;
+                document.getElementById('sendBtn').disabled = true;
+                
                 try {
+                    console.log('Sending message to:', `${backendUrl}/api/chatbot/message`);
+                    console.log('Message payload:', {
+                        message: message,
+                        session_id: sessionId,
+                        llm_settings: config.customData || {}
+                    });
+                    
                     // Send message to backend
-                    const response = await fetch(`${config.apiUrl || 'https://customate-ai-1.onrender.com'}/api/chatbot/message`, {
+                    const response = await fetch(`${backendUrl}/api/chatbot/message`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -427,23 +576,43 @@ async def serve_chat_interface():
                         })
                     });
                     
+                    console.log('Response status:', response.status);
+                    
                     if (!response.ok) {
-                        throw new Error('Failed to send message');
+                        const errorText = await response.text();
+                        console.error('API Error:', response.status, errorText);
+                        throw new Error(`API Error (${response.status}): ${errorText}`);
                     }
                     
                     const data = await response.json();
+                    console.log('Response data:', data);
                     
                     // Update session ID
                     if (data.session_id) {
                         sessionId = data.session_id;
+                        console.log('Session ID updated:', sessionId);
                     }
+                    
+                    // Hide typing indicator
+                    hideTypingIndicator();
                     
                     // Add assistant response to chat
                     addMessage(data.message.content, false);
                     
                 } catch (error) {
-                    console.error('Error:', error);
-                    addMessage('Sorry, there was an error processing your request.', false);
+                    console.error('Error sending message:', error);
+                    
+                    // Hide typing indicator
+                    hideTypingIndicator();
+                    
+                    // Show error message
+                    const errorMessage = `Sorry, there was an error processing your request. ${error.message}`;
+                    addMessage(errorMessage, false, true);
+                } finally {
+                    // Re-enable input
+                    chatInput.disabled = false;
+                    document.getElementById('sendBtn').disabled = false;
+                    chatInput.focus();
                 }
             }
             
@@ -481,4 +650,4 @@ async def serve_chat_interface():
 </html>
     """
     
-    return HTMLResponse(content=html_content)    
+    return HTMLResponse(content=html_content)

@@ -1,3 +1,5 @@
+# File: backend/app/core/middleware/client_context.py
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
@@ -35,6 +37,7 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
             # If API key exists, lookup client
             if api_key:
                 try:
+                    logger.debug(f"Authenticating request with API key: {api_key[:8]}...")
                     db = SessionLocal()
                     client_repo = ClientRepository()
                     client = client_repo.get_by_api_key(db, api_key)
@@ -44,11 +47,11 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
                         request.state.client_id = client.client_id
                         request.state.client = client
                         client_id = client.client_id
-                        
-                        # Initialize subscription usage if needed - can be added here
-                        # from app.services.analytics.usage_tracker import UsageTracker
-                        # usage_tracker = UsageTracker()
-                        # usage_tracker.initialize_subscription_usage(db, client.client_id)
+                        logger.debug(f"Successfully authenticated client: {client_id}")
+                    else:
+                        # Log warning when client lookup fails but don't break the request flow
+                        # Actual auth failure will happen in the endpoint dependencies
+                        logger.warning(f"No client found for API key: {api_key[:8]}...")
                 finally:
                     db.close()
         
@@ -102,6 +105,8 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
             "/api/openapi.json", 
             "/api/auth/token", 
             "/api/auth/register",
+            "/api/widget/widget.js", # Always public
+            "/api/widget/chat",      # Always public
             "/",  # Root endpoint for health checks
         ]
         
