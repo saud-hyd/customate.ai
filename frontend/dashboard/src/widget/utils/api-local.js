@@ -21,8 +21,18 @@ const apiFetch = async (endpoint, options = {}) => {
     options.headers = {};
   }
   
-  // Add API key authentication
-  options.headers['X-API-Key'] = config.apiKey || "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50";
+  // First try to get token from localStorage
+  const token = localStorage.getItem('token');
+  
+  // Add authentication - prefer token over API key
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+    console.log('Using Bearer token authentication');
+  } else {
+    // Fall back to API key authentication
+    options.headers['X-API-Key'] = config.apiKey || "12b9d3d5-1aa4-466b-af7d-67c1ab4c4a50";
+    console.log('Using API key authentication');
+  }
   
   // Add content type if not specified and method is not GET
   if (!options.headers['Content-Type'] && options.method && options.method !== 'GET') {

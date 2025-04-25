@@ -34,6 +34,10 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
             # Try to extract API key from header
             api_key = request.headers.get("X-API-Key")
             
+            # If not in header, check query parameters for widget support
+            if not api_key:
+                api_key = request.query_params.get("apiKey")
+                
             # If API key exists, lookup client
             if api_key:
                 try:
@@ -50,11 +54,10 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
                         logger.debug(f"Successfully authenticated client: {client_id}")
                     else:
                         # Log warning when client lookup fails but don't break the request flow
-                        # Actual auth failure will happen in the endpoint dependencies
                         logger.warning(f"No client found for API key: {api_key[:8]}...")
                 finally:
                     db.close()
-        
+                
         # Process the request
         response = await call_next(request)
         
@@ -105,8 +108,12 @@ class ClientContextMiddleware(BaseHTTPMiddleware):
             "/api/openapi.json", 
             "/api/auth/token", 
             "/api/auth/register",
-            "/api/widget/widget.js", # Always public
-            "/api/widget/chat",      # Always public
+            "/api/auth/magic-link/request",
+            "/api/auth/magic-link/verify",
+            "/api/auth/password-reset/request",
+            "/api/auth/password-reset/verify",
+            "/api/widget/widget.js",
+            "/api/widget/chat",
             "/",  # Root endpoint for health checks
         ]
         

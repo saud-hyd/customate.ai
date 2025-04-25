@@ -1,4 +1,4 @@
-# File: backend/app/api/chatbot/routes.py
+# Path: backend/app/api/chatbot/routes.py
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
@@ -7,8 +7,9 @@ import time
 import traceback
 
 from app.core.database.dependencies import get_db
-from app.api.auth.dependencies import get_client_with_any_auth  # Use the new dependency
 from app.domain.client.entities import Client
+# Add this import - using the flexible auth dependency
+from app.api.auth.dependencies import get_client_with_any_auth
 from app.services.chat.chat_service import ChatService
 from app.services.knowledge.similarity_service import SimilarityService
 from app.services.llm.deepseek_service import DeepSeekService
@@ -24,12 +25,15 @@ router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 async def send_message(
     message_data: Dict[str, Any],
     request: Request,
-    current_client: Client = Depends(get_client_with_any_auth),  # CHANGED LINE
+    current_client: Client = Depends(get_client_with_any_auth),  # Use the flexible auth dependency
     db: Session = Depends(get_db)
 ):
     """Send a message to the chatbot and get a response."""
     start_time = time.time()
     
+    # No need for manual API key lookup - the dependency handles it
+    
+    # Regular message processing
     if "message" not in message_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -115,10 +119,12 @@ async def send_message(
 async def get_chat_history(
     session_id: str,
     limit: int = 50,
-    current_client: Client = Depends(get_client_with_any_auth),  # CHANGED LINE
+    current_client: Client = Depends(get_client_with_any_auth),  # Use the flexible auth dependency
     db: Session = Depends(get_db)
 ):
     """Get chat history for a specific session."""
+    # No need for manual auth handling - the dependency handles it
+    
     # Use LLM Factory to get the correct LLM service
     llm_service = LLMFactory.create_llm_service(db, current_client.client_id)
     

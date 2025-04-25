@@ -8,7 +8,6 @@
     <p>This is the absolute minimal test for the widget.</p>
     
     <script>
-        // Direct inline implementation to guarantee button presence
         document.addEventListener('DOMContentLoaded', function() {
             // Create widget elements
             const container = document.createElement('div');
@@ -38,7 +37,6 @@
             let chatFrame = null;
             
             button.addEventListener('click', function() {
-                alert('Button clicked!');
                 console.log('Chat button clicked');
                 
                 if (!chatFrame) {
@@ -54,7 +52,17 @@
                     chatFrame.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
                     
                     const apiKey = 'eEx17lbp60FYeWlZxcrg6TYbsK-ZiA_unlkc8cUQTqA';
-                    chatFrame.src = `http://localhost:8000/api/widget/chat?apiKey=${apiKey}`;
+                    
+                    // Simple config object with necessary parameters
+                    const config = {
+                        apiUrl: window.location.origin.includes('localhost') ? 
+                            'http://localhost:8000' : 'https://customate-ai-1.onrender.com',
+                        primaryColor: '#4f46e5',
+                        chatbotName: 'Customate AI'
+                    };
+                    
+                    const configStr = encodeURIComponent(JSON.stringify(config));
+                    chatFrame.src = `${config.apiUrl}/api/widget/chat?apiKey=${apiKey}&config=${configStr}`;
                     
                     container.appendChild(chatFrame);
                 } else {

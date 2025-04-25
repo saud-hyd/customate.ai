@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+# Path: backend/app/api/widget/routes.py
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 from fastapi.responses import Response, HTMLResponse
-
 
 from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.repositories.client_repository import ClientSettingsRepository
-
 
 router = APIRouter(prefix="/widget", tags=["widget"])
 
@@ -85,7 +84,6 @@ async def update_widget_settings(
         }
     }
     
-
 @router.get("/widget.js", include_in_schema=False)
 async def serve_widget_js():
     """Serve the widget JavaScript file without authentication."""
@@ -260,10 +258,13 @@ async def serve_widget_js():
     )
     
 @router.get("/chat", include_in_schema=False)
-async def serve_chat_interface():
+async def serve_chat_interface(
+    apiKey: str = None,
+    config: str = None,
+    request: Request = None
+):
     """Serve the chat interface HTML without authentication."""
     html_content = """
-<!-- Path: backend/app/api/widget/routes.py - chat route HTML -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -291,6 +292,7 @@ async def serve_chat_interface():
             display: flex;
             align-items: center;
             justify-content: space-between;
+            background-color: #4f46e5;
         }
         
         .chat-title {
@@ -342,6 +344,7 @@ async def serve_chat_interface():
             display: flex;
             align-items: center;
             justify-content: center;
+            background-color: #4f46e5;
         }
         
         .user-message {
@@ -366,6 +369,7 @@ async def serve_chat_interface():
         .user-bubble {
             color: white;
             border-bottom-right-radius: 4px;
+            background-color: #4f46e5;
         }
         
         .assistant-bubble {
@@ -441,6 +445,7 @@ async def serve_chat_interface():
     </div>
     
     <script>
+        // Wait for the DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Get API key from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
@@ -458,20 +463,30 @@ async def serve_chat_interface():
                 }
             }
             
+            // Make sure DOM elements exist before trying to access them
+            const headerElement = document.getElementById('chatHeader');
+            const titleElement = document.getElementById('chatTitle');
+            const sendBtnElement = document.getElementById('sendBtn');
+            const chatInput = document.getElementById('chatInput');
+            
+            if (!headerElement || !titleElement || !sendBtnElement || !chatInput) {
+                console.error('Required DOM elements not found');
+                return;
+            }
+            
             // Apply configuration
             const primaryColor = config.primaryColor || '#4f46e5';
             const chatTitle = config.chatbotName || 'AI Assistant';
             
             // Set the header color and title
-            document.getElementById('chatHeader').style.backgroundColor = primaryColor;
-            document.getElementById('chatTitle').textContent = chatTitle;
-            document.getElementById('sendBtn').style.backgroundColor = primaryColor;
+            headerElement.style.backgroundColor = primaryColor;
+            titleElement.textContent = chatTitle;
+            sendBtnElement.style.backgroundColor = primaryColor;
             
             // Focus input on load
-            document.getElementById('chatInput').focus();
+            chatInput.focus();
             
             // Auto-resize textarea
-            const chatInput = document.getElementById('chatInput');
             chatInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
@@ -487,6 +502,8 @@ async def serve_chat_interface():
                 if (isTyping) return;
                 
                 const messagesContainer = document.getElementById('chatMessages');
+                if (!messagesContainer) return;
+                
                 typingIndicator = document.createElement('div');
                 typingIndicator.className = 'typing-indicator';
                 
@@ -514,6 +531,8 @@ async def serve_chat_interface():
                 hideTypingIndicator();
                 
                 const messagesContainer = document.getElementById('chatMessages');
+                if (!messagesContainer) return;
+                
                 const messageDiv = document.createElement('div');
                 messageDiv.className = isUser ? 'user-message' : 'assistant-message';
                 
@@ -536,8 +555,9 @@ async def serve_chat_interface():
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
             
-            // Get backend URL from config
-            const backendUrl = config.apiUrl || 'https://customate-ai-1.onrender.com';
+            // Get current origin as the API URL
+            const currentOrigin = window.location.origin;
+            const backendUrl = config.apiUrl || currentOrigin;
             console.log('Using backend URL:', backendUrl);
             
             // Send message to backend
@@ -552,15 +572,11 @@ async def serve_chat_interface():
                 
                 // Disable input while processing
                 chatInput.disabled = true;
-                document.getElementById('sendBtn').disabled = true;
+                sendBtnElement.disabled = true;
                 
                 try {
                     console.log('Sending message to:', `${backendUrl}/api/chatbot/message`);
-                    console.log('Message payload:', {
-                        message: message,
-                        session_id: sessionId,
-                        llm_settings: config.customData || {}
-                    });
+                    console.log('With API key:', apiKey ? `${apiKey.substring(0, 5)}...` : 'none');
                     
                     // Send message to backend
                     const response = await fetch(`${backendUrl}/api/chatbot/message`, {
@@ -611,13 +627,13 @@ async def serve_chat_interface():
                 } finally {
                     // Re-enable input
                     chatInput.disabled = false;
-                    document.getElementById('sendBtn').disabled = false;
+                    sendBtnElement.disabled = false;
                     chatInput.focus();
                 }
             }
             
             // Send message on button click
-            document.getElementById('sendBtn').addEventListener('click', function() {
+            sendBtnElement.addEventListener('click', function() {
                 const message = chatInput.value;
                 chatInput.value = '';
                 chatInput.style.height = 'auto';
@@ -636,10 +652,13 @@ async def serve_chat_interface():
             });
             
             // Close button
-            document.getElementById('closeBtn').addEventListener('click', function() {
-                // Send a message to the parent window to close the chat
-                window.parent.postMessage('closeChat', '*');
-            });
+            const closeBtnElement = document.getElementById('closeBtn');
+            if (closeBtnElement) {
+                closeBtnElement.addEventListener('click', function() {
+                    // Send a message to the parent window to close the chat
+                    window.parent.postMessage('closeChat', '*');
+                });
+            }
             
             // Add welcome message
             const greeting = config.greeting_message || 'Hello! How can I help you today?';
