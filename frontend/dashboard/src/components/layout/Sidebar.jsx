@@ -50,6 +50,21 @@ const Sidebar = () => {
           Knowledge Base
         </NavLink>
 
+        {/* Added Channels link */}
+        <NavLink 
+          to="/channels" 
+          className={({ isActive }) => 
+            `flex items-center px-6 py-3 ${isActive ? 'bg-indigo-800' : 'hover:bg-indigo-600'}`
+          }
+        >
+          <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 9.50006C14 11.9853 11.9853 14 9.5 14C7.01472 14 5 11.9853 5 9.50006C5 7.01478 7.01472 5 9.5 5C11.9853 5 14 7.01478 14 9.50006Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9.5 19C5.50004 19 5.50004 15 5.50004 15H13.5C13.5 15 13.5 19 9.5 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M16 10.5H21.5M16 14H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Channels
+        </NavLink>
+
         <NavLink 
           to="/integrations" 
           className={({ isActive }) => 

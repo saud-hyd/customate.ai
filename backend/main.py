@@ -25,6 +25,8 @@ from app.api.knowledge import collection_routes
 from app.api.integration import routes as integration_routes  
 from app.api.widget import router as widget_router 
 from app.api.client import subscription_routes
+from app.api.channel.routes import router as channel_router
+from app.api.channel.webhook_routes import router as webhook_router
 from app.api.notifications import router as notifications_router
 from app.api.admin.routes import router as admin_router
 from app.api.knowledge import (
@@ -75,11 +77,12 @@ app.add_middleware(
         "http://localhost:3001", 
         "http://localhost:3002", 
         "http://localhost:5173",
+        "http://localhost", 
+        "http://127.0.0.1",
         
         # Vercel deployment URLs
         "https://customate.vercel.app",
         "https://customate-ai.vercel.app",
-        "https://customate-ai-git-develop-saud-hyds-projects.vercel.app",
         "https://customate-ai-git-develop-saud-hyds-projects.vercel.app",
         "https://customate-lyw0rsjn0-saud-hyds-projects.vercel.app",
         "https://customate-16bvgs9s9-saud-hyds-projects.vercel.app",
@@ -88,15 +91,16 @@ app.add_middleware(
         # Render backend URL for same-origin requests
         "https://customate-ai-1.onrender.com",
         
-        # Custom domains - ADD THESE LINES
+        # Custom domains
         "https://customate.ai",
         "https://app.customate.ai",
         "http://customate.ai",
         "http://app.customate.ai",
         
-        # Accept all subdomains as a fallback
-        "https://*.vercel.app"
+        # Allow all for widget embedding
+        "*"
     ],
+    
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -129,6 +133,8 @@ app.include_router(document_router, prefix="/api/knowledge/documents")
 app.include_router(collection_router, prefix="/api/knowledge") 
 app.include_router(crawl_router, prefix="/api/knowledge")
 app.include_router(enhanced_router, prefix="/api/knowledge")
+app.include_router(channel_router, prefix="/api")
+app.include_router(webhook_router, prefix="/api")
 
 # Request logging middleware
 @app.middleware("http")

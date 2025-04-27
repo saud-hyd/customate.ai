@@ -1,5 +1,5 @@
 # backend/app/api/channel/routes.py
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
@@ -8,6 +8,7 @@ from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.repositories.channel_repository import ChannelRepository, ChannelConversationRepository, ChannelMessageRepository
+from app.domain.channel.entities import ChannelMessage
 from app.services.channel.channel_service import ChannelService
 from app.core import logger
 
@@ -64,6 +65,7 @@ class SendMessageRequest(BaseModel):
 # Routes
 @router.get("", response_model=List[ChannelResponse])
 async def get_channels(
+    request: Request,
     platform: Optional[str] = None,
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)

@@ -21,6 +21,8 @@ import ConversationsPage from './pages/chat/ConversationsPage';
 import IntegrationsPage from './pages/integrations/IntegrationsPage';
 import SubscriptionPage from './pages/subscription/SubscriptionPage';
 import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
+import ChannelsPage from './pages/channels/ChannelsPage';
+
 
 // Knowledge management pages
 import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
@@ -138,6 +140,7 @@ const AppRoutes = () => {
         <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         
         <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="channels" element={<ChannelsPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="subscription" element={<SubscriptionPage />} />
         <Route path="settings" element={<SettingsPage />} />
