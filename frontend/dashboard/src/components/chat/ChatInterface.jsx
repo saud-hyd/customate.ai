@@ -1,17 +1,18 @@
-// frontend/dashboard/src/components/chat/ChatInterface.jsx
+// Path: frontend/dashboard/src/components/chat/ChatInterface.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
-import chatService from '../../services/chatService';
 import PropTypes from 'prop-types';
+import ChatBubble from './ChatBubble';
+import ChatInput from './ChatInput';
+import chatService from '../../services/chatService';
 
 const ChatInterface = ({ config }) => {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const cancelStreamRef = useRef(null);
 
-  // Scroll to bottom of messages
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -20,134 +21,277 @@ const ChatInterface = ({ config }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Handle sending a message
-  const handleSendMessage = async (e) => {
-    e?.preventDefault();
-    
-    if (!input.trim()) return;
-    
-    // Get LLM settings from props if available
-    let llmSettings = null;
-    if (config && config.llmProvider) {
-      llmSettings = {
-        llm_provider: config.llmProvider,
-        llm_model: config.llmModel,
-        temperature: config.temperature
-      };
-    }
-    
-    // Add user message to state
+  const handleSendMessage = async (text) => {
+    if (!text.trim()) return;
+
     const userMessage = {
       role: 'user',
-      content: input,
+      content: text,
       id: `temp-${Date.now()}`,
+      timestamp: new Date().toISOString()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
-    
-    // Create a placeholder for the bot's response
-    const tempBotMessageId = `temp-bot-${Date.now()}`;
-    const tempBotMessage = {
-      role: 'assistant',
-      content: '',
-      id: tempBotMessageId,
-      isStreaming: true,
-    };
-    
-    setMessages(prev => [...prev, tempBotMessage]);
     setIsLoading(true);
-    setInput(''); // Clear input after sending
-    
+
     try {
-      // Cancel any existing stream
       if (cancelStreamRef.current) {
         cancelStreamRef.current();
         cancelStreamRef.current = null;
       }
-      
-      // Store the message for reference
-      const sentMessage = input;
-      
-      // Create a streaming response
-      cancelStreamRef.current = chatService.sendMessageStreaming(
+
+      const tempBotMessageId = `temp-bot-${Date.now()}`;
+      const tempBotMessage = {
+        role: 'assistant',
+        content: '',
+        id: tempBotMessageId,
+        timestamp: new Date().toISOString(),
+        isStreaming: true,
+      };
+
+      setMessages(prev => [...prev, tempBotMessage]);
+
+      // Create LLM settings from config
+      let llmSettings = null;
+      if (config && config.llmProvider) {
+        llmSettings = {
+          llm_provider: config.llmProvider,
+          llm_model: config.llmModel,
+          temperature: config.temperature
+        };
+      }
+
+      const sentMessage = text;
+
+      // Create a custom chatService with API key authentication
+      const apiKey = localStorage.getItem('apiKey');
+      const customChatService = {
+        ...chatService,
+        sendMessageStreaming: (message, sessionId, onChunk, onDone, onError, llmSettings) => {
+          // Create request data
+          const requestData = {
+            message,
+            session_id: sessionId,
+          };
+          
+          // Add LLM settings if provided
+          if (llmSettings) {
+            requestData.llm_settings = llmSettings;
+          }
+          
+          // Force API key authentication
+          const headers = {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+          };
+          
+          // Create abort controller for cancellation
+          const controller = new AbortController();
+          const signal = controller.signal;
+          
+          // Get API URL
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+          
+          // Start the fetch request
+          fetch(`${API_URL}/chatbot/message/stream`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestData),
+            signal: signal
+          })
+          .then(response => {
+            // Rest of the implementation (use the existing one from chatService)
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            // Get the readable stream from the response
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let messageId = null;
+            let fullMessage = '';
+            
+            // Process the stream
+            function processStream() {
+              return reader.read().then(({ done, value }) => {
+                if (done) {
+                  // Process any remaining data in buffer
+                  if (buffer) {
+                    try {
+                      // Handle any remaining event data
+                      const lines = buffer.split('\n\n');
+                      lines.forEach(line => {
+                        if (line.startsWith('data: ')) {
+                          const eventData = line.substring(6);
+                          if (eventData && eventData !== '[DONE]') {
+                            const data = JSON.parse(eventData);
+                            
+                            // Handle different message types
+                            if (data.type === 'info') {
+                              sessionId = data.session_id;
+                            } else if (data.type === 'chunk') {
+                              if (!messageId) messageId = data.message_id;
+                              fullMessage += data.content;
+                              onChunk(data.content, messageId);
+                            } else if (data.type === 'complete') {
+                              fullMessage = data.content;
+                              onChunk(data.content, messageId, true);
+                            } else if (data.type === 'done') {
+                              onDone({
+                                message: data.message,
+                                session_id: sessionId,
+                              });
+                            }
+                          }
+                        }
+                      });
+                    } catch (e) {
+                      console.error('Error parsing final SSE chunk:', e);
+                    }
+                  }
+                  return;
+                }
+                
+                // Decode the incoming chunk and add to buffer
+                const chunk = decoder.decode(value, { stream: true });
+                buffer += chunk;
+                
+                // Process complete events in buffer
+                const lines = buffer.split('\n\n');
+                // Keep the last (potentially incomplete) line in the buffer
+                buffer = lines.pop() || '';
+                
+                // Process each complete SSE event
+                lines.forEach(line => {
+                  if (line.startsWith('data: ')) {
+                    const eventData = line.substring(6);
+                    if (eventData && eventData !== '[DONE]') {
+                      try {
+                        const data = JSON.parse(eventData);
+                        
+                        // Handle different message types
+                        if (data.type === 'info') {
+                          sessionId = data.session_id;
+                        } else if (data.type === 'chunk') {
+                          if (!messageId) messageId = data.message_id;
+                          fullMessage += data.content;
+                          onChunk(data.content, messageId);
+                        } else if (data.type === 'complete') {
+                          fullMessage = data.content;
+                          onChunk(data.content, messageId, true);
+                        } else if (data.type === 'done') {
+                          onDone({
+                            message: data.message,
+                            session_id: sessionId,
+                          });
+                        } else if (data.type === 'error') {
+                          onError(new Error(data.error || 'Unknown error'));
+                        }
+                      } catch (e) {
+                        console.error('Error parsing SSE chunk:', e);
+                      }
+                    }
+                  }
+                });
+                
+                // Continue reading the stream
+                return processStream();
+              }).catch(err => {
+                if (err.name !== 'AbortError') {
+                  console.error('Stream reading error:', err);
+                  onError(err);
+                }
+              });
+            }
+            
+            // Start processing the stream
+            return processStream();
+          })
+          .catch(err => {
+            console.error('Fetch error:', err);
+            onError(err);
+          });
+          
+          // Return a function to abort the fetch request
+          return () => {
+            controller.abort();
+          };
+        }
+      };
+
+      // Use the custom chat service instead of the regular one
+      cancelStreamRef.current = customChatService.sendMessageStreaming(
         sentMessage,
         sessionId,
-        // On chunk received
         (chunk, messageId, isComplete) => {
           setMessages(prev => {
-            // Find the bot message placeholder by ID or by being the last assistant message
             const updatedMessages = [...prev];
             const botMessageIndex = updatedMessages.findIndex(
-              msg => msg.id === tempBotMessageId || 
-                    (msg.role === 'assistant' && msg.isStreaming)
+              msg => msg.id === tempBotMessageId ||
+                     (msg.role === 'assistant' && msg.isStreaming)
             );
-            
+
             if (botMessageIndex !== -1) {
               if (isComplete) {
-                // Replace with complete message
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
-                  content: chunk,
+                  content: typeof chunk === 'string' ? chunk : chunk?.text || '',
                   id: messageId || tempBotMessageId,
                   isStreaming: false,
                 };
               } else {
-                // Update the content
                 updatedMessages[botMessageIndex] = {
                   ...updatedMessages[botMessageIndex],
-                  content: updatedMessages[botMessageIndex].content + chunk,
+                  content: updatedMessages[botMessageIndex].content + (typeof chunk === 'string' ? chunk : chunk?.text || ''),
                   id: messageId || tempBotMessageId,
                 };
               }
             }
-            
+
             return updatedMessages;
           });
-          
-          // Scroll to bottom with each new chunk
+
           setTimeout(scrollToBottom, 50);
         },
-        // On done
         (response) => {
           setIsLoading(false);
-          if (response && response.session_id) {
+          if (response?.session_id) {
             setSessionId(response.session_id);
           }
-          
-          // Make sure we have the final message
+
           setMessages(prev => {
             const updatedMessages = [...prev];
             const botMessageIndex = updatedMessages.findIndex(
-              msg => msg.id === tempBotMessageId || 
-                    (msg.role === 'assistant' && msg.isStreaming)
+              msg => msg.id === tempBotMessageId ||
+                     (msg.role === 'assistant' && msg.isStreaming)
             );
-            
+
             if (botMessageIndex !== -1) {
               updatedMessages[botMessageIndex] = {
                 ...updatedMessages[botMessageIndex],
                 id: response?.message?.id || tempBotMessageId,
                 isStreaming: false,
+                knowledge_used: response?.knowledge_used
               };
             }
-            
+
             return updatedMessages;
           });
-          
+
           cancelStreamRef.current = null;
         },
-        // On error
         (error) => {
           console.error('Error in streaming response:', error);
           setIsLoading(false);
-          
-          // Update the bot message with error
+
           setMessages(prev => {
             const updatedMessages = [...prev];
             const botMessageIndex = updatedMessages.findIndex(
-              msg => msg.id === tempBotMessageId || 
-                    (msg.role === 'assistant' && msg.isStreaming)
+              msg => msg.id === tempBotMessageId ||
+                     (msg.role === 'assistant' && msg.isStreaming)
             );
-            
+
             if (botMessageIndex !== -1) {
               updatedMessages[botMessageIndex] = {
                 ...updatedMessages[botMessageIndex],
@@ -156,93 +300,54 @@ const ChatInterface = ({ config }) => {
                 isError: true,
               };
             }
-            
+
             return updatedMessages;
           });
-          
+
           cancelStreamRef.current = null;
         },
-        // Pass LLM settings
         llmSettings
       );
     } catch (error) {
       console.error('Failed to send message:', error);
       setIsLoading(false);
-      
-      // Update the bot message with error
-      setMessages(prev => {
-        const updatedMessages = [...prev];
-        const botMessageIndex = updatedMessages.findIndex(
-          msg => msg.id === tempBotMessageId || 
-                (msg.role === 'assistant' && msg.isStreaming)
-        );
-        
-        if (botMessageIndex !== -1) {
-          updatedMessages[botMessageIndex] = {
-            ...updatedMessages[botMessageIndex],
-            content: "I'm sorry, I encountered an error while processing your request. Please try again.",
-            isStreaming: false,
-            isError: true,
-          };
-        }
-        
-        return updatedMessages;
-      });
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I'm sorry, I encountered an error while processing your request. Please try again.",
+        id: `error-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        isError: true
+      }]);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // Reset the chat when the resetSession prop changes
   useEffect(() => {
-    if (config && config.resetSession) {
+    if (config?.resetSession) {
       setMessages([]);
       setSessionId(null);
+
+      if (config.greeting) {
+        setMessages([{
+          role: 'assistant',
+          content: config.greeting,
+          id: 'welcome',
+          timestamp: new Date().toISOString()
+        }]);
+      }
     }
-  }, [config]);
+  }, [config?.resetSession]);
 
-  // Typing indicator component
-  const TypingIndicator = () => (
-    <div className="flex space-x-1 items-center h-5">
-      <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }}></div>
-      <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }}></div>
-      <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }}></div>
-    </div>
-  );
-
-  // Message component with typing indicator
-  const Message = ({ message }) => {
-    const isUser = message.role === 'user';
-    const accentColor = config?.primaryColor || '#4f46e5';
-    
-    return (
-      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div
-          className={`relative ${
-            isUser ? 'text-white rounded-lg py-2 px-4 max-w-[80%]' : 'bg-gray-100 text-gray-800 rounded-lg py-2 px-4 max-w-[80%]'
-          } ${message.isError ? 'bg-red-100 text-red-800' : ''}`}
-          style={isUser ? { backgroundColor: accentColor } : {}}
-        >
-          {/* Message content */}
-          <div className="text-sm whitespace-pre-wrap break-words">
-            {message.content || (message.isStreaming && <TypingIndicator />)}
-          </div>
-          
-          {/* Typing indicator shown while streaming */}
-          {message.isStreaming && message.content && (
-            <div className="mt-1 pt-1 border-t border-gray-200 dark:border-gray-700">
-              <TypingIndicator />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
+  useEffect(() => {
+    if (messages.length === 0 && config?.greeting) {
+      setMessages([{
+        role: 'assistant',
+        content: config.greeting || 'Hello! How can I help you today?',
+        id: 'welcome',
+        timestamp: new Date().toISOString()
+      }]);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-white rounded-md">
@@ -252,46 +357,38 @@ const ChatInterface = ({ config }) => {
             <p className="text-gray-500">Send a message to start a conversation</p>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <Message key={`${message.id || index}-${index}`} message={message} />
-          ))
+          <>
+            {messages.map((message) => (
+              <ChatBubble 
+                key={message.id} 
+                message={typeof message.content === 'string' ? message.content : message.content?.text || ''}
+                isUser={message.role === 'user'}
+                timestamp={message.timestamp}
+                primaryColor={config?.primaryColor}
+                isError={message.isError}
+              />
+            ))}
+            {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+              <div className="flex justify-start mb-4">
+                <div className="bg-gray-100 text-gray-800 rounded-lg rounded-bl-none px-4 py-2">
+                  <div className="flex space-x-1">
+                    <div className="bg-gray-500 rounded-full h-2 w-2 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="bg-gray-500 rounded-full h-2 w-2 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="bg-gray-500 rounded-full h-2 w-2 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>
       
-      <form onSubmit={handleSendMessage} className="border-t p-4">
-        <div className="flex">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isLoading}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className={`px-4 py-2 text-white rounded-r-md transition-colors ${
-              isLoading || !input.trim()
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:opacity-90'
-            }`}
-            style={{ backgroundColor: config?.primaryColor || '#4f46e5' }}
-          >
-            {isLoading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Sending
-              </span>
-            ) : 'Send'}
-          </button>
-        </div>
-      </form>
+      <ChatInput 
+        onSendMessage={handleSendMessage} 
+        disabled={isLoading}
+        primaryColor={config?.primaryColor}
+      />
     </div>
   );
 };
@@ -300,6 +397,7 @@ ChatInterface.propTypes = {
   config: PropTypes.shape({
     primaryColor: PropTypes.string,
     chatbotName: PropTypes.string,
+    greeting: PropTypes.string,
     resetSession: PropTypes.bool,
     llmProvider: PropTypes.string,
     llmModel: PropTypes.string,

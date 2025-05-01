@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     
     # Database settings - Read from environment or use Render values as fallback
     DB_USER: str = Field(default=os.getenv("DB_USER", "customate_db_user"))
-    DB_PASSWORD: str = Field(default=os.getenv("DB_PASSWORD", "iLuzfjNqC50iz1y5wQhw0kRyRrbob9B1"))
+    DB_PASSWORD: str = Field(default=os.getenv("DB_PASSWORD", "iLurfjNqC501zly5wQhw0kRyRrbob9B1"))
     DB_HOST: str = Field(default=os.getenv("DB_HOST", "dpg-cvp5f3a4d50c73bogp50-a.oregon-postgres.render.com"))
     DB_PORT: str = Field(default=os.getenv("DB_PORT", "5432"))
     DB_NAME: str = Field(default=os.getenv("DB_NAME", "customate_db"))

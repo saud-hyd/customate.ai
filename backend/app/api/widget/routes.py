@@ -1,13 +1,14 @@
 # Path: backend/app/api/widget/routes.py
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any
-from fastapi.responses import Response, HTMLResponse
+from fastapi.responses import Response, HTMLResponse, JSONResponse
 
 from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
-from app.repositories.client_repository import ClientSettingsRepository
+from app.repositories.client_repository import ClientSettingsRepository, ClientRepository
 
 router = APIRouter(prefix="/widget", tags=["widget"])
 
@@ -16,6 +17,7 @@ async def get_widget_settings(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
+    """Get widget settings for the current client."""
     settings_repo = ClientSettingsRepository()
     settings = settings_repo.get_by_client_id(db, current_client.client_id)
     
@@ -33,12 +35,13 @@ async def get_widget_settings(
         "enable_typing_indicator": settings.enable_typing_indicator,
         "widget_position": settings.widget_position,
         "chatbot_name": settings.chatbot_name,
+        "session_timeout": getattr(settings, "session_timeout", 30),
+        "reset_on_page_refresh": getattr(settings, "reset_on_page_refresh", True),
         "llm_provider": custom_settings.get("llm_provider", "deepseek"),
         "llm_model": custom_settings.get("llm_model"),
-        # Return the full custom settings
         "custom_settings": custom_settings
     }
-    
+
 @router.put("/settings", response_model=Dict[str, Any])
 async def update_widget_settings(
     settings_data: Dict[str, Any],
@@ -57,9 +60,32 @@ async def update_widget_settings(
         "enable_typing_indicator": settings_data.get("show_typing_indicator", True),
         "enable_suggestions": settings_data.get("enable_suggestions", True),
         "greeting_message": settings_data.get("greeting_message"),
-        # Add the custom settings to be saved in the database
-        "custom_settings": settings_data.get("custom_settings", {}),
+        "session_timeout": settings_data.get("session_timeout", 30),
+        "reset_on_page_refresh": settings_data.get("reset_on_page_refresh", True),
     }
+    
+    # Handle LLM settings
+    custom_settings = settings.custom_settings if settings else {}
+    
+    if settings_data.get("llm_provider"):
+        if not custom_settings:
+            custom_settings = {}
+        custom_settings["llm_provider"] = settings_data["llm_provider"]
+    
+    if settings_data.get("llm_model"):
+        if not custom_settings:
+            custom_settings = {}
+        custom_settings["llm_model"] = settings_data["llm_model"]
+    
+    # If custom_settings from request exist, use them
+    if settings_data.get("custom_settings"):
+        # Merge with existing custom settings
+        if custom_settings:
+            custom_settings.update(settings_data["custom_settings"])
+        else:
+            custom_settings = settings_data["custom_settings"]
+    
+    db_settings["custom_settings"] = custom_settings
     
     if not settings:
         # Create settings if they don't exist
@@ -79,19 +105,70 @@ async def update_widget_settings(
             "show_typing_indicator": settings.enable_typing_indicator,
             "enable_suggestions": settings.enable_suggestions,
             "greeting_message": settings.greeting_message,
-            # Include custom settings in the response
+            "session_timeout": getattr(settings, "session_timeout", 30),
+            "reset_on_page_refresh": getattr(settings, "reset_on_page_refresh", True),
             "custom_settings": settings.custom_settings
         }
     }
+
+@router.get("/client-settings", include_in_schema=False)
+async def get_client_settings_by_api_key(
+    apiKey: str,
+    db: Session = Depends(get_db)
+):
+    """Get settings for a client by API key (for widget initialization)."""
+    # Find client by API key
+    client_repo = ClientRepository()
+    client = client_repo.get_by_api_key(db, apiKey)
     
+    if not client:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Invalid API key"}
+        )
+    
+    # Get client settings
+    settings_repo = ClientSettingsRepository()
+    settings = settings_repo.get_by_client_id(db, client.client_id)
+    
+    if not settings:
+        return JSONResponse(content={
+            "primaryColor": "#4f46e5",
+            "chatbotName": "AI Assistant",
+            "widgetPosition": "bottom-right",
+            "showTypingIndicator": True,
+            "enableSuggestions": True,
+            "greetingMessage": "Hello! How can I help you today?",
+            "sessionTimeout": 30,
+            "resetOnPageRefresh": True,
+            "llmProvider": "deepseek",
+            "llmModel": "deepseek-chat"
+        })
+    
+    # Get custom settings with LLM provider information
+    custom_settings = settings.custom_settings or {}
+    
+    # Return client-specific settings in camelCase format for frontend
+    return JSONResponse(content={
+        "primaryColor": settings.primary_color,
+        "chatbotName": settings.chatbot_name,
+        "widgetPosition": settings.widget_position,
+        "showTypingIndicator": settings.enable_typing_indicator,
+        "enableSuggestions": settings.enable_suggestions,
+        "greetingMessage": settings.greeting_message,
+        "sessionTimeout": getattr(settings, "session_timeout", 30),
+        "resetOnPageRefresh": getattr(settings, "reset_on_page_refresh", True),
+        "llmProvider": custom_settings.get("llm_provider", "deepseek"),
+        "llmModel": custom_settings.get("llm_model", "deepseek-chat")
+    })
+
 @router.get("/widget.js", include_in_schema=False)
-async def serve_widget_js():
-    """Serve the widget JavaScript file without authentication."""
-    # The file content as a string - an improved version of the widget loader
+def serve_widget_js():
+    """Serve the widget JavaScript file with dynamic settings fetch."""
     widget_js = """
-// Improved Customate.ai Widget Loader
+// Customate.ai Widget Loader - Dynamic Configuration
 (function() {
-    // Configuration object to store settings
+    // Configuration object from global variable
     const config = window.customateConfig || {};
     
     // Default settings
@@ -99,23 +176,19 @@ async def serve_widget_js():
         apiKey: null,
         position: 'bottom-right',
         primaryColor: '#4f46e5',
-        apiUrl: 'https://customate-ai-1.onrender.com',
-        chatbotName: 'AI Assistant',
-        showTypingIndicator: true,
-        enableSuggestions: true
+        apiUrl: 'https://customate-ai-1.onrender.com'
     };
     
-    // Merge configs
-    const settings = {...defaults, ...config};
+    // Check for development environment
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const defaultApiUrl = isLocalhost ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
     
-    // Log for debugging
-    console.log('Customate Chat: Initializing with settings', 
-      JSON.stringify({
-        apiKey: settings.apiKey ? '***' : 'not set',
-        position: settings.position,
-        apiUrl: settings.apiUrl
-      })
-    );
+    // Merge configs with environment-aware defaults
+    const settings = {
+        ...defaults, 
+        apiUrl: defaultApiUrl,
+        ...config
+    };
     
     // Make sure we have an API key
     if (!settings.apiKey) {
@@ -123,140 +196,159 @@ async def serve_widget_js():
         return;
     }
     
-    // Create widget container
-    const container = document.createElement('div');
-    container.id = 'customate-chat-widget';
-    container.style.position = 'fixed';
-    container.style.zIndex = '9999';
-    container.style.overflow = 'hidden';
-    
-    // Position the widget
-    if (settings.position === 'bottom-right') {
-        container.style.bottom = '20px';
-        container.style.right = '20px';
-    } else if (settings.position === 'bottom-left') {
-        container.style.bottom = '20px';
-        container.style.left = '20px';
-    } else if (settings.position === 'top-right') {
-        container.style.top = '20px';
-        container.style.right = '20px';
-    } else if (settings.position === 'top-left') {
-        container.style.top = '20px';
-        container.style.left = '20px';
-    }
-    
-    document.body.appendChild(container);
-    
-    // Create toggle button with explicit styling
-    const button = document.createElement('button');
-    button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill="currentColor"/></svg>';
-    button.style.width = '60px';
-    button.style.height = '60px';
-    button.style.borderRadius = '50%';
-    button.style.backgroundColor = settings.primaryColor;
-    button.style.color = 'white';
-    button.style.border = 'none';
-    button.style.cursor = 'pointer';
-    button.style.display = 'flex';
-    button.style.alignItems = 'center';
-    button.style.justifyContent = 'center';
-    button.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-    button.style.padding = '0';
-    button.style.transition = 'transform 0.2s ease';
-    button.setAttribute('aria-label', 'Open chat widget');
-    container.appendChild(button);
-    
-    // Widget state
-    let isOpen = false;
-    let chatFrame = null;
-    
-    // Add hover effect
-    button.addEventListener('mouseover', function() {
-        button.style.transform = 'scale(1.05)';
-    });
-    
-    button.addEventListener('mouseout', function() {
-        button.style.transform = 'scale(1)';
-    });
-    
-    // Toggle widget with explicit debugging
-    button.addEventListener('click', function(e) {
-        console.log('Customate widget button clicked');
-        e.preventDefault();
-        
-        if (isOpen) {
-            // Close widget
-            if (chatFrame) {
-                chatFrame.style.display = 'none';
+    // Fetch client-specific settings from server
+    const fetchSettings = async () => {
+        try {
+            console.log('Fetching settings from:', settings.apiUrl);
+            const response = await fetch(`${settings.apiUrl}/api/widget/client-settings?apiKey=${encodeURIComponent(settings.apiKey)}`);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to load settings: ${response.status}`);
             }
-            isOpen = false;
-            console.log('Customate widget closed');
-        } else {
-            // Open widget or create it if it doesn't exist
+            
+            const serverSettings = await response.json();
+            console.log('Server settings loaded:', serverSettings);
+            
+            // Merge server settings with client settings (client settings take precedence)
+            const finalSettings = {...serverSettings, ...config};
+            
+            // Now create and initialize the widget
+            createWidget(finalSettings);
+        } catch (error) {
+            console.warn('Failed to load server settings, using defaults:', error);
+            // Create widget with only client settings as fallback
+            createWidget(settings);
+        }
+    };
+    
+    // Create and initialize the widget 
+    function createWidget(finalSettings) {
+        // Create widget container
+        const container = document.createElement('div');
+        container.id = 'customate-chat-widget';
+        container.style.position = 'fixed';
+        container.style.zIndex = '999999';
+        container.style.overflow = 'hidden';
+        
+        // Position the widget based on settings
+        const position = finalSettings.widgetPosition || finalSettings.position || 'bottom-right';
+        if (position === 'bottom-right') {
+            container.style.bottom = '20px';
+            container.style.right = '20px';
+        } else if (position === 'bottom-left') {
+            container.style.bottom = '20px';
+            container.style.left = '20px';
+        } else if (position === 'top-right') {
+            container.style.top = '20px';
+            container.style.right = '20px';
+        } else if (position === 'top-left') {
+            container.style.top = '20px';
+            container.style.left = '20px';
+        }
+        
+        document.body.appendChild(container);
+        
+        // Create toggle button (chat icon)
+        const button = document.createElement('button');
+        button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill="currentColor"/></svg>';
+        button.style.width = '60px';
+        button.style.height = '60px';
+        button.style.borderRadius = '50%';
+        button.style.color = 'white';
+        button.style.border = 'none';
+        button.style.cursor = 'pointer';
+        button.style.display = 'flex';
+        button.style.alignItems = 'center';
+        button.style.justifyContent = 'center';
+        button.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+        button.style.transition = 'transform 0.2s';
+        
+        // Apply primary color from settings
+        button.style.backgroundColor = finalSettings.primaryColor || '#4f46e5';
+        
+        // Add hover effects
+        button.addEventListener('mouseover', function() {
+            button.style.transform = 'scale(1.05)';
+        });
+        
+        button.addEventListener('mouseout', function() {
+            button.style.transform = 'scale(1)';
+        });
+        
+        container.appendChild(button);
+        
+        // Variables to track state
+        let isOpen = false;
+        let chatFrame = null;
+        
+        // Toggle chat when button is clicked
+        button.addEventListener('click', function() {
             if (!chatFrame) {
-                console.log('Creating chat iframe');
-                // Create iframe for the chat interface
+                // First click - create the iframe
                 chatFrame = document.createElement('iframe');
                 chatFrame.style.width = '350px';
                 chatFrame.style.height = '500px';
                 chatFrame.style.border = 'none';
+                chatFrame.style.position = 'absolute';
+                chatFrame.style.bottom = '80px';
+                chatFrame.style.right = '0';
+                chatFrame.style.backgroundColor = 'white';
                 chatFrame.style.borderRadius = '10px';
                 chatFrame.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                chatFrame.style.backgroundColor = 'white';
-                chatFrame.style.position = 'absolute';
-                chatFrame.style.overflow = 'hidden';
+                chatFrame.style.transition = 'opacity 0.3s';
+                chatFrame.style.zIndex = '10000';
                 
-                // Position the frame based on the settings
-                if (settings.position === 'bottom-right') {
-                    chatFrame.style.bottom = '80px';
-                    chatFrame.style.right = '0';
-                } else if (settings.position === 'bottom-left') {
-                    chatFrame.style.bottom = '80px';
-                    chatFrame.style.left = '0';
-                } else if (settings.position === 'top-right') {
-                    chatFrame.style.top = '20px';
-                    chatFrame.style.right = '0';
-                } else if (settings.position === 'top-left') {
-                    chatFrame.style.top = '20px';
-                    chatFrame.style.left = '0';
-                }
+                // Create config param to pass all settings to the chat frame
+                const configParam = encodeURIComponent(JSON.stringify({
+                    primaryColor: finalSettings.primaryColor,
+                    chatbotName: finalSettings.chatbotName,
+                    greeting: finalSettings.greetingMessage,
+                    widgetPosition: finalSettings.widgetPosition,
+                    showTypingIndicator: finalSettings.showTypingIndicator,
+                    enableSuggestions: finalSettings.enableSuggestions,
+                    sessionTimeout: finalSettings.sessionTimeout,
+                    resetOnPageRefresh: finalSettings.resetOnPageRefresh,
+                    llmProvider: finalSettings.llmProvider,
+                    llmModel: finalSettings.llmModel
+                }));
                 
-                // Set the src to your chat interface URL with API key
-                const configString = encodeURIComponent(JSON.stringify(settings));
-                const chatUrl = `${settings.apiUrl}/api/widget/chat?apiKey=${encodeURIComponent(settings.apiKey)}&config=${configString}`;
-                
-                console.log('Loading chat iframe from:', chatUrl);
-                chatFrame.src = chatUrl;
-                chatFrame.setAttribute('title', 'Customate Chat Widget');
+                // IMPORTANT: We pass the API key and additional config to the chat frame
+                chatFrame.src = `${finalSettings.apiUrl}/api/widget/chat?apiKey=${encodeURIComponent(finalSettings.apiKey)}&config=${configParam}`;
+                chatFrame.title = finalSettings.chatbotName || "Chat with Customate AI";
                 
                 container.appendChild(chatFrame);
-                
-                // Listen for close messages from the iframe
-                window.addEventListener('message', function(event) {
-                    if (event.data === 'closeChat') {
-                        chatFrame.style.display = 'none';
-                        isOpen = false;
-                    }
-                });
-                
+                isOpen = true;
             } else {
-                console.log('Showing existing chat iframe');
-                chatFrame.style.display = 'block';
+                // Subsequent clicks - toggle visibility
+                if (isOpen) {
+                    chatFrame.style.display = 'none';
+                    isOpen = false;
+                } else {
+                    chatFrame.style.display = 'block';
+                    isOpen = true;
+                }
             }
-            isOpen = true;
-        }
-    });
+        });
+
+        // Listen for close messages from the iframe
+        window.addEventListener('message', function(event) {
+            if (event.data === 'closeChat' && chatFrame) {
+                chatFrame.style.display = 'none';
+                isOpen = false;
+            }
+        });
+    }
     
-    // Log successful initialization
-    console.log('Customate Chat Widget initialized successfully');
+    // Start the process - fetch settings and initialize widget
+    fetchSettings();
 })();
-"""
+    """
     
     return Response(
         content=widget_js,
         media_type="application/javascript"
     )
-    
+
 @router.get("/chat", include_in_schema=False)
 async def serve_chat_interface(
     apiKey: str = None,
@@ -419,7 +511,93 @@ async def serve_chat_interface(
             0%, 60%, 100% { transform: translateY(0); }
             30% { transform: translateY(-8px); }
         }
+        
+        /* Suggestions */
+        .suggestions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .suggestion-chip {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            border: 1px solid #4f46e5;
+            color: #4f46e5;
+            background: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .suggestion-chip:hover {
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+        
+        /* Markdown rendering styles */
+        .markdown-content p {
+            margin-bottom: 0.75rem;
+        }
+        
+        .markdown-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .markdown-content ul, 
+        .markdown-content ol {
+            margin-top: 0.5rem;
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+        }
+        
+        .markdown-content ul li,
+        .markdown-content ol li {
+            margin-bottom: 0.25rem;
+        }
+        
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .markdown-content code {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .markdown-content pre {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 0.75rem;
+            border-radius: 3px;
+            overflow-x: auto;
+            margin: 0.75rem 0;
+        }
+        
+        .markdown-content blockquote {
+            border-left: 3px solid #e0e0e0;
+            padding-left: 0.75rem;
+            color: #555;
+            margin: 0.75rem 0;
+        }
+        
+        .markdown-content a {
+            color: #4f46e5;
+            text-decoration: underline;
+        }
     </style>
+    
+    <!-- Add marked library for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+    <!-- Add DOMPurify for sanitizing HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.8/dist/purify.min.js"></script>
 </head>
 <body>
     <div class="chat-container">
@@ -451,6 +629,7 @@ async def serve_chat_interface(
             const urlParams = new URLSearchParams(window.location.search);
             const apiKey = urlParams.get('apiKey');
             
+            // Parse config from URL parameter
             let configParam = urlParams.get('config');
             let config = {};
             
@@ -462,6 +641,10 @@ async def serve_chat_interface(
                     console.error('Error parsing config:', e);
                 }
             }
+            
+            // Check if we're in development mode
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const backendUrl = isLocalhost ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
             
             // Make sure DOM elements exist before trying to access them
             const headerElement = document.getElementById('chatHeader');
@@ -477,6 +660,8 @@ async def serve_chat_interface(
             // Apply configuration
             const primaryColor = config.primaryColor || '#4f46e5';
             const chatTitle = config.chatbotName || 'AI Assistant';
+            const showTypingIndicator = config.showTypingIndicator !== false; // Default to true
+            const enableSuggestions = config.enableSuggestions !== false; // Default to true
             
             // Set the header color and title
             headerElement.style.backgroundColor = primaryColor;
@@ -526,6 +711,42 @@ async def serve_chat_interface(
                 isTyping = false;
             }
             
+            // Show suggestions
+            function showSuggestions(suggestions) {
+                const messagesContainer = document.getElementById('chatMessages');
+                if (!messagesContainer) return;
+                
+                const suggestionsContainer = document.createElement('div');
+                suggestionsContainer.className = 'suggestions-container';
+                
+                suggestions.forEach(suggestion => {
+                    const chip = document.createElement('button');
+                    chip.className = 'suggestion-chip';
+                    chip.textContent = suggestion;
+                    chip.style.borderColor = primaryColor;
+                    chip.style.color = primaryColor;
+                    
+                    chip.addEventListener('mouseenter', () => {
+                        chip.style.backgroundColor = `${primaryColor}10`;
+                    });
+                    
+                    chip.addEventListener('mouseleave', () => {
+                        chip.style.backgroundColor = 'white';
+                    });
+                    
+                    chip.addEventListener('click', () => {
+                        chatInput.value = suggestion;
+                        sendMessage(suggestion);
+                        suggestionsContainer.remove();
+                    });
+                    
+                    suggestionsContainer.appendChild(chip);
+                });
+                
+                messagesContainer.appendChild(suggestionsContainer);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
             // Add message to the chat
             function addMessage(message, isUser, isError = false) {
                 hideTypingIndicator();
@@ -544,9 +765,17 @@ async def serve_chat_interface(
                 
                 if (isUser) {
                     bubble.style.backgroundColor = primaryColor;
+                    bubble.textContent = message;
+                } else {
+                    // Apply markdown formatting for assistant messages
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'markdown-content';
+                    
+                    // Use marked.js to parse markdown and DOMPurify to sanitize
+                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(message));
+                    
+                    bubble.appendChild(contentDiv);
                 }
-                
-                bubble.textContent = message;
                 
                 messageDiv.appendChild(bubble);
                 messagesContainer.appendChild(messageDiv);
@@ -555,11 +784,6 @@ async def serve_chat_interface(
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
             
-            // Get current origin as the API URL
-            const currentOrigin = window.location.origin;
-            const backendUrl = config.apiUrl || currentOrigin;
-            console.log('Using backend URL:', backendUrl);
-            
             // Send message to backend
             async function sendMessage(message) {
                 if (!message.trim()) return;
@@ -567,46 +791,158 @@ async def serve_chat_interface(
                 // Add user message to chat
                 addMessage(message, true);
                 
-                // Show typing indicator
-                showTypingIndicator();
+                // Show typing indicator if enabled
+                if (showTypingIndicator) {
+                    showTypingIndicator();
+                }
                 
                 // Disable input while processing
                 chatInput.disabled = true;
                 sendBtnElement.disabled = true;
                 
                 try {
-                    console.log('Sending message to:', `${backendUrl}/api/chatbot/message`);
-                    console.log('With API key:', apiKey ? `${apiKey.substring(0, 5)}...` : 'none');
+                    // Build LLM settings object
+                    const llmSettings = {};
                     
-                    // Send message to backend
+                    // Only add LLM settings if they exist in config
+                    if (config.llmProvider) {
+                        llmSettings.llm_provider = config.llmProvider;
+                    }
+                    
+                    if (config.llmModel) {
+                        llmSettings.llm_model = config.llmModel;
+                    }
+                    
+                    // Common request data and headers
+                    const requestData = {
+                        message: message,
+                        session_id: sessionId,
+                        llm_settings: Object.keys(llmSettings).length > 0 ? llmSettings : undefined
+                    };
+                    
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    };
+                    
+                    // Try to use streaming endpoint first
+                    let useStreaming = true;
+                    let fullResponse = "";
+                    
+                    if (useStreaming) {
+                        try {
+                            // First: try the streaming endpoint
+                            const response = await fetch(`${backendUrl}/api/chatbot/message/stream`, {
+                                method: 'POST',
+                                headers: headers,
+                                body: JSON.stringify(requestData)
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`API Error (${response.status})`);
+                            }
+                            
+                            // Set up stream reading
+                            const reader = response.body.getReader();
+                            const decoder = new TextDecoder();
+                            let buffer = '';
+                            
+                            // Hide typing indicator as we'll show content as it streams
+                            hideTypingIndicator();
+                            
+                            // Create a temporary message that we'll update
+                            const tempMessage = document.createElement('div');
+                            tempMessage.className = 'assistant-message';
+                            
+                            const tempBubble = document.createElement('div');
+                            tempBubble.className = 'message-bubble assistant-bubble';
+                            
+                            const contentDiv = document.createElement('div');
+                            contentDiv.className = 'markdown-content';
+                            
+                            tempBubble.appendChild(contentDiv);
+                            tempMessage.appendChild(tempBubble);
+                            
+                            const messagesContainer = document.getElementById('chatMessages');
+                            messagesContainer.appendChild(tempMessage);
+                            
+                            // Process the stream
+                            while (true) {
+                                const { value, done } = await reader.read();
+                                if (done) break;
+                                
+                                buffer += decoder.decode(value, { stream: true });
+                                
+                                // Process complete events in buffer
+                                const lines = buffer.split('\n\n');
+                                buffer = lines.pop() || '';
+                                
+                                for (const line of lines) {
+                                    if (line.startsWith('data: ')) {
+                                        try {
+                                            const eventData = line.substring(6);
+                                            if (eventData && eventData !== '[DONE]') {
+                                                const data = JSON.parse(eventData);
+                                                
+                                                if (data.type === 'chunk' || data.type === 'complete') {
+                                                    fullResponse += data.content || '';
+                                                    
+                                                    // Update the temporary message with current content
+                                                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+                                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                                } else if (data.type === 'info' && data.session_id) {
+                                                    sessionId = data.session_id;
+                                                } else if (data.type === 'done') {
+                                                    // Final update with complete message
+                                                    if (data.message && data.message.content) {
+                                                        fullResponse = data.message.content;
+                                                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+                                                    }
+                                                    
+                                                    if (data.session_id) {
+                                                        sessionId = data.session_id;
+                                                    }
+                                                    
+                                                    // Show suggestions if enabled and available
+                                                    if (enableSuggestions && data.suggestions && 
+                                                        Array.isArray(data.suggestions) && 
+                                                        data.suggestions.length > 0) {
+                                                        showSuggestions(data.suggestions);
+                                                    }
+                                                }
+                                            }
+                                        } catch (e) {
+                                            console.error('Error parsing streaming data:', e);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            return; // Exit the function - we've handled everything via streaming
+                            
+                        } catch (streamError) {
+                            console.warn('Streaming failed, falling back to standard endpoint:', streamError);
+                            // If streaming fails, we'll fall back to the standard endpoint
+                        }
+                    }
+                    
+                    // Fallback to standard endpoint
                     const response = await fetch(`${backendUrl}/api/chatbot/message`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-API-Key': apiKey
-                        },
-                        body: JSON.stringify({
-                            message: message,
-                            session_id: sessionId,
-                            llm_settings: config.customData || {}
-                        })
+                        headers: headers,
+                        body: JSON.stringify(requestData)
                     });
-                    
-                    console.log('Response status:', response.status);
                     
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('API Error:', response.status, errorText);
                         throw new Error(`API Error (${response.status}): ${errorText}`);
                     }
                     
                     const data = await response.json();
-                    console.log('Response data:', data);
                     
                     // Update session ID
                     if (data.session_id) {
                         sessionId = data.session_id;
-                        console.log('Session ID updated:', sessionId);
                     }
                     
                     // Hide typing indicator
@@ -614,6 +950,13 @@ async def serve_chat_interface(
                     
                     // Add assistant response to chat
                     addMessage(data.message.content, false);
+                    
+                    // Show suggestions if enabled and available
+                    if (enableSuggestions && data.suggestions && 
+                        Array.isArray(data.suggestions) && 
+                        data.suggestions.length > 0) {
+                        showSuggestions(data.suggestions);
+                    }
                     
                 } catch (error) {
                     console.error('Error sending message:', error);
@@ -630,8 +973,7 @@ async def serve_chat_interface(
                     sendBtnElement.disabled = false;
                     chatInput.focus();
                 }
-            }
-            
+            }            
             // Send message on button click
             sendBtnElement.addEventListener('click', function() {
                 const message = chatInput.value;
@@ -661,7 +1003,7 @@ async def serve_chat_interface(
             }
             
             // Add welcome message
-            const greeting = config.greeting_message || 'Hello! How can I help you today?';
+            const greeting = config.greeting || 'Hello! How can I help you today?';
             addMessage(greeting, false);
         });
     </script>

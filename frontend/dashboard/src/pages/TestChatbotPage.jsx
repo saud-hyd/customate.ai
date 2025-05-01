@@ -200,29 +200,23 @@ const TestChatbotPage = () => {
   
   // Generate embed code for installation
   const generateEmbedCode = () => {
-    const backendUrl = 'https://customate-ai-1.onrender.com'; // Your Render backend URL
+    let backendUrl = 'https://customate-ai-1.onrender.com'; // Production backend URL
+    
+    // Check if we're in development mode
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      backendUrl = 'http://localhost:8000'; // Local backend URL
+    }
     
     return `<!-- Customate.ai Chat Widget -->
   <script>
     window.customateConfig = {
       apiKey: '${chatSettings.apiKey}',
-      primaryColor: '${chatSettings.primaryColor}',
-      position: '${chatSettings.widgetPosition}',
-      chatbotName: '${chatSettings.chatbotName}',
-      showTypingIndicator: ${chatSettings.showTypingIndicator},
-      enableSuggestions: ${chatSettings.enableSuggestions},
-      resetOnPageRefresh: ${chatSettings.resetOnPageRefresh},
-      sessionTimeout: ${chatSettings.sessionTimeout},
-      apiUrl: '${backendUrl}'${chatSettings.llmProvider ? `,
-      customData: {
-        llmProvider: '${chatSettings.llmProvider}'${chatSettings.llmModel ? `,
-        llmModel: '${chatSettings.llmModel}'` : ''}
-      }` : ''}
+      apiUrl: '${backendUrl}'
+      // All other settings will be loaded dynamically from the server
     };
   </script>
   <script src="${backendUrl}/api/widget/widget.js" async></script>`;
-  };
-    
+  };    
   if (isLoading) {
     return <LoadingState message="Initializing chatbot test environment..." />;
   }
