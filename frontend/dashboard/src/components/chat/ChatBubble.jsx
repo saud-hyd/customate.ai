@@ -45,7 +45,9 @@ const ChatBubble = ({ message, isUser, timestamp }) => {
 ChatBubble.propTypes = {
   message: PropTypes.string.isRequired,
   isUser: PropTypes.bool.isRequired,
-  timestamp: PropTypes.string.isRequired
+  timestamp: PropTypes.string.isRequired,
+  primaryColor: PropTypes.string,
+  isError: PropTypes.bool
 };
 
 export default ChatBubble;

@@ -20,7 +20,7 @@ module.exports = {
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@hooks': path.resolve(__dirname, 'src/hooks'),
       '@context': path.resolve(__dirname, 'src/context'),
-      '@widget': path.resolve(__dirname, '../../widget/src') // Add this line to resolve widget imports
+      '@widget': path.resolve(__dirname, 'src/widget') // Correct path to widget files
     }
   },
   module: {

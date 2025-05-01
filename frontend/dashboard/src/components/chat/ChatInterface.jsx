@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import ChatBubble from './ChatBubble';
-import ChatInput from './ChatInput';
+import ChatBubble from './ChatBubble'; // Ensure this is the correct path
+import ChatInput from './ChatInput'; // Ensure this is the correct path
 import chatService from '../../services/chatService';
+
 
 const ChatInterface = ({ config }) => {
   const [messages, setMessages] = useState([]);
@@ -93,7 +94,7 @@ const ChatInterface = ({ config }) => {
           const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
           
           // Start the fetch request
-          fetch(`${API_URL}/chatbot/message/stream`, {
+          fetch(`${API_URL}/api/chatbot/message/stream`, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(requestData),
