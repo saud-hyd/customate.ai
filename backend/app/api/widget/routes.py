@@ -623,9 +623,8 @@ async def serve_chat_interface(
     </div>
     
     <script>
-        // Wait for the DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Get API key from URL parameters
+            // Get API key and config from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const apiKey = urlParams.get('apiKey');
             
@@ -646,36 +645,27 @@ async def serve_chat_interface(
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const backendUrl = isLocalhost ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
             
-            // Make sure DOM elements exist before trying to access them
+            // Normalized API URL - ensure we don't duplicate /api prefix
+            const apiUrl = backendUrl.endsWith('/api') ? backendUrl : `${backendUrl}/api`;
+            
+            // Apply configuration
+            const primaryColor = config.primaryColor || '#4f46e5';
+            const chatTitle = config.chatbotName || 'AI Assistant';
+            const shouldShowTypingIndicator = config.showTypingIndicator !== false;
+            const enableSuggestions = config.enableSuggestions !== false; // Default to true
+            
+            // Set the header color and title
             const headerElement = document.getElementById('chatHeader');
             const titleElement = document.getElementById('chatTitle');
             const sendBtnElement = document.getElementById('sendBtn');
             const chatInput = document.getElementById('chatInput');
             
-            if (!headerElement || !titleElement || !sendBtnElement || !chatInput) {
-                console.error('Required DOM elements not found');
-                return;
-            }
-            
-            // Apply configuration
-            const primaryColor = config.primaryColor || '#4f46e5';
-            const chatTitle = config.chatbotName || 'AI Assistant';
-            const showTypingIndicator = config.showTypingIndicator !== false; // Default to true
-            const enableSuggestions = config.enableSuggestions !== false; // Default to true
-            
-            // Set the header color and title
-            headerElement.style.backgroundColor = primaryColor;
-            titleElement.textContent = chatTitle;
-            sendBtnElement.style.backgroundColor = primaryColor;
+            if (headerElement) headerElement.style.backgroundColor = primaryColor;
+            if (titleElement) titleElement.textContent = chatTitle;
+            if (sendBtnElement) sendBtnElement.style.backgroundColor = primaryColor;
             
             // Focus input on load
-            chatInput.focus();
-            
-            // Auto-resize textarea
-            chatInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
+            if (chatInput) chatInput.focus();
             
             // Session ID for conversation tracking
             let sessionId = null;
@@ -725,14 +715,6 @@ async def serve_chat_interface(
                     chip.textContent = suggestion;
                     chip.style.borderColor = primaryColor;
                     chip.style.color = primaryColor;
-                    
-                    chip.addEventListener('mouseenter', () => {
-                        chip.style.backgroundColor = `${primaryColor}10`;
-                    });
-                    
-                    chip.addEventListener('mouseleave', () => {
-                        chip.style.backgroundColor = 'white';
-                    });
                     
                     chip.addEventListener('click', () => {
                         chatInput.value = suggestion;
@@ -801,10 +783,9 @@ async def serve_chat_interface(
                 sendBtnElement.disabled = true;
                 
                 try {
-                    // Build LLM settings object
+                    // Build LLM settings object - IMPORTANT: Match TestChatbot format exactly
                     const llmSettings = {};
                     
-                    // Only add LLM settings if they exist in config
                     if (config.llmProvider) {
                         llmSettings.llm_provider = config.llmProvider;
                     }
@@ -813,155 +794,153 @@ async def serve_chat_interface(
                         llmSettings.llm_model = config.llmModel;
                     }
                     
-                    // Common request data and headers
+                    // Common request data and headers - match TestChatbot format
                     const requestData = {
                         message: message,
                         session_id: sessionId,
-                        llm_settings: Object.keys(llmSettings).length > 0 ? llmSettings : undefined
                     };
                     
-                    const headers = {
+                    // Only add llm_settings if we have values
+                    if (Object.keys(llmSettings).length > 0) {
+                        requestData.llm_settings = llmSettings;
+                    }
+                    
+const headers = {
                         'Content-Type': 'application/json',
                         'X-API-Key': apiKey
                     };
                     
-                    // Try to use streaming endpoint first
-                    let useStreaming = true;
-                    let fullResponse = "";
+                    console.log('Sending request with data:', JSON.stringify(requestData));
                     
-                    if (useStreaming) {
-                        try {
-                            // First: try the streaming endpoint
-                            const response = await fetch(`${backendUrl}/api/chatbot/message/stream`, {
-                                method: 'POST',
-                                headers: headers,
-                                body: JSON.stringify(requestData)
-                            });
+                    // First: try the streaming endpoint - ensuring correct URL format
+                    const streamEndpoint = `${apiUrl}/chatbot/message/stream`;
+                    console.log('Using stream endpoint:', streamEndpoint);
+                    
+                    try {
+                        const response = await fetch(streamEndpoint, {
+                            method: 'POST',
+                            headers: headers,
+                            body: JSON.stringify(requestData)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`API Error (${response.status})`);
+                        }
+                        
+                        // Set up stream reading
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let buffer = '';
+                        
+                        // Hide typing indicator as we'll show content as it streams
+                        hideTypingIndicator();
+                        
+                        // Create a temporary message that we'll update
+                        const tempMessage = document.createElement('div');
+                        tempMessage.className = 'assistant-message';
+                        
+                        const tempBubble = document.createElement('div');
+                        tempBubble.className = 'message-bubble assistant-bubble';
+                        
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'markdown-content';
+                        
+                        tempBubble.appendChild(contentDiv);
+                        tempMessage.appendChild(tempBubble);
+                        
+                        const messagesContainer = document.getElementById('chatMessages');
+                        messagesContainer.appendChild(tempMessage);
+                        
+                        // Process the stream
+                        let fullResponse = "";
+                        
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
                             
-                            if (!response.ok) {
-                                throw new Error(`API Error (${response.status})`);
-                            }
+                            buffer += decoder.decode(value, { stream: true });
                             
-                            // Set up stream reading
-                            const reader = response.body.getReader();
-                            const decoder = new TextDecoder();
-                            let buffer = '';
+                            // Process complete events in buffer
+                            const lines = buffer.split('\n\n');
+                            buffer = lines.pop() || '';
                             
-                            // Hide typing indicator as we'll show content as it streams
-                            hideTypingIndicator();
-                            
-                            // Create a temporary message that we'll update
-                            const tempMessage = document.createElement('div');
-                            tempMessage.className = 'assistant-message';
-                            
-                            const tempBubble = document.createElement('div');
-                            tempBubble.className = 'message-bubble assistant-bubble';
-                            
-                            const contentDiv = document.createElement('div');
-                            contentDiv.className = 'markdown-content';
-                            
-                            tempBubble.appendChild(contentDiv);
-                            tempMessage.appendChild(tempBubble);
-                            
-                            const messagesContainer = document.getElementById('chatMessages');
-                            messagesContainer.appendChild(tempMessage);
-                            
-                            // Process the stream
-                            while (true) {
-                                const { value, done } = await reader.read();
-                                if (done) break;
-                                
-                                buffer += decoder.decode(value, { stream: true });
-                                
-                                // Process complete events in buffer
-                                const lines = buffer.split('\n\n');
-                                buffer = lines.pop() || '';
-                                
-                                for (const line of lines) {
-                                    if (line.startsWith('data: ')) {
-                                        try {
-                                            const eventData = line.substring(6);
-                                            if (eventData && eventData !== '[DONE]') {
-                                                const data = JSON.parse(eventData);
-                                                
-                                                if (data.type === 'chunk' || data.type === 'complete') {
-                                                    fullResponse += data.content || '';
-                                                    
-                                                    // Update the temporary message with current content
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const eventData = line.substring(6);
+                                        if (eventData && eventData !== '[DONE]') {
+                                            const data = JSON.parse(eventData);
+                                            
+                                            if (data.type === 'info') {
+                                                sessionId = data.session_id;
+                                                console.log('Session ID:', sessionId);
+                                            } else if (data.type === 'chunk') {
+                                                fullResponse += data.content || '';
+                                                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+                                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                            } else if (data.type === 'complete') {
+                                                fullResponse = data.content;
+                                                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
+                                            } else if (data.type === 'done') {
+                                                if (data.message && data.message.content) {
+                                                    fullResponse = data.message.content;
                                                     contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                                                } else if (data.type === 'info' && data.session_id) {
+                                                }
+                                                
+                                                if (data.session_id) {
                                                     sessionId = data.session_id;
-                                                } else if (data.type === 'done') {
-                                                    // Final update with complete message
-                                                    if (data.message && data.message.content) {
-                                                        fullResponse = data.message.content;
-                                                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                                                    }
-                                                    
-                                                    if (data.session_id) {
-                                                        sessionId = data.session_id;
-                                                    }
-                                                    
-                                                    // Show suggestions if enabled and available
-                                                    if (enableSuggestions && data.suggestions && 
-                                                        Array.isArray(data.suggestions) && 
-                                                        data.suggestions.length > 0) {
-                                                        showSuggestions(data.suggestions);
-                                                    }
+                                                }
+                                                
+                                                if (enableSuggestions && data.suggestions && 
+                                                    Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+                                                    showSuggestions(data.suggestions);
                                                 }
                                             }
-                                        } catch (e) {
-                                            console.error('Error parsing streaming data:', e);
                                         }
+                                    } catch (e) {
+                                        console.error('Error parsing streaming data:', e);
                                     }
                                 }
                             }
-                            
-                            return; // Exit the function - we've handled everything via streaming
-                            
-                        } catch (streamError) {
-                            console.warn('Streaming failed, falling back to standard endpoint:', streamError);
-                            // If streaming fails, we'll fall back to the standard endpoint
+                        }
+                    } catch (streamError) {
+                        console.warn('Streaming failed, falling back to standard endpoint:', streamError);
+                        
+                        // Fallback to standard endpoint
+                        const standardEndpoint = `${apiUrl}/chatbot/message`;
+                        console.log('Falling back to standard endpoint:', standardEndpoint);
+                        
+                        const response = await fetch(standardEndpoint, {
+                            method: 'POST',
+                            headers: headers,
+                            body: JSON.stringify(requestData)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`API Error (${response.status}): ${await response.text()}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Update session ID
+                        if (data.session_id) {
+                            sessionId = data.session_id;
+                        }
+                        
+                        // Hide typing indicator
+                        hideTypingIndicator();
+                        
+                        // Add assistant response to chat
+                        addMessage(data.message.content, false);
+                        
+                        // Show suggestions if enabled and available
+                        if (enableSuggestions && data.suggestions && 
+                            Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+                            showSuggestions(data.suggestions);
                         }
                     }
-                    
-                    // Fallback to standard endpoint
-                    const response = await fetch(`${backendUrl}/api/chatbot/message`, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(requestData)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`API Error (${response.status}): ${errorText}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    // Update session ID
-                    if (data.session_id) {
-                        sessionId = data.session_id;
-                    }
-                    
-                    // Hide typing indicator
-                    hideTypingIndicator();
-                    
-                    // Add assistant response to chat
-                    addMessage(data.message.content, false);
-                    
-                    // Show suggestions if enabled and available
-                    if (enableSuggestions && data.suggestions && 
-                        Array.isArray(data.suggestions) && 
-                        data.suggestions.length > 0) {
-                        showSuggestions(data.suggestions);
-                    }
-                    
                 } catch (error) {
                     console.error('Error sending message:', error);
-                    
-                    // Hide typing indicator
                     hideTypingIndicator();
                     
                     // Show error message
@@ -972,26 +951,38 @@ async def serve_chat_interface(
                     chatInput.disabled = false;
                     sendBtnElement.disabled = false;
                     chatInput.focus();
+                    chatInput.value = '';
                 }
-            }            
-            // Send message on button click
-            sendBtnElement.addEventListener('click', function() {
-                const message = chatInput.value;
-                chatInput.value = '';
-                chatInput.style.height = 'auto';
-                sendMessage(message);
-            });
+            }
             
-            // Send message on Enter (but allow Shift+Enter for new line)
-            chatInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
+            // Set up event listeners
+            if (sendBtnElement) {
+                sendBtnElement.addEventListener('click', function() {
                     const message = chatInput.value;
                     chatInput.value = '';
                     chatInput.style.height = 'auto';
                     sendMessage(message);
-                }
-            });
+                });
+            }
+            
+            if (chatInput) {
+                // Auto-resize textarea
+                chatInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+                
+                // Send message on Enter (but allow Shift+Enter for new line)
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const message = chatInput.value;
+                        chatInput.value = '';
+                        chatInput.style.height = 'auto';
+                        sendMessage(message);
+                    }
+                });
+            }
             
             // Close button
             const closeBtnElement = document.getElementById('closeBtn');
