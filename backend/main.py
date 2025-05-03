@@ -33,6 +33,8 @@ from app.api.knowledge import (
     knowledge_router, document_router, collection_router, 
     crawl_router, enhanced_router
 )
+from app.api.widget import router as widget_router
+
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -135,6 +137,8 @@ app.include_router(crawl_router, prefix="/api/knowledge")
 app.include_router(enhanced_router, prefix="/api/knowledge")
 app.include_router(channel_router, prefix="/api")
 app.include_router(webhook_router, prefix="/api")
+app.include_router(widget_router, prefix="/api")
+
 
 # Request logging middleware
 @app.middleware("http")

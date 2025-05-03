@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -103,3 +103,45 @@ async def get_current_client(
         detail="Not authenticated",
         headers={"WWW-Authenticate": "Bearer"},
     )
+async def get_client_with_any_auth(
+    request: Request,
+    x_api_key: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+) -> Client:
+    """
+    Get client by API key or bearer token - flexible authentication for widget.
+    Supports both dashboard and widget authentication methods.
+    """
+    client_repo = ClientRepository()
+    
+    # Method 1: Try to authenticate using API key header
+    if x_api_key:
+        client = client_repo.get_by_api_key(db, x_api_key)
+        if client:
+            return client
+    
+    # Method 2: Try to get token from Authorization header
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.replace("Bearer ", "")
+        # Verify JWT token and get client_id
+        try:
+            from app.core.security.authentication import verify_token
+            payload = verify_token(token)
+            if payload and "sub" in payload:
+                client_id = payload["sub"]
+                client = client_repo.get_by_client_id(db, client_id)
+                if client:
+                    return client
+        except Exception as e:
+            # If token verification fails, continue to next method
+            pass
+    
+    # If all authentication methods fail, raise exception
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )    
+    
+    
