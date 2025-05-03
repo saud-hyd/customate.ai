@@ -1,5 +1,3 @@
-# Path: backend/app/api/widget/routes.py
-
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any
@@ -223,6 +221,8 @@ def serve_widget_js():
     
     // Create and initialize the widget 
     function createWidget(finalSettings) {
+        console.log('Creating widget with settings:', finalSettings);
+        
         // Create widget container
         const container = document.createElement('div');
         container.id = 'customate-chat-widget';
@@ -283,20 +283,30 @@ def serve_widget_js():
         
         // Toggle chat when button is clicked
         button.addEventListener('click', function() {
+            console.log('Button clicked, current state:', isOpen);
+            
             if (!chatFrame) {
+                console.log('Creating new chat frame');
+                
                 // First click - create the iframe
                 chatFrame = document.createElement('iframe');
-                chatFrame.style.width = '350px';
-                chatFrame.style.height = '500px';
-                chatFrame.style.border = 'none';
-                chatFrame.style.position = 'absolute';
-                chatFrame.style.bottom = '80px';
-                chatFrame.style.right = '0';
-                chatFrame.style.backgroundColor = 'white';
-                chatFrame.style.borderRadius = '10px';
-                chatFrame.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                chatFrame.style.transition = 'opacity 0.3s';
-                chatFrame.style.zIndex = '10000';
+                
+                // Set styles all at once for better performance
+                Object.assign(chatFrame.style, {
+                    width: '350px',
+                    height: '500px',
+                    border: '1px solid #ccc', // Add a border to make it visible during debugging
+                    position: 'fixed', // Use fixed instead of absolute for better positioning
+                    bottom: '80px',
+                    right: '20px', // Ensure it's visible on the right
+                    backgroundColor: 'white',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)', // Stronger shadow
+                    display: 'block',
+                    opacity: '1', // Ensure full opacity
+                    visibility: 'visible', // Explicitly set visibility
+                    zIndex: '2147483647' // Maximum z-index to ensure it's on top
+                });
                 
                 // Create config param to pass all settings to the chat frame
                 const configParam = encodeURIComponent(JSON.stringify({
@@ -312,21 +322,34 @@ def serve_widget_js():
                     llmModel: finalSettings.llmModel
                 }));
                 
+                // Normalize API URL to avoid duplicate /api
+                let apiUrl = finalSettings.apiUrl;
+                if (apiUrl.endsWith('/api')) {
+                    apiUrl = apiUrl.slice(0, -4);
+                }
+                
                 // IMPORTANT: We pass the API key and additional config to the chat frame
-                chatFrame.src = `${finalSettings.apiUrl}/api/widget/chat?apiKey=${encodeURIComponent(finalSettings.apiKey)}&config=${configParam}`;
+                const chatUrl = `${apiUrl}/api/widget/chat?apiKey=${encodeURIComponent(finalSettings.apiKey)}&config=${configParam}`;
+                console.log('Loading iframe from URL:', chatUrl);
+                
+                // Add load and error handlers
+                chatFrame.onload = () => console.log('Chat iframe loaded successfully');
+                chatFrame.onerror = (e) => console.error('Error loading chat iframe:', e);
+                
+                // Set the source after attaching event handlers
+                chatFrame.src = chatUrl;
                 chatFrame.title = finalSettings.chatbotName || "Chat with Customate AI";
                 
+                // Append to container and update state
                 container.appendChild(chatFrame);
+                console.log('Chat frame added to DOM');
                 isOpen = true;
             } else {
                 // Subsequent clicks - toggle visibility
-                if (isOpen) {
-                    chatFrame.style.display = 'none';
-                    isOpen = false;
-                } else {
-                    chatFrame.style.display = 'block';
-                    isOpen = true;
-                }
+                isOpen = !isOpen;
+                chatFrame.style.display = isOpen ? 'block' : 'none';
+                chatFrame.style.opacity = isOpen ? '1' : '0';
+                console.log('Toggled chat frame visibility:', isOpen ? 'visible' : 'hidden');
             }
         });
 
@@ -335,6 +358,7 @@ def serve_widget_js():
             if (event.data === 'closeChat' && chatFrame) {
                 chatFrame.style.display = 'none';
                 isOpen = false;
+                console.log('Chat closed via message from iframe');
             }
         });
     }
@@ -348,14 +372,14 @@ def serve_widget_js():
         content=widget_js,
         media_type="application/javascript"
     )
-
+    
 @router.get("/chat", include_in_schema=False)
 async def serve_chat_interface(
     apiKey: str = None,
     config: str = None,
     request: Request = None
 ):
-    """Serve the chat interface HTML without authentication."""
+    """Serve the chat interface HTML that uses the streaming API similar to TestChatbot page."""
     html_content = """
 <!DOCTYPE html>
 <html lang="en">
@@ -364,216 +388,82 @@ async def serve_chat_interface(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; overflow: hidden; }
+        * { box-sizing: border-box; }
+        .chat-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .chat-header { padding: 12px 16px; color: white; display: flex; align-items: center; justify-content: space-between; background-color: #4f46e5; }
+        .chat-brand { display: flex; align-items: center; }
+        .chat-logo { width: 24px; height: 24px; margin-right: 8px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .chat-title { font-size: 16px; font-weight: 600; margin: 0; }
+        .chat-subtitle { font-size: 12px; opacity: 0.8; margin: 0; }
+        .chat-messages { flex: 1; padding: 16px; overflow-y: auto; background-color: #f9fafb; }
+        .message-group { margin-bottom: 16px; }
+        .message-group.user { display: flex; justify-content: flex-end; }
+        .message-group.assistant { display: flex; justify-content: flex-start; }
+        .message-bubble { padding: 12px 16px; border-radius: 18px; max-width: 75%; word-break: break-word; }
+        .message-bubble.user { background-color: #4f46e5; color: white; border-bottom-right-radius: 4px; }
+        .message-bubble.assistant { background-color: white; border: 1px solid #e5e7eb; color: #1f2937; border-bottom-left-radius: 4px; }
+        .message-bubble.error { background-color: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; }
+        .message-time { font-size: 11px; margin-top: 4px; text-align: right; opacity: 0.7; }
+        .chat-input-container { border-top: 1px solid #e5e7eb; padding: 12px 16px; display: flex; align-items: flex-end; gap: 8px; background-color: white; }
+        .chat-input { flex: 1; border: 1px solid #d1d5db; border-radius: 20px; padding: 10px 16px; max-height: 120px; min-height: 40px; resize: none; font-family: inherit; font-size: 14px; outline: none; overflow-y: auto; }
+        .chat-input:focus { border-color: #6366f1; }
+        .chat-send-btn { width: 40px; height: 40px; border-radius: 50%; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background-color: #4f46e5; flex-shrink: 0; }
+        .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .typing-indicator { display: flex; gap: 4px; padding: 12px 16px; background-color: white; border: 1px solid #e5e7eb; border-radius: 18px; border-bottom-left-radius: 4px; width: fit-content; margin-bottom: 16px; }
+        .typing-dot { width: 8px; height: 8px; background-color: #6366f1; border-radius: 50%; opacity: 0.7; animation: typing-dot 1.4s infinite; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            background-color: white;
-        }
-        
-        .chat-header {
-            padding: 12px 16px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: #4f46e5;
-        }
-        
-        .chat-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin: 0;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-            background-color: #f9fafb;
-        }
-        
-        .chat-input-container {
-            border-top: 1px solid #e5e7eb;
-            padding: 12px 16px;
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            background-color: white;
-        }
-        
-        .chat-input {
-            flex: 1;
-            border: 1px solid #d1d5db;
-            border-radius: 20px;
-            padding: 10px 16px;
-            max-height: 120px;
-            min-height: 44px;
-            resize: none;
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-        }
-        
-        .chat-input:focus {
-            border-color: #6366f1;
-        }
-        
-        .chat-send-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #4f46e5;
-        }
-        
-        .user-message {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 16px;
-        }
-        
-        .assistant-message {
-            display: flex;
-            justify-content: flex-start;
-            margin-bottom: 16px;
-        }
-        
-        .message-bubble {
-            padding: 12px 16px;
-            border-radius: 18px;
-            max-width: 80%;
-            word-break: break-word;
-        }
-        
-        .user-bubble {
-            color: white;
-            border-bottom-right-radius: 4px;
-            background-color: #4f46e5;
-        }
-        
-        .assistant-bubble {
-            background-color: white;
-            border: 1px solid #e5e7eb;
-            color: #1f2937;
-            border-bottom-left-radius: 4px;
-        }
-        
-        .error-message {
-            background-color: #fee2e2;
-            border-color: #fca5a5;
-            color: #b91c1c;
-        }
-        
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            padding: 6px 12px;
-            margin-bottom: 16px;
-            background-color: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            border-bottom-left-radius: 4px;
-            width: fit-content;
-        }
-        
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #6b7280;
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: typing-animation 1.5s infinite;
-        }
-        
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.15s;
-        }
-        
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.3s;
-        }
-        
-        @keyframes typing-animation {
+        @keyframes typing-dot {
             0%, 60%, 100% { transform: translateY(0); }
             30% { transform: translateY(-8px); }
         }
         
-        /* Suggestions */
-        .suggestions-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-            margin-bottom: 16px;
+        /* For handling markdown content in assistant messages */
+        .message-content {
+            font-size: 14px;
+            line-height: 1.5;
         }
         
-        .suggestion-chip {
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 12px;
-            border: 1px solid #4f46e5;
-            color: #4f46e5;
-            background: white;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .suggestion-chip:hover {
-            background-color: rgba(79, 70, 229, 0.1);
-        }
-        
-        /* Markdown rendering styles */
-        .markdown-content p {
+        .message-content p {
+            margin-top: 0;
             margin-bottom: 0.75rem;
         }
         
-        .markdown-content p:last-child {
+        .message-content p:last-child {
             margin-bottom: 0;
         }
         
-        .markdown-content ul, 
-        .markdown-content ol {
+        .message-content ul, 
+        .message-content ol {
             margin-top: 0.5rem;
             margin-bottom: 0.75rem;
             padding-left: 1.5rem;
         }
         
-        .markdown-content ul li,
-        .markdown-content ol li {
+        .message-content ul li,
+        .message-content ol li {
             margin-bottom: 0.25rem;
         }
         
-        .markdown-content h1,
-        .markdown-content h2,
-        .markdown-content h3,
-        .markdown-content h4 {
+        .message-content h1,
+        .message-content h2,
+        .message-content h3,
+        .message-content h4 {
             margin-top: 1rem;
             margin-bottom: 0.5rem;
             font-weight: 600;
         }
         
-        .markdown-content code {
+        .message-content code {
             background-color: rgba(0, 0, 0, 0.05);
             padding: 0.1rem 0.3rem;
             border-radius: 3px;
             font-family: monospace;
         }
         
-        .markdown-content pre {
+        .message-content pre {
             background-color: rgba(0, 0, 0, 0.05);
             padding: 0.75rem;
             border-radius: 3px;
@@ -581,31 +471,33 @@ async def serve_chat_interface(
             margin: 0.75rem 0;
         }
         
-        .markdown-content blockquote {
+        .message-content blockquote {
             border-left: 3px solid #e0e0e0;
             padding-left: 0.75rem;
             color: #555;
             margin: 0.75rem 0;
         }
-        
-        .markdown-content a {
-            color: #4f46e5;
-            text-decoration: underline;
-        }
     </style>
-    
-    <!-- Add marked library for Markdown rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
-    <!-- Add DOMPurify for sanitizing HTML -->
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.8/dist/purify.min.js"></script>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header" id="chatHeader">
-            <h3 class="chat-title" id="chatTitle">AI Assistant</h3>
-            <button id="closeBtn" style="background: none; border: none; color: white; cursor: pointer;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
+            <div class="chat-brand">
+                <div class="chat-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"></path>
+                        <path d="M18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="chat-title" id="chatTitle">AI Assistant</h3>
+                    <p class="chat-subtitle">Online</p>
+                </div>
+            </div>
+            <button id="closeBtn" style="background: none; border: none; color: white; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
         </div>
@@ -615,390 +507,383 @@ async def serve_chat_interface(
         <div class="chat-input-container">
             <textarea id="chatInput" class="chat-input" placeholder="Type your message..." rows="1"></textarea>
             <button id="sendBtn" class="chat-send-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
             </button>
         </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get API key and config from URL parameters
+            console.log('Chat interface initializing...');
+            
+            // Get parameters from URL
             const urlParams = new URLSearchParams(window.location.search);
             const apiKey = urlParams.get('apiKey');
-            
-            // Parse config from URL parameter
-            let configParam = urlParams.get('config');
             let config = {};
             
-            if (configParam) {
-                try {
-                    config = JSON.parse(decodeURIComponent(configParam));
-                    console.log('Chat config loaded:', config);
-                } catch (e) {
-                    console.error('Error parsing config:', e);
-                }
+            try {
+                config = JSON.parse(decodeURIComponent(urlParams.get('config') || '{}'));
+                console.log('Loaded config:', config);
+            } catch (e) {
+                console.error('Error parsing config:', e);
             }
             
-            // Check if we're in development mode
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const backendUrl = isLocalhost ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
-            
-            // Normalized API URL - ensure we don't duplicate /api prefix
-            const apiUrl = backendUrl.endsWith('/api') ? backendUrl : `${backendUrl}/api`;
-            
-            // Apply configuration
-            const primaryColor = config.primaryColor || '#4f46e5';
-            const chatTitle = config.chatbotName || 'AI Assistant';
-            const shouldShowTypingIndicator = config.showTypingIndicator !== false;
-            const enableSuggestions = config.enableSuggestions !== false; // Default to true
-            
-            // Set the header color and title
-            const headerElement = document.getElementById('chatHeader');
-            const titleElement = document.getElementById('chatTitle');
-            const sendBtnElement = document.getElementById('sendBtn');
+            // Setup DOM elements
+            const chatHeader = document.getElementById('chatHeader');
+            const chatTitle = document.getElementById('chatTitle');
+            const sendBtn = document.getElementById('sendBtn');
             const chatInput = document.getElementById('chatInput');
+            const messagesContainer = document.getElementById('chatMessages');
+            const closeBtn = document.getElementById('closeBtn');
             
-            if (headerElement) headerElement.style.backgroundColor = primaryColor;
-            if (titleElement) titleElement.textContent = chatTitle;
-            if (sendBtnElement) sendBtnElement.style.backgroundColor = primaryColor;
+            // Apply styling
+            const primaryColor = config.primaryColor || '#4f46e5';
+            chatHeader.style.backgroundColor = primaryColor;
+            chatTitle.textContent = config.chatbotName || 'AI Assistant';
+            sendBtn.style.backgroundColor = primaryColor;
             
-            // Focus input on load
-            if (chatInput) chatInput.focus();
-            
-            // Session ID for conversation tracking
+            // Session tracking
             let sessionId = null;
-            let isTyping = false;
-            let typingIndicator = null;
+            const messagesEndRef = document.createElement('div');
+            messagesContainer.appendChild(messagesEndRef);
             
-            // Create typing indicator
-            function showTypingIndicator() {
-                if (isTyping) return;
+            // Auto-resize textarea
+            chatInput.addEventListener('input', function() {
+                // Reset height
+                this.style.height = 'auto';
+                // Set to scrollHeight (with max height limit)
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+            
+            // Scroll to bottom of messages
+            function scrollToBottom() {
+                messagesEndRef.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            // Format timestamp
+            function formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // Add message to the chat
+            function addMessage(content, role, timestamp = new Date().toISOString(), isError = false) {
+                const messageGroup = document.createElement('div');
+                messageGroup.className = 'message-group ' + role;
                 
-                const messagesContainer = document.getElementById('chatMessages');
-                if (!messagesContainer) return;
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble ' + role;
                 
-                typingIndicator = document.createElement('div');
-                typingIndicator.className = 'typing-indicator';
+                if (isError) {
+                    bubble.classList.add('error');
+                }
+                
+                if (role === 'user') {
+                    bubble.style.backgroundColor = primaryColor;
+                    
+                    // Plain text for user messages
+                    bubble.textContent = content;
+                } else {
+                    // Use marked for markdown in assistant messages
+                    if (window.marked && window.DOMPurify) {
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'message-content';
+                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(content));
+                        bubble.appendChild(contentDiv);
+                    } else {
+                        bubble.textContent = content;
+                    }
+                }
+                
+                // Add timestamp
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = formatTimestamp(timestamp);
+                bubble.appendChild(timeDiv);
+                
+                messageGroup.appendChild(bubble);
+                messagesContainer.appendChild(messageGroup);
+                scrollToBottom();
+                
+                return { group: messageGroup, bubble: bubble };
+            }
+            
+            // Add typing indicator
+            function addTypingIndicator() {
+                const typingGroup = document.createElement('div');
+                typingGroup.className = 'message-group assistant';
+                typingGroup.id = 'typing-indicator';
+                
+                const indicatorDiv = document.createElement('div');
+                indicatorDiv.className = 'typing-indicator';
                 
                 for (let i = 0; i < 3; i++) {
                     const dot = document.createElement('div');
                     dot.className = 'typing-dot';
-                    typingIndicator.appendChild(dot);
+                    indicatorDiv.appendChild(dot);
                 }
                 
-                messagesContainer.appendChild(typingIndicator);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                isTyping = true;
+                typingGroup.appendChild(indicatorDiv);
+                messagesContainer.appendChild(typingGroup);
+                scrollToBottom();
+                
+                return typingGroup;
             }
             
-            function hideTypingIndicator() {
-                if (!isTyping || !typingIndicator) return;
-                
-                typingIndicator.remove();
-                typingIndicator = null;
-                isTyping = false;
-            }
-            
-            // Show suggestions
-            function showSuggestions(suggestions) {
-                const messagesContainer = document.getElementById('chatMessages');
-                if (!messagesContainer) return;
-                
-                const suggestionsContainer = document.createElement('div');
-                suggestionsContainer.className = 'suggestions-container';
-                
-                suggestions.forEach(suggestion => {
-                    const chip = document.createElement('button');
-                    chip.className = 'suggestion-chip';
-                    chip.textContent = suggestion;
-                    chip.style.borderColor = primaryColor;
-                    chip.style.color = primaryColor;
-                    
-                    chip.addEventListener('click', () => {
-                        chatInput.value = suggestion;
-                        sendMessage(suggestion);
-                        suggestionsContainer.remove();
-                    });
-                    
-                    suggestionsContainer.appendChild(chip);
-                });
-                
-                messagesContainer.appendChild(suggestionsContainer);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-            
-            // Add message to the chat
-            function addMessage(message, isUser, isError = false) {
-                hideTypingIndicator();
-                
-                const messagesContainer = document.getElementById('chatMessages');
-                if (!messagesContainer) return;
-                
-                const messageDiv = document.createElement('div');
-                messageDiv.className = isUser ? 'user-message' : 'assistant-message';
-                
-                const bubble = document.createElement('div');
-                bubble.className = `message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'}`;
-                if (isError) {
-                    bubble.className += ' error-message';
-                }
-                
-                if (isUser) {
-                    bubble.style.backgroundColor = primaryColor;
-                    bubble.textContent = message;
-                } else {
-                    // Apply markdown formatting for assistant messages
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'markdown-content';
-                    
-                    // Use marked.js to parse markdown and DOMPurify to sanitize
-                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(message));
-                    
-                    bubble.appendChild(contentDiv);
-                }
-                
-                messageDiv.appendChild(bubble);
-                messagesContainer.appendChild(messageDiv);
-                
-                // Scroll to bottom
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-            
-            // Send message to backend
-            async function sendMessage(message) {
-                if (!message.trim()) return;
-                
-                // Add user message to chat
-                addMessage(message, true);
-                
-                // Show typing indicator if enabled
-                if (showTypingIndicator) {
-                    showTypingIndicator();
-                }
-                
-                // Disable input while processing
-                chatInput.disabled = true;
-                sendBtnElement.disabled = true;
-                
-                try {
-                    // Build LLM settings object - IMPORTANT: Match TestChatbot format exactly
-                    const llmSettings = {};
-                    
-                    if (config.llmProvider) {
-                        llmSettings.llm_provider = config.llmProvider;
+            // Remove typing indicator
+        function removeTypingIndicator() {
+                    const indicator = document.getElementById('typing-indicator');
+                    if (indicator) {
+                        indicator.remove();
                     }
+                }
+                
+                // Create or update a streaming message
+                function createOrUpdateStreamingMessage(content, messageId, isComplete = false) {
+                    // Look for existing message with this ID
+                    const existingBubble = document.querySelector(`[data-message-id="${messageId}"]`);
                     
-                    if (config.llmModel) {
-                        llmSettings.llm_model = config.llmModel;
+                    if (existingBubble) {
+                        // Update existing message
+                        const contentDiv = existingBubble.querySelector('.message-content');
+                        if (contentDiv) {
+                            if (isComplete) {
+                                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(content));
+                            } else {
+                                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(content + "▋")); // Add cursor
+                            }
+                        } else {
+                            existingBubble.textContent = content;
+                        }
+                        scrollToBottom();
+                        return existingBubble;
+                    } else {
+                        // Create new streaming message
+                        const messageGroup = document.createElement('div');
+                        messageGroup.className = 'message-group assistant';
+                        
+                        const bubble = document.createElement('div');
+                        bubble.className = 'message-bubble assistant';
+                        bubble.setAttribute('data-message-id', messageId);
+                        
+                        // Use marked for markdown
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'message-content';
+                        contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(content + "▋")); // Add cursor
+                        bubble.appendChild(contentDiv);
+                        
+                        // Add timestamp
+                        const timeDiv = document.createElement('div');
+                        timeDiv.className = 'message-time';
+                        timeDiv.textContent = formatTimestamp(new Date());
+                        bubble.appendChild(timeDiv);
+                        
+                        messageGroup.appendChild(bubble);
+                        messagesContainer.appendChild(messageGroup);
+                        scrollToBottom();
+                        
+                        return bubble;
                     }
+                }
+                
+                // Send message with streaming response
+                async function sendMessage(message) {
+                    if (!message.trim()) return;
                     
-                    // Common request data and headers - match TestChatbot format
-                    const requestData = {
-                        message: message,
-                        session_id: sessionId,
-                    };
+                    // Add user message to chat
+                    addMessage(message, 'user');
+                    chatInput.value = '';
+                    chatInput.style.height = 'auto';
                     
-                    // Only add llm_settings if we have values
-                    if (Object.keys(llmSettings).length > 0) {
-                        requestData.llm_settings = llmSettings;
-                    }
+                    // Disable input while processing
+                    chatInput.disabled = true;
+                    sendBtn.disabled = true;
                     
-const headers = {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    };
-                    
-                    console.log('Sending request with data:', JSON.stringify(requestData));
-                    
-                    // First: try the streaming endpoint - ensuring correct URL format
-                    const streamEndpoint = `${apiUrl}/chatbot/message/stream`;
-                    console.log('Using stream endpoint:', streamEndpoint);
+                    // Show typing indicator
+                    const typingIndicator = addTypingIndicator();
                     
                     try {
-                        const response = await fetch(streamEndpoint, {
+                        // Prepare LLM settings if provided
+                        let llmSettings = null;
+                        if (config.llmProvider) {
+                            llmSettings = {
+                                llm_provider: config.llmProvider,
+                                llm_model: config.llmModel
+                            };
+                        }
+                        
+                        // Prepare request data
+                        const requestData = {
+                            message: message,
+                            session_id: sessionId
+                        };
+                        
+                        // Add LLM settings if available
+                        if (llmSettings) {
+                            requestData.llm_settings = llmSettings;
+                        }
+                        
+                        // Use the streaming API for a more responsive experience
+                        const backendUrl = window.location.origin;
+                        const apiUrl = `${backendUrl}/api/chatbot/message/stream`;
+                        
+                        // Create abort controller for potential cancellation
+                        const controller = new AbortController();
+                        const signal = controller.signal;
+                        
+                        // Start the fetch request
+                        const response = await fetch(apiUrl, {
                             method: 'POST',
-                            headers: headers,
-                            body: JSON.stringify(requestData)
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            },
+                            body: JSON.stringify(requestData),
+                            signal: signal
                         });
                         
                         if (!response.ok) {
-                            throw new Error(`API Error (${response.status})`);
+                            throw new Error(`HTTP error! Status: ${response.status}`);
                         }
                         
-                        // Set up stream reading
+                        // Process the streaming response
                         const reader = response.body.getReader();
                         const decoder = new TextDecoder();
                         let buffer = '';
+                        let messageId = null;
+                        let fullMessage = '';
                         
-                        // Hide typing indicator as we'll show content as it streams
-                        hideTypingIndicator();
-                        
-                        // Create a temporary message that we'll update
-                        const tempMessage = document.createElement('div');
-                        tempMessage.className = 'assistant-message';
-                        
-                        const tempBubble = document.createElement('div');
-                        tempBubble.className = 'message-bubble assistant-bubble';
-                        
-                        const contentDiv = document.createElement('div');
-                        contentDiv.className = 'markdown-content';
-                        
-                        tempBubble.appendChild(contentDiv);
-                        tempMessage.appendChild(tempBubble);
-                        
-                        const messagesContainer = document.getElementById('chatMessages');
-                        messagesContainer.appendChild(tempMessage);
+                        // Remove typing indicator once we start getting chunks
+                        removeTypingIndicator();
                         
                         // Process the stream
-                        let fullResponse = "";
-                        
                         while (true) {
-                            const { value, done } = await reader.read();
-                            if (done) break;
+                            const { done, value } = await reader.read();
                             
-                            buffer += decoder.decode(value, { stream: true });
-                            
-                            // Process complete events in buffer
-                            const lines = buffer.split('\n\n');
-                            buffer = lines.pop() || '';
-                            
-                            for (const line of lines) {
-                                if (line.startsWith('data: ')) {
+                            if (done) {
+                                // Process any remaining data in buffer
+                                if (buffer) {
                                     try {
-                                        const eventData = line.substring(6);
-                                        if (eventData && eventData !== '[DONE]') {
-                                            const data = JSON.parse(eventData);
-                                            
-                                            if (data.type === 'info') {
-                                                sessionId = data.session_id;
-                                                console.log('Session ID:', sessionId);
-                                            } else if (data.type === 'chunk') {
-                                                fullResponse += data.content || '';
-                                                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                                            } else if (data.type === 'complete') {
-                                                fullResponse = data.content;
-                                                contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                                            } else if (data.type === 'done') {
-                                                if (data.message && data.message.content) {
-                                                    fullResponse = data.message.content;
-                                                    contentDiv.innerHTML = DOMPurify.sanitize(marked.parse(fullResponse));
-                                                }
-                                                
-                                                if (data.session_id) {
-                                                    sessionId = data.session_id;
-                                                }
-                                                
-                                                if (enableSuggestions && data.suggestions && 
-                                                    Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-                                                    showSuggestions(data.suggestions);
+                                        // Handle any remaining event data
+                                        const lines = buffer.split('\\n\\n');
+                                        lines.forEach(line => {
+                                            if (line.startsWith('data: ')) {
+                                                const eventData = line.substring(6);
+                                                if (eventData && eventData !== '[DONE]') {
+                                                    const data = JSON.parse(eventData);
+                                                    
+                                                    // Handle different message types
+                                                    if (data.type === 'info') {
+                                                        sessionId = data.session_id;
+                                                    } else if (data.type === 'chunk') {
+                                                        if (!messageId) messageId = data.message_id;
+                                                        fullMessage += data.content;
+                                                        createOrUpdateStreamingMessage(fullMessage, messageId);
+                                                    } else if (data.type === 'complete') {
+                                                        fullMessage = data.content;
+                                                        createOrUpdateStreamingMessage(fullMessage, messageId, true);
+                                                    } else if (data.type === 'done') {
+                                                        // Final message with complete info
+                                                    }
                                                 }
                                             }
-                                        }
+                                        });
                                     } catch (e) {
-                                        console.error('Error parsing streaming data:', e);
+                                        console.error('Error parsing final SSE chunk:', e);
+                                    }
+                                }
+                                break;
+                            }
+                            
+                            // Decode the incoming chunk and add to buffer
+                            const chunk = decoder.decode(value, { stream: true });
+                            buffer += chunk;
+                            
+                            // Process complete events in buffer
+                            const lines = buffer.split('\\n\\n');
+                            buffer = lines.pop() || '';
+                            
+                            // Process each complete SSE event
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    const eventData = line.substring(6);
+                                    if (eventData && eventData !== '[DONE]') {
+                                        try {
+                                            const data = JSON.parse(eventData);
+                                            
+                                            // Handle different message types
+                                            if (data.type === 'info') {
+                                                sessionId = data.session_id;
+                                            } else if (data.type === 'chunk') {
+                                                if (!messageId) messageId = data.message_id;
+                                                fullMessage += data.content;
+                                                createOrUpdateStreamingMessage(fullMessage, messageId);
+                                            } else if (data.type === 'complete') {
+                                                fullMessage = data.content;
+                                                createOrUpdateStreamingMessage(fullMessage, messageId, true);
+                                            } else if (data.type === 'done') {
+                                                // Message is complete, no need for further updates
+                                                if (data.message && data.message.content) {
+                                                    createOrUpdateStreamingMessage(data.message.content, messageId || data.message.id, true);
+                                                }
+                                            } else if (data.type === 'error') {
+                                                throw new Error(data.error || 'Unknown error');
+                                            }
+                                        } catch (e) {
+                                            console.error('Error parsing SSE chunk:', e);
+                                        }
                                     }
                                 }
                             }
                         }
-                    } catch (streamError) {
-                        console.warn('Streaming failed, falling back to standard endpoint:', streamError);
                         
-                        // Fallback to standard endpoint
-                        const standardEndpoint = `${apiUrl}/chatbot/message`;
-                        console.log('Falling back to standard endpoint:', standardEndpoint);
-                        
-                        const response = await fetch(standardEndpoint, {
-                            method: 'POST',
-                            headers: headers,
-                            body: JSON.stringify(requestData)
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error(`API Error (${response.status}): ${await response.text()}`);
-                        }
-                        
-                        const data = await response.json();
-                        
-                        // Update session ID
-                        if (data.session_id) {
-                            sessionId = data.session_id;
-                        }
-                        
-                        // Hide typing indicator
-                        hideTypingIndicator();
-                        
-                        // Add assistant response to chat
-                        addMessage(data.message.content, false);
-                        
-                        // Show suggestions if enabled and available
-                        if (enableSuggestions && data.suggestions && 
-                            Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-                            showSuggestions(data.suggestions);
-                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        removeTypingIndicator();
+                        addMessage(
+                            "I'm sorry, I encountered an error processing your request. Please try again later.",
+                            'assistant',
+                            new Date().toISOString(),
+                            true
+                        );
+                    } finally {
+                        // Re-enable input
+                        chatInput.disabled = false;
+                        sendBtn.disabled = false;
+                        chatInput.focus();
                     }
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                    hideTypingIndicator();
-                    
-                    // Show error message
-                    const errorMessage = `Sorry, there was an error processing your request. ${error.message}`;
-                    addMessage(errorMessage, false, true);
-                } finally {
-                    // Re-enable input
-                    chatInput.disabled = false;
-                    sendBtnElement.disabled = false;
-                    chatInput.focus();
-                    chatInput.value = '';
                 }
-            }
-            
-            // Set up event listeners
-            if (sendBtnElement) {
-                sendBtnElement.addEventListener('click', function() {
-                    const message = chatInput.value;
-                    chatInput.value = '';
-                    chatInput.style.height = 'auto';
-                    sendMessage(message);
-                });
-            }
-            
-            if (chatInput) {
-                // Auto-resize textarea
-                chatInput.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                });
                 
-                // Send message on Enter (but allow Shift+Enter for new line)
-                chatInput.addEventListener('keydown', function(e) {
+                // Event listeners
+                sendBtn.addEventListener('click', () => sendMessage(chatInput.value));
+                
+                chatInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        const message = chatInput.value;
-                        chatInput.value = '';
-                        chatInput.style.height = 'auto';
-                        sendMessage(message);
+                        sendMessage(chatInput.value);
                     }
                 });
-            }
-            
-            // Close button
-            const closeBtnElement = document.getElementById('closeBtn');
-            if (closeBtnElement) {
-                closeBtnElement.addEventListener('click', function() {
-                    // Send a message to the parent window to close the chat
+                
+                closeBtn.addEventListener('click', () => {
                     window.parent.postMessage('closeChat', '*');
                 });
-            }
-            
-            // Add welcome message
-            const greeting = config.greeting || 'Hello! How can I help you today?';
-            addMessage(greeting, false);
-        });
-    </script>
-</body>
+                
+                // Add welcome message
+                addMessage(config.greeting || 'Hello! How can I help you today?', 'assistant');
+                
+                // Focus the input
+                chatInput.focus();
+                
+                console.log('Chat interface ready');
+            });
+        </script>
+    </body>
 </html>
     """
     

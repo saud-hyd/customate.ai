@@ -194,7 +194,7 @@ async def send_message_stream(
     request: Request,
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
-):
+):    
     """Send a message to the chatbot and get a streaming response."""
     start_time = time.time()
     
