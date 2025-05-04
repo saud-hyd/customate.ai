@@ -1,5 +1,7 @@
 // frontend/dashboard/src/services/widgetConfigService.js
 import api from './api';
+import { isDevelopment } from '../utils/environment';
+
 
 class WidgetConfigService {
   async getConfig() {

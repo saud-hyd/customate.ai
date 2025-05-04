@@ -1,9 +1,12 @@
+# Path: main.py
+
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import time
 import asyncio
 from contextlib import asynccontextmanager
+import os
 
 from app.core.config.settings import settings
 from app.core.database.session import engine, Base
@@ -44,10 +47,56 @@ logger.setLevel(logging.DEBUG)
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Environment detection
+IS_PRODUCTION = os.environ.get("ENVIRONMENT", "development").lower() == "production"
+BACKEND_URL = "https://customate-ai-1.onrender.com" if IS_PRODUCTION else "http://localhost:8000"
+
+# Define allowed origins based on environment
+def get_allowed_origins():
+    # Base origins that are always allowed
+    origins = [
+        # Local development URLs
+        "http://localhost:3000", 
+        "http://localhost:3001", 
+        "http://localhost:3002", 
+        "http://localhost:5173",
+        "http://localhost", 
+        "http://127.0.0.1",
+        
+        # Render backend URL for same-origin requests
+        "https://customate-ai-1.onrender.com",
+    ]
+    
+    # Production-only origins
+    if IS_PRODUCTION:
+        origins.extend([
+            # Vercel deployment URLs
+            "https://customate.vercel.app",
+            "https://customate-ai.vercel.app",
+            "https://customate-ai-git-develop-saud-hyds-projects.vercel.app",
+            "https://customate-lyw0rsjn0-saud-hyds-projects.vercel.app",
+            "https://customate-16bvgs9s9-saud-hyds-projects.vercel.app",
+            "https://customate-g3wug6ubm-saud-hyds-projects.vercel.app",
+            
+            # Custom domains
+            "https://customate.ai",
+            "https://app.customate.ai",
+            "http://customate.ai",
+            "http://app.customate.ai",
+        ])
+    
+    # For widget embedding, we need to allow all origins
+    origins.append("*")
+    
+    return origins
+
 # Define lifespan context manager for startup/shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Run before the application starts
+    logger.info(f"Starting application in {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'} mode")
+    logger.info(f"Backend URL: {BACKEND_URL}")
+    
     crawler_task = asyncio.create_task(run_crawler_worker())
     logger.info("Started crawler worker in background")
     yield
@@ -73,42 +122,12 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        # Local development URLs
-        "http://localhost:3000", 
-        "http://localhost:3001", 
-        "http://localhost:3002", 
-        "http://localhost:5173",
-        "http://localhost", 
-        "http://127.0.0.1",
-        
-        # Vercel deployment URLs
-        "https://customate.vercel.app",
-        "https://customate-ai.vercel.app",
-        "https://customate-ai-git-develop-saud-hyds-projects.vercel.app",
-        "https://customate-lyw0rsjn0-saud-hyds-projects.vercel.app",
-        "https://customate-16bvgs9s9-saud-hyds-projects.vercel.app",
-        "https://customate-g3wug6ubm-saud-hyds-projects.vercel.app",
-        
-        # Render backend URL for same-origin requests
-        "https://customate-ai-1.onrender.com",
-        
-        # Custom domains
-        "https://customate.ai",
-        "https://app.customate.ai",
-        "http://customate.ai",
-        "http://app.customate.ai",
-        
-        # Allow all for widget embedding
-        "*"
-    ],
-    
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"]
 )
-
 
 # Add middleware (order matters)
 app.add_middleware(ClientContextMiddleware) 
@@ -170,6 +189,8 @@ async def root():
         "status": "healthy", 
         "app_name": settings.APP_NAME, 
         "version": settings.API_VERSION,
+        "environment": "production" if IS_PRODUCTION else "development",
+        "backend_url": BACKEND_URL,
         "features": [
             "enhanced_search", 
             "knowledge_integration", 
@@ -185,6 +206,8 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
+        "environment": "production" if IS_PRODUCTION else "development",
+        "backend_url": BACKEND_URL,
         "components": {
             "api": "up",
             "database": "up"

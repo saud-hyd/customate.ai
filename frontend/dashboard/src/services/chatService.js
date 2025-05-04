@@ -1,7 +1,7 @@
 // frontend/dashboard/src/services/enhancedChatService.js
 import axios from 'axios';
+import { API_URL, API_BASE_URL } from '../utils/environment';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
 
 class ChatService {
   constructor() {
@@ -45,7 +45,7 @@ class ChatService {
     try {
       const headers = this.getAuthHeaders();
       
-      const response = await axios.get(`${API_URL}/api/chatbot/sessions`, {
+      const response = await axios.get(`${API_URL}/chatbot/sessions`, {
         headers,
         params: { limit, skip }
       });
@@ -62,7 +62,7 @@ class ChatService {
     try {
       const headers = this.getAuthHeaders();
       
-      await axios.delete(`${API_URL}/api/chatbot/sessions/${sessionId}`, {
+      await axios.delete(`${API_URL}/chatbot/sessions/${sessionId}`, {
         headers
       });
       
@@ -78,7 +78,7 @@ class ChatService {
     try {
       const headers = this.getAuthHeaders();
       
-      const response = await axios.get(`${API_URL}/api/chatbot/history/${sessionId}`, {
+      const response = await axios.get(`${API_URL}/chatbot/history/${sessionId}`, {
         headers,
         params: { limit }
       });
@@ -116,11 +116,8 @@ class ChatService {
     const controller = new AbortController();
     const signal = controller.signal;
     
-    // Fix URL construction - ensure we don't duplicate /api prefix
-    let endpoint = `${API_URL}/api/chatbot/message/stream`;
-    if (API_URL.endsWith('/api')) {
-      endpoint = `${API_URL}/chatbot/message/stream`;
-    }
+    const endpoint = `${API_URL}/chatbot/message/stream`;
+
     
     // Start the fetch request
     fetch(endpoint, {

@@ -14,15 +14,35 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     
-    <!-- Customate.ai Chatbot Widget -->
+    <!-- Customate.ai Chatbot Widget with Environment Detection -->
     <script>
+      // Automatically detect environment based on hostname
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1';
+      const backendUrl = isLocalhost ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
+      
+      // Configure the widget
       window.customateConfig = {
         apiKey: 'eEx17lbp60FYeWlZxcrg6TYbsK-ZiA_unlkc8cUQTqA',
-        apiUrl: 'http://localhost:8000',  // Point to your local backend
+        apiUrl: backendUrl,  // Set URL based on environment detection
         primaryColor: '#4f46e5',
-        debug: true  // Enable debug logging
+        debug: isLocalhost  // Only enable debug in localhost environment
       };
+      
+      // Log environment info in development
+      if (isLocalhost) {
+        console.log('Running in development environment');
+        console.log('Using backend URL:', backendUrl);
+      }
     </script>
-  <script src="http://localhost:8000/api/widget/widget.js" async></script>
-</body>
+    
+    <!-- Dynamically insert script tag with correct URL -->
+    <script>
+      const scriptSrc = `${window.customateConfig.apiUrl}/api/widget/widget.js`;
+      const scriptTag = document.createElement('script');
+      scriptTag.src = scriptSrc;
+      scriptTag.async = true;
+      document.body.appendChild(scriptTag);
+    </script>
+  </body>
 </html>

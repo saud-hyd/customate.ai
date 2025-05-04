@@ -1,5 +1,7 @@
 // frontend/dashboard/src/services/analyticsService.js
 import api from './api';
+import { isDevelopment } from '../utils/environment';
+
 
 // Increased cache duration to reduce API load
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -180,5 +182,8 @@ const analyticsService = {
     });
   }
 };
+if (isDevelopment) {
+  console.log('Analytics Service initialized with cache duration:', CACHE_DURATION);
+}
 
 export default analyticsService;

@@ -2,9 +2,7 @@
 // This service handles all authentication API calls
 
 import api from './api';
-
-// Use environment variable with fallback to the production URL
-const API_URL = process.env.REACT_APP_API_URL || 'https://customate-ai-1.onrender.com';
+import { API_URL, API_BASE_URL } from '../utils/environment';
 
 const authService = {
 // Path: frontend/dashboard/src/services/authService.js
