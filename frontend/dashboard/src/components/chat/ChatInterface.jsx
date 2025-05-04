@@ -1,16 +1,16 @@
 // Path: frontend/dashboard/src/components/chat/ChatInterface.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import ChatBubble from './ChatBubble'; // Ensure this is the correct path
-import ChatInput from './ChatInput'; // Ensure this is the correct path
+import ChatBubble from './ChatBubble';
+import ChatInput from './ChatInput';
 import chatService from '../../services/chatService';
-
+import TypingIndicator from './TypingIndicator'; // Import the typing indicator component
 
 const ChatInterface = ({ config }) => {
   const [messages, setMessages] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false); // New state for typing indicator
   const messagesEndRef = useRef(null);
   const cancelStreamRef = useRef(null);
 
@@ -20,291 +20,212 @@ const ChatInterface = ({ config }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]); // Also scroll when typing indicator appears
+
+  // Initialize with greeting message
+  useEffect(() => {
+    if (messages.length === 0) {
+      const greeting = config?.greeting || "Hello! 👋 How can I help you today?";
+      setMessages([
+        {
+          id: 'greeting',
+          role: 'assistant',
+          content: greeting,
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    }
+  }, []);
+
+  // Handle session reset if config changes
+  useEffect(() => {
+    if (config?.resetSession) {
+      setMessages([]);
+      setSessionId(null);
+      
+      // Re-add greeting after reset
+      const greeting = config?.greeting || "Hello! 👋 How can I help you today?";
+      setMessages([
+        {
+          id: 'greeting',
+          role: 'assistant',
+          content: greeting,
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    }
+  }, [config?.resetSession]);
 
   const handleSendMessage = async (text) => {
     if (!text.trim()) return;
-
+    
+    // Add user message to state
+    const userMessageId = `user-${Date.now()}`;
     const userMessage = {
+      id: userMessageId,
       role: 'user',
-      content: text,
-      id: `temp-${Date.now()}`,
+      content: text.trim(),
       timestamp: new Date().toISOString()
     };
-
-    setMessages(prev => [...prev, userMessage]);
+    
+    // Add user message immediately to state
+    setMessages(prevMessages => [...prevMessages, userMessage]);
+    
+    // Show loading/typing indicator
     setIsLoading(true);
-
+    setIsTyping(true);
+    
     try {
+      // Cancel any ongoing stream
       if (cancelStreamRef.current) {
         cancelStreamRef.current();
         cancelStreamRef.current = null;
       }
 
-      const tempBotMessageId = `temp-bot-${Date.now()}`;
-      const tempBotMessage = {
-        role: 'assistant',
-        content: '',
-        id: tempBotMessageId,
-        timestamp: new Date().toISOString(),
-        isStreaming: true,
-      };
+      // Create a temporary bot message ID
+      const botMessageId = `bot-${Date.now()}`;
+      let hasStartedStreaming = false;
 
-      setMessages(prev => [...prev, tempBotMessage]);
+      // Set up LLM settings if provided
+      const llmSettings = config?.llmProvider ? {
+        llm_provider: config.llmProvider,
+        llm_model: config.llmModel,
+        temperature: config.temperature || 0.7
+      } : null;
 
-      // Create LLM settings from config
-      let llmSettings = null;
-      if (config && config.llmProvider) {
-        llmSettings = {
-          llm_provider: config.llmProvider,
-          llm_model: config.llmModel,
-          temperature: config.temperature
-        };
-      }
-
-      const sentMessage = text;
-
-      // Create a custom chatService with API key authentication
+      // Get the API key from local storage
       const apiKey = localStorage.getItem('apiKey');
-      const customChatService = {
-        ...chatService,
-        sendMessageStreaming: (message, sessionId, onChunk, onDone, onError, llmSettings) => {
-          // Create request data
-          const requestData = {
-            message,
-            session_id: sessionId,
-          };
-          
-          // Add LLM settings if provided
-          if (llmSettings) {
-            requestData.llm_settings = llmSettings;
-          }
-          
-          // Force API key authentication
-          const headers = {
-            'Content-Type': 'application/json',
-            'X-API-Key': apiKey
-          };
-          
-          // Create abort controller for cancellation
-          const controller = new AbortController();
-          const signal = controller.signal;
-          
-          // Get API URL
-          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-          
-          // Start the fetch request
-          fetch(`${API_URL}/api/chatbot/message/stream`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(requestData),
-            signal: signal
-          })
-          .then(response => {
-            // Rest of the implementation (use the existing one from chatService)
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            
-            // Get the readable stream from the response
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let messageId = null;
-            let fullMessage = '';
-            
-            // Process the stream
-            function processStream() {
-              return reader.read().then(({ done, value }) => {
-                if (done) {
-                  // Process any remaining data in buffer
-                  if (buffer) {
-                    try {
-                      // Handle any remaining event data
-                      const lines = buffer.split('\n\n');
-                      lines.forEach(line => {
-                        if (line.startsWith('data: ')) {
-                          const eventData = line.substring(6);
-                          if (eventData && eventData !== '[DONE]') {
-                            const data = JSON.parse(eventData);
-                            
-                            // Handle different message types
-                            if (data.type === 'info') {
-                              sessionId = data.session_id;
-                            } else if (data.type === 'chunk') {
-                              if (!messageId) messageId = data.message_id;
-                              fullMessage += data.content;
-                              onChunk(data.content, messageId);
-                            } else if (data.type === 'complete') {
-                              fullMessage = data.content;
-                              onChunk(data.content, messageId, true);
-                            } else if (data.type === 'done') {
-                              onDone({
-                                message: data.message,
-                                session_id: sessionId,
-                              });
-                            }
-                          }
-                        }
-                      });
-                    } catch (e) {
-                      console.error('Error parsing final SSE chunk:', e);
-                    }
-                  }
-                  return;
-                }
-                
-                // Decode the incoming chunk and add to buffer
-                const chunk = decoder.decode(value, { stream: true });
-                buffer += chunk;
-                
-                // Process complete events in buffer
-                const lines = buffer.split('\n\n');
-                // Keep the last (potentially incomplete) line in the buffer
-                buffer = lines.pop() || '';
-                
-                // Process each complete SSE event
-                lines.forEach(line => {
-                  if (line.startsWith('data: ')) {
-                    const eventData = line.substring(6);
-                    if (eventData && eventData !== '[DONE]') {
-                      try {
-                        const data = JSON.parse(eventData);
-                        
-                        // Handle different message types
-                        if (data.type === 'info') {
-                          sessionId = data.session_id;
-                        } else if (data.type === 'chunk') {
-                          if (!messageId) messageId = data.message_id;
-                          fullMessage += data.content;
-                          onChunk(data.content, messageId);
-                        } else if (data.type === 'complete') {
-                          fullMessage = data.content;
-                          onChunk(data.content, messageId, true);
-                        } else if (data.type === 'done') {
-                          onDone({
-                            message: data.message,
-                            session_id: sessionId,
-                          });
-                        } else if (data.type === 'error') {
-                          onError(new Error(data.error || 'Unknown error'));
-                        }
-                      } catch (e) {
-                        console.error('Error parsing SSE chunk:', e);
-                      }
-                    }
-                  }
-                });
-                
-                // Continue reading the stream
-                return processStream();
-              }).catch(err => {
-                if (err.name !== 'AbortError') {
-                  console.error('Stream reading error:', err);
-                  onError(err);
-                }
-              });
-            }
-            
-            // Start processing the stream
-            return processStream();
-          })
-          .catch(err => {
-            console.error('Fetch error:', err);
-            onError(err);
-          });
-          
-          // Return a function to abort the fetch request
-          return () => {
-            controller.abort();
-          };
-        }
-      };
-
-      // Use the custom chat service instead of the regular one
-      cancelStreamRef.current = customChatService.sendMessageStreaming(
-        sentMessage,
+      
+      // Call the API with streaming
+      cancelStreamRef.current = chatService.sendMessageStreaming(
+        text.trim(),
         sessionId,
         (chunk, messageId, isComplete) => {
+          if (!hasStartedStreaming) {
+            // When we get the first chunk, hide typing indicator and show actual message
+            hasStartedStreaming = true;
+            setIsTyping(false);
+            
+            // Add empty bot message to state that will be filled with streaming content
+            setMessages(prevMessages => [
+              ...prevMessages, 
+              {
+                id: botMessageId,
+                role: 'assistant',
+                content: '',
+                timestamp: new Date().toISOString(),
+                isStreaming: true
+              }
+            ]);
+          }
+          
+          // Update the bot message with the new chunk
           setMessages(prev => {
             const updatedMessages = [...prev];
-            const botMessageIndex = updatedMessages.findIndex(
-              msg => msg.id === tempBotMessageId ||
-                     (msg.role === 'assistant' && msg.isStreaming)
+            const botIndex = updatedMessages.findIndex(msg => 
+              msg.id === botMessageId || (msg.role === 'assistant' && msg.isStreaming)
             );
-
-            if (botMessageIndex !== -1) {
-              if (isComplete) {
-                updatedMessages[botMessageIndex] = {
-                  ...updatedMessages[botMessageIndex],
-                  content: typeof chunk === 'string' ? chunk : chunk?.text || '',
-                  id: messageId || tempBotMessageId,
-                  isStreaming: false,
-                };
-              } else {
-                updatedMessages[botMessageIndex] = {
-                  ...updatedMessages[botMessageIndex],
-                  content: updatedMessages[botMessageIndex].content + (typeof chunk === 'string' ? chunk : chunk?.text || ''),
-                  id: messageId || tempBotMessageId,
-                };
-              }
+            
+            if (botIndex !== -1) {
+              updatedMessages[botIndex] = {
+                ...updatedMessages[botIndex],
+                content: isComplete 
+                  ? (typeof chunk === 'string' ? chunk : chunk?.text || '') 
+                  : updatedMessages[botIndex].content + (typeof chunk === 'string' ? chunk : chunk?.text || ''),
+                id: messageId || botMessageId,
+                isStreaming: !isComplete
+              };
             }
-
+            
             return updatedMessages;
           });
-
+          
+          // Scroll to bottom with each update
           setTimeout(scrollToBottom, 50);
         },
-        (response) => {
+        response => {
+          // Handle completion
           setIsLoading(false);
+          setIsTyping(false);
+          
           if (response?.session_id) {
             setSessionId(response.session_id);
           }
-
+          
+          // If we never started streaming (instant response), add the message now
+          if (!hasStartedStreaming && response?.message?.content) {
+            setMessages(prev => [
+              ...prev,
+              {
+                id: response.message.id || botMessageId,
+                role: 'assistant',
+                content: response.message.content,
+                timestamp: new Date().toISOString()
+              }
+            ]);
+            return;
+          }
+          
+          // Finalize the bot message
           setMessages(prev => {
             const updatedMessages = [...prev];
-            const botMessageIndex = updatedMessages.findIndex(
-              msg => msg.id === tempBotMessageId ||
-                     (msg.role === 'assistant' && msg.isStreaming)
+            const botIndex = updatedMessages.findIndex(msg => 
+              msg.id === botMessageId || (msg.role === 'assistant' && msg.isStreaming)
             );
-
-            if (botMessageIndex !== -1) {
-              updatedMessages[botMessageIndex] = {
-                ...updatedMessages[botMessageIndex],
-                id: response?.message?.id || tempBotMessageId,
+            
+            if (botIndex !== -1) {
+              updatedMessages[botIndex] = {
+                ...updatedMessages[botIndex],
                 isStreaming: false,
-                knowledge_used: response?.knowledge_used
+                id: response?.message?.id || botMessageId
               };
             }
-
+            
             return updatedMessages;
           });
-
+          
           cancelStreamRef.current = null;
         },
-        (error) => {
+        error => {
+          // Handle errors
           console.error('Error in streaming response:', error);
           setIsLoading(false);
-
+          setIsTyping(false);
+          
+          // If we never started streaming, add an error message
+          if (!hasStartedStreaming) {
+            setMessages(prev => [
+              ...prev,
+              {
+                id: `error-${Date.now()}`,
+                role: 'assistant',
+                content: "I'm sorry, I encountered an error while processing your request. Please try again.",
+                timestamp: new Date().toISOString(),
+                isError: true
+              }
+            ]);
+            return;
+          }
+          
+          // Update the bot message with an error
           setMessages(prev => {
             const updatedMessages = [...prev];
-            const botMessageIndex = updatedMessages.findIndex(
-              msg => msg.id === tempBotMessageId ||
-                     (msg.role === 'assistant' && msg.isStreaming)
+            const botIndex = updatedMessages.findIndex(msg => 
+              msg.id === botMessageId || (msg.role === 'assistant' && msg.isStreaming)
             );
-
-            if (botMessageIndex !== -1) {
-              updatedMessages[botMessageIndex] = {
-                ...updatedMessages[botMessageIndex],
+            
+            if (botIndex !== -1) {
+              updatedMessages[botIndex] = {
+                ...updatedMessages[botIndex],
                 content: "I'm sorry, I encountered an error while processing your request. Please try again.",
                 isStreaming: false,
-                isError: true,
+                isError: true
               };
             }
-
+            
             return updatedMessages;
           });
-
+          
           cancelStreamRef.current = null;
         },
         llmSettings
@@ -312,43 +233,21 @@ const ChatInterface = ({ config }) => {
     } catch (error) {
       console.error('Failed to send message:', error);
       setIsLoading(false);
-
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: "I'm sorry, I encountered an error while processing your request. Please try again.",
-        id: `error-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        isError: true
-      }]);
+      setIsTyping(false);
+      
+      // Add error message
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: "I'm sorry, I encountered an error while processing your request. Please try again.",
+          timestamp: new Date().toISOString(),
+          isError: true
+        }
+      ]);
     }
   };
-
-  useEffect(() => {
-    if (config?.resetSession) {
-      setMessages([]);
-      setSessionId(null);
-
-      if (config.greeting) {
-        setMessages([{
-          role: 'assistant',
-          content: config.greeting,
-          id: 'welcome',
-          timestamp: new Date().toISOString()
-        }]);
-      }
-    }
-  }, [config?.resetSession]);
-
-  useEffect(() => {
-    if (messages.length === 0 && config?.greeting) {
-      setMessages([{
-        role: 'assistant',
-        content: config.greeting || 'Hello! How can I help you today?',
-        id: 'welcome',
-        timestamp: new Date().toISOString()
-      }]);
-    }
-  }, []);
 
   return (
     <div className="flex flex-col h-full bg-white rounded-md">
@@ -362,14 +261,14 @@ const ChatInterface = ({ config }) => {
             {messages.map((message) => (
               <ChatBubble 
                 key={message.id} 
-                message={typeof message.content === 'string' ? message.content : message.content?.text || ''}
+                message={message.content || ''}
                 isUser={message.role === 'user'}
                 timestamp={message.timestamp}
-                primaryColor={config?.primaryColor}
-                isError={message.isError}
               />
             ))}
-            {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+            
+            {/* Typing indicator */}
+            {isTyping && (
               <div className="flex justify-start mb-4">
                 <div className="bg-gray-100 text-gray-800 rounded-lg rounded-bl-none px-4 py-2">
                   <div className="flex space-x-1">
@@ -380,15 +279,16 @@ const ChatInterface = ({ config }) => {
                 </div>
               </div>
             )}
+            
+            <div ref={messagesEndRef} />
           </>
         )}
-        <div ref={messagesEndRef} />
       </div>
       
       <ChatInput 
         onSendMessage={handleSendMessage} 
         disabled={isLoading}
-        primaryColor={config?.primaryColor}
+        primaryColor={config?.primaryColor || '#4f46e5'}
       />
     </div>
   );
@@ -402,16 +302,8 @@ ChatInterface.propTypes = {
     resetSession: PropTypes.bool,
     llmProvider: PropTypes.string,
     llmModel: PropTypes.string,
-    temperature: PropTypes.number,
-    customData: PropTypes.object
+    temperature: PropTypes.number
   })
-};
-
-ChatInterface.defaultProps = {
-  config: {
-    primaryColor: '#4f46e5',
-    temperature: 0.7
-  }
 };
 
 export default ChatInterface;

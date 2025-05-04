@@ -1,4 +1,4 @@
-// frontend/dashboard/src/components/chat/ChatBubble.jsx
+// Path: frontend/dashboard/src/components/chat/ChatBubble.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import DOMPurify from 'dompurify';
@@ -19,22 +19,21 @@ const ChatBubble = ({ message, isUser, timestamp }) => {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       <div 
-        className={`max-w-3/4 rounded-lg px-4 py-2 ${
+        className={`max-w-xs md:max-w-md rounded-lg px-4 py-2 ${
           isUser 
-            ? 'bg-primary-600 text-white rounded-br-none' 
+            ? 'bg-indigo-600 text-white rounded-br-none' 
             : 'bg-gray-100 text-gray-800 rounded-bl-none'
         }`}
-        style={{ maxWidth: '75%' }}
       >
         {isUser ? (
-          <p className="text-sm">{message}</p>
+          <p className="text-sm whitespace-pre-wrap">{message}</p>
         ) : (
           <div 
-            className="text-sm prose prose-sm max-w-none"
+            className="text-sm prose prose-sm max-w-none whitespace-pre-wrap"
             dangerouslySetInnerHTML={{ __html: processedContent }}
           />
         )}
-        <div className={`text-xs mt-1 ${isUser ? 'text-primary-200' : 'text-gray-500'}`}>
+        <div className={`text-xs mt-1 text-right ${isUser ? 'text-indigo-200' : 'text-gray-500'}`}>
           {formattedTime}
         </div>
       </div>
@@ -45,9 +44,7 @@ const ChatBubble = ({ message, isUser, timestamp }) => {
 ChatBubble.propTypes = {
   message: PropTypes.string.isRequired,
   isUser: PropTypes.bool.isRequired,
-  timestamp: PropTypes.string.isRequired,
-  primaryColor: PropTypes.string,
-  isError: PropTypes.bool
+  timestamp: PropTypes.string.isRequired
 };
 
 export default ChatBubble;

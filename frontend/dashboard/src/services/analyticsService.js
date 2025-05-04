@@ -1,6 +1,7 @@
 // frontend/dashboard/src/services/analyticsService.js
 import api from './api';
 
+// Increased cache duration to reduce API load
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 /**
@@ -10,6 +11,7 @@ const analyticsService = {
   // Track last data refresh time and cache state
   lastSyncTime: null,
   dataCache: {},
+  pendingRequests: {},
   
   // Check if data needs refreshing
   needsRefresh: () => {
@@ -19,16 +21,61 @@ const analyticsService = {
     return (now - lastSync) > CACHE_DURATION;
   },
   
-  // Manual refresh function to be triggered by button
+  // Cache key generator with params
+  getCacheKey: (baseKey, params = {}) => {
+    return `${baseKey}${Object.keys(params).length ? '_' + JSON.stringify(params) : ''}`;
+  },
+  
+  // Request manager to prevent duplicate requests
+  requestManager: async (key, apiCall) => {
+    // Return from cache if fresh
+    if (analyticsService.dataCache[key] && !analyticsService.needsRefresh()) {
+      console.log(`Using cached data for ${key}`);
+      return analyticsService.dataCache[key];
+    }
+    
+    // If we already have a pending request for this key, return that promise
+    if (analyticsService.pendingRequests[key]) {
+      console.log(`Using pending request for ${key}`);
+      return analyticsService.pendingRequests[key];
+    }
+    
+    // Otherwise, make a new request
+    console.log(`Fetching fresh data for ${key}`);
+    try {
+      analyticsService.pendingRequests[key] = apiCall();
+      const result = await analyticsService.pendingRequests[key];
+      
+      // Cache the result
+      analyticsService.dataCache[key] = result;
+      if (!analyticsService.lastSyncTime) {
+        analyticsService.lastSyncTime = new Date();
+      }
+      
+      // Clean up the pending request
+      delete analyticsService.pendingRequests[key];
+      
+      return result;
+    } catch (error) {
+      // Clean up the pending request on error
+      delete analyticsService.pendingRequests[key];
+      throw error;
+    }
+  },
+  
+  // Manual refresh function
   refreshAllData: async (showToast = true) => {
     try {
-      // Perform the sync operations
-      await analyticsService.syncDashboardData();
-      await analyticsService.fixMessageCounts();
+      // Clear all cache and pending requests
+      analyticsService.dataCache = {};
+      analyticsService.pendingRequests = {};
+      analyticsService.lastSyncTime = null;
+      
+      // Fetch fresh dashboard data
+      await analyticsService.getDashboardOverview();
       
       // Update timestamp
       analyticsService.lastSyncTime = new Date();
-      analyticsService.dataCache = {}; // Clear cache after sync
       
       if (showToast && window.toast) {
         window.toast.success('Analytics data refreshed successfully');
@@ -44,137 +91,64 @@ const analyticsService = {
     }
   },
   
-  // Get dashboard overview without extra operations
+  // Get dashboard overview
   getDashboardOverview: async () => {
-    try {
-      const cacheKey = 'dashboardOverview';
-      
-      // Use cached data if available and fresh
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
-      const response = await api.get('/api/analytics/dashboard');
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching dashboard overview:', error);
-      throw error;
-    }
+    const key = 'dashboardOverview';
+    return analyticsService.requestManager(key, () => {
+      // Use the optimized endpoint
+      return api.get('/api/analytics/dashboard-optimized').then(response => response.data);
+    });
   },
 
+  // Get chat performance with improved request management
   getChatPerformance: async (days = 30) => {
-    try {
-      const cacheKey = `chatPerformance_${days}`;
-      
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
-      const response = await api.get('/api/analytics/chat', {
+    const key = analyticsService.getCacheKey('chatPerformance', { days });
+    return analyticsService.requestManager(key, () => {
+      return api.get('/api/analytics/chat', {
         params: { days }
-      });
-      
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching chat performance:', error);
-      throw error;
-    }
+      }).then(response => response.data);
+    });
   },
 
+  // Get knowledge usage with improved request management
   getKnowledgeUsage: async (days = 30, collectionId = null) => {
-    try {
-      const cacheKey = `knowledgeUsage_${days}_${collectionId || 'all'}`;
-      
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
+    const key = analyticsService.getCacheKey('knowledgeUsage', { days, collectionId });
+    return analyticsService.requestManager(key, () => {
       const params = { days };
       if (collectionId) params.collection_id = collectionId;
       
-      const response = await api.get('/api/analytics/knowledge', { params });
-      
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching knowledge usage:', error);
-      throw error;
-    }
+      return api.get('/api/analytics/knowledge', { params }).then(response => response.data);
+    });
   },
 
+  // Get subscription usage with improved request management
   getSubscriptionUsage: async (months = 6) => {
-    try {
-      const cacheKey = `subscriptionUsage_${months}`;
-      
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
-      const response = await api.get('/api/analytics/subscription', {
+    const key = analyticsService.getCacheKey('subscriptionUsage', { months });
+    return analyticsService.requestManager(key, () => {
+      return api.get('/api/analytics/subscription', {
         params: { months }
-      });
-      
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching subscription usage:', error);
-      throw error;
-    }
+      }).then(response => response.data);
+    });
   },
 
-  getApiUsage: async (days = 30) => {
-    try {
-      const cacheKey = `apiUsage_${days}`;
-      
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
-      const response = await api.get('/api/analytics/api-usage', {
-        params: { days }
-      });
-      
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching API usage:', error);
-      throw error;
-    }
-  },
-
+  // Get API usage with improved request management
   getSubscriptionLimits: async () => {
-    try {
-      const cacheKey = 'subscriptionLimits';
-      
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
-      const response = await api.get('/api/analytics/subscription/limits');
-      
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching subscription limits:', error);
-      throw error;
-    }
+    const key = 'subscriptionLimits';
+    return analyticsService.requestManager(key, () => {
+      return api.get('/api/analytics/subscription/limits').then(response => response.data);
+    });
   },
   
-  syncSubscriptionMessages: async () => {
-    try {
-      const response = await api.post('/api/client/sync-subscription-messages');
-      return response.data;
-    } catch (error) {
-      console.error('Error syncing subscription messages:', error);
-      throw error;
-    }
-  },
-  
+  // Fix message counts - clear cache after operation
   fixMessageCounts: async () => {
     try {
-      const response = await api.post('/api/client/fix-message-counts');
+      const response = await api.post('/api/analytics/sync-subscription-usage');
+      
+      // Clear cache to ensure fresh data
+      analyticsService.dataCache = {};
+      analyticsService.pendingRequests = {};
+      analyticsService.lastSyncTime = new Date();
+      
       return response.data;
     } catch (error) {
       console.error('Error fixing message counts:', error);
@@ -182,10 +156,12 @@ const analyticsService = {
     }
   },
   
+  // Reset analytics
   resetAnalytics: async () => {
     try {
-      // Clear cache when analytics are reset
+      // Clear cache
       analyticsService.dataCache = {};
+      analyticsService.pendingRequests = {};
       analyticsService.lastSyncTime = null;
       
       const response = await api.post('/api/analytics/reset');
@@ -196,73 +172,12 @@ const analyticsService = {
     }
   },
   
-  getDetailedUsageStats: async (days = 30) => {
-    try {
-      const cacheKey = `detailedUsage_${days}`;
-      
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
-      const response = await api.get('/api/analytics/performance', {
-        params: { days }
-      });
-      
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching detailed usage stats:', error);
-      throw error;
-    }
-  },
-  
-  syncSubscriptionUsage: async () => {
-    try {
-      const response = await api.post('/api/client/sync-message-counts');
-      return response.data;
-    } catch (error) {
-      console.error('Error syncing subscription usage:', error);
-      throw error;
-    }
-  },
-  
-  updateUsageData: async () => {
-    try {
-      const response = await api.post('/api/analytics/update-usage');
-      analyticsService.lastSyncTime = new Date(); // Update sync time
-      return response.data;
-    } catch (error) {
-      console.error('Error updating usage data:', error);
-      throw error;
-    }
-  },
-  
-  syncDashboardData: async () => {
-    try {
-      const response = await api.post('/api/client/sync-dashboard-data');
-      return response.data;
-    } catch (error) {
-      console.error('Error syncing dashboard data:', error);
-      throw error;
-    }
-  },
-  
+  // Get storage statistics
   getStorageStatistics: async () => {
-    try {
-      const cacheKey = 'storageStatistics';
-      
-      if (analyticsService.dataCache[cacheKey] && !analyticsService.needsRefresh()) {
-        return analyticsService.dataCache[cacheKey];
-      }
-      
-      const response = await api.get('/api/analytics/storage');
-      
-      analyticsService.dataCache[cacheKey] = response.data;
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching storage statistics:', error);
-      throw error;
-    }
+    const key = 'storageStatistics';
+    return analyticsService.requestManager(key, () => {
+      return api.get('/api/analytics/storage').then(response => response.data);
+    });
   }
 };
 

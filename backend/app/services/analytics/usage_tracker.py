@@ -26,7 +26,7 @@ class UsageTracker:
         self.chat_metrics_repo = ChatMetricsRepository()
         self.knowledge_metrics_repo = KnowledgeMetricsRepository()
         self.daily_stats_repo = DailyStatsRepository()
-    
+            
     def initialize_client_analytics(self, db: Session, client_id: str) -> None:
         """Initialize analytics records for a new client."""
         try:
@@ -577,6 +577,7 @@ class UsageTracker:
             
             # Default limits if no subscription
             message_limit = 100  # Free tier default
+            user_limit = 10  # Default user limit
             storage_limit = 0.5 * 1024 * 1024  # 500 kb
             
             if subscription:
@@ -593,13 +594,7 @@ class UsageTracker:
                 self.initialize_subscription_usage(db, client_id)
                 usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
             
-            # Force update of the data if it seems incomplete
-            if not usage or usage.storage_used_bytes == 0:
-                self._update_storage_usage(db, client_id)
-                self._update_active_users(db, client_id)
-                usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
-            
-            # Prepare response
+            # Prepare response - FIX: Changed users_active to active_users
             result = {
                 "current": {
                     "messages": {
@@ -608,9 +603,10 @@ class UsageTracker:
                         "percentage": min(100, ((usage.messages_used if usage else 0) / message_limit) * 100) if message_limit > 0 else 0
                     },
                     "users": {
-                        "used": usage.users_active if usage else 0,
+                        # Changed from users_active to active_users
+                        "used": usage.active_users if usage else 0,
                         "limit": user_limit,
-                        "percentage": min(100, ((usage.users_active if usage else 0) / user_limit) * 100) if user_limit > 0 else 0
+                        "percentage": min(100, ((usage.active_users if usage else 0) / user_limit) * 100) if user_limit > 0 else 0
                     },
                     "storage": {
                         "used_bytes": usage.storage_used_bytes if usage else 0,
@@ -623,8 +619,8 @@ class UsageTracker:
             # Add historical data
             historical = []
             
-            # Get previous months
-            previous_months = self.subscription_usage_repo.get_previous_months(db, client_id, limit=6)
+            # Get previous months - limiting to just 2 months for better performance
+            previous_months = self.subscription_usage_repo.get_previous_months(db, client_id, limit=2)
             
             for prev_usage in previous_months:
                 # Skip current month which is already in "current"
@@ -639,9 +635,10 @@ class UsageTracker:
                         "percentage": min(100, (prev_usage.messages_used / message_limit) * 100) if message_limit > 0 else 0
                     },
                     "users": {
-                        "used": prev_usage.users_active,
+                        # Changed from users_active to active_users
+                        "used": prev_usage.active_users,
                         "limit": user_limit,
-                        "percentage": min(100, (prev_usage.users_active / user_limit) * 100) if user_limit > 0 else 0
+                        "percentage": min(100, (prev_usage.active_users / user_limit) * 100) if user_limit > 0 else 0
                     },
                     "storage": {
                         "used_bytes": prev_usage.storage_used_bytes,
@@ -678,7 +675,7 @@ class UsageTracker:
                     "storage": {"used_bytes": 0, "limit_bytes": 100 * 1024 * 1024, "percentage": 0}
                 }
             }
-    
+                            
     def repair_subscription_data(self, db: Session) -> None:
         """Repair subscription usage data for all clients."""
         try:

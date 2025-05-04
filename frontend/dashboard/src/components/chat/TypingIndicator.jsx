@@ -1,4 +1,4 @@
-// frontend/dashboard/src/components/chat/TypingIndicator.jsx
+// Path: frontend/dashboard/src/components/chat/TypingIndicator.jsx
 import React from 'react';
 
 const TypingIndicator = () => {
