@@ -1,11 +1,13 @@
-# Add the new channel routes to the API router
-from app.api.channel import routes as channel_routes
-from app.api.channel import webhook_routes as channel_webhook_routes
+# backend/app/api/widget/__init__.py
 from fastapi import APIRouter
 
-# Initialize the API router
-api_router = APIRouter()
+# Create router with the correct prefix
+router = APIRouter(prefix="/widget")
 
-# Add to the list of routers
-api_router.include_router(channel_routes.router, prefix="/channel")
-api_router.include_router(channel_webhook_routes.router, prefix="/channel/webhook")
+# Import all widget-related routes
+from app.api.widget.routes import router as routes_router
+from app.api.widget.widget_js import router as widget_js_router
+
+# Include the sub-routers
+router.include_router(routes_router)
+router.include_router(widget_js_router)

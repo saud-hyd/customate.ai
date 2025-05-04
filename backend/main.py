@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import time
 import asyncio
 from contextlib import asynccontextmanager
@@ -23,7 +24,6 @@ from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
 from app.api.knowledge import collection_routes
 from app.api.integration import routes as integration_routes  
-from app.api.widget import router as widget_router 
 from app.api.client import subscription_routes
 from app.api.channel.routes import router as channel_router
 from app.api.channel.webhook_routes import router as webhook_router
@@ -34,7 +34,7 @@ from app.api.knowledge import (
     crawl_router, enhanced_router
 )
 from app.api.widget import router as widget_router
-
+from app.api.widget.widget_js import get_widget_js
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -137,8 +137,12 @@ app.include_router(crawl_router, prefix="/api/knowledge")
 app.include_router(enhanced_router, prefix="/api/knowledge")
 app.include_router(channel_router, prefix="/api")
 app.include_router(webhook_router, prefix="/api")
-app.include_router(widget_router, prefix="/api")
 
+# Direct route for widget.js to handle the exact path
+@app.get("/api/widget/widget.js")
+async def serve_widget_js():
+    """Direct route for widget.js to ensure it's available at the expected path"""
+    return await get_widget_js()
 
 # Request logging middleware
 @app.middleware("http")
