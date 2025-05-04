@@ -40,6 +40,56 @@ class ChatService {
    * @param {Object} llmSettings - Optional LLM provider and model settings
    * @returns {function} Function to cancel the stream
    */
+  // Add this method to the ChatService class to fix the error
+  async getConversations(limit = 100, skip = 0) {
+    try {
+      const headers = this.getAuthHeaders();
+      
+      const response = await axios.get(`${API_URL}/api/chatbot/sessions`, {
+        headers,
+        params: { limit, skip }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      throw error;
+    }
+  }
+
+  // Add this function to delete a conversation
+  async deleteConversation(sessionId) {
+    try {
+      const headers = this.getAuthHeaders();
+      
+      await axios.delete(`${API_URL}/api/chatbot/sessions/${sessionId}`, {
+        headers
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      throw error;
+    }
+  }
+
+  // Add this function to get messages for a specific conversation
+  async getMessages(sessionId, limit = 50) {
+    try {
+      const headers = this.getAuthHeaders();
+      
+      const response = await axios.get(`${API_URL}/api/chatbot/history/${sessionId}`, {
+        headers,
+        params: { limit }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      throw error;
+    }
+  }
+  
   sendMessageStreaming(message, sessionId = null, onChunk, onDone, onError, llmSettings = null) {
     // Create request data
     const requestData = {

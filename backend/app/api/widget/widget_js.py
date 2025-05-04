@@ -1,13 +1,12 @@
 # backend/app/api/widget/widget_js.py
+
 from fastapi import APIRouter, Response
 
-# Create router without prefix - we'll add the prefix when including it
 router = APIRouter()
 
-# Change route to match the expected path in the request
 @router.get("/widget.js")
 async def get_widget_js():
-    """Serve the widget JavaScript file with improved implementation"""
+    """Serve the widget JavaScript file with markdown parsing support"""
     
     widget_js = """
 // Customate.ai Widget v1.0.0
@@ -15,7 +14,7 @@ async def get_widget_js():
     // Get configuration from global variable
     const config = window.customateConfig || {};
     
-    // Default configuration with localhost URLs
+    // Default configuration
     const defaultConfig = {
         apiUrl: 'http://localhost:8000',
         position: 'bottom-right',
@@ -35,13 +34,36 @@ async def get_widget_js():
         return;
     }
     
-    // Log configuration for debugging
-    console.log('Widget initialized with config:', mergedConfig);
-    
+    // Simple markdown parser function
+    function parseMarkdown(text) {
+        if (!text) return '';
+        
+        // Bold text (e.g., **bold** or __bold__)
+        let formattedText = text.replace(/(\*\*|__)(.*?)\\1/g, '<strong>$2</strong>');
+        
+        // Italic text (e.g., *italic* or _italic_)
+        formattedText = formattedText.replace(/(\*|_)(.*?)\\1/g, '<em>$2</em>');
+        
+        // Line breaks
+        formattedText = formattedText.replace(/\\n/g, '<br>');
+        
+        // Lists
+        formattedText = formattedText.replace(/^\\s*-\\s+(.*?)$/gm, '<li>$1</li>');
+        formattedText = formattedText.replace(/(<li>.*<\\/li>)/s, '<ul>$1</ul>');
+        
+        // Headers
+        formattedText = formattedText.replace(/^##\\s+(.*?)$/gm, '<h2>$1</h2>');
+        formattedText = formattedText.replace(/^###\\s+(.*?)$/gm, '<h3>$1</h3>');
+        
+        // Links [text](url)
+        formattedText = formattedText.replace(/\\[(.*?)\\]\\((.*?)\\)/g, '<a href="$2" target="_blank">$1</a>');
+        
+        return formattedText;
+    }
+
     // Fetch widget settings from server
     async function fetchWidgetSettings() {
         try {
-            console.log('Fetching widget settings from:', `${mergedConfig.apiUrl}/api/widget/settings`);
             const response = await fetch(`${mergedConfig.apiUrl}/api/widget/settings`, {
                 method: 'GET',
                 headers: {
@@ -55,7 +77,6 @@ async def get_widget_js():
             }
             
             const settings = await response.json();
-            console.log('Widget settings loaded:', settings);
             return {...mergedConfig, ...settings};
         } catch (error) {
             console.warn('Failed to load widget settings:', error);
@@ -68,6 +89,56 @@ async def get_widget_js():
         const styleEl = document.createElement('style');
         styleEl.id = 'customate-widget-styles';
         styleEl.innerHTML = `
+            .customate-widget-container * {
+                box-sizing: border-box;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            }
+            
+            .customate-message-bubble {
+                position: relative;
+                padding: 12px 16px;
+                border-radius: 18px;
+                max-width: 100%;
+                word-wrap: break-word;
+                line-height: 1.5;
+                font-size: 14px;
+            }
+            
+            /* Styles for markdown content */
+            .customate-message-bubble strong {
+                font-weight: bold;
+            }
+            
+            .customate-message-bubble em {
+                font-style: italic;
+            }
+            
+            .customate-message-bubble h2 {
+                font-size: 1.2em;
+                margin: 0.5em 0;
+            }
+            
+            .customate-message-bubble h3 {
+                font-size: 1.1em;
+                margin: 0.4em 0;
+            }
+            
+            .customate-message-bubble ul {
+                margin: 0.5em 0;
+                padding-left: 1.5em;
+            }
+            
+            .customate-message-bubble li {
+                margin: 0.2em 0;
+                list-style-type: disc;
+            }
+            
+            .customate-message-bubble a {
+                color: inherit;
+                text-decoration: underline;
+            }
+            
+            /* Animation for typing indicator */
             @keyframes customate-bounce {
                 0%, 100% { transform: translateY(0); }
                 50% { transform: translateY(-5px); }
@@ -91,21 +162,7 @@ async def get_widget_js():
             .customate-typing-dot:nth-child(2) { animation-delay: 0.2s; }
             .customate-typing-dot:nth-child(3) { animation-delay: 0.4s; }
             
-            .customate-widget-container * {
-                box-sizing: border-box;
-                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            }
-            
-            .customate-message-bubble {
-                position: relative;
-                padding: 12px 16px;
-                border-radius: 18px;
-                max-width: 100%;
-                word-wrap: break-word;
-                line-height: 1.5;
-                font-size: 14px;
-            }
-            
+            /* Message positioning */
             .customate-message.user .customate-message-bubble {
                 border-bottom-right-radius: 4px;
             }
@@ -130,7 +187,6 @@ async def get_widget_js():
     // Initialize widget with configuration
     async function initWidget() {
         const settings = await fetchWidgetSettings();
-        console.log('Initializing widget with settings:', settings);
         
         // Inject styles
         injectStyles();
@@ -179,7 +235,10 @@ async def get_widget_js():
         toggleButton.style.cursor = 'pointer';
         toggleButton.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.2)';
         toggleButton.style.transition = 'transform 0.2s';
-        toggleButton.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+        toggleButton.style.display = 'flex';
+        toggleButton.style.alignItems = 'center';
+        toggleButton.style.justifyContent = 'center';
+        toggleButton.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path></svg>';
         
         // Create chat container (hidden initially)
         const chatContainer = document.createElement('div');
@@ -245,7 +304,9 @@ async def get_widget_js():
         welcomeMessageBubble.style.color = '#333';
         welcomeMessageBubble.style.borderBottomLeftRadius = '4px';
         welcomeMessageBubble.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
-        welcomeMessageBubble.textContent = settings.greeting_message || settings.greeting;
+        
+        // Apply markdown to greeting message
+        welcomeMessageBubble.innerHTML = parseMarkdown(settings.greeting_message || settings.greeting);
         
         welcomeMessage.appendChild(welcomeMessageBubble);
         messagesContainer.appendChild(welcomeMessage);
@@ -367,18 +428,20 @@ async def get_widget_js():
                 bubbleEl.style.backgroundColor = settings.primary_color || settings.primaryColor;
                 bubbleEl.style.color = '#fff';
                 bubbleEl.style.borderBottomRightRadius = '4px';
+                bubbleEl.textContent = content; // User messages don't need markdown
             } else if (isError) {
                 bubbleEl.style.backgroundColor = '#fee2e2';
                 bubbleEl.style.color = '#b91c1c';
                 bubbleEl.style.borderBottomLeftRadius = '4px';
+                bubbleEl.textContent = content; // Error messages don't need markdown
             } else {
                 bubbleEl.style.backgroundColor = '#fff';
                 bubbleEl.style.color = '#333';
                 bubbleEl.style.borderBottomLeftRadius = '4px';
                 bubbleEl.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                bubbleEl.innerHTML = parseMarkdown(content); // Parse assistant messages for markdown
             }
             
-            bubbleEl.textContent = content;
             messageEl.appendChild(bubbleEl);
             messagesContainer.appendChild(messageEl);
             
@@ -515,13 +578,14 @@ async def get_widget_js():
                                             }
                                             
                                             responseContent += data.content;
-                                            botMessageEl.bubble.textContent = responseContent;
+                                            // Update with parsed markdown
+                                            botMessageEl.bubble.innerHTML = parseMarkdown(responseContent);
                                             messagesContainer.scrollTop = messagesContainer.scrollHeight;
                                         } else if (data.type === 'complete') {
-                                            // Update with complete response
+                                            // Update with complete response (parsed markdown)
                                             if (botMessageEl) {
                                                 responseContent = data.content;
-                                                botMessageEl.bubble.textContent = responseContent;
+                                                botMessageEl.bubble.innerHTML = parseMarkdown(responseContent);
                                             }
                                         } else if (data.type === 'error') {
                                             throw new Error(data.error || 'Unknown error');
