@@ -6,7 +6,7 @@ const KnowledgeBaseTabs = () => {
   const location = useLocation();
   
   const tabs = [
-    { name: 'FAQs', path: '/knowledge', exact: true },
+    { name: 'Collections', path: '/knowledge', exact: true }, // Changed from 'FAQs' to 'Collections'
     { name: 'Documents', path: '/knowledge/documents' },
     { name: 'Training', path: '/knowledge/training' },
     { name: 'Website Crawler', path: '/knowledge/crawler', icon: <GlobeAltIcon className="h-4 w-4 mr-1" /> }

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import knowledgeService from '../../services/knowledgeService';
 import DocumentUploader from '../../components/knowledge/DocumentUploader';
-import WebsiteCrawler from '../../components/knowledge/WebsiteCrawler'; // Import the new component
+import WebsiteCrawler from '../../components/knowledge/WebsiteCrawler';
 import { useToast } from '../../context/ToastContext';
 
 import {
@@ -17,12 +17,12 @@ import {
   ChevronDownIcon,
   AdjustmentsHorizontalIcon,
   CalendarIcon,
-  GlobeAltIcon, // Added for the websites tab
-  TrashIcon, // For delete buttons
+  GlobeAltIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 
 const KnowledgeListPage = () => {
-  const [activeTab, setActiveTab] = useState('faqs');
+  const [activeTab, setActiveTab] = useState('collections'); // Changed from 'faqs' to 'collections'
   const [collections, setCollections] = useState([]);
   const [activeCollection, setActiveCollection] = useState(null);
   const [items, setItems] = useState([]);
@@ -36,11 +36,15 @@ const KnowledgeListPage = () => {
   const [newItem, setNewItem] = useState({ title: '', content: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedItemIds, setExpandedItemIds] = useState({});
-  const [expandedDocuments, setExpandedDocuments] = useState({}); // Track expanded document sections
+  const [expandedDocuments, setExpandedDocuments] = useState({});
   const [sortOption, setSortOption] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState(null);
   const [isDeleteDocumentConfirmOpen, setIsDeleteDocumentConfirmOpen] = useState(false);
+  const [isDeleteCollectionConfirmOpen, setIsDeleteCollectionConfirmOpen] = useState(false);
+  const [collectionToDelete, setCollectionToDelete] = useState(null);
+  const [isDeleteItemConfirmOpen, setIsDeleteItemConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   
   const { success, error: showError } = useToast();
 
@@ -135,6 +139,32 @@ const KnowledgeListPage = () => {
     }
   };
 
+  const handleDeleteCollection = async () => {
+    if (!collectionToDelete) return;
+    
+    try {
+      setLoading(true);
+      await knowledgeService.deleteCollection(collectionToDelete.collection_id);
+      success('Collection deleted successfully');
+      
+      await fetchCollections();
+      
+      // Reset active collection if it was the one deleted
+      if (activeCollection?.collection_id === collectionToDelete.collection_id) {
+        setActiveCollection(null);
+      }
+      
+    } catch (err) {
+      console.error('Error deleting collection:', err);
+      setError('Failed to delete collection');
+      if (showError) showError('Failed to delete collection');
+    } finally {
+      setLoading(false);
+      setIsDeleteCollectionConfirmOpen(false);
+      setCollectionToDelete(null);
+    }
+  };
+
   const handleCreateItem = async () => {
     try {
       if (!activeCollection) {
@@ -155,6 +185,30 @@ const KnowledgeListPage = () => {
       if (showError) showError('Failed to create item');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteItem = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      setLoading(true);
+      await knowledgeService.deleteKnowledgeItem(itemToDelete.item_id);
+      success('Knowledge item deleted successfully');
+      
+      // Refresh the items list
+      if (activeCollection) {
+        await fetchCollectionItems(activeCollection.collection_id);
+      }
+      
+    } catch (err) {
+      console.error('Error deleting knowledge item:', err);
+      setError('Failed to delete knowledge item');
+      if (showError) showError('Failed to delete item');
+    } finally {
+      setLoading(false);
+      setIsDeleteItemConfirmOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -326,18 +380,18 @@ const KnowledgeListPage = () => {
         </div>
       </div>
       
-      {/* Knowledge Base Tabs */}
+      {/* Knowledge Base Tabs - Changed FAQs to Collections */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex -mb-px">
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
-              activeTab === 'faqs' 
+              activeTab === 'collections' 
                 ? 'border-indigo-500 text-indigo-600' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
-            onClick={() => setActiveTab('faqs')}
+            onClick={() => setActiveTab('collections')}
           >
-            FAQs
+            Collections
           </button>
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
@@ -382,8 +436,8 @@ const KnowledgeListPage = () => {
         </div>
       )}
 
-      {/* FAQs and Collections View */}
-      {activeTab === 'faqs' && (
+      {/* Collections View (previously FAQs) */}
+      {activeTab === 'collections' && (
         <div className="flex flex-col md:flex-row gap-6">
           {/* Collections sidebar */}
           <div className="w-full md:w-64 bg-white shadow-sm rounded-lg p-4">
@@ -416,19 +470,31 @@ const KnowledgeListPage = () => {
             ) : (
               <ul className="space-y-1">
                 {collections.map((collection) => (
-                  <li key={collection.collection_id}>
-                    <button
-                      onClick={() => setActiveCollection(collection)}
-                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                        activeCollection?.collection_id === collection.collection_id
-                          ? 'bg-indigo-100 text-indigo-700'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <FolderIcon className="h-5 w-5 mr-3 text-gray-400" />
-                      <span className="truncate">{collection.name}</span>
-                      <span className="ml-auto text-xs text-gray-500">{collection.item_count || 0}</span>
-                    </button>
+                  <li key={collection.collection_id} className="group relative">
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => setActiveCollection(collection)}
+                        className={`flex-1 flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                          activeCollection?.collection_id === collection.collection_id
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <FolderIcon className="h-5 w-5 mr-3 text-gray-400" />
+                        <span className="truncate">{collection.name}</span>
+                        <span className="ml-auto text-xs text-gray-500">{collection.item_count || 0}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCollectionToDelete(collection);
+                          setIsDeleteCollectionConfirmOpen(true);
+                        }}
+                        className="ml-2 invisible group-hover:visible p-1 text-gray-400 hover:text-red-500 rounded"
+                        title="Delete collection"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -565,25 +631,35 @@ const KnowledgeListPage = () => {
                       <ul className="divide-y divide-gray-200">
                         {docItems.map((item) => (
                           <li key={item.item_id} className="group">
-                            <div 
-                              className="px-4 py-3 hover:bg-gray-50 cursor-pointer ml-4"
-                              onClick={() => toggleItemExpansion(item.item_id)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
+                            <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 ml-4">
+                              <div 
+                                className="flex-1 cursor-pointer"
+                                onClick={() => toggleItemExpansion(item.item_id)}
+                              >
+                                <div className="flex items-center">
                                   {expandedItemIds[item.item_id] ? (
-                                    <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                                    <ChevronDownIcon className="h-4 w-4 text-gray-400 mr-3" />
                                   ) : (
-                                    <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+                                    <ChevronRightIcon className="h-4 w-4 text-gray-400 mr-3" />
                                   )}
                                   <h3 className="text-sm font-medium text-gray-900">{item.title}</h3>
                                 </div>
-                                <div className="flex items-center">
-                                  <span className="text-xs text-gray-500 flex items-center">
-                                    <CalendarIcon className="h-3 w-3 mr-1" />
-                                    {formatDate(item.updated_at)}
-                                  </span>
-                                </div>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-xs text-gray-500 flex items-center mr-4">
+                                  <CalendarIcon className="h-3 w-3 mr-1" />
+                                  {formatDate(item.updated_at)}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setItemToDelete(item);
+                                    setIsDeleteItemConfirmOpen(true);
+                                  }}
+                                  className="invisible group-hover:visible p-1 text-gray-400 hover:text-red-500 rounded"
+                                  title="Delete item"
+                                >
+                                  <TrashIcon className="h-4 w-4" />
+                                </button>
                               </div>
                             </div>
                             
@@ -605,7 +681,7 @@ const KnowledgeListPage = () => {
         </div>
       )}
 
-      {/* Websites Tab View - New Section */}
+      {/* Websites Tab View */}
       {activeTab === 'websites' && (
         <WebsiteCrawler 
           collections={collections} 
@@ -731,7 +807,7 @@ const KnowledgeListPage = () => {
                 id="name"
                 value={newCollection.name}
                 onChange={(e) => setNewCollection({...newCollection, name: e.target.value})}
-                className="input w-full"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Collection name"
               />
             </div>
@@ -742,7 +818,7 @@ const KnowledgeListPage = () => {
                 id="description"
                 value={newCollection.description}
                 onChange={(e) => setNewCollection({...newCollection, description: e.target.value})}
-                className="input w-full"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 rows="3"
                 placeholder="Collection description"
               ></textarea>
@@ -754,7 +830,7 @@ const KnowledgeListPage = () => {
                 id="type"
                 value={newCollection.type}
                 onChange={(e) => setNewCollection({...newCollection, type: e.target.value})}
-                className="input w-full"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="general">General</option>
                 <option value="faqs">FAQs</option>
@@ -762,6 +838,7 @@ const KnowledgeListPage = () => {
                 <option value="products">Products</option>
                 <option value="procedures">Procedures</option>
                 <option value="website">Website</option>
+                <option value="custom">Custom Collection</option>
               </select>
             </div>
             
@@ -769,7 +846,7 @@ const KnowledgeListPage = () => {
               <button
                 type="button"
                 onClick={() => setIsNewCollectionModalOpen(false)}
-                className="btn btn-outline"
+                className="btn btn-outline px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 Cancel
               </button>
@@ -777,7 +854,7 @@ const KnowledgeListPage = () => {
                 type="button"
                 onClick={handleCreateCollection}
                 disabled={!newCollection.name}
-                className="btn btn-primary"
+                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Create Collection
               </button>
@@ -800,7 +877,7 @@ const KnowledgeListPage = () => {
                 id="title"
                 value={newItem.title}
                 onChange={(e) => setNewItem({...newItem, title: e.target.value})}
-                className="input w-full"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Item title"
               />
             </div>
@@ -811,7 +888,7 @@ const KnowledgeListPage = () => {
                 id="content"
                 value={newItem.content}
                 onChange={(e) => setNewItem({...newItem, content: e.target.value})}
-                className="input w-full"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 rows="8"
                 placeholder="Item content"
               ></textarea>
@@ -821,7 +898,7 @@ const KnowledgeListPage = () => {
               <button
                 type="button"
                 onClick={() => setIsNewItemModalOpen(false)}
-                className="btn btn-outline"
+                className="btn btn-outline px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 Cancel
               </button>
@@ -829,7 +906,7 @@ const KnowledgeListPage = () => {
                 type="button"
                 onClick={handleCreateItem}
                 disabled={!newItem.title || !newItem.content}
-                className="btn btn-primary"
+                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Add Item
               </button>
@@ -888,6 +965,89 @@ const KnowledgeListPage = () => {
                 type="button"
                 className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
                 onClick={() => setIsDeleteDocumentConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Collection Delete Confirmation Modal */}
+      {isDeleteCollectionConfirmOpen && collectionToDelete && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteCollectionConfirmOpen(false)}></div>
+          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Delete Collection
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to delete the collection "{collectionToDelete.name}"? 
+                    This will permanently remove all items in this collection.
+                    This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={handleDeleteCollection}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                onClick={() => setIsDeleteCollectionConfirmOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Item Delete Confirmation Modal */}
+      {isDeleteItemConfirmOpen && itemToDelete && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteItemConfirmOpen(false)}></div>
+          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Delete Knowledge Item
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to delete the item "{itemToDelete.title}"? 
+                    This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={handleDeleteItem}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                onClick={() => setIsDeleteItemConfirmOpen(false)}
               >
                 Cancel
               </button>

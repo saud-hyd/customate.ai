@@ -28,8 +28,8 @@ const KnowledgeNavigation = () => {
       icon: <GlobeAltIcon className="h-5 w-5" />
     },
     {
-      name: 'FAQs',
-      path: '/dashboard/knowledge/faqs',
+      name: 'Collections',  // Changed from FAQs to Collections
+      path: '/dashboard/knowledge/collections',
       icon: <QuestionMarkCircleIcon className="h-5 w-5" />
     }
   ];
