@@ -2,6 +2,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
+import os
+import logging
+from app.repositories.knowledge_repository import KnowledgeCollectionRepository, KnowledgeItemRepository, DocumentSourceRepository
+
+logger = logging.getLogger(__name__)
 
 from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
@@ -64,7 +69,7 @@ async def delete_collection(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
-    """Delete a collection and all its items."""
+    """Delete a collection and all its items including associated documents."""
     # Verify collection belongs to client
     collection_repo = KnowledgeCollectionRepository()
     collection = collection_repo.get_by_collection_id(db, collection_id)
@@ -75,11 +80,48 @@ async def delete_collection(
             detail="Collection not found"
         )
     
-    # Delete the collection (cascade should handle items)
-    collection_repo.delete(db, id=collection.id)
-    
-    return None
-
+    try:
+        # Get all items in the collection
+        item_repo = KnowledgeItemRepository()
+        items = item_repo.get_by_collection_id(db, collection_id)
+        
+        # Find all unique document IDs referenced by these items
+        document_ids = []
+        for item in items:
+            if item.source_document_id and item.source_document_id not in document_ids:
+                document_ids.append(item.source_document_id)
+        
+        # Delete the associated documents
+        if document_ids:
+            doc_repo = DocumentSourceRepository()
+            for doc_id in document_ids:
+                document = doc_repo.get_by_document_id(db, doc_id)
+                if document and document.client_id == current_client.client_id:
+                    # Delete the actual file if it exists
+                    try:
+                        if os.path.exists(document.storage_path):
+                            os.remove(document.storage_path)
+                    except Exception as e:
+                        logger.error(f"Error deleting document file: {str(e)}")
+                    
+                    # Delete the document record
+                    doc_repo.delete(db, id=document.id)
+        
+        # Delete the collection (cascade will handle items and their embeddings)
+        collection_repo.delete(db, id=collection.id)
+        
+        # Commit the transaction
+        db.commit()
+        
+        return None
+    except Exception as e:
+        db.rollback()
+        logger.exception(f"Error deleting collection: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting collection: {str(e)}"
+        )
+        
 @router.get("/collections/{collection_id}/items")
 async def get_collection_items(
     collection_id: str,
