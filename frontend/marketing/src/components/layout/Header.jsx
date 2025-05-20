@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import Button from '../ui/Button';
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -22,20 +21,9 @@ const Header = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
-
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Features', path: '/features' },
-    { name: 'Pricing', path: '/pricing' },
-    { name: 'Contact', path: '/contact' },
-  ];
-
   return (
     <header
-      className={`fixed w-full z-30 transition-all duration-300 ${
+      className={`fixed w-full z-50 transition-all duration-300 ${
         isScrolled ? 'bg-white shadow-md py-2' : 'bg-transparent py-4'
       }`}
     >
@@ -43,45 +31,54 @@ const Header = () => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img
-              src="/logo.svg"
-              alt="Customate.ai"
-              className="h-8 w-auto sm:h-10"
-            />
-            <span className="ml-2 text-xl font-bold text-primary-700">
+            
+            <span className="ml-2 text-xl font-bold text-orange-600">
               Customate.ai
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`text-sm font-medium transition-colors ${
-                  isActive(link.path)
-                    ? 'text-primary-600'
-                    : 'text-gray-700 hover:text-primary-600'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
+            <Link
+              to="/features"
+              className="text-sm font-medium transition-colors text-gray-700 hover:text-orange-600"
+            >
+              Features
+            </Link>
+            <Link
+              to="/pricing"
+              className="text-sm font-medium transition-colors text-gray-700 hover:text-orange-600"
+            >
+              Pricing
+            </Link>
+            <Link
+              to="/blog"
+              className="text-sm font-medium transition-colors text-gray-700 hover:text-orange-600"
+            >
+              Blog
+            </Link>
+            <Link
+              to="/contact"
+              className="text-sm font-medium transition-colors text-gray-700 hover:text-orange-600"
+            >
+              Contact
+            </Link>
             <div className="flex space-x-4">
               <Button 
                 variant="outline" 
                 size="sm" 
                 as={Link} 
-                to="http://localhost:3001/api/auth/login"
+                to="/login"
+                className="text-orange-600 border-orange-600 hover:bg-orange-50"
               >
-                Login
+                Log In
               </Button>
               <Button 
                 variant="primary" 
                 size="sm" 
                 as={Link} 
-                to="http://localhost:3001/api/auth/register"
+                to="/register"
+                className="bg-orange-600 hover:bg-orange-700"
               >
                 Sign Up
               </Button>
@@ -92,7 +89,8 @@ const Header = () => {
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary-600 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-orange-600 focus:outline-none"
+              aria-expanded={isMenuOpen}
             >
               <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
@@ -138,36 +136,52 @@ const Header = () => {
         className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}
       >
         <div className="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive(link.path)
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:bg-primary-50 hover:text-primary-600'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {link.name}
-            </Link>
-          ))}
+          <Link
+            to="/features"
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Features
+          </Link>
+          <Link
+            to="/pricing"
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Pricing
+          </Link>
+          <Link
+            to="/blog"
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Blog
+          </Link>
+          <Link
+            to="/contact"
+            className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Contact
+          </Link>
           <div className="mt-4 flex flex-col space-y-2 px-3">
             <Button 
               variant="outline" 
               size="sm" 
               fullWidth 
               as={Link} 
-              to="http://localhost:3001/api/auth/login"
+              to="/login"
+              className="text-orange-600 border-orange-600 hover:bg-orange-50"
             >
-              Login
+              Log In
             </Button>
             <Button 
               variant="primary" 
               size="sm" 
               fullWidth 
               as={Link} 
-              to="http://localhost:3001/api/auth/register"
+              to="/signup"
+              className="bg-orange-600 hover:bg-orange-700"
             >
               Sign Up
             </Button>

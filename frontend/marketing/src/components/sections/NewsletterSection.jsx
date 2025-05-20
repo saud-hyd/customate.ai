@@ -115,7 +115,7 @@ const NewsletterSection = () => {
                 <Button
                   type="submit"
                   variant="secondary"
-                  className="w-full bg-white text-primary-600 hover:bg-gray-50"
+                  className="w-full bg-white text-primary-600 hover:bg-primary-50"
                   disabled={status.loading || status.success}
                 >
                   {status.loading ? 'Subscribing...' : 'Subscribe'}

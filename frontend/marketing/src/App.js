@@ -5,11 +5,14 @@ import { HelmetProvider } from 'react-helmet-async';
 // Layout components
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import './landingpage.css';
+
 
 // Pages
 import HomePage from './pages/HomePage';
 import FeaturesPage from './pages/FeaturesPage';
 import PricingPage from './pages/PricingPage';
+import BlogPage from './pages/BlogPage';
 import ContactPage from './pages/ContactPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
@@ -40,6 +43,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/blog" element={<BlogPage />}/>
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/checkout/success" element={<CheckoutSuccessPage />} />

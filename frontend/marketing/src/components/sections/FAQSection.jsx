@@ -77,8 +77,8 @@ const FAQSection = () => {
   };
 
   return (
-    <SectionContainer background="white" id="faq">
-      <div className="text-center mb-16">
+    <SectionContainer background="white" id="faq" paddingY="py-16 md:py-20">
+      <div className="text-center mb-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,17 +93,17 @@ const FAQSection = () => {
         </motion.div>
       </div>
 
-      <div className="max-w-3xl mx-auto divide-y divide-gray-200">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 divide-y divide-gray-200">
         {faqs.map((faq, index) => (
-          <div key={faq.id} className="py-6">
+          <div key={faq.id} className="py-5">
             <button
               onClick={() => toggleFAQ(index)}
-              className="flex justify-between items-center w-full text-left focus:outline-none"
+              className="flex justify-between items-center w-full text-left focus:outline-none group"
             >
-              <h3 className="text-lg font-medium text-gray-900">{faq.question}</h3>
+              <h3 className="text-lg font-medium text-gray-900 group-hover:text-primary-600 transition-colors duration-200">{faq.question}</h3>
               <span className="ml-6 flex-shrink-0">
                 <svg
-                  className={`h-6 w-6 transform ${
+                  className={`h-6 w-6 text-primary-500 transform ${
                     openIndex === index ? 'rotate-180' : 'rotate-0'
                   } transition-transform duration-200 ease-in-out`}
                   xmlns="http://www.w3.org/2000/svg"
@@ -137,10 +137,10 @@ const FAQSection = () => {
         ))}
       </div>
 
-      <div className="mt-16 text-center">
+      <div className="mt-12 text-center">
         <p className="text-base text-gray-600">
           Still have questions?{' '}
-          <a href="/contact" className="font-medium text-primary-600 hover:text-primary-500">
+          <a href="/contact" className="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200">
             Contact our support team
           </a>
         </p>
