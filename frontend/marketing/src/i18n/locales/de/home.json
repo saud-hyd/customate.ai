@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "badge": "Neu Gestartet",
+    "title": {
+      "part1": "Ihr Unternehmen,",
+      "part2": "Verbessert durch KI"
+    },
+    "subtitle": "Customate.ai transformiert Kundeninteraktionen mit intelligenten, konversationellen KI-Agenten, die auf die einzigartigen Anforderungen Ihres Unternehmens zugeschnitten sind."
+  },
+  "features": {
+    "heading": "Geschäftsgespräche Verbessern",
+    "subheading": "Customate.ai bietet intelligente, kontextbezogene Erlebnisse",
+    "cards": {
+      "knowledgeIntegration": {
+        "title": "Wissensintegration",
+        "description": "Unsere RAG-Implementierung verbindet Ihre Dokumente, FAQs und Daten direkt mit konversationeller KI für kontextbezogene Antworten."
+      },
+      "industryBehaviors": {
+        "title": "Branchenspezifisches Verhalten",
+        "description": "Vorkonfigurierte KI-Verhaltensweisen für verschiedene Branchen, die den spezialisierten Wortschatz Ihres Unternehmens verstehen."
+      },
+      "multiChannel": {
+        "title": "Multi-Kanal-Integration",
+        "description": "Implementieren Sie Ihren KI-Agenten auf Website, mobiler App, SMS, sozialen Medien und allen Plattformen zur Kundeninteraktion."
+      },
+      "semantic": {
+        "title": "Semantisches Verständnis",
+        "description": "Unsere KI versteht Kontext, Stimmung und Absicht über Schlüsselwörter hinaus für wirklich menschenähnliche Gespräche."
+      },
+      "analytics": {
+        "title": "Echtzeit-Analysen",
+        "description": "Überwachen Sie Gespräche, verfolgen Sie die Zufriedenheit und identifizieren Sie Optimierungsmöglichkeiten durch unser intuitives Dashboard."
+      },
+      "brand": {
+        "title": "Markenanpassung",
+        "description": "Vollständige visuelle Kontrolle mit benutzerdefinierten Farben, Logos und Gesprächsstilen, die zu Ihrer Markenidentität passen."
+      }
+    }
+  },
+  "cta": {
+    "title": "Beginnen Sie noch heute mit der Erstellung Ihres KI-Assistenten",
+    "subtitle": "Schließen Sie sich der KI-Revolution an und verändern Sie die Art und Weise, wie Sie mit Ihren Kunden kommunizieren. Keine technischen Kenntnisse erforderlich."
+  }
+}

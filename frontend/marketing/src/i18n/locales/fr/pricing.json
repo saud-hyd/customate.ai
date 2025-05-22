@@ -1,0 +1,81 @@
+{
+  "title": "Tarification Simple et Transparente",
+  "subtitle": "Choisissez le plan qui convient à votre entreprise",
+  "billing": {
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "annualSave": "(Économisez 20%)"
+  },
+  "billedAnnually": "Facturé annuellement",
+  "plans": {
+    "free": {
+      "name": "Gratuit",
+      "description": "Parfait pour essayer Customate.ai",
+      "features": [
+        "500 messages par mois",
+        "5 utilisateurs actifs",
+        "50 MB de stockage",
+        "3 collections de connaissances",
+        "Personnalisation de base du chatbot",
+        "Support communautaire"
+      ],
+      "cta": "Commencer Gratuitement"
+    },
+    "basic": {
+      "name": "Basic",
+      "description": "Pour les petites entreprises et startups",
+      "features": [
+        "5 000 messages par mois",
+        "25 utilisateurs actifs",
+        "500 MB de stockage",
+        "10 collections de connaissances",
+        "Image de marque personnalisée",
+        "Support par e-mail",
+        "Tableau de bord analytique",
+        "Accès API"
+      ],
+      "cta": "Commencer avec Basic"
+    },
+    "professional": {
+      "name": "Professional",
+      "description": "Pour les entreprises en croissance avec des besoins avancés",
+      "features": [
+        "20 000 messages par mois",
+        "100 utilisateurs actifs",
+        "2 GB de stockage",
+        "50 collections de connaissances",
+        "Personnalisation avancée du chatbot",
+        "Support e-mail prioritaire",
+        "Analyses avancées",
+        "Domaine personnalisé",
+        "Collaboration d'équipe"
+      ],
+      "cta": "Commencer avec Professional"
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "description": "Pour les organisations aux exigences complexes",
+      "features": [
+        "100 000 messages par mois",
+        "500 utilisateurs actifs",
+        "10 GB de stockage",
+        "250 collections de connaissances",
+        "Options de déploiement personnalisées",
+        "Gestionnaire de compte dédié",
+        "Support téléphonique et e-mail",
+        "Garanties SLA",
+        "Fonctionnalités de sécurité avancées",
+        "Intégrations personnalisées"
+      ],
+      "cta": "Contacter les Ventes"
+    }
+  },
+  "badges": {
+    "popular": "Populaire"
+  },
+  "footer": {
+    "customPlan": "Vous cherchez un plan personnalisé ?",
+    "contactUs": "Contactez-nous",
+    "tailoredSolution": "pour une solution sur mesure."
+  }
+}

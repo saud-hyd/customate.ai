@@ -1,0 +1,37 @@
+{
+  "title": "优势",
+  "cards": {
+    "topService": {
+      "title": "顶级服务",
+      "description": "提供可靠、可扩展且不间断的客户服务，信息始终清晰准确。"
+    },
+    "lowestTime": {
+      "title": "最短解决时间",
+      "description": "避免延迟。您的客户可以全天候立即获得答案，无需等待人工代理。"
+    },
+    "multichannel": {
+      "title": "多渠道支持",
+      "description": "不仅仅是聊天机器人小部件——我们的解决方案适用于电子邮件、Facebook、WhatsApp 等。（电话渠道即将推出。）"
+    },
+    "reduceExpenses": {
+      "title": "降低费用",
+      "description": "支付更少的支持人员费用，或让您的员工专注于更有成效的活动。"
+    },
+    "increaseIncome": {
+      "title": "增加收入",
+      "description": "获得潜在客户、反馈和关键信息，以促进销售并改善客户服务。"
+    },
+    "integrations": {
+      "title": "集成",
+      "description": "我们适应您的需求。将您用于运营的应用程序连接到我们的门户。我们只检索相关信息。"
+    },
+    "advancedAi": {
+      "title": "高级AI分析",
+      "description": "通过我们专有的机器学习模型，我们提供最佳的信息处理和输出。"
+    },
+    "continuousLearning": {
+      "title": "持续学习",
+      "description": "您的 Customate Bot 随着知识库的发展而不断进化。"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "badge": "Just Launched",
+    "title": {
+      "part1": "Your Business,",
+      "part2": "Enhanced by AI"
+    },
+    "subtitle": "Customate.ai transforms customer interactions with intelligent, conversational AI agents tailored to your unique business needs."
+  },
+  "features": {
+    "heading": "Supercharging Business Conversations",
+    "subheading": "Customate.ai delivers intelligent, context-aware experiences",
+    "cards": {
+      "knowledgeIntegration": {
+        "title": "Knowledge Integration",
+        "description": "Our RAG implementation connects your documents, FAQs, and data directly to conversational AI for context-aware responses."
+      },
+      "industryBehaviors": {
+        "title": "Industry Behaviors",
+        "description": "Pre-configured AI behaviors for different industries that understand specialized vocabulary specific to your business."
+      },
+      "multiChannel": {
+        "title": "Multi-channel Integration",
+        "description": "Deploy your AI agent across website, mobile app, SMS, social media, and all your customer engagement platforms."
+      },
+      "semantic": {
+        "title": "Semantic Understanding",
+        "description": "Our AI comprehends context, sentiment, and intent beyond keywords for truly human-like conversations."
+      },
+      "analytics": {
+        "title": "Real-time Analytics",
+        "description": "Monitor conversations, track satisfaction, and identify optimization opportunities through our intuitive dashboard."
+      },
+      "brand": {
+        "title": "Brand Customization",
+        "description": "Complete visual control with custom colors, logos, and conversation styles that match your brand identity."
+      }
+    }
+  },
+  "cta": {
+    "title": "Start Building Your AI Assistant Today",
+    "subtitle": "Join the AI revolution and transform how you engage with your customers. No technical knowledge required."
+  }
+}

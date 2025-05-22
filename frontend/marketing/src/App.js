@@ -2,11 +2,14 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
+// i18n setup
+import './i18n'; // Import i18n configuration
+import { LanguageProvider } from './contexts/LanguageContext';
+
 // Layout components
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import './landingpage.css';
-
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -34,47 +37,49 @@ const ScrollToTop = () => {
 function App() {
   return (
     <HelmetProvider>
-      <Router>
-        <ScrollToTop />
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/blog" element={<BlogPage />}/>
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-              
-              {/* Redirect to dashboard app for these routes */}
-              <Route 
-                path="/login" 
-                element={
-                  <RedirectPage url="https://app.customate.ai/login" />
-                }
-              />
-              <Route 
-                path="/register" 
-                element={
-                  <RedirectPage url="https://app.customate.ai/register" />
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <RedirectPage url="https://app.customate.ai/dashboard" />
-                } 
-              />
-              
-              {/* Fallback route - 404 */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
+      <LanguageProvider>
+        <Router>
+          <ScrollToTop />
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/blog" element={<BlogPage />}/>
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+                
+                {/* Redirect to dashboard app for these routes */}
+                <Route 
+                  path="/login" 
+                  element={
+                    <RedirectPage url="https://app.customate.ai/login" />
+                  }
+                />
+                <Route 
+                  path="/register" 
+                  element={
+                    <RedirectPage url="https://app.customate.ai/register" />
+                  } 
+                />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <RedirectPage url="https://app.customate.ai/dashboard" />
+                  } 
+                />
+                
+                {/* Fallback route - 404 */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </Router>
+      </LanguageProvider>
     </HelmetProvider>
   );
 }

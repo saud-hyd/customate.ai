@@ -1,0 +1,81 @@
+{
+  "title": "Simple, Transparent Pricing",
+  "subtitle": "Choose the plan that's right for your business",
+  "billing": {
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "annualSave": "(Save 20%)"
+  },
+  "billedAnnually": "Billed annually",
+  "plans": {
+    "free": {
+      "name": "Free",
+      "description": "Perfect for trying out Customate.ai",
+      "features": [
+        "500 messages per month",
+        "5 active users",
+        "50 MB storage",
+        "3 knowledge collections",
+        "Basic chatbot customization",
+        "Community support"
+      ],
+      "cta": "Start for Free"
+    },
+    "basic": {
+      "name": "Basic",
+      "description": "For small businesses and startups",
+      "features": [
+        "5,000 messages per month",
+        "25 active users",
+        "500 MB storage",
+        "10 knowledge collections",
+        "Custom branding",
+        "Email support",
+        "Analytics dashboard",
+        "API access"
+      ],
+      "cta": "Start with Basic"
+    },
+    "professional": {
+      "name": "Professional",
+      "description": "For growing businesses with advanced needs",
+      "features": [
+        "20,000 messages per month",
+        "100 active users",
+        "2 GB storage",
+        "50 knowledge collections",
+        "Advanced chatbot customization",
+        "Priority email support",
+        "Advanced analytics",
+        "Custom domain",
+        "Team collaboration"
+      ],
+      "cta": "Start with Professional"
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "description": "For organizations with complex requirements",
+      "features": [
+        "100,000 messages per month",
+        "500 active users",
+        "10 GB storage",
+        "250 knowledge collections",
+        "Custom deployment options",
+        "Dedicated account manager",
+        "Phone & email support",
+        "SLA guarantees",
+        "Advanced security features",
+        "Custom integrations"
+      ],
+      "cta": "Contact Sales"
+    }
+  },
+  "badges": {
+    "popular": "Popular"
+  },
+  "footer": {
+    "customPlan": "Looking for a custom plan?",
+    "contactUs": "Contact us",
+    "tailoredSolution": "for a tailored solution."
+  }
+}

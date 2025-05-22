@@ -1,12 +1,16 @@
+// src/components/sections/HowItWorksSection.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { useTranslation } from 'react-i18next';
 
 const HowItWorksSection = () => {
+  const { t } = useTranslation('howItWorks');
+  
   const steps = [
     {
-      title: "Sign up & create an account",
-      description: "Create your account in seconds. No credit card required for the basic plan.",
+      title: t('steps.0.title'),
+      description: t('steps.0.description'),
       icon: (
         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -14,8 +18,8 @@ const HowItWorksSection = () => {
       )
     },
     {
-      title: "Upload your knowledge base",
-      description: "Import your documents, FAQs, or connect to your existing content repositories.",
+      title: t('steps.1.title'),
+      description: t('steps.1.description'),
       icon: (
         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -23,8 +27,8 @@ const HowItWorksSection = () => {
       )
     },
     {
-      title: "Customize your AI agent",
-      description: "Configure behavior, appearance, and conversation flows to match your brand.",
+      title: t('steps.2.title'),
+      description: t('steps.2.description'),
       icon: (
         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -33,8 +37,8 @@ const HowItWorksSection = () => {
       )
     },
     {
-      title: "Deploy across channels",
-      description: "Add to your website, mobile app, or integrate with your existing platforms.",
+      title: t('steps.3.title'),
+      description: t('steps.3.description'),
       icon: (
         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -102,13 +106,13 @@ const HowItWorksSection = () => {
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
             <span className="inline-block py-1.5 px-4 rounded-full bg-orange-100 text-orange-600 font-medium mb-4 border border-orange-200">
-              4 Simple Steps
+              {t('badge')}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              How Customate.ai <span className="text-orange-500">Works</span>
+              {t('title.part1')} <span className="text-orange-500">{t('title.part2')}</span>
             </h2>
             <p className="text-xl text-gray-700 max-w-2xl mx-auto">
-              Get up and running with your personalized AI assistant in minutes
+              {t('subtitle')}
             </p>
           </motion.div>
         </div>
@@ -236,7 +240,7 @@ const HowItWorksSection = () => {
               duration: 2
             }}
           >
-            Get Started Today
+            {t('cta')}
             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>

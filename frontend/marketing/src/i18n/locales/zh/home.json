@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "badge": "全新上线",
+    "title": {
+      "part1": "您的企业，",
+      "part2": "由人工智能增强"
+    },
+    "subtitle": "Customate.ai 通过专为您的独特业务需求量身定制的智能对话式 AI 代理，改变客户互动体验。"
+  },
+  "features": {
+    "heading": "提升商务对话能力",
+    "subheading": "Customate.ai 提供智能、情境感知的体验",
+    "cards": {
+      "knowledgeIntegration": {
+        "title": "知识集成",
+        "description": "我们的 RAG 实现将您的文档、常见问题解答和数据直接连接到对话式 AI，以提供情境感知的回答。"
+      },
+      "industryBehaviors": {
+        "title": "行业行为模式",
+        "description": "为不同行业预配置的 AI 行为，能够理解特定于您业务的专业词汇。"
+      },
+      "multiChannel": {
+        "title": "多渠道集成",
+        "description": "在网站、移动应用、短信、社交媒体和所有客户互动平台上部署您的 AI 代理。"
+      },
+      "semantic": {
+        "title": "语义理解",
+        "description": "我们的 AI 能理解关键词之外的上下文、情感和意图，实现真正类人的对话。"
+      },
+      "analytics": {
+        "title": "实时分析",
+        "description": "通过我们直观的仪表板监控对话、跟踪满意度并识别优化机会。"
+      },
+      "brand": {
+        "title": "品牌定制",
+        "description": "通过自定义颜色、徽标和对话风格，完全控制视觉效果，匹配您的品牌形象。"
+      }
+    }
+  },
+  "cta": {
+    "title": "立即开始构建您的 AI 助手",
+    "subtitle": "加入 AI 革命，改变您与客户互动的方式。无需技术知识。"
+  }
+}

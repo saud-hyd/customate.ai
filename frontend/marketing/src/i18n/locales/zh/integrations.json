@@ -1,0 +1,75 @@
+{
+  "badge": "无缝连接",
+  "title": {
+    "part1": "一个AI，",
+    "part2": "无处不在"
+  },
+  "subtitle": "连接您的业务数据，在每个平台上通过一致的智能AI互动触达客户。",
+  "tabs": {
+    "dataSources": "数据源",
+    "chatPlatforms": "聊天平台"
+  },
+  "dataSources": {
+    "title": {
+      "part1": "智能",
+      "part2": "数据源"
+    },
+    "integrations": {
+      "knowledge": {
+        "name": "知识库",
+        "description": "您的AI从文档、常见问题解答和网站内容中学习"
+      },
+      "crm": {
+        "name": "CRM系统",
+        "description": "连接来自Salesforce、Zendesk等的客户数据"
+      },
+      "erp": {
+        "name": "ERP/库存",
+        "description": "实时产品和库存信息集成"
+      },
+      "helpdesk": {
+        "name": "帮助台",
+        "description": "链接支持工单、聊天记录和客户问题"
+      }
+    }
+  },
+  "chatPlatforms": {
+    "title": {
+      "part1": "多平台",
+      "part2": "消息传递"
+    },
+    "features": {
+      "omnichannelPresence": {
+        "title": "全渠道存在",
+        "description": "一个AI，任何通信平台"
+      },
+      "nativeInterface": {
+        "title": "原生界面",
+        "description": "外观和感觉就像原始平台"
+      },
+      "richMedia": {
+        "title": "富媒体",
+        "description": "发送图片、按钮、卡片等"
+      },
+      "availability": {
+        "title": "24/7可用性",
+        "description": "为您的客户提供始终在线的支持"
+      },
+      "consistentVoice": {
+        "title": "一致的声音",
+        "description": "在任何地方都有相同的品牌体验"
+      },
+      "smartHandoff": {
+        "title": "智能交接",
+        "description": "无缝转移到人工代理"
+      }
+    },
+    "deployMessage": "几分钟内部署到任何平台，无需编码"
+  },
+  "cta": {
+    "title": "准备提升您的客户体验了吗？",
+    "subtitle": "几分钟内在所有渠道部署AI，而不是几个月。无需编码。",
+    "startTrial": "免费试用",
+    "watchDemo": "观看演示"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "header": {
+    "features": "功能",
+    "pricing": "价格",
+    "blog": "博客",
+    "contact": "联系我们",
+    "login": "登录",
+    "signup": "注册"
+  },
+  "footer": {
+    "rights": "© {{year}} Customate.ai. 保留所有权利。",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "cookies": "Cookie 政策",
+    "description": "构建、定制和部署具有行业特定行为和自定义知识库的AI驱动聊天机器人，实现变革性的客户互动。",
+    "product": {
+      "title": "产品",
+      "useCases": "使用案例",
+      "roadmap": "路线图"
+    },
+    "resources": {
+      "title": "资源",
+      "documentation": "文档",
+      "apiReference": "API参考"
+    },
+    "company": {
+      "title": "公司",
+      "about": "关于我们"
+    }
+  },
+  "cta": {
+    "getStarted": "开始使用",
+    "startFree": "免费试用",
+    "learnMore": "了解更多",
+    "watchDemo": "观看演示",
+    "contactSales": "联系销售"
+  }
+}

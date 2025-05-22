@@ -1,0 +1,37 @@
+{
+  "title": "Vorteile",
+  "cards": {
+    "topService": {
+      "title": "Erstklassiger Service",
+      "description": "Bieten Sie zuverlässigen, skalierbaren und ununterbrochenen Kundenservice mit stets klaren und genauen Informationen."
+    },
+    "lowestTime": {
+      "title": "Kürzeste Lösungszeit",
+      "description": "Vermeiden Sie Verzögerungen. Ihre Kunden erhalten sofortige Antworten rund um die Uhr, ohne auf einen Agenten warten zu müssen."
+    },
+    "multichannel": {
+      "title": "Mehrkanaliger Support",
+      "description": "Nicht nur ein Chatbot-Widget – unsere Lösung funktioniert per E-Mail, Facebook, WhatsApp und mehr. (Telefonkanal kommt bald.)"
+    },
+    "reduceExpenses": {
+      "title": "Kosten Reduzieren",
+      "description": "Zahlen Sie viel weniger für Support-Personal oder setzen Sie Ihre Mitarbeiter für produktivere Aktivitäten frei."
+    },
+    "increaseIncome": {
+      "title": "Einkommen Steigern",
+      "description": "Erhalten Sie Leads, Feedback und wichtige Informationen, um Ihre Verkäufe zu steigern und Ihren Kundenservice zu verbessern."
+    },
+    "integrations": {
+      "title": "Integrationen",
+      "description": "Wir passen uns an Sie an. Verbinden Sie die Anwendungen, die Sie für Ihren Betrieb nutzen, mit unserem Portal. Wir rufen nur relevante Informationen ab."
+    },
+    "advancedAi": {
+      "title": "Erweiterte KI-Analyse",
+      "description": "Durch unser proprietäres maschinelles Lernmodell bieten wir optimale Informationsverarbeitung und -ausgaben."
+    },
+    "continuousLearning": {
+      "title": "Kontinuierliches Lernen",
+      "description": "Ihr Customate Bot entwickelt sich mit der Entwicklung Ihrer Wissensbasis weiter."
+    }
+  }
+}

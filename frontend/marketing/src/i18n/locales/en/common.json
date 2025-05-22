@@ -1,0 +1,38 @@
+{
+  "header": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "contact": "Contact",
+    "login": "Log In",
+    "signup": "Sign Up"
+  },
+  "footer": {
+    "rights": "© {{year}} Customate.ai. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "cookies": "Cookie Policy",
+    "description": "Build, customize, and deploy AI-powered chatbots with industry-specific behaviors and custom knowledge bases for transformative customer interactions.",
+    "product": {
+      "title": "PRODUCT",
+      "useCases": "Use Cases",
+      "roadmap": "Roadmap"
+    },
+    "resources": {
+      "title": "RESOURCES",
+      "documentation": "Documentation",
+      "apiReference": "API Reference"
+    },
+    "company": {
+      "title": "COMPANY",
+      "about": "About Us"
+    }
+  },
+  "cta": {
+    "getStarted": "Get Started",
+    "startFree": "Start Free Trial",
+    "learnMore": "Learn More",
+    "watchDemo": "Watch Demo",
+    "contactSales": "Contact Sales"
+  }
+}

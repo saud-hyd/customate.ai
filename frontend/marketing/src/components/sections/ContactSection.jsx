@@ -1,9 +1,12 @@
+// src/components/sections/ContactSection.jsx
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import SectionContainer from '../ui/SectionContainer';
 import Button from '../ui/Button';
 
 const ContactSection = () => {
+  const { t } = useTranslation('contact');
   const [formState, setFormState] = useState({
     name: '',
     email: '',
@@ -56,7 +59,7 @@ const ContactSection = () => {
       setFormState((prev) => ({
         ...prev,
         loading: false,
-        error: 'There was an error submitting the form. Please try again.',
+        error: t('form.error'),
       }));
     }
   };
@@ -81,10 +84,10 @@ const ContactSection = () => {
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-primary-100">
                 <div className="bg-gradient-to-r from-primary-600 to-primary-500 py-6 px-8">
                   <h2 className="text-2xl font-bold text-white">
-                    Get in Touch
+                    {t('form.title')}
                   </h2>
                   <p className="mt-2 text-primary-100">
-                    We'd love to hear from you. Fill out the form below and we'll get back to you shortly.
+                    {t('form.subtitle')}
                   </p>
                 </div>
 
@@ -109,17 +112,17 @@ const ContactSection = () => {
                         </div>
                         <div className="ml-4">
                           <h3 className="text-lg font-medium text-green-800">
-                            Message sent successfully!
+                            {t('form.success.title')}
                           </h3>
                           <p className="mt-2 text-green-700">
-                            Thank you for reaching out. We'll get back to you as soon as possible.
+                            {t('form.success.message')}
                           </p>
                           <div className="mt-4">
                             <Button
                               variant="outline"
                               onClick={() => setFormState((prev) => ({ ...prev, submitted: false }))}
                             >
-                              Send another message
+                              {t('form.success.sendAnother')}
                             </Button>
                           </div>
                         </div>
@@ -154,7 +157,7 @@ const ContactSection = () => {
 
                       <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                          Full name
+                          {t('form.fields.name')}
                         </label>
                         <div className="mt-1">
                           <input
@@ -163,7 +166,8 @@ const ContactSection = () => {
                             id="name"
                             autoComplete="name"
                             required
-                            className="py-3 px-4 block w-full shadow-sm focus:ring-primary-500 focus:border-primary-500 border-2 border-gray-400 bg-white text-gray-900 rounded-lg"                            value={formState.name}
+                            className="py-3 px-4 block w-full shadow-sm focus:ring-primary-500 focus:border-primary-500 border-2 border-gray-400 bg-white text-gray-900 rounded-lg"
+                            value={formState.name}
                             onChange={handleChange}
                           />
                         </div>
@@ -171,7 +175,7 @@ const ContactSection = () => {
 
                       <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                          Email
+                          {t('form.fields.email')}
                         </label>
                         <div className="mt-1">
                           <input
@@ -180,7 +184,8 @@ const ContactSection = () => {
                             type="email"
                             autoComplete="email"
                             required
-                            className="py-3 px-4 block w-full shadow-sm focus:ring-primary-500 focus:border-primary-500 border-2 border-gray-400 bg-white text-gray-900 rounded-lg"                            value={formState.email}
+                            className="py-3 px-4 block w-full shadow-sm focus:ring-primary-500 focus:border-primary-500 border-2 border-gray-400 bg-white text-gray-900 rounded-lg"
+                            value={formState.email}
                             onChange={handleChange}
                           />
                         </div>
@@ -188,7 +193,7 @@ const ContactSection = () => {
 
                       <div>
                         <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-                          Company
+                          {t('form.fields.company')}
                         </label>
                         <div className="mt-1">
                           <input
@@ -205,7 +210,7 @@ const ContactSection = () => {
 
                       <div>
                         <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                          Message
+                          {t('form.fields.message')}
                         </label>
                         <div className="mt-1">
                           <textarea
@@ -234,10 +239,10 @@ const ContactSection = () => {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              Sending...
+                              {t('form.sending')}
                             </span>
                           ) : (
-                            'Send Message'
+                            t('form.submit')
                           )}
                         </Button>
                       </div>
@@ -257,7 +262,7 @@ const ContactSection = () => {
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-primary-100">
                   <div className="bg-gradient-to-r from-primary-600 to-primary-500 py-6 px-8">
-                    <h3 className="text-2xl font-bold text-white">Contact Information</h3>
+                    <h3 className="text-2xl font-bold text-white">{t('info.title')}</h3>
                   </div>
                   <div className="p-8">
                     <div className="space-y-6">
@@ -279,13 +284,13 @@ const ContactSection = () => {
                           </svg>
                         </div>
                         <div className="ml-4">
-                          <h4 className="text-lg font-medium text-gray-900">Email</h4>
+                          <h4 className="text-lg font-medium text-gray-900">{t('info.email.title')}</h4>
                           <p className="mt-2 text-gray-600">
                             <a
-                              href="mailto:info@customate.ai"
+                              href={`mailto:${t('info.email.value')}`}
                               className="text-primary-600 hover:text-primary-500 hover:underline transition-colors duration-200"
                             >
-                              info@customate.ai
+                              {t('info.email.value')}
                             </a>
                           </p>
                         </div>
@@ -309,13 +314,13 @@ const ContactSection = () => {
                           </svg>
                         </div>
                         <div className="ml-4">
-                          <h4 className="text-lg font-medium text-gray-900">Phone</h4>
+                          <h4 className="text-lg font-medium text-gray-900">{t('info.phone.title')}</h4>
                           <p className="mt-2 text-gray-600">
                             <a
-                              href="tel:+1-555-123-4567"
+                              href={`tel:${t('info.phone.value')}`}
                               className="text-primary-600 hover:text-primary-500 hover:underline transition-colors duration-200"
                             >
-                              +1 (555) 123-4567
+                              {t('info.phone.value')}
                             </a>
                           </p>
                         </div>
@@ -345,33 +350,31 @@ const ContactSection = () => {
                           </svg>
                         </div>
                         <div className="ml-4">
-                          <h4 className="text-lg font-medium text-gray-900">Office</h4>
-                          <p className="mt-2 text-gray-600">
-                            123 Tech Boulevard<br />
-                            San Francisco, CA 94107<br />
-                            United States
+                          <h4 className="text-lg font-medium text-gray-900">{t('info.office.title')}</h4>
+                          <p className="mt-2 text-gray-600 whitespace-pre-line">
+                            {t('info.office.address')}
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-gray-200">
-                      <h4 className="text-lg font-medium text-gray-900">Follow Us</h4>
+                      <h4 className="text-lg font-medium text-gray-900">{t('info.followUs')}</h4>
                       <div className="mt-4 flex space-x-5">
                         <a href="#" className="bg-gray-100 text-gray-500 hover:text-primary-600 hover:bg-primary-50 p-3 rounded-full transition-colors duration-200">
-                          <span className="sr-only">Twitter</span>
+                          <span className="sr-only">{t('info.social.twitter')}</span>
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
                           </svg>
                         </a>
                         <a href="#" className="bg-gray-100 text-gray-500 hover:text-primary-600 hover:bg-primary-50 p-3 rounded-full transition-colors duration-200">
-                          <span className="sr-only">LinkedIn</span>
+                          <span className="sr-only">{t('info.social.linkedin')}</span>
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                           </svg>
                         </a>
                         <a href="#" className="bg-gray-100 text-gray-500 hover:text-primary-600 hover:bg-primary-50 p-3 rounded-full transition-colors duration-200">
-                          <span className="sr-only">GitHub</span>
+                          <span className="sr-only">{t('info.social.github')}</span>
                           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                             <path
                               fillRule="evenodd"
@@ -394,9 +397,9 @@ const ContactSection = () => {
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <h4 className="text-lg font-medium text-gray-900">Quick Support</h4>
+                      <h4 className="text-lg font-medium text-gray-900">{t('quickSupport.title')}</h4>
                       <p className="mt-2 text-gray-600">
-                        Need immediate help? Check our <a href="/faq" className="text-primary-600 hover:text-primary-500 font-medium hover:underline">FAQ</a> or email our support team at <a href="mailto:support@customate.ai" className="text-primary-600 hover:text-primary-500 font-medium hover:underline">support@customate.ai</a>
+                        {t('quickSupport.message')} <a href="/faq" className="text-primary-600 hover:text-primary-500 font-medium hover:underline">{t('quickSupport.faq')}</a> {t('quickSupport.or')} <a href={`mailto:${t('quickSupport.supportEmail')}`} className="text-primary-600 hover:text-primary-500 font-medium hover:underline">{t('quickSupport.supportEmail')}</a>
                       </p>
                     </div>
                   </div>

@@ -1,15 +1,18 @@
+// src/components/sections/FeaturesSection.jsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const FeaturesSection = () => {
+  const { t } = useTranslation('home');
   // State to track which cards are hovered
   const [hoveredCard, setHoveredCard] = useState(null);
 
   // Enhanced feature list with front and back content
   const features = [
     {
-      title: "Knowledge Integration",
-      description: "Our RAG implementation connects your documents, FAQs, and data directly to conversational AI for context-aware responses.",
+      title: t('features.cards.knowledgeIntegration.title'),
+      description: t('features.cards.knowledgeIntegration.description'),
       detailedInfo: "Seamlessly connect your knowledge base with our proprietary RAG system. Transform documents, databases, and support tickets into conversational intelligence with millisecond access time, reducing inaccuracies by 86% compared to standard LLMs.",
       icon: (
         <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,8 +21,8 @@ const FeaturesSection = () => {
       )
     },
     {
-      title: "Industry Behaviors",
-      description: "Pre-configured AI behaviors for different industries that understand specialized vocabulary specific to your business.",
+      title: t('features.cards.industryBehaviors.title'),
+      description: t('features.cards.industryBehaviors.description'),
       detailedInfo: "Industry-specific behaviors for healthcare, finance, legal, and more with domain terminology, compliance guardrails, and optimized conversation patterns that continuously adapt to industry-specific needs.",
       icon: (
         <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,8 +31,8 @@ const FeaturesSection = () => {
       )
     },
     {
-      title: "Multi-channel Integration",
-      description: "Deploy your AI agent across website, mobile app, SMS, social media, and all your customer engagement platforms.",
+      title: t('features.cards.multiChannel.title'),
+      description: t('features.cards.multiChannel.description'),
       detailedInfo: "Deploy across websites, mobile apps, SMS, WhatsApp, and more with our unified API. Maintain conversation context across channels with seamless transitions between platforms and customizable integrations.",
       icon: (
         <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,8 +41,8 @@ const FeaturesSection = () => {
       )
     },
     {
-      title: "Semantic Understanding",
-      description: "Our AI comprehends context, sentiment, and intent beyond keywords for truly human-like conversations.",
+      title: t('features.cards.semantic.title'),
+      description: t('features.cards.semantic.description'),
       detailedInfo: "Advanced NLU engine understands nuances, sentiment, and intent with 93% accuracy. Recognizes complex patterns including sarcasm and cultural references while maintaining conversation context for personalized experiences.",
       icon: (
         <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,8 +51,8 @@ const FeaturesSection = () => {
       )
     },
     {
-      title: "Real-time Analytics",
-      description: "Monitor conversations, track satisfaction, and identify optimization opportunities through our intuitive dashboard.",
+      title: t('features.cards.analytics.title'),
+      description: t('features.cards.analytics.description'),
       detailedInfo: "Track conversation volume, resolution rates, and satisfaction in real time. Identify knowledge gaps with AI-powered analytics and configure custom dashboards with automated alerts for critical KPIs.",
       icon: (
         <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,8 +61,8 @@ const FeaturesSection = () => {
       )
     },
     {
-      title: "Brand Customization",
-      description: "Complete visual control with custom colors, logos, and conversation styles that match your brand identity.",
+      title: t('features.cards.brand.title'),
+      description: t('features.cards.brand.description'),
       detailedInfo: "Transform your AI into a brand ambassador with comprehensive customization. Define conversation style, tone, and personality traits aligned with your brand values, plus pixel-perfect UI elements that blend seamlessly with your digital properties.",
       icon: (
         <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,17 +114,17 @@ const FeaturesSection = () => {
             variants={headingVariants}
             className="text-4xl font-bold text-gray-900 leading-tight"
           >
-            Supercharging Business <span className="text-orange-500">Conversations</span>
+            {t('features.heading')}
           </motion.h2>
-          <motion.p 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={subheadingVariants}
-            className="mt-5 text-lg max-w-3xl mx-auto text-gray-600"
-          >
-            Customate.ai delivers intelligent, context-aware experiences
-          </motion.p>
+        <motion.p 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={subheadingVariants}
+          className="mt-5 text-lg max-w-3xl mx-auto text-gray-600"
+        >
+          {t('features.subheading')}
+        </motion.p>        
         </div>
 
         {/* Feature Cards Layout */}
@@ -172,13 +175,14 @@ const FeaturesSection = () => {
                     className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-full backface-hidden flex flex-col"
                   >
                     {/* Dramatic background with unique color per feature */}
-                    <div className="absolute inset-0 bg-gradient-to-br 
-                      ${index === 0 ? 'from-orange-500 to-red-600' : 
-                        index === 1 ? 'from-orange-400 to-amber-600' : 
-                        index === 2 ? 'from-orange-500 to-pink-600' : 
-                        index === 3 ? 'from-amber-500 to-orange-700' : 
-                        index === 4 ? 'from-orange-500 to-rose-600' : 
-                        'from-orange-400 to-orange-700'}">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${
+                      index === 0 ? 'from-orange-500 to-red-600' : 
+                      index === 1 ? 'from-orange-400 to-amber-600' : 
+                      index === 2 ? 'from-orange-500 to-pink-600' : 
+                      index === 3 ? 'from-amber-500 to-orange-700' : 
+                      index === 4 ? 'from-orange-500 to-rose-600' : 
+                      'from-orange-400 to-orange-700'
+                    }`}>
                     </div>
                     
                     {/* Circular highlight */}

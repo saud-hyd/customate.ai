@@ -1,0 +1,81 @@
+{
+  "title": "Einfache, Transparente Preise",
+  "subtitle": "Wählen Sie den Plan, der zu Ihrem Unternehmen passt",
+  "billing": {
+    "monthly": "Monatlich",
+    "annual": "Jährlich",
+    "annualSave": "(20% sparen)"
+  },
+  "billedAnnually": "Jährlich abgerechnet",
+  "plans": {
+    "free": {
+      "name": "Kostenlos",
+      "description": "Perfekt zum Testen von Customate.ai",
+      "features": [
+        "500 Nachrichten pro Monat",
+        "5 aktive Nutzer",
+        "50 MB Speicher",
+        "3 Wissenssammlungen",
+        "Grundlegende Chatbot-Anpassung",
+        "Community-Support"
+      ],
+      "cta": "Kostenlos Beginnen"
+    },
+    "basic": {
+      "name": "Basic",
+      "description": "Für kleine Unternehmen und Startups",
+      "features": [
+        "5.000 Nachrichten pro Monat",
+        "25 aktive Nutzer",
+        "500 MB Speicher",
+        "10 Wissenssammlungen",
+        "Individuelles Branding",
+        "E-Mail-Support",
+        "Analytics-Dashboard",
+        "API-Zugang"
+      ],
+      "cta": "Mit Basic Beginnen"
+    },
+    "professional": {
+      "name": "Professional",
+      "description": "Für wachsende Unternehmen mit erweiterten Anforderungen",
+      "features": [
+        "20.000 Nachrichten pro Monat",
+        "100 aktive Nutzer",
+        "2 GB Speicher",
+        "50 Wissenssammlungen",
+        "Erweiterte Chatbot-Anpassung",
+        "Prioritäts-E-Mail-Support",
+        "Erweiterte Analysen",
+        "Individuelle Domain",
+        "Team-Zusammenarbeit"
+      ],
+      "cta": "Mit Professional Beginnen"
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "description": "Für Organisationen mit komplexen Anforderungen",
+      "features": [
+        "100.000 Nachrichten pro Monat",
+        "500 aktive Nutzer",
+        "10 GB Speicher",
+        "250 Wissenssammlungen",
+        "Individuelle Bereitstellungsoptionen",
+        "Dedizierter Account Manager",
+        "Telefon- & E-Mail-Support",
+        "SLA-Garantien",
+        "Erweiterte Sicherheitsfeatures",
+        "Individuelle Integrationen"
+      ],
+      "cta": "Vertrieb Kontaktieren"
+    }
+  },
+  "badges": {
+    "popular": "Beliebt"
+  },
+  "footer": {
+    "customPlan": "Suchen Sie einen individuellen Plan?",
+    "contactUs": "Kontaktieren Sie uns",
+    "tailoredSolution": "für eine maßgeschneiderte Lösung."
+  }
+}

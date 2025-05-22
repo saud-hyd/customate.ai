@@ -1,0 +1,48 @@
+{
+  "form": {
+    "title": "Contact",
+    "subtitle": "We'd love to hear from you. Fill out the form below and we'll get back to you shortly.",
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "company": "Company",
+      "message": "Message"
+    },
+    "submit": "Contact Sales",
+    "sending": "Sending...",
+    "success": {
+      "title": "Message sent successfully!",
+      "message": "Thank you for reaching out. We'll get back to you as soon as possible.",
+      "sendAnother": "Send another message"
+    },
+    "error": "There was an error submitting the form. Please try again."
+  },
+  "info": {
+    "title": "Contact Information",
+    "email": {
+      "title": "Email",
+      "value": "info@customate.ai"
+    },
+    "phone": {
+      "title": "Phone",
+      "value": "+1 (555) 123-4567"
+    },
+    "office": {
+      "title": "Office",
+      "address": "123 Tech Boulevard\nSan Francisco, CA 94107\nUnited States"
+    },
+    "followUs": "Follow Us",
+    "social": {
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn",
+      "github": "GitHub"
+    }
+  },
+  "quickSupport": {
+    "title": "Quick Support",
+    "message": "Need immediate help? Check our",
+    "faq": "FAQ",
+    "or": "or email our support team at",
+    "supportEmail": "support@customate.ai"
+  }
+}

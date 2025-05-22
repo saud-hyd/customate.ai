@@ -1,80 +1,46 @@
+// src/components/sections/PricingSection.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionContainer from '../ui/SectionContainer';
 import Button from '../ui/Button';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const PricingSection = () => {
+  const { t } = useTranslation('pricing');
   const [isAnnual, setIsAnnual] = useState(true);
 
   const plans = [
     {
-      name: 'Free',
-      description: 'Perfect for trying out Customate.ai',
+      name: t('plans.free.name'),
+      description: t('plans.free.description'),
       price: { monthly: '$0', annually: '$0' },
-      features: [
-        '500 messages per month',
-        '5 active users',
-        '50 MB storage',
-        '3 knowledge collections',
-        'Basic chatbot customization',
-        'Community support',
-      ],
-      cta: 'Start for Free',
+      features: t('plans.free.features', { returnObjects: true }),
+      cta: t('plans.free.cta'),
       highlighted: false,
     },
     {
-      name: 'Basic',
-      description: 'For small businesses and startups',
+      name: t('plans.basic.name'),
+      description: t('plans.basic.description'),
       price: { monthly: '$39', annually: '$29' },
-      features: [
-        '5,000 messages per month',
-        '25 active users',
-        '500 MB storage',
-        '10 knowledge collections',
-        'Custom branding',
-        'Email support',
-        'Analytics dashboard',
-        'API access',
-      ],
-      cta: 'Start with Basic',
+      features: t('plans.basic.features', { returnObjects: true }),
+      cta: t('plans.basic.cta'),
       highlighted: true,
     },
     {
-      name: 'Professional',
-      description: 'For growing businesses with advanced needs',
+      name: t('plans.professional.name'),
+      description: t('plans.professional.description'),
       price: { monthly: '$129', annually: '$99' },
-      features: [
-        '20,000 messages per month',
-        '100 active users',
-        '2 GB storage',
-        '50 knowledge collections',
-        'Advanced chatbot customization',
-        'Priority email support',
-        'Advanced analytics',
-        'Custom domain',
-        'Team collaboration',
-      ],
-      cta: 'Start with Professional',
+      features: t('plans.professional.features', { returnObjects: true }),
+      cta: t('plans.professional.cta'),
       highlighted: false,
     },
     {
-      name: 'Enterprise',
-      description: 'For organizations with complex requirements',
+      name: t('plans.enterprise.name'),
+      description: t('plans.enterprise.description'),
       price: { monthly: '$449', annually: '$349' },
-      features: [
-        '100,000 messages per month',
-        '500 active users',
-        '10 GB storage',
-        '250 knowledge collections',
-        'Custom deployment options',
-        'Dedicated account manager',
-        'Phone & email support',
-        'SLA guarantees',
-        'Advanced security features',
-        'Custom integrations',
-      ],
-      cta: 'Contact Sales',
+      features: t('plans.enterprise.features', { returnObjects: true }),
+      cta: t('plans.enterprise.cta'),
       highlighted: false,
     },
   ];
@@ -88,10 +54,10 @@ const PricingSection = () => {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Simple, Transparent Pricing
+            {t('title')}
           </h2>
           <p className="mt-4 max-w-2xl text-xl text-gray-600 mx-auto">
-            Choose the plan that's right for your business
+            {t('subtitle')}
           </p>
         </motion.div>
 
@@ -107,7 +73,7 @@ const PricingSection = () => {
               } relative py-2 px-6 rounded-md text-sm font-medium focus:outline-none transition-colors duration-200`}
               onClick={() => setIsAnnual(false)}
             >
-              Monthly
+              {t('billing.monthly')}
             </button>
             <button
               type="button"
@@ -118,7 +84,7 @@ const PricingSection = () => {
               } relative py-2 px-6 rounded-md text-sm font-medium focus:outline-none transition-colors duration-200`}
               onClick={() => setIsAnnual(true)}
             >
-              Annual <span className="text-primary-600 font-bold">(Save 20%)</span>
+              {t('billing.annual')} <span className="text-primary-600 font-bold">{t('billing.annualSave')}</span>
             </button>
           </div>
         </div>
@@ -140,7 +106,7 @@ const PricingSection = () => {
             >
               {plan.highlighted && (
                 <div className="absolute top-0 right-0 bg-primary-500 text-white px-4 py-1 text-xs font-bold uppercase tracking-wider transform translate-x-2 -translate-y-0 rotate-3 shadow-lg rounded-bl-xl rounded-tr-xl">
-                  Popular
+                  {t('badges.popular')}
                 </div>
               )}
               <div className={`px-6 py-8 ${plan.highlighted ? 'bg-gradient-to-br from-primary-50 to-primary-100' : 'bg-white'}`}>
@@ -152,11 +118,11 @@ const PricingSection = () => {
                       {isAnnual ? plan.price.annually : plan.price.monthly}
                     </span>
                     <span className="text-base font-medium text-gray-500 ml-1">
-                      {plan.name === 'Free' ? '' : '/month'}
+                      {plan.name === t('plans.free.name') ? '' : '/month'}
                     </span>
                   </p>
                   {isAnnual && plan.price.annually !== '$0' && (
-                    <p className="mt-1 text-sm text-primary-600 font-medium">Billed annually</p>
+                    <p className="mt-1 text-sm text-primary-600 font-medium">{t('billedAnnually')}</p>
                   )}
                 </div>
               </div>
@@ -184,7 +150,7 @@ const PricingSection = () => {
                   </ul>
                 </div>
                 <div className="mt-8">
-                  {plan.name === 'Free' ? (
+                  {plan.name === t('plans.free.name') ? (
                     <Button
                       variant={plan.highlighted ? 'primary' : 'outline'}
                       size="lg"
@@ -195,7 +161,7 @@ const PricingSection = () => {
                     >
                       {plan.cta}
                     </Button>
-                  ) : plan.name === 'Enterprise' ? (
+                  ) : plan.name === t('plans.enterprise.name') ? (
                     <Button
                       variant={plan.highlighted ? 'primary' : 'outline'}
                       size="lg"
@@ -227,7 +193,7 @@ const PricingSection = () => {
 
       <div className="mt-16 text-center">
         <p className="text-base text-gray-600">
-          Looking for a custom plan? <a href="/contact" className="text-primary-600 font-medium hover:text-primary-500 underline">Contact us</a> for a tailored solution.
+          {t('footer.customPlan')} <a href="/contact" className="text-primary-600 font-medium hover:text-primary-500 underline">{t('footer.contactUs')}</a> {t('footer.tailoredSolution')}
         </p>
       </div>
     </SectionContainer>

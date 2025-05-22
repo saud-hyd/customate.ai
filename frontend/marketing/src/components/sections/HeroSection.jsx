@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Button from '../ui/Button';
 
 const HeroSection = () => {
+  const { t } = useTranslation('home'); 
+
   const [activeTab, setActiveTab] = useState('ecommerce');
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -380,16 +383,16 @@ const HeroSection = () => {
             <div className="space-y-6">
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-orange-400">
                 <span className="h-2 w-2 rounded-full bg-orange-500 mr-2"></span>
-                <span className="text-sm font-medium uppercase tracking-wider">Just Launched</span>
+                <span className="text-sm font-medium uppercase tracking-wider">{t('hero.badge')}</span>
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-none text-white">
-                Your Business, <br/>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-300">Enhanced by AI</span>
-              </h1>
+                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-none text-white">
+                  {t('hero.title.part1')} <br/>
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-300">{t('hero.title.part2')}</span>
+                </h1>
               
               <p className="text-xl md:text-2xl font-light max-w-2xl text-gray-300">
-                Customate.ai transforms customer interactions with intelligent, conversational AI agents tailored to your unique business needs.
+                {t('hero.subtitle')}
               </p>
               
               <div className="flex flex-wrap gap-4 pt-6">
@@ -400,7 +403,7 @@ const HeroSection = () => {
                   size="lg"
                   className="bg-gradient-to-r from-orange-500 to-amber-500 border-0 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-orange-500/20"
                 >
-                  Start Free Trial
+                  {t('cta.startFree', { ns: 'common' })}
                 </Button>
                 
               <Button
@@ -412,7 +415,7 @@ const HeroSection = () => {
                 size="lg"
                 className="text-white border-white/30 hover:bg-white/10 backdrop-blur-sm"
               >
-                Watch Demo
+                {t('cta.watchDemo', { ns: 'common' })}
               </Button>
 
               </div>

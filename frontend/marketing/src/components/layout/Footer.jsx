@@ -1,8 +1,42 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
+  const { t } = useTranslation();
+  const location = useLocation();
   const currentYear = new Date().getFullYear();
+
+  // Function to handle smooth scrolling to sections
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      // Calculate offset for fixed header
+      const headerOffset = 80;
+      const elementPosition = element.offsetTop;
+      const offsetPosition = elementPosition - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Function to handle navigation clicks
+  const handleNavClick = (href, e) => {
+    if (href.startsWith('/#')) {
+      e.preventDefault();
+      const sectionId = href.replace('/#', '');
+      
+      // If we're not on homepage, navigate there first then scroll
+      if (location.pathname !== '/') {
+        window.location.href = href;
+      } else {
+        scrollToSection(sectionId);
+      }
+    }
+  };
 
   // Social icons
   const renderSocialIcon = (name) => {
@@ -30,11 +64,13 @@ const Footer = () => {
     }
   };
 
-  // Define all link data
+  // Define all link data with translations
   const sections = [
     {
       id: 'customate',
-      text: 'Build, customize, and deploy AI-powered chatbots with industry-specific behaviors and custom knowledge bases for transformative customer interactions.',
+      text: t('footer.description', { 
+        defaultValue: 'Build, customize, and deploy AI-powered chatbots with industry-specific behaviors and custom knowledge bases for transformative customer interactions.'
+      }),
       social: [
         { name: 'twitter', href: 'https://twitter.com/customateai' },
         { name: 'linkedin', href: 'https://linkedin.com/company/customateai' },
@@ -43,32 +79,32 @@ const Footer = () => {
     },
     {
       id: 'product',
-      title: 'PRODUCT',
+      title: t('footer.product.title', { defaultValue: 'PRODUCT' }),
       links: [
-        { name: 'Features', href: '/features' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'Use Cases', href: '/use-cases' },
-        { name: 'Roadmap', href: '/roadmap' }
+        { name: t('header.features'), href: '/#features', isSection: true },
+        { name: t('header.pricing'), href: '/#pricing', isSection: true },
+        { name: t('footer.product.useCases', { defaultValue: 'Use Cases' }), href: '/use-cases' },
+        { name: t('footer.product.roadmap', { defaultValue: 'Roadmap' }), href: '/roadmap' }
       ]
     },
     {
       id: 'resources',
-      title: 'RESOURCES',
+      title: t('footer.resources.title', { defaultValue: 'RESOURCES' }),
       links: [
-        { name: 'Documentation', href: 'https://docs.customate.ai' },
-        { name: 'API Reference', href: 'https://docs.customate.ai/api' },
-        { name: 'Blog', href: '/blog' },
-        { name: 'Terms of Service', href: '/terms' },
+        { name: t('footer.resources.documentation', { defaultValue: 'Documentation' }), href: 'https://docs.customate.ai' },
+        { name: t('footer.resources.apiReference', { defaultValue: 'API Reference' }), href: 'https://docs.customate.ai/api' },
+        { name: t('header.blog'), href: '/blog' },
+        { name: t('footer.terms'), href: '/terms' },
       ]
     },
     {
       id: 'company',
-      title: 'COMPANY',
+      title: t('footer.company.title', { defaultValue: 'COMPANY' }),
       links: [
-        { name: 'About Us', href: '/about' },
-        { name: 'Contact', href: '/contact' },
-        { name: 'Privacy Policy', href: '/privacy' },
-        { name: 'Cookie Policy', href: '/cookies' }
+        { name: t('footer.company.about', { defaultValue: 'About Us' }), href: '/about' },
+        { name: t('header.contact'), href: '/contact' },
+        { name: t('footer.privacy'), href: '/privacy' },
+        { name: t('footer.cookies'), href: '/cookies' }
       ]
     }
   ];
@@ -102,7 +138,12 @@ const Footer = () => {
         <div className="flex flex-col lg:flex-row justify-between space-y-10 lg:space-y-0">
           {/* Company description and social icons */}
           <div className="lg:w-1/4">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent mb-4">Customate.ai</h2>
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-orange-600 to-orange-500 rounded-lg flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-lg">C</span>
+              </div>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Customate.ai</h2>
+            </div>
             <p className="text-gray-600 mb-6 pr-4 text-sm leading-relaxed">
               {sections[0].text}
             </p>
@@ -140,6 +181,13 @@ const Footer = () => {
                         >
                           {link.name}
                         </a>
+                      ) : link.isSection ? (
+                        <button
+                          onClick={(e) => handleNavClick(link.href, e)}
+                          className="text-gray-600 hover:text-gray-900 text-sm transition-colors text-left"
+                        >
+                          {link.name}
+                        </button>
                       ) : (
                         <Link
                           to={link.href}
@@ -159,7 +207,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="mt-12 pt-5 border-t border-orange-100">
           <p className="text-gray-500 text-sm">
-            &copy; {currentYear} Customate.ai. All rights reserved.
+            {t('footer.rights', { year: currentYear })}
           </p>
         </div>
       </div>

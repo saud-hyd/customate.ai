@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 const CTASection = () => {
+  const { t } = useTranslation('home');
+  
   return (
     <section id="cta" className="relative py-20 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600"></div>
@@ -32,10 +35,10 @@ const CTASection = () => {
           className="max-w-3xl mx-auto text-center text-white"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Start Building Your AI Assistant Today
+            {t('cta.title')}
           </h2>
           <p className="text-xl mb-8 text-orange-50">
-            Join the AI revolution and transform how you engage with your customers. No technical knowledge required.
+            {t('cta.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button
@@ -45,7 +48,7 @@ const CTASection = () => {
               size="lg"
               className="bg-white text-orange-600 hover:bg-yellow-100 focus:ring-orange-600"
             >
-              Get Started For Free
+              {t('cta.getStarted', { ns: 'common' })}
             </Button>
             
             <Button
@@ -55,7 +58,7 @@ const CTASection = () => {
               size="lg"
               className="border-white text-white hover:bg-white/10"
             >
-              Watch Demo
+              {t('cta.watchDemo', { ns: 'common' })}
             </Button>
           </div>
           <p className="mt-6 text-sm text-orange-100">

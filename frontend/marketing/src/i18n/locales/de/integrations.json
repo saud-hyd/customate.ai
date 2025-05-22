@@ -1,0 +1,75 @@
+{
+  "badge": "Nahtlose Konnektivität",
+  "title": {
+    "part1": "Eine KI,",
+    "part2": "Überall"
+  },
+  "subtitle": "Verbinden Sie Ihre Geschäftsdaten und erreichen Sie Kunden auf jeder Plattform mit konsistenten, intelligenten KI-Interaktionen.",
+  "tabs": {
+    "dataSources": "Datenquellen",
+    "chatPlatforms": "Chat-Plattformen"
+  },
+  "dataSources": {
+    "title": {
+      "part1": "Intelligente",
+      "part2": "Datenquellen"
+    },
+    "integrations": {
+      "knowledge": {
+        "name": "Wissensbasis",
+        "description": "Ihre KI lernt aus Ihren Dokumenten, FAQs und Website-Inhalten"
+      },
+      "crm": {
+        "name": "CRM-Systeme",
+        "description": "Verbinden Sie Kundendaten von Salesforce, Zendesk und mehr"
+      },
+      "erp": {
+        "name": "ERP/Inventar",
+        "description": "Echtzeit-Integration von Produkt- und Bestandsinformationen"
+      },
+      "helpdesk": {
+        "name": "Help Desk",
+        "description": "Verknüpfen Sie Support-Tickets, Chat-Verlauf und Kundenprobleme"
+      }
+    }
+  },
+  "chatPlatforms": {
+    "title": {
+      "part1": "Multiplattform",
+      "part2": "Messaging"
+    },
+    "features": {
+      "omnichannelPresence": {
+        "title": "Omnichannel-Präsenz",
+        "description": "Eine KI, jede Kommunikationsplattform"
+      },
+      "nativeInterface": {
+        "title": "Native Oberfläche",
+        "description": "Sieht aus und fühlt sich an wie die ursprüngliche Plattform"
+      },
+      "richMedia": {
+        "title": "Rich Media",
+        "description": "Senden Sie Bilder, Buttons, Karten und mehr"
+      },
+      "availability": {
+        "title": "24/7 Verfügbarkeit",
+        "description": "Immer verfügbarer Support für Ihre Kunden"
+      },
+      "consistentVoice": {
+        "title": "Konsistente Stimme",
+        "description": "Gleiche Markenerfahrung überall"
+      },
+      "smartHandoff": {
+        "title": "Intelligente Übergabe",
+        "description": "Nahtlose Übertragung an menschliche Agenten"
+      }
+    },
+    "deployMessage": "Bereitstellung auf jeder Plattform in Minuten ohne Programmierung"
+  },
+  "cta": {
+    "title": "Bereit, Ihre Kundenerfahrung zu verbessern?",
+    "subtitle": "Stellen Sie KI in allen Ihren Kanälen in Minuten, nicht Monaten bereit. Keine Programmierung erforderlich.",
+    "startTrial": "Kostenlose Testversion",
+    "watchDemo": "Demo Ansehen"
+  }
+}
