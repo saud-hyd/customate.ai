@@ -311,7 +311,7 @@ const fetchData = async () => {
   if (loading && !subscription) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-600"></div>
       </div>
     );
   }
@@ -422,7 +422,7 @@ const fetchData = async () => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div 
-                    className={`${messagePercentage > 90 ? 'bg-red-500' : 'bg-indigo-600'} h-2 rounded-full`}
+                    className={`${messagePercentage > 90 ? 'bg-red-500' : 'bg-orange-600'} h-2 rounded-full`}
                     style={{ width: `${messagePercentage}%` }}
                   ></div>
                 </div>
@@ -443,7 +443,7 @@ const fetchData = async () => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div 
-                    className={`${storagePercentage > 90 ? 'bg-red-500' : 'bg-indigo-600'} h-2 rounded-full`}
+                    className={`${storagePercentage > 90 ? 'bg-red-500' : 'bg-orange-600'} h-2 rounded-full`}
                     style={{ width: `${storagePercentage}%` }}
                   ></div>
                 </div>
@@ -456,7 +456,7 @@ const fetchData = async () => {
               <div className="sm:col-span-2 flex justify-end">
                 <button
                   onClick={refreshUsageData}
-                  className="text-sm text-indigo-600 hover:text-indigo-800"
+                  className="text-sm text-orange-600 hover:text-orange-800"
                   disabled={loading}
                 >
                   {loading ? 'Refreshing...' : 'Refresh usage data'}
@@ -480,13 +480,13 @@ const fetchData = async () => {
                 key={planType} 
                 className={`border rounded-lg overflow-hidden flex flex-col h-full ${
                   planType === currentPlan 
-                    ? 'border-indigo-500 ring-1 ring-indigo-500' 
+                    ? 'border-orange-500 ring-1 ring-orange-500' 
                     : 'border-gray-200'
                 }`}
               >
                 <div className={`px-6 py-4 border-b ${
                   planType === currentPlan 
-                    ? 'bg-indigo-50 border-indigo-100' 
+                    ? 'bg-orange-50 border-orange-100' 
                     : 'bg-gray-50 border-gray-200'
                 }`}>
                   <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
@@ -526,7 +526,7 @@ const fetchData = async () => {
                       className={`w-full py-2 px-4 border border-transparent rounded-md font-medium text-center text-white ${
                         planType === 'free' 
                           ? 'bg-gray-600 hover:bg-gray-700' 
-                          : 'bg-indigo-600 hover:bg-indigo-700'
+                          : 'bg-orange-600 hover:bg-orange-700'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       {processingPlan === planType ? 'Processing...' : planType === 'free' ? 'Downgrade' : 'Upgrade'}

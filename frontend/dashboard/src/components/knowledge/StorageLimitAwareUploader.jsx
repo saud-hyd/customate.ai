@@ -290,7 +290,7 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
         <p className="ml-3 text-gray-700">Loading storage information...</p>
       </div>
     );
@@ -318,7 +318,7 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
           </button>
           <a
             href="/dashboard/subscription"
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
           >
             Upgrade Plan
           </a>
@@ -394,9 +394,9 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
         <>
           {/* File Drop Zone */}
           <div
-            className={`border-2 ${isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-dashed border-gray-300'} 
-                       ${file ? 'border-indigo-500 border-solid' : ''} 
-                       ${!uploading && !isAtCapacity() ? 'hover:border-indigo-500 hover:bg-gray-50' : ''} 
+            className={`border-2 ${isDragging ? 'border-orange-500 bg-orange-50' : 'border-dashed border-gray-300'} 
+                       ${file ? 'border-orange-500 border-solid' : ''} 
+                       ${!uploading && !isAtCapacity() ? 'hover:border-orange-500 hover:bg-gray-50' : ''} 
                        rounded-lg p-8 text-center transition-colors duration-150 ease-in-out`}
             onDrop={!uploading && !isAtCapacity() ? handleDrop : undefined}
             onDragOver={!uploading && !isAtCapacity() ? handleDragOver : undefined}
@@ -468,7 +468,7 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
             </label>
             <select
               id="collection"
-              className="w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
               value={selectedCollection}
               onChange={handleCollectionChange}
               disabled={uploading || isAtCapacity()}
@@ -499,7 +499,7 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
                   className={`h-2.5 rounded-full ${
-                    uploadProgress < 100 ? 'bg-indigo-600' : 'bg-green-600'
+                    uploadProgress < 100 ? 'bg-orange-600' : 'bg-green-600'
                   }`}
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
@@ -518,7 +518,7 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
               type="button"
               onClick={onCancel}
               disabled={uploading}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               Cancel
             </button>
@@ -528,8 +528,8 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
               disabled={!file || !selectedCollection || uploading || wouldExceedLimit || isAtCapacity()}
               className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
                 ${(!file || !selectedCollection || uploading || wouldExceedLimit || isAtCapacity()) 
-                  ? 'bg-indigo-300 cursor-not-allowed' 
-                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+                  ? 'bg-orange-300 cursor-not-allowed' 
+                  : 'bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500'}`}
             >
               {uploading ? 'Uploading...' : 'Upload Document'}
             </button>

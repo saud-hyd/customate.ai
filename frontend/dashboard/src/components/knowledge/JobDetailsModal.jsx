@@ -107,7 +107,7 @@ const JobDetailsModal = ({ job, onClose }) => {
               onClick={() => setActiveTab('overview')}
               className={`px-4 py-2 text-sm font-medium ${
                 activeTab === 'overview' 
-                  ? 'border-b-2 border-indigo-500 text-indigo-600'
+                  ? 'border-b-2 border-orange-500 text-orange-600'
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -117,7 +117,7 @@ const JobDetailsModal = ({ job, onClose }) => {
               onClick={() => setActiveTab('pages')}
               className={`px-4 py-2 text-sm font-medium ${
                 activeTab === 'pages' 
-                  ? 'border-b-2 border-indigo-500 text-indigo-600'
+                  ? 'border-b-2 border-orange-500 text-orange-600'
                   : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -150,7 +150,7 @@ const JobDetailsModal = ({ job, onClose }) => {
                     href={job.base_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-indigo-600 hover:text-indigo-900 hover:underline flex items-center"
+                    className="text-orange-600 hover:text-orange-900 hover:underline flex items-center"
                   >
                     <LinkIcon className="h-4 w-4 mr-1 flex-shrink-0" />
                     {job.base_url}
@@ -309,7 +309,7 @@ const JobDetailsModal = ({ job, onClose }) => {
                                 href={page.url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                className="text-orange-600 hover:text-orange-900 hover:underline"
                                 title={page.url}
                               >
                                 {page.url.length > 40 ? page.url.substring(0, 40) + '...' : page.url}
@@ -369,7 +369,7 @@ const JobDetailsModal = ({ job, onClose }) => {
         <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
           <button
             type="button"
-            className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             onClick={onClose}
           >
             Close

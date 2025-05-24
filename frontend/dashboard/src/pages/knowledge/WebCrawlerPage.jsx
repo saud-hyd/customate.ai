@@ -45,8 +45,8 @@ const WebCrawlerPage = () => {
       {/* Page header */}
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
         <div className="flex items-center">
-          <div className="flex-shrink-0 p-3 bg-indigo-100 rounded-md">
-            <GlobeAltIcon className="h-6 w-6 text-indigo-600" />
+          <div className="flex-shrink-0 p-3 bg-orange-100 rounded-md">
+            <GlobeAltIcon className="h-6 w-6 text-orange-600" />
           </div>
           <div className="ml-4">
             <h1 className="text-2xl font-bold text-gray-900">Website Crawler</h1>
@@ -73,7 +73,7 @@ const WebCrawlerPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center mb-2">
-              <div className="bg-indigo-100 rounded-full w-8 h-8 flex items-center justify-center text-indigo-600 font-bold">1</div>
+              <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-orange-600 font-bold">1</div>
               <h3 className="font-medium ml-2">Enter Website URL</h3>
             </div>
             <p className="text-sm text-gray-600">
@@ -83,7 +83,7 @@ const WebCrawlerPage = () => {
           
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center mb-2">
-              <div className="bg-indigo-100 rounded-full w-8 h-8 flex items-center justify-center text-indigo-600 font-bold">2</div>
+              <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-orange-600 font-bold">2</div>
               <h3 className="font-medium ml-2">Crawl Process</h3>
             </div>
             <p className="text-sm text-gray-600">
@@ -93,7 +93,7 @@ const WebCrawlerPage = () => {
           
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center mb-2">
-              <div className="bg-indigo-100 rounded-full w-8 h-8 flex items-center justify-center text-indigo-600 font-bold">3</div>
+              <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-orange-600 font-bold">3</div>
               <h3 className="font-medium ml-2">Use in Chatbot</h3>
             </div>
             <p className="text-sm text-gray-600">

@@ -66,8 +66,8 @@ const ChannelList = ({ channels, onChannelSelect, onConnectClick }) => {
   if (channels.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow">
-        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100">
-          <HiOutlineChat className="h-6 w-6 text-indigo-600" />
+        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
+          <HiOutlineChat className="h-6 w-6 text-orange-600" />
         </div>
         <h3 className="mt-2 text-lg font-medium text-gray-900">No channels connected</h3>
         <p className="mt-1 text-sm text-gray-500">
@@ -76,7 +76,7 @@ const ChannelList = ({ channels, onChannelSelect, onConnectClick }) => {
         <div className="mt-6">
           <button
             onClick={onConnectClick}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
           >
             Connect Your First Channel
           </button>
@@ -192,7 +192,7 @@ const ChannelList = ({ channels, onChannelSelect, onConnectClick }) => {
             <div className="bg-gray-50 px-4 py-3 sm:px-6">
               <button
                 onClick={() => onChannelSelect(channel)}
-                className="w-full text-sm font-medium text-indigo-600 hover:text-indigo-500 flex justify-center items-center"
+                className="w-full text-sm font-medium text-orange-600 hover:text-orange-500 flex justify-center items-center"
               >
                 View Details
                 <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -238,7 +238,7 @@ const ChannelList = ({ channels, onChannelSelect, onConnectClick }) => {
                 </button>
                 <button 
                   type="button" 
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   onClick={() => setShowDeleteConfirm(false)}
                 >
                   Cancel

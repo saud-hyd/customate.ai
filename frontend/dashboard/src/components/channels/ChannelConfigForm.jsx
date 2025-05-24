@@ -123,7 +123,7 @@ const ChannelConfigForm = ({ channel, onSuccess }) => {
                   id="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   required
                 />
               </div>
@@ -144,8 +144,8 @@ const ChannelConfigForm = ({ channel, onSuccess }) => {
                   checked={formData.active}
                   onChange={handleSwitchChange}
                   className={`${
-                    formData.active ? 'bg-indigo-600' : 'bg-gray-200'
-                  } relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+                    formData.active ? 'bg-orange-600' : 'bg-gray-200'
+                  } relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500`}
                 >
                   <span
                     className={`${
@@ -161,7 +161,7 @@ const ChannelConfigForm = ({ channel, onSuccess }) => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
               >
                 Save Changes
               </button>

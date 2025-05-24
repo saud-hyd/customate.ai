@@ -7,7 +7,7 @@ class WidgetConfigBase(BaseModel):
     primary_color: Optional[str] = Field(
         None, 
         description="Primary color for the widget", 
-        example="#4f46e5"
+        example="#ea580c"
     )
     chatbot_name: Optional[str] = Field(
         None, 

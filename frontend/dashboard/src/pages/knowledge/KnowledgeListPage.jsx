@@ -386,7 +386,7 @@ const KnowledgeListPage = () => {
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
               activeTab === 'collections' 
-                ? 'border-indigo-500 text-indigo-600' 
+                ? 'border-orange-500 text-orange-600' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
             onClick={() => setActiveTab('collections')}
@@ -396,7 +396,7 @@ const KnowledgeListPage = () => {
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
               activeTab === 'websites' 
-                ? 'border-indigo-500 text-indigo-600' 
+                ? 'border-orange-500 text-orange-600' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
             onClick={() => setActiveTab('websites')}
@@ -406,7 +406,7 @@ const KnowledgeListPage = () => {
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
               activeTab === 'documents' 
-                ? 'border-indigo-500 text-indigo-600' 
+                ? 'border-orange-500 text-orange-600' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
             onClick={() => setActiveTab('documents')}
@@ -416,7 +416,7 @@ const KnowledgeListPage = () => {
           <button
             className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
               activeTab === 'training' 
-                ? 'border-indigo-500 text-indigo-600' 
+                ? 'border-orange-500 text-orange-600' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
             onClick={() => setActiveTab('training')}
@@ -453,7 +453,7 @@ const KnowledgeListPage = () => {
             
             {loading && collections.length === 0 ? (
               <div className="py-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="mt-2 text-sm">Loading collections...</p>
               </div>
             ) : collections.length === 0 ? (
@@ -462,7 +462,7 @@ const KnowledgeListPage = () => {
                 <p className="mt-2 text-sm">No collections yet</p>
                 <button
                   onClick={() => setIsNewCollectionModalOpen(true)}
-                  className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                  className="mt-2 text-sm text-orange-600 hover:text-orange-500"
                 >
                   Create your first collection
                 </button>
@@ -476,7 +476,7 @@ const KnowledgeListPage = () => {
                         onClick={() => setActiveCollection(collection)}
                         className={`flex-1 flex items-center px-3 py-2 text-sm font-medium rounded-md ${
                           activeCollection?.collection_id === collection.collection_id
-                            ? 'bg-indigo-100 text-indigo-700'
+                            ? 'bg-orange-100 text-orange-700'
                             : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
@@ -517,7 +517,7 @@ const KnowledgeListPage = () => {
                   <input
                     type="text"
                     placeholder="Search items..."
-                    className="pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 w-full"
+                    className="pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 w-full"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -545,7 +545,7 @@ const KnowledgeListPage = () => {
                   <select
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value)}
-                    className="py-2 pl-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                    className="py-2 pl-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-sm"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -564,7 +564,7 @@ const KnowledgeListPage = () => {
                   <select
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value)}
-                    className="w-full py-2 pl-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                    className="w-full py-2 pl-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-sm"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -583,7 +583,7 @@ const KnowledgeListPage = () => {
             
             {loading && activeCollection ? (
               <div className="py-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
                 <p className="mt-2 text-sm">Loading items...</p>
               </div>
             ) : !activeCollection ? (
@@ -600,7 +600,7 @@ const KnowledgeListPage = () => {
                 {!searchQuery && (
                   <button
                     onClick={() => setIsNewItemModalOpen(true)}
-                    className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                    className="mt-2 text-sm text-orange-600 hover:text-orange-500"
                   >
                     Add your first item
                   </button>
@@ -714,7 +714,7 @@ const KnowledgeListPage = () => {
           
           {loading ? (
             <div className="py-8 text-center text-gray-500">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
               <p className="mt-2 text-sm">Loading documents...</p>
             </div>
           ) : documents.length === 0 ? (
@@ -723,7 +723,7 @@ const KnowledgeListPage = () => {
               <p className="mt-2 text-sm">No documents uploaded yet</p>
               <button
                 onClick={() => setIsUploadModalOpen(true)}
-                className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                className="mt-2 text-sm text-orange-600 hover:text-orange-500"
               >
                 Upload your first document
               </button>
@@ -807,7 +807,7 @@ const KnowledgeListPage = () => {
                 id="name"
                 value={newCollection.name}
                 onChange={(e) => setNewCollection({...newCollection, name: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                 placeholder="Collection name"
               />
             </div>
@@ -818,7 +818,7 @@ const KnowledgeListPage = () => {
                 id="description"
                 value={newCollection.description}
                 onChange={(e) => setNewCollection({...newCollection, description: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                 rows="3"
                 placeholder="Collection description"
               ></textarea>
@@ -830,7 +830,7 @@ const KnowledgeListPage = () => {
                 id="type"
                 value={newCollection.type}
                 onChange={(e) => setNewCollection({...newCollection, type: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
               >
                 <option value="general">General</option>
                 <option value="faqs">FAQs</option>
@@ -854,7 +854,7 @@ const KnowledgeListPage = () => {
                 type="button"
                 onClick={handleCreateCollection}
                 disabled={!newCollection.name}
-                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
               >
                 Create Collection
               </button>
@@ -877,7 +877,7 @@ const KnowledgeListPage = () => {
                 id="title"
                 value={newItem.title}
                 onChange={(e) => setNewItem({...newItem, title: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                 placeholder="Item title"
               />
             </div>
@@ -888,7 +888,7 @@ const KnowledgeListPage = () => {
                 id="content"
                 value={newItem.content}
                 onChange={(e) => setNewItem({...newItem, content: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                 rows="8"
                 placeholder="Item content"
               ></textarea>
@@ -906,7 +906,7 @@ const KnowledgeListPage = () => {
                 type="button"
                 onClick={handleCreateItem}
                 disabled={!newItem.title || !newItem.content}
-                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
               >
                 Add Item
               </button>
@@ -963,7 +963,7 @@ const KnowledgeListPage = () => {
               </button>
               <button
                 type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
                 onClick={() => setIsDeleteDocumentConfirmOpen(false)}
               >
                 Cancel
@@ -1005,7 +1005,7 @@ const KnowledgeListPage = () => {
               </button>
               <button
                 type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
                 onClick={() => setIsDeleteCollectionConfirmOpen(false)}
               >
                 Cancel
@@ -1046,7 +1046,7 @@ const KnowledgeListPage = () => {
               </button>
               <button
                 type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
                 onClick={() => setIsDeleteItemConfirmOpen(false)}
               >
                 Cancel

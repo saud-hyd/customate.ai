@@ -105,7 +105,7 @@ const ResetPasswordPage = () => {
           </p>
           <button
             onClick={() => navigate('/forgot-password')}
-            className="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
           >
             Request New Link
           </button>
@@ -139,7 +139,7 @@ const ResetPasswordPage = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="••••••••"
               required
               minLength={6}
@@ -155,7 +155,7 @@ const ResetPasswordPage = () => {
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="••••••••"
               required
               minLength={6}
@@ -164,7 +164,7 @@ const ResetPasswordPage = () => {
           
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             disabled={isResetting}
           >
             {isResetting ? 'Resetting Password...' : 'Reset Password'}

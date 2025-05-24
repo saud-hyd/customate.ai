@@ -103,7 +103,7 @@ const DocumentPreview = ({ documentId, onClose }) => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600 mx-auto"></div>
           <p className="mt-3 text-gray-600">Loading document details...</p>
         </div>
       </div>
@@ -178,7 +178,7 @@ const DocumentPreview = ({ documentId, onClose }) => {
         
         {document.status === 'processing' ? (
           <div className="p-6 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
             <p className="mt-2 text-gray-600">Document is still being processed. Sections will appear here once processing is complete.</p>
           </div>
         ) : document.status === 'failed' ? (
@@ -214,7 +214,7 @@ const DocumentPreview = ({ documentId, onClose }) => {
                     <div className="flex items-center space-x-4">
                       <Link 
                         to={`/dashboard/knowledge/${section.item_id}`}
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-orange-600 hover:text-orange-800"
                         title="Edit this section"
                         onClick={(e) => e.stopPropagation()}
                       >

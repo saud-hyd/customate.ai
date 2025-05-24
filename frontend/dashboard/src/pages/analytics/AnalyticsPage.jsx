@@ -175,7 +175,7 @@ const AnalyticsPage = () => {
           <div className="mt-4">
             <button
               onClick={refreshAllData}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
             >
               Retry Loading Data
             </button>
@@ -248,7 +248,7 @@ const AnalyticsPage = () => {
           </div>
           <button
             onClick={refreshAllData}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
+            className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm"
             disabled={loading}
           >
             {loading ? 'Refreshing...' : 'Refresh Data'}

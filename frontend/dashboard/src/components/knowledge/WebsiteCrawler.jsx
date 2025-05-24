@@ -230,7 +230,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
               <input
                 type="url"
                 id="website-url"
-                className="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300"
+                className="focus:ring-orange-500 focus:border-orange-500 flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300"
                 placeholder="https://example.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -248,7 +248,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
             </label>
             <select
               id="collection"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md"
               value={selectedCollection}
               onChange={(e) => setSelectedCollection(e.target.value)}
             >
@@ -264,7 +264,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
           <div>
             <button
               type="button"
-              className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center"
+              className="text-sm text-orange-600 hover:text-orange-500 flex items-center"
               onClick={() => setAdvancedOptions(!advancedOptions)}
             >
               {advancedOptions ? 'Hide' : 'Show'} Advanced Options
@@ -280,7 +280,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
                 <input
                   type="number"
                   id="max-pages"
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                  className="mt-1 focus:ring-orange-500 focus:border-orange-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                   min="1"
                   max="1000"
                   value={maxPages}
@@ -294,7 +294,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
                 <input
                   type="number"
                   id="max-depth"
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                  className="mt-1 focus:ring-orange-500 focus:border-orange-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                   min="1"
                   max="5"
                   value={maxDepth}
@@ -307,7 +307,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
           <div className="pt-3">
             <button
               type="submit"
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm"
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:w-auto sm:text-sm"
               disabled={loading}
             >
               {loading ? (
@@ -338,7 +338,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
         
         {refreshingJobs && crawlJobs.length === 0 ? (
           <div className="py-8 text-center text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
             <p className="mt-2 text-sm">Loading crawl jobs...</p>
           </div>
         ) : crawlJobs.length === 0 ? (
@@ -363,7 +363,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
                 {crawlJobs.map((job) => (
                   <tr key={job.job_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      <a href={job.base_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-900">
+                      <a href={job.base_url} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-900">
                         {formatDomain(job.base_url)}
                       </a>
                     </td>
@@ -398,7 +398,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
                         {job.status === 'failed' && (
                           <button
                             onClick={() => handleRetryJob(job.job_id)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            className="text-orange-600 hover:text-orange-900"
                             title="Retry job"
                           >
                             <PlayIcon className="h-5 w-5" aria-hidden="true" />
@@ -475,7 +475,7 @@ const WebsiteCrawler = ({ collections, onJobCreated }) => {
               </button>
               <button
                 type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
                 onClick={() => {
                   setDeleteConfirmOpen(false);
                   setJobToDelete(null);

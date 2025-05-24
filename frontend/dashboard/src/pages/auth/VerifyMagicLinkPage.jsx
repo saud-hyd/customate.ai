@@ -53,7 +53,7 @@ const VerifyMagicLinkPage = () => {
         
         {isVerifying ? (
           <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mb-4"></div>
             <p className="text-gray-600">Please wait while we verify your magic link...</p>
           </div>
         ) : (
@@ -61,7 +61,7 @@ const VerifyMagicLinkPage = () => {
             <div className="text-red-600 mb-4">{error}</div>
             <button
               onClick={() => navigate('/login')}
-              className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               Back to Login
             </button>

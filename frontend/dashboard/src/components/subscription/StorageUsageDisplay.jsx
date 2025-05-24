@@ -41,7 +41,7 @@ const StorageUsageDisplay = ({ onRefresh, showRefreshButton = true, compact = fa
   if (loading) {
     return (
       <div className={`flex items-center ${compact ? 'py-1' : 'py-3'} ${className}`}>
-        <div className="animate-spin h-4 w-4 border-b-2 border-indigo-500 rounded-full mr-2"></div>
+        <div className="animate-spin h-4 w-4 border-b-2 border-orange-500 rounded-full mr-2"></div>
         <span className="text-sm text-gray-500">Loading storage info...</span>
       </div>
     );
@@ -52,7 +52,7 @@ const StorageUsageDisplay = ({ onRefresh, showRefreshButton = true, compact = fa
       <div className={`text-sm text-red-600 ${className}`}>
         {error}
         {showRefreshButton && (
-          <button onClick={fetchStorageInfo} className="ml-2 text-indigo-600 hover:text-indigo-800">
+          <button onClick={fetchStorageInfo} className="ml-2 text-orange-600 hover:text-orange-800">
             Retry
           </button>
         )}
@@ -66,7 +66,7 @@ const StorageUsageDisplay = ({ onRefresh, showRefreshButton = true, compact = fa
       <div className={`text-sm text-gray-500 ${className}`}>
         Storage information not available
         {showRefreshButton && (
-          <button onClick={fetchStorageInfo} className="ml-2 text-indigo-600 hover:text-indigo-800">
+          <button onClick={fetchStorageInfo} className="ml-2 text-orange-600 hover:text-orange-800">
             Refresh
           </button>
         )}

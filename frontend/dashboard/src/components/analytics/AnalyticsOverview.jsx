@@ -324,7 +324,7 @@ const AnalyticsOverview = ({ data, dateRange }) => {
 
       {/* Insights cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow p-6">
+        <div className="bg-gradient-to-br from-blue-50 to-orange-50 rounded-lg shadow p-6">
           <div className="flex items-start">
             <div className="flex-shrink-0 rounded-md p-3 bg-blue-500">
               <ChatBubbleLeftRightIcon className="h-6 w-6 text-white" aria-hidden="true" />

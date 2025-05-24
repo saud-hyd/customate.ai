@@ -115,7 +115,7 @@ const LoginPage = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="name@example.com"
               required
             />
@@ -126,7 +126,7 @@ const LoginPage = () => {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
-              <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
+              <Link to="/forgot-password" className="text-sm text-orange-600 hover:text-orange-500">
                 Forgot password?
               </Link>
             </div>
@@ -135,14 +135,14 @@ const LoginPage = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               required
             />
           </div>
           
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             disabled={isLoading}
           >
             {isLoading ? 'Signing in...' : 'Sign in'}
@@ -152,7 +152,7 @@ const LoginPage = () => {
             <button
               type="button"
               onClick={handleMagicLinkRequest}
-              className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+              className="text-orange-600 hover:text-orange-500 text-sm font-medium"
               disabled={isLoading}
             >
               Sign in with magic link instead
@@ -181,7 +181,7 @@ const LoginPage = () => {
         
         <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
             Sign up
           </Link>
         </p>

@@ -143,7 +143,7 @@ const ChannelDetailView = ({ channel, onChannelUpdate }) => {
         <div className="md:ml-auto mt-4 md:mt-0 flex space-x-2">
           <button
             onClick={() => setActiveTab(2)}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
           >
             <HiOutlineCog className="mr-2 h-4 w-4" />
             Settings
@@ -157,7 +157,7 @@ const ChannelDetailView = ({ channel, onChannelUpdate }) => {
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center">
-                <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                <div className="flex-shrink-0 bg-orange-500 rounded-md p-3">
                   <HiOutlineChat className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-5">
@@ -215,15 +215,15 @@ const ChannelDetailView = ({ channel, onChannelUpdate }) => {
       {/* Content tabs */}
       <div className="px-4 py-4 sm:px-6">
         <Tab.Group selectedIndex={activeTab} onChange={setActiveTab}>
-          <Tab.List className="flex space-x-1 rounded-xl bg-indigo-50 p-1">
+          <Tab.List className="flex space-x-1 rounded-xl bg-orange-50 p-1">
             <Tab
               className={({ selected }) =>
                 classNames(
                   'w-full py-2.5 text-sm font-medium leading-5 rounded-lg',
-                  'focus:outline-none focus:ring-2 ring-offset-2 ring-indigo-400 ring-opacity-60',
+                  'focus:outline-none focus:ring-2 ring-offset-2 ring-orange-400 ring-opacity-60',
                   selected
-                    ? 'bg-white text-indigo-700 shadow'
-                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-indigo-600'
+                    ? 'bg-white text-orange-700 shadow'
+                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-orange-600'
                 )
               }
             >
@@ -236,10 +236,10 @@ const ChannelDetailView = ({ channel, onChannelUpdate }) => {
               className={({ selected }) =>
                 classNames(
                   'w-full py-2.5 text-sm font-medium leading-5 rounded-lg',
-                  'focus:outline-none focus:ring-2 ring-offset-2 ring-indigo-400 ring-opacity-60',
+                  'focus:outline-none focus:ring-2 ring-offset-2 ring-orange-400 ring-opacity-60',
                   selected
-                    ? 'bg-white text-indigo-700 shadow'
-                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-indigo-600'
+                    ? 'bg-white text-orange-700 shadow'
+                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-orange-600'
                 )
               }
             >
@@ -252,10 +252,10 @@ const ChannelDetailView = ({ channel, onChannelUpdate }) => {
               className={({ selected }) =>
                 classNames(
                   'w-full py-2.5 text-sm font-medium leading-5 rounded-lg',
-                  'focus:outline-none focus:ring-2 ring-offset-2 ring-indigo-400 ring-opacity-60',
+                  'focus:outline-none focus:ring-2 ring-offset-2 ring-orange-400 ring-opacity-60',
                   selected
-                    ? 'bg-white text-indigo-700 shadow'
-                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-indigo-600'
+                    ? 'bg-white text-orange-700 shadow'
+                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-orange-600'
                 )
               }
             >

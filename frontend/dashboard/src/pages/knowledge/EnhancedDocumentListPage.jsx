@@ -284,7 +284,7 @@ const EnhancedDocumentListPage = () => {
               placeholder="Search documents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-sm"
             />
             {searchQuery && (
               <button
@@ -311,7 +311,7 @@ const EnhancedDocumentListPage = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="all">All Status</option>
               <option value="processed">Processed</option>
@@ -323,7 +323,7 @@ const EnhancedDocumentListPage = () => {
             <select
               value={collectionFilter}
               onChange={(e) => setCollectionFilter(e.target.value)}
-              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="all">All Collections</option>
               {collections.map(collection => (
@@ -337,7 +337,7 @@ const EnhancedDocumentListPage = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="date-desc">Newest First</option>
               <option value="date-asc">Oldest First</option>
@@ -367,7 +367,7 @@ const EnhancedDocumentListPage = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="all">All Status</option>
               <option value="processed">Processed</option>
@@ -379,7 +379,7 @@ const EnhancedDocumentListPage = () => {
             <select
               value={collectionFilter}
               onChange={(e) => setCollectionFilter(e.target.value)}
-              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="all">All Collections</option>
               {collections.map(collection => (
@@ -393,7 +393,7 @@ const EnhancedDocumentListPage = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="date-desc">Newest First</option>
               <option value="date-asc">Oldest First</option>
@@ -434,7 +434,7 @@ const EnhancedDocumentListPage = () => {
                 <div className="mt-6">
                   <button
                     onClick={() => setIsUploadModalOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                   >
                     <DocumentArrowUpIcon className="h-5 w-5 mr-2" />
                     Upload Document
@@ -449,7 +449,7 @@ const EnhancedDocumentListPage = () => {
                 <div className="mt-6">
                   <button
                     onClick={clearFilters}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                   >
                     <XMarkIcon className="h-5 w-5 mr-2" />
                     Clear Filters

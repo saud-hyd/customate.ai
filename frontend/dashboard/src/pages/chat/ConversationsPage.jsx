@@ -254,11 +254,11 @@ const ConversationsPage = () => {
 
       {/* Bulk actions */}
       {selectedConversations.length > 0 && (
-        <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4">
+        <div className="bg-orange-50 border-l-4 border-orange-500 p-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <CheckIcon className="h-5 w-5 text-indigo-500 mr-2" />
-              <p className="text-sm text-indigo-700">
+              <CheckIcon className="h-5 w-5 text-orange-500 mr-2" />
+              <p className="text-sm text-orange-700">
                 {selectedConversations.length} conversation(s) selected
               </p>
             </div>
@@ -284,7 +284,7 @@ const ConversationsPage = () => {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                       onChange={handleSelectAll}
                       checked={selectAll}
                       disabled={loading}
@@ -324,12 +324,12 @@ const ConversationsPage = () => {
                   const isSelected = selectedConversations.includes(sessionId);
                   
                   return (
-                    <tr key={sessionId} className={`hover:bg-gray-50 ${isSelected ? 'bg-indigo-50' : ''}`}>
+                    <tr key={sessionId} className={`hover:bg-gray-50 ${isSelected ? 'bg-orange-50' : ''}`}>
                       <td className="px-3 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
-                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                             checked={isSelected}
                             onChange={() => handleSelectConversation(sessionId)}
                             disabled={loading}

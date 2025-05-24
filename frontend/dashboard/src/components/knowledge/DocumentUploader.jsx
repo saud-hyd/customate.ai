@@ -110,8 +110,8 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
           {/* File Drop Zone */}
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center
-              ${file ? 'border-indigo-500' : 'border-gray-300'}
-              ${!uploading ? 'hover:border-indigo-500 hover:bg-gray-50 cursor-pointer' : ''}`}
+              ${file ? 'border-orange-500' : 'border-gray-300'}
+              ${!uploading ? 'hover:border-orange-500 hover:bg-gray-50 cursor-pointer' : ''}`}
             onDrop={!uploading ? handleDrop : undefined}
             onDragOver={!uploading ? handleDragOver : undefined}
             onClick={!uploading && !file ? () => document.getElementById('fileInput').click() : undefined}
@@ -127,7 +127,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
             
             {file ? (
               <div className="flex items-center justify-center">
-                <i className="fas fa-file-upload text-indigo-500 text-2xl mr-3"></i>
+                <i className="fas fa-file-upload text-orange-500 text-2xl mr-3"></i>
                 <div className="ml-4 text-left">
                   <p className="text-sm font-medium text-gray-900">{file.name}</p>
                   <p className="text-sm text-gray-500">
@@ -190,7 +190,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
-                  className="bg-indigo-600 h-2.5 rounded-full"
+                  className="bg-orange-600 h-2.5 rounded-full"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>

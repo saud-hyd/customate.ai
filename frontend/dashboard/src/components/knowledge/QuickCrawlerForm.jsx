@@ -40,7 +40,7 @@ const QuickCrawlerForm = ({ onCrawlComplete }) => {
   return (
     <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
       <h3 className="text-md font-medium flex items-center text-gray-900 mb-2">
-        <GlobeAltIcon className="h-5 w-5 mr-2 text-indigo-500" />
+        <GlobeAltIcon className="h-5 w-5 mr-2 text-orange-500" />
         Crawl Website
       </h3>
       <form onSubmit={handleSubmit} className="flex">
@@ -49,13 +49,13 @@ const QuickCrawlerForm = ({ onCrawlComplete }) => {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://example.com"
-          className="flex-1 rounded-l-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          className="flex-1 rounded-l-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
           required
         />
         <button
           type="submit"
           disabled={isLoading || !url}
-          className="rounded-r-md border border-transparent px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-r-md border border-transparent px-4 py-2 bg-orange-600 text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Starting...' : 'Start Crawler'}
         </button>

@@ -156,7 +156,7 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                 <div className="h-full flex flex-col bg-white shadow-xl overflow-y-scroll">
                   <div className="flex-1 overflow-y-auto">
                     {/* Header */}
-                    <div className="px-4 py-6 bg-indigo-700 sm:px-6">
+                    <div className="px-4 py-6 bg-orange-700 sm:px-6">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center">
                           {conversation.user_profile_url ? (
@@ -166,7 +166,7 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                               alt={conversation.user_name || "User"}
                             />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center border-2 border-white">
+                            <div className="h-10 w-10 rounded-full bg-orange-500 flex items-center justify-center border-2 border-white">
                               <HiOutlineUser className="h-6 w-6 text-white" />
                             </div>
                           )}
@@ -174,7 +174,7 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                             <Dialog.Title className="text-lg font-medium text-white">
                               {conversation.user_name || conversation.platform_user_id || "Unknown User"}
                             </Dialog.Title>
-                            <p className="text-sm text-indigo-200">
+                            <p className="text-sm text-orange-200">
                               {conversation.platform_user_id}
                             </p>
                           </div>
@@ -182,7 +182,7 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                         <div className="ml-3 h-7 flex items-center">
                           <button
                             type="button"
-                            className="bg-indigo-700 rounded-md text-indigo-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                            className="bg-orange-700 rounded-md text-orange-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
                             onClick={onClose}
                           >
                             <span className="sr-only">Close panel</span>
@@ -202,8 +202,8 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                         <ErrorAlert message={error} />
                       ) : messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-64">
-                          <div className="rounded-full bg-indigo-100 p-3">
-                            <HiOutlineExclamation className="h-6 w-6 text-indigo-600" />
+                          <div className="rounded-full bg-orange-100 p-3">
+                            <HiOutlineExclamation className="h-6 w-6 text-orange-600" />
                           </div>
                           <h3 className="mt-2 text-sm font-medium text-gray-900">No messages</h3>
                           <p className="mt-1 text-sm text-gray-500">
@@ -241,8 +241,8 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                                           alt={conversation.user_name || "User"}
                                         />
                                       ) : (
-                                        <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                                          <HiOutlineUser className="h-5 w-5 text-indigo-600" />
+                                        <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
+                                          <HiOutlineUser className="h-5 w-5 text-orange-600" />
                                         </div>
                                       )}
                                     </div>
@@ -251,14 +251,14 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                                   <div
                                     className={`max-w-[75%] rounded-lg px-4 py-2 shadow-sm ${
                                       message.direction === 'outbound'
-                                        ? 'bg-indigo-600 text-white'
+                                        ? 'bg-orange-600 text-white'
                                         : 'bg-white text-gray-900'
                                     }`}
                                   >
                                     {message.content}
                                     <div 
                                       className={`text-xs mt-1 ${
-                                        message.direction === 'outbound' ? 'text-indigo-300' : 'text-gray-500'
+                                        message.direction === 'outbound' ? 'text-orange-300' : 'text-gray-500'
                                       }`}
                                     >
                                       {formatMessageDate(message.created_at)}
@@ -267,8 +267,8 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                                   
                                   {message.direction === 'outbound' && (
                                     <div className="ml-2 flex-shrink-0 self-end mb-1">
-                                      <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                                        <svg className="h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
+                                        <svg className="h-5 w-5 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                       </div>
@@ -294,7 +294,7 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
                           disabled={sending}
-                          className="block w-full py-2 pl-4 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="block w-full py-2 pl-4 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                         <button
                           type="submit"
@@ -302,7 +302,7 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
                           className={`absolute right-2 p-1 rounded-full text-white ${
                             sending || !newMessage.trim()
                               ? 'bg-gray-400'
-                              : 'bg-indigo-600 hover:bg-indigo-700'
+                              : 'bg-orange-600 hover:bg-orange-700'
                           }`}
                         >
                           <HiOutlinePaperAirplane className="h-5 w-5 transform rotate-90" />

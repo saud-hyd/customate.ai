@@ -206,7 +206,7 @@ const CrawlJobsList = ({ refreshTrigger = 0 }) => {
   if (loading && jobs.length === 0) {
     return (
       <div className="bg-white shadow-sm rounded-lg p-6 text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
         <p className="mt-4 text-gray-500">Loading crawl jobs...</p>
       </div>
     );
@@ -228,7 +228,7 @@ const CrawlJobsList = ({ refreshTrigger = 0 }) => {
         <div className="mt-4">
           <button
             onClick={fetchJobs}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-orange-700 bg-orange-100 hover:bg-orange-200"
           >
             <ArrowPathIcon className="h-5 w-5 mr-2" />
             Retry
@@ -290,7 +290,7 @@ const CrawlJobsList = ({ refreshTrigger = 0 }) => {
                     href={job.base_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-indigo-600 hover:text-indigo-900"
+                    className="text-orange-600 hover:text-orange-900"
                   >
                     {formatDomain(job.base_url)}
                   </a>
@@ -326,7 +326,7 @@ const CrawlJobsList = ({ refreshTrigger = 0 }) => {
                     {job.status === 'failed' && (
                       <button
                         onClick={() => handleRetryJob(job.job_id)}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-orange-600 hover:text-orange-900"
                         title="Retry job"
                       >
                         <PlayIcon className="h-5 w-5" />
@@ -432,7 +432,7 @@ const CrawlJobsList = ({ refreshTrigger = 0 }) => {
               </button>
               <button
                 type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
                 onClick={() => {
                   setDeleteConfirmOpen(false);
                   setJobToDelete(null);

@@ -51,7 +51,7 @@ const Input = ({
           className={`
             w-full px-3 py-2 border rounded-md shadow-sm
             ${icon ? 'pl-10' : ''}
-            ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'}
+            ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-orange-500 focus:ring-orange-500'}
             ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}
             focus:outline-none focus:ring-1
             ${inputClassName}

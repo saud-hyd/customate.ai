@@ -41,7 +41,7 @@ const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
           type="text"
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
           placeholder="Enter 6-digit code"
           maxLength={6}
           required
@@ -53,7 +53,7 @@ const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
           type="button"
           onClick={handleResend}
           disabled={!canResend}
-          className="text-sm text-indigo-600 hover:text-indigo-500 disabled:text-gray-400"
+          className="text-sm text-orange-600 hover:text-orange-500 disabled:text-gray-400"
         >
           {canResend ? 'Resend code' : `Resend in ${timer}s`}
         </button>
@@ -62,7 +62,7 @@ const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
           type="button"
           onClick={onVerify}
           disabled={otp.length !== 6}
-          className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400"
+          className="bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-400"
         >
           Verify
         </button>

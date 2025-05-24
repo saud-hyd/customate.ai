@@ -131,7 +131,7 @@ const IntegrationCard = ({ integration, onTestConnection, onDisconnect, onSync }
           <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
             <button
               onClick={() => onTestConnection(integration.integration_id)}
-              className="text-sm text-indigo-600 hover:text-indigo-900"
+              className="text-sm text-orange-600 hover:text-orange-900"
             >
               Test Connection
             </button>

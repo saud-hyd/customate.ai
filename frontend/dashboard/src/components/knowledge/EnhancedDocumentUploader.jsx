@@ -219,9 +219,9 @@ const EnhancedDocumentUploader = ({ collections, onUploadComplete, onCancel }) =
         <>
           {/* File Drop Zone */}
           <div
-            className={`border-2 ${isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-dashed border-gray-300'} 
-                       ${file ? 'border-indigo-500 border-solid' : ''} 
-                       ${!uploading ? 'hover:border-indigo-500 hover:bg-gray-50' : ''} 
+            className={`border-2 ${isDragging ? 'border-orange-500 bg-orange-50' : 'border-dashed border-gray-300'} 
+                       ${file ? 'border-orange-500 border-solid' : ''} 
+                       ${!uploading ? 'hover:border-orange-500 hover:bg-gray-50' : ''} 
                        rounded-lg p-8 text-center transition-colors duration-150 ease-in-out`}
             onDrop={!uploading ? handleDrop : undefined}
             onDragOver={!uploading ? handleDragOver : undefined}
@@ -282,7 +282,7 @@ const EnhancedDocumentUploader = ({ collections, onUploadComplete, onCancel }) =
             </label>
             <select
               id="collection"
-              className="w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
               value={selectedCollection}
               onChange={handleCollectionChange}
               disabled={uploading}
@@ -313,7 +313,7 @@ const EnhancedDocumentUploader = ({ collections, onUploadComplete, onCancel }) =
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
                   className={`h-2.5 rounded-full ${
-                    uploadProgress < 100 ? 'bg-indigo-600' : 'bg-green-600'
+                    uploadProgress < 100 ? 'bg-orange-600' : 'bg-green-600'
                   }`}
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
@@ -332,7 +332,7 @@ const EnhancedDocumentUploader = ({ collections, onUploadComplete, onCancel }) =
               type="button"
               onClick={onCancel}
               disabled={uploading}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               Cancel
             </button>
@@ -342,8 +342,8 @@ const EnhancedDocumentUploader = ({ collections, onUploadComplete, onCancel }) =
               disabled={!file || !selectedCollection || uploading}
               className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
                 ${(!file || !selectedCollection || uploading) 
-                  ? 'bg-indigo-300 cursor-not-allowed' 
-                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}
+                  ? 'bg-orange-300 cursor-not-allowed' 
+                  : 'bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500'}`}
             >
               {uploading ? 'Uploading...' : 'Upload Document'}
             </button>

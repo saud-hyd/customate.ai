@@ -132,7 +132,7 @@ const ApiUsageAnalytics = ({ data, dateRange }) => {
       title: 'Success Rate',
       value: `${Math.round(data.summary?.success_rate || 0)}%`,
       icon: CheckCircleIcon,
-      color: 'bg-indigo-500',
+      color: 'bg-orange-500',
       description: 'Percentage of successful requests',
     },
     {

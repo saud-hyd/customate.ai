@@ -136,7 +136,7 @@ const RegisterPage = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="you@example.com"
               required
             />
@@ -152,7 +152,7 @@ const RegisterPage = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="Your Company"
             />
           </div>
@@ -166,7 +166,7 @@ const RegisterPage = () => {
               name="industry"
               value={formData.industry}
               onChange={handleChange}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="e-commerce">E-commerce</option>
               <option value="saas">SaaS</option>
@@ -187,7 +187,7 @@ const RegisterPage = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="••••••••"
               required
               minLength={6}
@@ -204,7 +204,7 @@ const RegisterPage = () => {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="••••••••"
               required
               minLength={6}
@@ -213,7 +213,7 @@ const RegisterPage = () => {
           
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             disabled={isLoading}
           >
             {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -241,7 +241,7 @@ const RegisterPage = () => {
         
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500">
             Sign in
           </Link>
         </p>

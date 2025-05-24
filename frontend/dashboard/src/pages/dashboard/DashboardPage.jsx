@@ -164,7 +164,7 @@ const DashboardPage = () => {
           <button
             onClick={handleRefreshData}
             disabled={refreshing}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 flex items-center"
+            className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-orange-300 flex items-center"
           >
             {refreshing ? (
               <>
@@ -203,7 +203,7 @@ const DashboardPage = () => {
 
       {/* Subscription plan banner with quick upgrade CTA */}
       <div className={`rounded-lg p-4 ${
-        subscriptionData.plan_type === 'free' ? 'bg-indigo-50 border border-indigo-200' :
+        subscriptionData.plan_type === 'free' ? 'bg-orange-50 border border-orange-200' :
         subscriptionData.plan_type === 'basic' ? 'bg-blue-50 border border-blue-200' :
         subscriptionData.plan_type === 'standard' ? 'bg-purple-50 border border-purple-200' :
         'bg-green-50 border border-green-200'
@@ -211,7 +211,7 @@ const DashboardPage = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <div className={`p-2 rounded-md ${
-              subscriptionData.plan_type === 'free' ? 'bg-indigo-100 text-indigo-700' :
+              subscriptionData.plan_type === 'free' ? 'bg-orange-100 text-orange-700' :
               subscriptionData.plan_type === 'basic' ? 'bg-blue-100 text-blue-700' :
               subscriptionData.plan_type === 'standard' ? 'bg-purple-100 text-purple-700' :
               'bg-green-100 text-green-700'
@@ -230,7 +230,7 @@ const DashboardPage = () => {
             <button
               onClick={handleUpgradeClick}
               className={`px-4 py-2 rounded-md text-white font-medium ${
-                subscriptionData.plan_type === 'free' ? 'bg-indigo-600 hover:bg-indigo-700' :
+                subscriptionData.plan_type === 'free' ? 'bg-orange-600 hover:bg-orange-700' :
                 subscriptionData.plan_type === 'basic' ? 'bg-blue-600 hover:bg-blue-700' :
                 'bg-purple-600 hover:bg-purple-700'
               }`}
@@ -386,17 +386,17 @@ const DashboardPage = () => {
       <div className="bg-white shadow-sm rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <a href="/knowledge" className="block p-4 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition duration-150">
+          <a href="/knowledge" className="block p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition duration-150">
             <h3 className="font-medium text-gray-900">Manage Knowledge Base</h3>
             <p className="mt-1 text-sm text-gray-500">Upload documents, add FAQs, and organize your knowledge base.</p>
           </a>
           
-          <a href="/conversations" className="block p-4 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition duration-150">
+          <a href="/conversations" className="block p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition duration-150">
             <h3 className="font-medium text-gray-900">View Conversations</h3>
             <p className="mt-1 text-sm text-gray-500">Browse chat history and analyze user interactions.</p>
           </a>
           
-          <a href="/test" className="block p-4 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition duration-150">
+          <a href="/test" className="block p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition duration-150">
             <h3 className="font-medium text-gray-900">Test Your Chatbot</h3>
             <p className="mt-1 text-sm text-gray-500">Try out your chatbot and see how it responds to queries.</p>
           </a>

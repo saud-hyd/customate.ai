@@ -52,7 +52,7 @@ const Header = () => {
           {/* Notification bell */}
           <button
             type="button"
-            className="ml-auto flex-shrink-0 bg-white p-2 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="ml-auto flex-shrink-0 bg-white p-2 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
           >
             <span className="sr-only">View notifications</span>
             <BellIcon className="h-6 w-6" aria-hidden="true" />
@@ -63,13 +63,13 @@ const Header = () => {
             <div>
               <button
                 onClick={toggleDropdown}
-                className="flex rounded-full bg-indigo-600 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="flex rounded-full bg-orange-600 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                 id="user-menu-button"
                 aria-expanded={dropdownOpen}
                 aria-haspopup="true"
               >
                 <span className="sr-only">Open user menu</span>
-                <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white uppercase font-medium text-sm">
+                <div className="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center text-white uppercase font-medium text-sm">
                   {user?.name?.charAt(0) || clientInfo?.name?.charAt(0) || 'U'}
                 </div>
               </button>
@@ -98,7 +98,7 @@ const Header = () => {
                       <p className="text-sm font-light text-gray-500 truncate">
                         {clientInfo?.email || user?.email || 'user@example.com'}
                       </p>
-                      <p className="text-xs font-light text-indigo-600 mt-1">
+                      <p className="text-xs font-light text-orange-600 mt-1">
                         {clientInfo?.plan_type || 'Free Plan'}
                       </p>
                     </>
@@ -106,6 +106,7 @@ const Header = () => {
                 </div>
                 
                 {/* Menu items */}
+                
                 <a
                   href="/settings/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"

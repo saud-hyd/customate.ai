@@ -90,7 +90,7 @@ const Modal = ({
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                   aria-label="Close"
                 >
                   <XMarkIcon className="h-5 w-5" />

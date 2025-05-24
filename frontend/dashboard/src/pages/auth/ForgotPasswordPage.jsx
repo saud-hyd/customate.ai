@@ -47,7 +47,7 @@ const ForgotPasswordPage = () => {
           <div className="flex justify-center">
             <Link
               to="/login"
-              className="inline-block bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="inline-block bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               Back to Login
             </Link>
@@ -82,7 +82,7 @@ const ForgotPasswordPage = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
               placeholder="name@example.com"
               required
             />
@@ -90,7 +90,7 @@ const ForgotPasswordPage = () => {
           
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Sending...' : 'Send Reset Link'}
@@ -98,7 +98,7 @@ const ForgotPasswordPage = () => {
         </form>
         
         <p className="mt-6 text-center text-sm text-gray-600">
-          <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500">
             Back to Login
           </Link>
         </p>

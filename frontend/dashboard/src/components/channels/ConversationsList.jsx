@@ -87,7 +87,7 @@ const ConversationsList = ({ channelId }) => {
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -97,7 +97,7 @@ const ConversationsList = ({ channelId }) => {
           <button
             type="button"
             className={`relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-              filterType === 'all' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50'
+              filterType === 'all' ? 'text-orange-700 bg-orange-50' : 'text-gray-700 hover:bg-gray-50'
             }`}
             onClick={() => setFilterType('all')}
           >
@@ -106,7 +106,7 @@ const ConversationsList = ({ channelId }) => {
           <button
             type="button"
             className={`relative inline-flex items-center px-4 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium ${
-              filterType === 'active' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50'
+              filterType === 'active' ? 'text-orange-700 bg-orange-50' : 'text-gray-700 hover:bg-gray-50'
             }`}
             onClick={() => setFilterType('active')}
           >
@@ -115,7 +115,7 @@ const ConversationsList = ({ channelId }) => {
           <button
             type="button"
             className={`relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-              filterType === 'unread' ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50'
+              filterType === 'unread' ? 'text-orange-700 bg-orange-50' : 'text-gray-700 hover:bg-gray-50'
             }`}
             onClick={() => setFilterType('unread')}
           >
@@ -148,12 +148,12 @@ const ConversationsList = ({ channelId }) => {
                           alt={conversation.user_name || "User"}
                         />
                       ) : (
-                        <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                          <HiOutlineUser className="h-6 w-6 text-indigo-600" />
+                        <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
+                          <HiOutlineUser className="h-6 w-6 text-orange-600" />
                         </div>
                       )}
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-indigo-600">
+                        <div className="text-sm font-medium text-orange-600">
                           {conversation.user_name || conversation.platform_user_id || "Unknown User"}
                         </div>
                         <div className="mt-1 flex items-center">
@@ -169,7 +169,7 @@ const ConversationsList = ({ channelId }) => {
                     </div>
                     <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
                       <div className="flex flex-col items-end">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
                           {conversation.message_count} messages
                         </span>
                         {/* Add an activity status indicator */}

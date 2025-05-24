@@ -166,7 +166,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                       id="provider"
                       value={provider}
                       onChange={(e) => setProvider(e.target.value)}
-                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md ${errors.provider ? 'border-red-300' : ''}`}
+                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md ${errors.provider ? 'border-red-300' : ''}`}
                     >
                       <option value="">Select a provider</option>
                       {availableProviders.map((p) => (
@@ -201,7 +201,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.name ? 'border-red-300' : ''}`}
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.name ? 'border-red-300' : ''}`}
                   />
                   {errors.name && (
                     <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -227,7 +227,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                             : selectedProviderObj.id === 'shopify'
                               ? "https://your-store.myshopify.com"
                               : ""}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.apiEndpoint ? 'border-red-300' : ''}`}
+                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.apiEndpoint ? 'border-red-300' : ''}`}
                         />
                         {errors.apiEndpoint && (
                           <p className="mt-1 text-sm text-red-600">{errors.apiEndpoint}</p>
@@ -246,7 +246,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                           id="apiKey"
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.apiKey ? 'border-red-300' : ''}`}
+                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.apiKey ? 'border-red-300' : ''}`}
                         />
                         {errors.apiKey && (
                           <p className="mt-1 text-sm text-red-600">{errors.apiKey}</p>
@@ -268,7 +268,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                           id="apiSecret"
                           value={apiSecret}
                           onChange={(e) => setApiSecret(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.apiSecret ? 'border-red-300' : ''}`}
+                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.apiSecret ? 'border-red-300' : ''}`}
                         />
                         {errors.apiSecret && (
                           <p className="mt-1 text-sm text-red-600">{errors.apiSecret}</p>
@@ -287,7 +287,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                           id="portalId"
                           value={portalId}
                           onChange={(e) => setPortalId(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.portalId ? 'border-red-300' : ''}`}
+                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.portalId ? 'border-red-300' : ''}`}
                         />
                         {errors.portalId && (
                           <p className="mt-1 text-sm text-red-600">{errors.portalId}</p>
@@ -307,7 +307,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                           id="clientId"
                           value={clientId}
                           onChange={(e) => setClientId(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.clientId ? 'border-red-300' : ''}`}
+                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.clientId ? 'border-red-300' : ''}`}
                         />
                         {errors.clientId && (
                           <p className="mt-1 text-sm text-red-600">{errors.clientId}</p>
@@ -326,7 +326,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
                           id="clientSecret"
                           value={clientSecret}
                           onChange={(e) => setClientSecret(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${errors.clientSecret ? 'border-red-300' : ''}`}
+                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.clientSecret ? 'border-red-300' : ''}`}
                         />
                         {errors.clientSecret && (
                           <p className="mt-1 text-sm text-red-600">{errors.clientSecret}</p>
@@ -349,7 +349,7 @@ const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProvi
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
               >
                 Cancel
               </button>
