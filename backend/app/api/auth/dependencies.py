@@ -144,4 +144,37 @@ async def get_client_with_any_auth(
         headers={"WWW-Authenticate": "Bearer"}
     )    
     
+async def get_current_client_optional(
+    db: Session = Depends(get_db),
+    api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(None)
+) -> Optional[Client]:
+    """
+    Get current client without raising authentication errors.
+    Returns None if no valid authentication is provided.
+    """
+    try:
+        # Try API key first
+        if api_key:
+            client = client_repo.get_by_api_key(db, api_key)
+            if client and client.active:
+                return client
+        
+        # Try Bearer token
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+            payload = verify_token(token)
+            client_id = payload.get("client_id")
+            if client_id:
+                client = client_repo.get_by_client_id(db, client_id)
+                if client and client.active:
+                    return client
+        
+        # Return None if no valid authentication
+        return None
+        
+    except Exception as e:
+        logger.debug(f"Optional authentication failed: {str(e)}")
+        return None    
+    
     

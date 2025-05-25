@@ -6,10 +6,10 @@ router = APIRouter()
 
 @router.get("/widget.js")
 async def get_widget_js():
-    """Serve the widget JavaScript file with both floating and inline mode support"""
+    """Serve the widget JavaScript file with enhanced settings synchronization"""
     
     widget_js = """
-// Customate.ai Widget v1.0.0
+// Customate.ai Widget v2.0.0 - Enhanced with Settings Sync
 (function() {
     // Get configuration from global variable
     const config = window.customateConfig || {};
@@ -18,17 +18,20 @@ async def get_widget_js():
     const defaultConfig = {
         apiUrl: 'http://localhost:8000',
         position: 'bottom-right',
-        primaryColor: '#ea580c', // Orange-600
+        primaryColor: '#ea580c',
         chatbotName: 'AI Assistant',
         greeting: 'Hello! How can I help you today?',
         enableTypingIndicator: true,
         enableSuggestions: true,
         testMode: false,
-        container: null
+        container: null,
+        settingsSyncInterval: 30000 // 30 seconds
     };
     
     // Merge configurations
-    const mergedConfig = {...defaultConfig, ...config};
+    let mergedConfig = {...defaultConfig, ...config};
+    let lastSettingsHash = '';
+    let settingsSyncTimer = null;
     
     // Ensure API key is provided
     if (!mergedConfig.apiKey) {
@@ -40,25 +43,15 @@ async def get_widget_js():
     function parseMarkdown(text) {
         if (!text) return '';
         
-        // Bold text (e.g., **bold** or __bold__)
-        let formattedText = text.replace(/(\*\*|__)(.*?)\\1/g, '<strong>$2</strong>');
-        
-        // Italic text (e.g., *italic* or _italic_)
-        formattedText = formattedText.replace(/(\*|_)(.*?)\\1/g, '<em>$2</em>');
-        
-        // Line breaks
-        formattedText = formattedText.replace(/\\n/g, '<br>');
-        
-        // Lists
-        formattedText = formattedText.replace(/^\\s*-\\s+(.*?)$/gm, '<li>$1</li>');
-        formattedText = formattedText.replace(/(<li>.*<\\/li>)/s, '<ul>$1</ul>');
-        
-        // Headers
-        formattedText = formattedText.replace(/^##\\s+(.*?)$/gm, '<h2>$1</h2>');
-        formattedText = formattedText.replace(/^###\\s+(.*?)$/gm, '<h3>$1</h3>');
-        
-        // Links [text](url)
-        formattedText = formattedText.replace(/\\[(.*?)\\]\\((.*?)\\)/g, '<a href="$2" target="_blank">$1</a>');
+        let formattedText = text
+            .replace(/(\*\*|__)(.*?)\\1/g, '<strong>$2</strong>')
+            .replace(/(\*|_)(.*?)\\1/g, '<em>$2</em>')
+            .replace(/\\n/g, '<br>')
+            .replace(/^\\s*-\\s+(.*?)$/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\\/li>)/s, '<ul>$1</ul>')
+            .replace(/^##\\s+(.*?)$/gm, '<h2>$1</h2>')
+            .replace(/^###\\s+(.*?)$/gm, '<h3>$1</h3>')
+            .replace(/\\[(.*?)\\]\\((.*?)\\)/g, '<a href="$2" target="_blank">$1</a>');
         
         return formattedText;
     }
@@ -66,8 +59,6 @@ async def get_widget_js():
     // Test API connection
     async function testApiConnection() {
         try {
-            console.log('Testing API connection to:', `${mergedConfig.apiUrl}/api/widget/test`);
-            
             const response = await fetch(`${mergedConfig.apiUrl}/api/widget/test`, {
                 method: 'GET',
                 headers: {
@@ -80,8 +71,6 @@ async def get_widget_js():
                 throw new Error(`API test failed: ${response.status}`);
             }
             
-            const result = await response.json();
-            console.log('✓ API connection successful:', result);
             return true;
         } catch (error) {
             console.error('✗ API connection failed:', error);
@@ -89,11 +78,9 @@ async def get_widget_js():
         }
     }
 
-    // Fetch widget settings from server
+    // Fetch widget settings from server with sync detection
     async function fetchWidgetSettings() {
         try {
-            console.log('Fetching widget settings from:', `${mergedConfig.apiUrl}/api/widget/settings`);
-            
             const response = await fetch(`${mergedConfig.apiUrl}/api/widget/settings`, {
                 method: 'GET',
                 headers: {
@@ -102,27 +89,63 @@ async def get_widget_js():
                 }
             });
             
-            console.log('Settings response status:', response.status);
-            
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Settings API error:', response.status, errorText);
-                throw new Error(`Failed to load widget settings: ${response.status} - ${errorText}`);
+                throw new Error(`Failed to load widget settings: ${response.status}`);
             }
             
             const settings = await response.json();
-            console.log('Widget settings loaded:', settings);
-            return {...mergedConfig, ...settings};
+            
+            // Calculate settings hash for change detection
+            const settingsHash = JSON.stringify(settings);
+            const settingsChanged = lastSettingsHash && lastSettingsHash !== settingsHash;
+            lastSettingsHash = settingsHash;
+            
+            // Merge with current config
+            const updatedConfig = {
+                ...mergedConfig,
+                primaryColor: settings.primary_color || mergedConfig.primaryColor,
+                chatbotName: settings.chatbot_name || mergedConfig.chatbotName,
+                greeting: settings.greeting_message || mergedConfig.greeting,
+                widgetPosition: settings.widget_position || mergedConfig.widgetPosition,
+                enableSuggestions: settings.enable_suggestions !== undefined ? settings.enable_suggestions : mergedConfig.enableSuggestions,
+                showTypingIndicator: settings.show_typing_indicator !== undefined ? settings.show_typing_indicator : mergedConfig.showTypingIndicator,
+                llmProvider: settings.llm_provider || 'deepseek',
+                llmModel: settings.llm_model || 'deepseek-chat'
+            };
+            
+            return { settings: updatedConfig, changed: settingsChanged };
         } catch (error) {
             console.warn('Failed to load widget settings:', error);
-            console.log('Using default configuration');
-            return mergedConfig;
+            return { settings: mergedConfig, changed: false };
         }
     }
 
-    // CSS Styles for the widget with orange theme
+    // Start periodic settings sync
+    function startSettingsSync() {
+        if (settingsSyncTimer) {
+            clearInterval(settingsSyncTimer);
+        }
+        
+        settingsSyncTimer = setInterval(async () => {
+            try {
+                const result = await fetchWidgetSettings();
+                if (result.changed) {
+                    console.log('🔄 Settings changed, reloading widget...');
+                    mergedConfig = result.settings;
+                    
+                    // Trigger widget reload with new settings
+                    if (window.customateWidgetInstance) {
+                        window.customateWidgetInstance.updateSettings(result.settings);
+                    }
+                }
+            } catch (error) {
+                console.warn('Settings sync error:', error);
+            }
+        }, mergedConfig.settingsSyncInterval);
+    }
+
+    // CSS Styles for the widget with enhanced theming
     function injectStyles() {
-        // Don't inject styles multiple times
         if (document.getElementById('customate-widget-styles')) {
             return;
         }
@@ -146,7 +169,6 @@ async def get_widget_js():
                 margin-bottom: 16px;
             }
             
-            /* Styles for markdown content */
             .customate-message-bubble strong {
                 font-weight: 600;
             }
@@ -182,11 +204,6 @@ async def get_widget_js():
                 text-decoration: underline;
             }
             
-            .customate-message-bubble a:hover {
-                text-decoration: none;
-            }
-            
-            /* Animation for typing indicator */
             @keyframes customate-bounce {
                 0%, 100% { transform: translateY(0); }
                 50% { transform: translateY(-5px); }
@@ -210,7 +227,6 @@ async def get_widget_js():
             .customate-typing-dot:nth-child(2) { animation-delay: 0.2s; }
             .customate-typing-dot:nth-child(3) { animation-delay: 0.4s; }
             
-            /* Message positioning */
             .customate-message.user {
                 display: flex;
                 justify-content: flex-end;
@@ -231,7 +247,6 @@ async def get_widget_js():
                 margin-right: auto;
             }
             
-            /* Fade-in animation for new messages */
             @keyframes customate-fade-in {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
@@ -241,14 +256,12 @@ async def get_widget_js():
                 animation: customate-fade-in 0.3s ease;
             }
             
-            /* Orange theme focus styles */
             .customate-widget-container input:focus {
                 outline: none;
-                border-color: #ea580c;
+                border-color: var(--primary-color, #ea580c);
                 box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
             }
             
-            /* Spin animation for loading */
             @keyframes customate-spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
@@ -258,7 +271,6 @@ async def get_widget_js():
                 animation: customate-spin 1s linear infinite;
             }
             
-            /* Inline mode specific styles */
             .customate-widget-inline {
                 position: relative !important;
                 width: 100% !important;
@@ -273,7 +285,6 @@ async def get_widget_js():
                 height: 100% !important;
             }
             
-            /* Scrollbar styling */
             .customate-messages-container::-webkit-scrollbar {
                 width: 6px;
             }
@@ -284,387 +295,403 @@ async def get_widget_js():
             }
             
             .customate-messages-container::-webkit-scrollbar-thumb {
-                background: linear-gradient(135deg, #ea580c, #f97316);
+                background: linear-gradient(135deg, var(--primary-color, #ea580c), #f97316);
                 border-radius: 3px;
-            }
-            
-            .customate-messages-container::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(135deg, #c2410c, #ea580c);
             }
         `;
         document.head.appendChild(styleEl);
     }
     
-    // Initialize widget with configuration
-    async function initWidget() {
-        console.log('Initializing Customate.ai widget...');
-        console.log('Widget config:', mergedConfig);
-        
-        // Test API connection first
-        const apiConnected = await testApiConnection();
-        if (!apiConnected) {
-            console.error('Cannot connect to API, widget may not function properly');
+    // Main widget class with settings sync
+    class CustomateWidget {
+        constructor(settings) {
+            this.settings = settings;
+            this.sessionId = null;
+            this.isInlineMode = settings.position === 'inline' || settings.testMode;
+            this.container = null;
+            this.chatContainer = null;
+            this.messagesContainer = null;
+            this.messageInput = null;
+            this.sendButton = null;
+            this.isSending = false;
         }
         
-        const settings = await fetchWidgetSettings();
-        console.log('Final widget settings:', settings);
+        async init() {
+            console.log('🚀 Initializing Customate Widget v2.0.0...');
+            
+            // Test API connection
+            const apiConnected = await testApiConnection();
+            if (!apiConnected) {
+                console.error('Cannot connect to API, widget may not function properly');
+            }
+            
+            // Load fresh settings
+            const result = await fetchWidgetSettings();
+            this.settings = result.settings;
+            
+            // Inject styles with theme
+            this.injectThemedStyles();
+            
+            // Create widget UI
+            this.createWidgetUI();
+            
+            // Start settings sync
+            if (!this.isInlineMode) {
+                startSettingsSync();
+            }
+            
+            console.log('✅ Widget initialized successfully');
+        }
         
-        // Inject styles
-        injectStyles();
+        injectThemedStyles() {
+            injectStyles();
+            
+            // Inject theme-specific CSS variables
+            const themeStyle = document.getElementById('customate-theme-vars') || document.createElement('style');
+            themeStyle.id = 'customate-theme-vars';
+            themeStyle.innerHTML = `
+                :root {
+                    --primary-color: ${this.settings.primaryColor};
+                }
+            `;
+            if (!document.getElementById('customate-theme-vars')) {
+                document.head.appendChild(themeStyle);
+            }
+        }
         
-        // Determine if this is inline mode (test mode)
-        const isInlineMode = settings.position === 'inline' || settings.testMode;
-        const targetContainer = settings.container || (isInlineMode ? document.getElementById('customate-test-widget') : document.body);
+        createWidgetUI() {
+            const targetContainer = this.settings.container || 
+                (this.isInlineMode ? document.getElementById('customate-test-widget') : document.body);
+            
+            if (!targetContainer) {
+                console.error('Widget target container not found');
+                return;
+            }
+            
+            // Create main container
+            this.container = document.createElement('div');
+            this.container.className = `customate-widget-container ${this.isInlineMode ? 'customate-widget-inline' : ''}`;
+            
+            if (this.isInlineMode) {
+                this.container.style.cssText = 'width: 100%; height: 100%; position: relative;';
+            } else {
+                this.container.style.cssText = `
+                    position: fixed;
+                    z-index: 999999;
+                    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    ${this.getPositionStyles()}
+                `;
+            }
+            
+            targetContainer.appendChild(this.container);
+            
+            // Create toggle button (floating mode only)
+            if (!this.isInlineMode) {
+                this.createToggleButton();
+            }
+            
+            // Create chat container
+            this.createChatContainer();
+        }
         
-        if (!targetContainer) {
-            console.error('Customate Widget: Target container not found');
-            if (isInlineMode) {
-                // Show error in the expected container
-                const errorContainer = document.getElementById('customate-test-widget');
-                if (errorContainer) {
-                    errorContainer.innerHTML = `
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2rem; text-align: center; color: #ef4444;">
-                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚠️</div>
-                            <div style="font-weight: 600; margin-bottom: 0.5rem;">Widget Container Not Found</div>
-                            <div style="font-size: 0.875rem; color: #6b7280;">The widget target container could not be located.</div>
-                        </div>
-                    `;
+        getPositionStyles() {
+            const position = this.settings.widgetPosition || this.settings.position || 'bottom-right';
+            switch (position) {
+                case 'bottom-left': return 'bottom: 20px; left: 20px;';
+                case 'top-right': return 'top: 20px; right: 20px;';
+                case 'top-left': return 'top: 20px; left: 20px;';
+                default: return 'bottom: 20px; right: 20px;';
+            }
+        }
+        
+        createToggleButton() {
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'customate-widget-toggle';
+            toggleButton.style.cssText = `
+                width: 60px; height: 60px; border-radius: 50%;
+                background: ${this.settings.primaryColor}; color: #fff;
+                border: none; cursor: pointer;
+                box-shadow: 0 2px 12px rgba(234, 88, 12, 0.3);
+                transition: transform 0.2s, box-shadow 0.2s;
+                display: flex; align-items: center; justify-content: center;
+            `;
+            toggleButton.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path></svg>';
+            
+            toggleButton.addEventListener('click', () => this.toggleChat());
+            this.container.appendChild(toggleButton);
+            this.toggleButton = toggleButton;
+        }
+        
+        createChatContainer() {
+            this.chatContainer = document.createElement('div');
+            this.chatContainer.className = 'customate-chat-container';
+            
+            const containerStyles = this.isInlineMode ? `
+                display: flex; flex-direction: column; width: 100%; height: 100%;
+                background-color: #fff; border-radius: 12px; overflow: hidden;
+                box-shadow: 0 4px 32px rgba(0, 0, 0, 0.12); border: 1px solid #e5e7eb;
+            ` : `
+                display: none; flex-direction: column; width: 350px; height: 500px;
+                background-color: #fff; border-radius: 12px; overflow: hidden;
+                box-shadow: 0 4px 32px rgba(0, 0, 0, 0.12); border: 1px solid #e5e7eb;
+            `;
+            
+            this.chatContainer.style.cssText = containerStyles;
+            
+            this.createChatHeader();
+            this.createMessagesContainer();
+            this.createInputContainer();
+            
+            this.container.appendChild(this.chatContainer);
+        }
+        
+        createChatHeader() {
+            const header = document.createElement('div');
+            header.style.cssText = `
+                padding: 16px 20px; 
+                background: linear-gradient(135deg, ${this.settings.primaryColor}, #f97316);
+                color: #fff; display: flex; justify-content: space-between; align-items: center;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+            
+            const headerContent = document.createElement('div');
+            headerContent.style.cssText = 'display: flex; align-items: center;';
+            
+            // Bot avatar
+            const avatar = document.createElement('div');
+            avatar.style.cssText = `
+                width: 32px; height: 32px; border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.2);
+                display: flex; align-items: center; justify-content: center; margin-right: 12px;
+            `;
+            avatar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>';
+            
+            const titleContainer = document.createElement('div');
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight: 600; font-size: 14px;';
+            title.textContent = this.settings.chatbotName;
+            
+            const status = document.createElement('div');
+            status.style.cssText = 'font-size: 12px; opacity: 0.9; display: flex; align-items: center;';
+            status.innerHTML = '<span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; margin-right: 6px;"></span>Online';
+            
+            titleContainer.appendChild(title);
+            titleContainer.appendChild(status);
+            headerContent.appendChild(avatar);
+            headerContent.appendChild(titleContainer);
+            
+            header.appendChild(headerContent);
+            
+            // Close button (floating mode only)
+            if (!this.isInlineMode) {
+                const closeButton = document.createElement('button');
+                closeButton.style.cssText = `
+                    background: transparent; border: none; color: #fff; cursor: pointer;
+                    padding: 6px; display: flex; align-items: center; justify-content: center;
+                    border-radius: 6px; transition: background 0.2s;
+                `;
+                closeButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                closeButton.addEventListener('click', () => this.toggleChat());
+                header.appendChild(closeButton);
+            } else {
+                // Test mode indicator
+                const testIndicator = document.createElement('div');
+                testIndicator.style.cssText = `
+                    font-size: 12px; background-color: rgba(255, 255, 255, 0.2);
+                    padding: 4px 8px; border-radius: 12px;
+                `;
+                testIndicator.textContent = 'Testing Mode';
+                header.appendChild(testIndicator);
+            }
+            
+            this.chatContainer.appendChild(header);
+        }
+        
+        createMessagesContainer() {
+            this.messagesContainer = document.createElement('div');
+            this.messagesContainer.className = 'customate-messages-container';
+            this.messagesContainer.style.cssText = `
+                flex: 1; overflow-y: auto; padding: 20px; background-color: #f8fafc;
+                scroll-behavior: smooth;
+            `;
+            
+            // Add welcome message
+            this.addWelcomeMessage();
+            
+            this.chatContainer.appendChild(this.messagesContainer);
+        }
+        
+        addWelcomeMessage() {
+            const welcomeMessage = document.createElement('div');
+            welcomeMessage.className = 'customate-message assistant';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'customate-message-bubble';
+            bubble.style.cssText = `
+                background-color: #fff; color: #1f2937; border-bottom-left-radius: 4px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb;
+            `;
+            bubble.innerHTML = parseMarkdown(this.settings.greeting);
+            
+            welcomeMessage.appendChild(bubble);
+            this.messagesContainer.appendChild(welcomeMessage);
+        }
+        
+        createInputContainer() {
+            const inputContainer = document.createElement('div');
+            inputContainer.style.cssText = `
+                display: flex; padding: 16px 20px; border-top: 1px solid #e5e7eb;
+                background-color: #fff; align-items: flex-end; gap: 12px;
+            `;
+            
+            this.messageInput = document.createElement('input');
+            this.messageInput.type = 'text';
+            this.messageInput.placeholder = 'Type your message...';
+            this.messageInput.style.cssText = `
+                flex: 1; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 22px;
+                outline: none; font-size: 14px; background-color: #f9fafb; transition: all 0.2s;
+            `;
+            
+            this.sendButton = document.createElement('button');
+            this.sendButton.style.cssText = `
+                width: 44px; height: 44px; border-radius: 50%; background: ${this.settings.primaryColor};
+                color: #fff; border: none; cursor: pointer; display: flex; align-items: center;
+                justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.2);
+                opacity: 0.6;
+            `;
+            this.sendButton.disabled = true;
+            this.sendButton.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
+            
+            this.setupInputHandlers();
+            
+            inputContainer.appendChild(this.messageInput);
+            inputContainer.appendChild(this.sendButton);
+            this.chatContainer.appendChild(inputContainer);
+        }
+        
+        setupInputHandlers() {
+            this.messageInput.addEventListener('input', () => {
+                const hasText = this.messageInput.value.trim().length > 0;
+                this.sendButton.disabled = !hasText || this.isSending;
+                this.sendButton.style.opacity = hasText && !this.isSending ? '1' : '0.6';
+            });
+            
+            this.messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !this.isSending) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+            
+            this.sendButton.addEventListener('click', () => {
+                if (!this.isSending) this.sendMessage();
+            });
+        }
+        
+        toggleChat() {
+            if (this.isInlineMode) return;
+            
+            const isVisible = this.chatContainer.style.display === 'flex';
+            this.chatContainer.style.display = isVisible ? 'none' : 'flex';
+            this.toggleButton.style.display = isVisible ? 'block' : 'none';
+            
+            if (!isVisible) {
+                this.messageInput.focus();
+            }
+        }
+        
+        async sendMessage() {
+            const text = this.messageInput.value.trim();
+            if (!text || this.isSending) return;
+            
+            this.isSending = true;
+            this.messageInput.disabled = true;
+            this.sendButton.disabled = true;
+            this.sendButton.innerHTML = '<svg class="customate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 12a4 4 0 11-8 0m8 0H8"/></svg>';
+            
+            this.appendMessage(text, true);
+            
+            const typingIndicator = this.createTypingIndicator();
+            
+            try {
+                const response = await fetch(`${this.settings.apiUrl}/api/widget/message/stream`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': this.settings.apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        session_id: this.sessionId
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                
+                await this.processStreamingResponse(response, typingIndicator);
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                if (typingIndicator && typingIndicator.parentNode) {
+                    this.messagesContainer.removeChild(typingIndicator);
+                }
+                this.appendMessage('Sorry, I encountered an error. Please try again.', false, true);
+            } finally {
+                this.resetInputState();
+            }
+        }
+        
+        async processStreamingResponse(response, typingIndicator) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let responseContent = '';
+            let botMessageEl = null;
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\\n\\n');
+                buffer = lines.pop() || '';
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            
+                            if (data.type === 'info') {
+                                this.sessionId = data.session_id;
+                            } else if (data.type === 'chunk') {
+                                if (!botMessageEl) {
+                                    if (typingIndicator) {
+                                        this.messagesContainer.removeChild(typingIndicator);
+                                    }
+                                    botMessageEl = this.appendMessage('', false);
+                                }
+                                responseContent += data.content;
+                                botMessageEl.bubble.innerHTML = parseMarkdown(responseContent);
+                                this.scrollToBottom();
+                            } else if (data.type === 'complete') {
+                                if (botMessageEl) {
+                                    responseContent = data.content;
+                                    botMessageEl.bubble.innerHTML = parseMarkdown(responseContent);
+                                }
+                            } else if (data.type === 'error') {
+                                throw new Error(data.error || 'Unknown error');
+                            }
+                        } catch (e) {
+                            console.error('Error parsing stream data:', e);
+                        }
+                    }
                 }
             }
-            return;
         }
         
-        // Create widget container
-        const widgetContainer = document.createElement('div');
-        widgetContainer.className = `customate-widget-container ${isInlineMode ? 'customate-widget-inline' : ''}`;
-        
-        if (isInlineMode) {
-            // Inline mode styling
-            widgetContainer.style.width = '100%';
-            widgetContainer.style.height = '100%';
-            widgetContainer.style.position = 'relative';
-        } else {
-            // Floating widget styling
-            widgetContainer.style.position = 'fixed';
-            widgetContainer.style.zIndex = '999999';
-            
-            // Set position based on configuration
-            switch (settings.widget_position || settings.position) {
-                case 'bottom-right':
-                    widgetContainer.style.bottom = '20px';
-                    widgetContainer.style.right = '20px';
-                    break;
-                case 'bottom-left':
-                    widgetContainer.style.bottom = '20px';
-                    widgetContainer.style.left = '20px';
-                    break;
-                case 'top-right':
-                    widgetContainer.style.top = '20px';
-                    widgetContainer.style.right = '20px';
-                    break;
-                case 'top-left':
-                    widgetContainer.style.top = '20px';
-                    widgetContainer.style.left = '20px';
-                    break;
-                default:
-                    widgetContainer.style.bottom = '20px';
-                    widgetContainer.style.right = '20px';
-            }
-        }
-        
-        widgetContainer.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        
-        targetContainer.appendChild(widgetContainer);
-        
-        // Create toggle button (only for floating mode)
-        let toggleButton = null;
-        if (!isInlineMode) {
-            toggleButton = document.createElement('button');
-            toggleButton.className = 'customate-widget-toggle';
-            toggleButton.style.width = '60px';
-            toggleButton.style.height = '60px';
-            toggleButton.style.borderRadius = '50%';
-            toggleButton.style.background = settings.primary_color || settings.primaryColor || '#ea580c';
-            toggleButton.style.color = '#fff';
-            toggleButton.style.border = 'none';
-            toggleButton.style.cursor = 'pointer';
-            toggleButton.style.boxShadow = '0 2px 12px rgba(234, 88, 12, 0.3)';
-            toggleButton.style.transition = 'transform 0.2s, box-shadow 0.2s';
-            toggleButton.style.display = 'flex';
-            toggleButton.style.alignItems = 'center';
-            toggleButton.style.justifyContent = 'center';
-            toggleButton.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path></svg>';
-        }
-        
-        // Create chat container
-        const chatContainer = document.createElement('div');
-        chatContainer.className = 'customate-chat-container';
-        
-        if (isInlineMode) {
-            // Inline mode - always visible, full size
-            chatContainer.style.display = 'flex';
-            chatContainer.style.flexDirection = 'column';
-            chatContainer.style.width = '100%';
-            chatContainer.style.height = '100%';
-            chatContainer.style.backgroundColor = '#fff';
-            chatContainer.style.borderRadius = '12px';
-            chatContainer.style.boxShadow = '0 4px 32px rgba(0, 0, 0, 0.12)';
-            chatContainer.style.overflow = 'hidden';
-            chatContainer.style.border = '1px solid #e5e7eb';
-        } else {
-            // Floating mode - initially hidden
-            chatContainer.style.display = 'none';
-            chatContainer.style.flexDirection = 'column';
-            chatContainer.style.width = '350px';
-            chatContainer.style.height = '500px';
-            chatContainer.style.backgroundColor = '#fff';
-            chatContainer.style.borderRadius = '12px';
-            chatContainer.style.boxShadow = '0 4px 32px rgba(0, 0, 0, 0.12)';
-            chatContainer.style.overflow = 'hidden';
-            chatContainer.style.border = '1px solid #e5e7eb';
-        }
-        
-        // Create chat header with orange theme
-        const chatHeader = document.createElement('div');
-        chatHeader.className = 'customate-chat-header';
-        chatHeader.style.padding = '16px 20px';
-        chatHeader.style.background = `linear-gradient(135deg, ${settings.primary_color || settings.primaryColor || '#ea580c'}, #f97316)`;
-        chatHeader.style.color = '#fff';
-        chatHeader.style.display = 'flex';
-        chatHeader.style.justifyContent = 'space-between';
-        chatHeader.style.alignItems = 'center';
-        chatHeader.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
-        
-        const headerContent = document.createElement('div');
-        headerContent.style.display = 'flex';
-        headerContent.style.alignItems = 'center';
-        
-        // Bot avatar
-        const botAvatar = document.createElement('div');
-        botAvatar.style.width = '32px';
-        botAvatar.style.height = '32px';
-        botAvatar.style.borderRadius = '50%';
-        botAvatar.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-        botAvatar.style.display = 'flex';
-        botAvatar.style.alignItems = 'center';
-        botAvatar.style.justifyContent = 'center';
-        botAvatar.style.marginRight = '12px';
-        botAvatar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>';
-        
-        const headerTitle = document.createElement('div');
-        
-        const titleText = document.createElement('div');
-        titleText.style.fontWeight = '600';
-        titleText.style.fontSize = '14px';
-        titleText.textContent = settings.chatbot_name || settings.chatbotName;
-        
-        const statusText = document.createElement('div');
-        statusText.style.fontSize = '12px';
-        statusText.style.opacity = '0.9';
-        statusText.style.display = 'flex';
-        statusText.style.alignItems = 'center';
-        statusText.innerHTML = '<span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; margin-right: 6px;"></span>Online';
-        
-        headerTitle.appendChild(titleText);
-        headerTitle.appendChild(statusText);
-        headerContent.appendChild(botAvatar);
-        headerContent.appendChild(headerTitle);
-        
-        // Close button (only for floating mode)
-        let closeButton = null;
-        if (!isInlineMode) {
-            closeButton = document.createElement('button');
-            closeButton.style.background = 'transparent';
-            closeButton.style.border = 'none';
-            closeButton.style.color = '#fff';
-            closeButton.style.cursor = 'pointer';
-            closeButton.style.padding = '6px';
-            closeButton.style.display = 'flex';
-            closeButton.style.alignItems = 'center';
-            closeButton.style.justifyContent = 'center';
-            closeButton.style.borderRadius = '6px';
-            closeButton.style.transition = 'background 0.2s';
-            closeButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-            
-            chatHeader.appendChild(headerContent);
-            chatHeader.appendChild(closeButton);
-        } else {
-            // Test mode indicator
-            const testIndicator = document.createElement('div');
-            testIndicator.style.fontSize = '12px';
-            testIndicator.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-            testIndicator.style.padding = '4px 8px';
-            testIndicator.style.borderRadius = '12px';
-            testIndicator.textContent = 'Testing Mode';
-            
-            chatHeader.appendChild(headerContent);
-            chatHeader.appendChild(testIndicator);
-        }
-        
-        // Create messages container
-        const messagesContainer = document.createElement('div');
-        messagesContainer.className = 'customate-messages-container';
-        messagesContainer.style.flex = '1';
-        messagesContainer.style.overflowY = 'auto';
-        messagesContainer.style.padding = '20px';
-        messagesContainer.style.backgroundColor = '#f8fafc';
-        messagesContainer.style.scrollBehavior = 'smooth';
-        
-        // Add welcome message
-        const welcomeMessage = document.createElement('div');
-        welcomeMessage.className = 'customate-message assistant';
-        
-        const welcomeMessageBubble = document.createElement('div');
-        welcomeMessageBubble.className = 'customate-message-bubble';
-        welcomeMessageBubble.style.backgroundColor = '#fff';
-        welcomeMessageBubble.style.color = '#1f2937';
-        welcomeMessageBubble.style.borderBottomLeftRadius = '4px';
-        welcomeMessageBubble.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-        welcomeMessageBubble.style.border = '1px solid #e5e7eb';
-        
-        // Apply markdown to greeting message
-        welcomeMessageBubble.innerHTML = parseMarkdown(settings.greeting_message || settings.greeting);
-        
-        welcomeMessage.appendChild(welcomeMessageBubble);
-        messagesContainer.appendChild(welcomeMessage);
-        
-        // Create input container
-        const inputContainer = document.createElement('div');
-        inputContainer.className = 'customate-input-container';
-        inputContainer.style.display = 'flex';
-        inputContainer.style.padding = '16px 20px';
-        inputContainer.style.borderTop = '1px solid #e5e7eb';
-        inputContainer.style.backgroundColor = '#fff';
-        inputContainer.style.alignItems = 'flex-end';
-        inputContainer.style.gap = '12px';
-        
-        const messageInput = document.createElement('input');
-        messageInput.type = 'text';
-        messageInput.placeholder = 'Type your message...';
-        messageInput.style.flex = '1';
-        messageInput.style.padding = '12px 16px';
-        messageInput.style.border = '1px solid #d1d5db';
-        messageInput.style.borderRadius = '22px';
-        messageInput.style.outline = 'none';
-        messageInput.style.fontSize = '14px';
-        messageInput.style.backgroundColor = '#f9fafb';
-        messageInput.style.transition = 'all 0.2s';
-        
-        const sendButton = document.createElement('button');
-        sendButton.className = 'customate-send-button';
-        sendButton.style.width = '44px';
-        sendButton.style.height = '44px';
-        sendButton.style.borderRadius = '50%';
-        sendButton.style.background = settings.primary_color || settings.primaryColor || '#ea580c';
-        sendButton.style.color = '#fff';
-        sendButton.style.border = 'none';
-        sendButton.style.cursor = 'pointer';
-        sendButton.style.display = 'flex';
-        sendButton.style.alignItems = 'center';
-        sendButton.style.justifyContent = 'center';
-        sendButton.style.transition = 'all 0.2s';
-        sendButton.style.boxShadow = '0 2px 8px rgba(234, 88, 12, 0.2)';
-        sendButton.disabled = true;
-        sendButton.style.opacity = '0.6';
-        sendButton.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
-        
-        inputContainer.appendChild(messageInput);
-        inputContainer.appendChild(sendButton);
-        
-        // Assemble chat container
-        chatContainer.appendChild(chatHeader);
-        chatContainer.appendChild(messagesContainer);
-        chatContainer.appendChild(inputContainer);
-        
-        // Add elements to widget container
-        if (toggleButton) {
-            widgetContainer.appendChild(toggleButton);
-        }
-        widgetContainer.appendChild(chatContainer);
-        
-        // Session state
-        let sessionId = null;
-        let cancelStream = null;
-        let isSending = false;
-        
-        // Event handlers
-        if (toggleButton && closeButton) {
-            toggleButton.addEventListener('click', () => {
-                toggleButton.style.display = 'none';
-                chatContainer.style.display = 'flex';
-                messageInput.focus();
-            });
-            
-            closeButton.addEventListener('click', () => {
-                chatContainer.style.display = 'none';
-                toggleButton.style.display = 'block';
-            });
-            
-            // Add hover effects
-            toggleButton.addEventListener('mouseover', () => {
-                toggleButton.style.transform = 'scale(1.05)';
-                toggleButton.style.boxShadow = '0 4px 16px rgba(234, 88, 12, 0.4)';
-            });
-            
-            toggleButton.addEventListener('mouseout', () => {
-                toggleButton.style.transform = 'scale(1)';
-                toggleButton.style.boxShadow = '0 2px 12px rgba(234, 88, 12, 0.3)';
-            });
-            
-            closeButton.addEventListener('mouseover', () => {
-                closeButton.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-            });
-            
-            closeButton.addEventListener('mouseout', () => {
-                closeButton.style.backgroundColor = 'transparent';
-            });
-        }
-        
-        // Focus input in inline mode
-        if (isInlineMode) {
-            setTimeout(() => {
-                messageInput.focus();
-            }, 100);
-        }
-        
-        // Common event handlers
-        sendButton.addEventListener('mouseover', () => {
-            if (!sendButton.disabled) {
-                sendButton.style.transform = 'scale(1.05)';
-                sendButton.style.boxShadow = '0 4px 12px rgba(234, 88, 12, 0.3)';
-            }
-        });
-        
-        sendButton.addEventListener('mouseout', () => {
-            sendButton.style.transform = 'scale(1)';
-            sendButton.style.boxShadow = '0 2px 8px rgba(234, 88, 12, 0.2)';
-        });
-        
-        // Handle input changes
-        messageInput.addEventListener('input', () => {
-            if (messageInput.value.trim()) {
-                sendButton.disabled = false;
-                sendButton.style.opacity = '1';
-            } else {
-                sendButton.disabled = true;
-                sendButton.style.opacity = '0.6';
-            }
-        });
-        
-        messageInput.addEventListener('focus', () => {
-            messageInput.style.borderColor = '#ea580c';
-            messageInput.style.backgroundColor = '#fff';
-            messageInput.style.boxShadow = '0 0 0 3px rgba(234, 88, 12, 0.1)';
-        });
-        
-        messageInput.addEventListener('blur', () => {
-            messageInput.style.borderColor = '#d1d5db';
-            messageInput.style.backgroundColor = '#f9fafb';
-            messageInput.style.boxShadow = 'none';
-        });
-        
-        // Create and append a new message
-        function appendMessage(content, isUser, isError = false) {
+        appendMessage(content, isUser, isError = false) {
             const messageEl = document.createElement('div');
             messageEl.className = `customate-message ${isUser ? 'user' : 'assistant'}`;
             
@@ -672,51 +699,43 @@ async def get_widget_js():
             bubbleEl.className = 'customate-message-bubble';
             
             if (isUser) {
-                bubbleEl.style.backgroundColor = settings.primary_color || settings.primaryColor || '#ea580c';
-                bubbleEl.style.color = '#fff';
-                bubbleEl.style.borderBottomRightRadius = '4px';
-                bubbleEl.style.boxShadow = '0 1px 3px rgba(234, 88, 12, 0.2)';
+                bubbleEl.style.cssText = `
+                    background-color: ${this.settings.primaryColor}; color: #fff;
+                    border-bottom-right-radius: 4px; box-shadow: 0 1px 3px rgba(234, 88, 12, 0.2);
+                `;
                 bubbleEl.textContent = content;
             } else if (isError) {
-                bubbleEl.style.backgroundColor = '#fef2f2';
-                bubbleEl.style.color = '#b91c1c';
-                bubbleEl.style.borderBottomLeftRadius = '4px';
-                bubbleEl.style.border = '1px solid #fecaca';
+                bubbleEl.style.cssText = `
+                    background-color: #fef2f2; color: #b91c1c; border-bottom-left-radius: 4px;
+                    border: 1px solid #fecaca;
+                `;
                 bubbleEl.textContent = content;
             } else {
-                bubbleEl.style.backgroundColor = '#fff';
-                bubbleEl.style.color = '#1f2937';
-                bubbleEl.style.borderBottomLeftRadius = '4px';
-                bubbleEl.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-                bubbleEl.style.border = '1px solid #e5e7eb';
+                bubbleEl.style.cssText = `
+                    background-color: #fff; color: #1f2937; border-bottom-left-radius: 4px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb;
+                `;
                 bubbleEl.innerHTML = parseMarkdown(content);
             }
             
             messageEl.appendChild(bubbleEl);
-            messagesContainer.appendChild(messageEl);
+            this.messagesContainer.appendChild(messageEl);
+            this.scrollToBottom();
             
-            // Scroll to bottom
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
-            return {
-                element: messageEl,
-                bubble: bubbleEl
-            };
+            return { element: messageEl, bubble: bubbleEl };
         }
         
-        // Create typing indicator
-        function createTypingIndicator() {
+        createTypingIndicator() {
             const indicatorEl = document.createElement('div');
             indicatorEl.className = 'customate-message assistant typing';
             
             const bubbleEl = document.createElement('div');
             bubbleEl.className = 'customate-message-bubble';
-            bubbleEl.style.backgroundColor = '#fff';
-            bubbleEl.style.borderBottomLeftRadius = '4px';
-            bubbleEl.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-            bubbleEl.style.border = '1px solid #e5e7eb';
-            bubbleEl.style.display = 'flex';
-            bubbleEl.style.padding = '14px 16px';
+            bubbleEl.style.cssText = `
+                background-color: #fff; border-bottom-left-radius: 4px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb;
+                display: flex; padding: 14px 16px;
+            `;
             
             const indicatorContainer = document.createElement('div');
             indicatorContainer.className = 'customate-typing-indicator';
@@ -729,165 +748,109 @@ async def get_widget_js():
             
             bubbleEl.appendChild(indicatorContainer);
             indicatorEl.appendChild(bubbleEl);
-            messagesContainer.appendChild(indicatorEl);
-            
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            this.messagesContainer.appendChild(indicatorEl);
+            this.scrollToBottom();
             
             return indicatorEl;
         }
         
-        // Send message function with streaming support
-        async function sendMessage(text) {
-            if (!text.trim() || isSending) return;
-            
-            isSending = true;
-            messageInput.disabled = true;
-            sendButton.disabled = true;
-            sendButton.innerHTML = '<svg class="customate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 12a4 4 0 11-8 0m8 0H8"/></svg>';
-            sendButton.style.opacity = '0.8';
-            
-            appendMessage(text, true);
-            
-            const typingIndicator = createTypingIndicator();
-            
-            if (cancelStream) {
-                cancelStream();
-                cancelStream = null;
-            }
-            
-            try {
-                const controller = new AbortController();
-                cancelStream = () => controller.abort();
-                
-                const response = await fetch(`${mergedConfig.apiUrl}/api/widget/message/stream`, {
-                    method: 'POST',
-                    headers: {
-                        'X-API-Key': mergedConfig.apiKey,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: text,
-                        session_id: sessionId
-                    }),
-                    signal: controller.signal
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status}`);
-                }
-                
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                
-                let buffer = '';
-                let responseContent = '';
-                let botMessageEl = null;
-                
-                async function processStream() {
-                    try {
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            
-                            if (done) break;
-                            
-                            buffer += decoder.decode(value, { stream: true });
-                            
-                            const lines = buffer.split('\\n\\n');
-                            buffer = lines.pop() || '';
-                            
-                            for (const line of lines) {
-                                if (line.startsWith('data: ')) {
-                                    try {
-                                        const data = JSON.parse(line.substring(6));
-                                        
-                                        if (data.type === 'info') {
-                                            sessionId = data.session_id;
-                                        } else if (data.type === 'chunk') {
-                                            if (!botMessageEl) {
-                                                if (typingIndicator) {
-                                                    messagesContainer.removeChild(typingIndicator);
-                                                }
-                                                botMessageEl = appendMessage('', false);
-                                            }
-                                            
-                                            responseContent += data.content;
-                                            botMessageEl.bubble.innerHTML = parseMarkdown(responseContent);
-                                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                                        } else if (data.type === 'complete') {
-                                            if (botMessageEl) {
-                                                responseContent = data.content;
-                                                botMessageEl.bubble.innerHTML = parseMarkdown(responseContent);
-                                            }
-                                        } else if (data.type === 'error') {
-                                            throw new Error(data.error || 'Unknown error');
-                                        }
-                                    } catch (e) {
-                                        console.error('Error parsing stream data:', e);
-                                    }
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        if (e.name !== 'AbortError') {
-                            console.error('Error processing stream:', e);
-                            throw e;
-                        }
-                    }
-                }
-                
-                await processStream();
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                
-                if (typingIndicator && typingIndicator.parentNode) {
-                    messagesContainer.removeChild(typingIndicator);
-                }
-                
-                appendMessage('Sorry, I encountered an error while processing your message. Please try again.', false, true);
-            } finally {
-                isSending = false;
-                messageInput.disabled = false;
-                messageInput.value = '';
-                messageInput.focus();
-                sendButton.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
-                sendButton.style.opacity = '0.6';
-                sendButton.disabled = true;
-            }
+        scrollToBottom() {
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
         }
         
-        // Input event handlers
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                const text = messageInput.value.trim();
-                if (text) {
-                    sendMessage(text);
-                }
-            }
-        });
+        resetInputState() {
+            this.isSending = false;
+            this.messageInput.disabled = false;
+            this.messageInput.value = '';
+            this.messageInput.focus();
+            this.sendButton.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
+            this.sendButton.style.opacity = '0.6';
+            this.sendButton.disabled = true;
+        }
         
-        sendButton.addEventListener('click', () => {
-            const text = messageInput.value.trim();
-            if (text) {
-                sendMessage(text);
-            }
-        });
+        // Method to update settings dynamically
+        updateSettings(newSettings) {
+            console.log('🔄 Updating widget settings...', newSettings);
+            
+            // Update internal settings
+            this.settings = { ...this.settings, ...newSettings };
+            
+            // Update theme
+            this.injectThemedStyles();
+            
+            // Update UI elements that reflect settings
+            this.updateUIForSettings();
+            
+            console.log('✅ Widget settings updated');
+        }
         
-        // Expose widget methods for external control (test mode)
-        if (isInlineMode) {
+        updateUIForSettings() {
+            // Update header colors
+            const header = this.chatContainer.querySelector('.customate-chat-header') || 
+                         this.chatContainer.children[0];
+            if (header) {
+                header.style.background = `linear-gradient(135deg, ${this.settings.primaryColor}, #f97316)`;
+            }
+            
+            // Update bot name
+            const titleElement = header?.querySelector('div div div');
+            if (titleElement) {
+                titleElement.textContent = this.settings.chatbotName;
+            }
+            
+            // Update button colors
+            if (this.sendButton) {
+                this.sendButton.style.background = this.settings.primaryColor;
+            }
+            
+            if (this.toggleButton) {
+                this.toggleButton.style.background = this.settings.primaryColor;
+            }
+            
+            // Update existing user message bubbles
+            const userBubbles = this.messagesContainer.querySelectorAll('.customate-message.user .customate-message-bubble');
+            userBubbles.forEach(bubble => {
+                bubble.style.backgroundColor = this.settings.primaryColor;
+            });
+        }
+        
+        // Method to reset chat
+        reset() {
+            this.messagesContainer.innerHTML = '';
+            this.addWelcomeMessage();
+            this.sessionId = null;
+        }
+        
+        // Method to get session ID
+        getSessionId() {
+            return this.sessionId;
+        }
+    }
+    
+    // Initialize the widget
+    async function initWidget() {
+        console.log('🚀 Initializing Customate.ai Widget...');
+        
+        const result = await fetchWidgetSettings();
+        const widget = new CustomateWidget(result.settings);
+        
+        await widget.init();
+        
+        // Expose widget instance globally for external control
+        window.customateWidgetInstance = widget;
+        
+        // Legacy compatibility
+        if (widget.isInlineMode) {
             window.customateWidget = {
-                reset: () => {
-                    messagesContainer.innerHTML = '';
-                    messagesContainer.appendChild(welcomeMessage);
-                    sessionId = null;
-                },
-                sendMessage: sendMessage
+                reset: () => widget.reset(),
+                sendMessage: (text) => widget.sendMessage(text),
+                getSessionId: () => widget.getSessionId(),
+                updateSettings: (settings) => widget.updateSettings(settings)
             };
         }
     }
     
-    // Initialize the widget when the DOM is loaded
+    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initWidget);
     } else {
@@ -896,10 +859,10 @@ async def get_widget_js():
 })();
     """
     
-    # Set appropriate headers for JavaScript
-    headers = {
-        "Content-Type": "application/javascript",
-        "Cache-Control": "no-cache, no-store, must-revalidate"
-    }
-    
-    return Response(content=widget_js, headers=headers)
+    return Response(
+        content=widget_js,
+        headers={
+            "Content-Type": "application/javascript",
+            "Cache-Control": "no-cache, no-store, must-revalidate"
+        }
+    )

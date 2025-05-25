@@ -39,6 +39,15 @@ from app.api.knowledge import (
 from app.api.widget import router as widget_router
 from app.api.widget.widget_js import get_widget_js
 
+# Import widget services for initialization (FIXED IMPORT PATH)
+try:
+    from app.services.widget.widget_chat_service import WidgetChatService
+    WIDGET_SERVICE_AVAILABLE = True
+    logger.info("✅ Widget chat service imported successfully")
+except ImportError as e:
+    WIDGET_SERVICE_AVAILABLE = False
+    logger.warning(f"⚠️ Widget chat service not available: {e}")
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("uvicorn")
@@ -97,6 +106,20 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting application in {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'} mode")
     logger.info(f"Backend URL: {BACKEND_URL}")
     
+    # Initialize widget services
+    if WIDGET_SERVICE_AVAILABLE:
+        logger.info("🚀 Widget chat service available for streaming responses")
+        logger.info("   Features: Real-time streaming, LLM integration, settings sync")
+    else:
+        logger.warning("⚠️ Widget chat service not available - using basic widget functionality")
+    
+    # Log widget configuration
+    logger.info("🔧 Widget configuration:")
+    logger.info(f"   - Streaming responses: {'✅ Enabled' if WIDGET_SERVICE_AVAILABLE else '❌ Basic mode'}")
+    logger.info(f"   - LLM integration: {'✅ Available' if WIDGET_SERVICE_AVAILABLE else '❌ Limited'}")
+    logger.info(f"   - Settings sync: {'✅ Real-time' if WIDGET_SERVICE_AVAILABLE else '❌ Manual'}")
+    logger.info(f"   - CORS origins: {len(get_allowed_origins())} configured")
+    
     crawler_task = asyncio.create_task(run_crawler_worker())
     logger.info("Started crawler worker in background")
     yield
@@ -112,14 +135,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.API_VERSION,
-    description="Multi-tenant chatbot platform API with knowledge integration and analytics",
+    description="Multi-tenant chatbot platform API with knowledge integration, streaming responses, and real-time widget embedding",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
 
-# Configure CORS
+# Configure CORS with enhanced widget support
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_allowed_origins(),
@@ -163,7 +186,32 @@ async def serve_widget_js():
     """Direct route for widget.js to ensure it's available at the expected path"""
     return await get_widget_js()
 
-# Request logging middleware
+# Enhanced widget health check endpoint
+@app.get("/api/widget/health")
+async def widget_health_check():
+    """Specific health check for widget services with detailed status"""
+    return {
+        "status": "healthy",
+        "service": "widget",
+        "version": settings.API_VERSION,
+        "features": {
+            "streaming_responses": WIDGET_SERVICE_AVAILABLE,
+            "llm_integration": WIDGET_SERVICE_AVAILABLE,
+            "settings_sync": WIDGET_SERVICE_AVAILABLE,
+            "markdown_formatting": True,
+            "cors_embedding": True
+        },
+        "endpoints": [
+            "/api/widget/settings",
+            "/api/widget/message",
+            "/api/widget/message/stream",
+            "/api/widget/widget.js"
+        ],
+        "backend_url": BACKEND_URL,
+        "environment": "production" if IS_PRODUCTION else "development"
+    }
+
+# Request logging middleware with enhanced widget request tracking
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
@@ -173,16 +221,30 @@ async def log_requests(request: Request, call_next):
     # Calculate process time
     process_time = time.time() - start_time
     
-    # Log request details
-    logger.info(
-        f"Request: {request.method} {request.url.path} "
-        f"- Status: {response.status_code} "
-        f"- Process Time: {process_time:.4f}s"
-    )
+    # Enhanced logging for widget requests
+    if request.url.path.startswith("/api/widget"):
+        log_level = "INFO"
+        if request.url.path.endswith("/stream"):
+            log_level = "DEBUG"  # Streaming requests can be verbose
+        
+        logger.log(
+            getattr(logging, log_level),
+            f"Widget Request: {request.method} {request.url.path} "
+            f"- Status: {response.status_code} "
+            f"- Process Time: {process_time:.4f}s "
+            f"- Origin: {request.headers.get('origin', 'N/A')}"
+        )
+    else:
+        # Standard request logging
+        logger.info(
+            f"Request: {request.method} {request.url.path} "
+            f"- Status: {response.status_code} "
+            f"- Process Time: {process_time:.4f}s"
+        )
     
     return response
 
-# Root endpoint for health check
+# Root endpoint for health check with enhanced widget info
 @app.get("/")
 async def root():
     return {
@@ -197,11 +259,20 @@ async def root():
             "analytics", 
             "conversation_history", 
             "external_integrations",
-            "website_crawling"
-        ]
+            "website_crawling",
+            "streaming_widget_responses",
+            "real_time_settings_sync",
+            "multi_llm_support"
+        ],
+        "widget": {
+            "enabled": True,
+            "streaming": WIDGET_SERVICE_AVAILABLE,
+            "llm_integration": WIDGET_SERVICE_AVAILABLE,
+            "embed_url": f"{BACKEND_URL}/api/widget/widget.js"
+        }
     }
 
-# Health check endpoint
+# Health check endpoint with detailed component status
 @app.get("/health")
 async def health_check():
     return {
@@ -210,9 +281,50 @@ async def health_check():
         "backend_url": BACKEND_URL,
         "components": {
             "api": "up",
-            "database": "up"
+            "database": "up",
+            "widget_service": "up" if WIDGET_SERVICE_AVAILABLE else "limited",
+            "streaming": "available" if WIDGET_SERVICE_AVAILABLE else "unavailable",
+            "cors": "configured"
+        },
+        "widget_info": {
+            "javascript_url": f"{BACKEND_URL}/api/widget/widget.js",
+            "streaming_endpoint": f"{BACKEND_URL}/api/widget/message/stream",
+            "settings_endpoint": f"{BACKEND_URL}/api/widget/settings",
+            "test_endpoint": f"{BACKEND_URL}/api/widget/test"
         }
     }
+
+# CORS preflight handler for widget embedding
+@app.options("/api/widget/{path:path}")
+async def widget_options_handler(path: str):
+    """Handle CORS preflight requests for all widget endpoints"""
+    return {
+        "message": "CORS preflight handled",
+        "path": path,
+        "methods": ["GET", "POST", "OPTIONS"],
+        "headers": ["Content-Type", "X-API-Key", "Authorization"]
+    }
+    
+@app.get("/debug/routes")
+async def debug_routes():
+    """Debug endpoint to check loaded routes"""
+    routes_info = []
+    for route in app.routes:
+        if hasattr(route, 'path') and hasattr(route, 'methods'):
+            routes_info.append({
+                "path": route.path,
+                "methods": list(route.methods) if route.methods else [],
+                "name": getattr(route, 'name', 'unknown')
+            })
+    
+    # Filter widget routes
+    widget_routes = [r for r in routes_info if '/widget' in r['path']]
+    
+    return {
+        "total_routes": len(routes_info),
+        "widget_routes": widget_routes,
+        "widget_routes_count": len(widget_routes)
+    }    
 
 if __name__ == "__main__":
     import uvicorn

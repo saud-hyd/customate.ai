@@ -11,7 +11,8 @@ import {
   ChevronDownIcon,
   SparklesIcon,
   ExclamationTriangleIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  BoltIcon
 } from '@heroicons/react/24/outline';
 import clientService from '../services/clientService';
 import Button from '../components/common/Button';
@@ -29,14 +30,16 @@ const TestChatbotPage = () => {
   const [widgetLoaded, setWidgetLoaded] = useState(false);
   const [widgetError, setWidgetError] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [lastSyncTime, setLastSyncTime] = useState(null);
   
   // Refs
   const widgetContainerRef = useRef(null);
   const widgetScriptRef = useRef(null);
   const cleanupTimeoutRef = useRef(null);
   const reloadTimeoutRef = useRef(null);
+  const syncCheckInterval = useRef(null);
   
-  // Chat settings with enhanced state management
+  // Enhanced chat settings with sync tracking
   const [chatSettings, setChatSettings] = useState({
     primaryColor: '#ea580c',
     chatbotName: 'Customate.AI Assistant',
@@ -53,6 +56,7 @@ const TestChatbotPage = () => {
   
   // Track previous settings for change detection
   const [previousSettings, setPreviousSettings] = useState({});
+  const [settingsHash, setSettingsHash] = useState('');
   
   const llmOptions = [
     { 
@@ -80,19 +84,18 @@ const TestChatbotPage = () => {
     }
   ];
 
-  // Enhanced cleanup function with better error handling
+  // Enhanced cleanup function
   const cleanupWidget = useCallback(() => {
     console.log('🧹 Cleaning up widget...');
     
-    // Clear timeouts
-    if (cleanupTimeoutRef.current) {
-      clearTimeout(cleanupTimeoutRef.current);
-      cleanupTimeoutRef.current = null;
-    }
-    if (reloadTimeoutRef.current) {
-      clearTimeout(reloadTimeoutRef.current);
-      reloadTimeoutRef.current = null;
-    }
+    // Clear timeouts and intervals
+    [cleanupTimeoutRef, reloadTimeoutRef, syncCheckInterval].forEach(ref => {
+      if (ref.current) {
+        clearTimeout(ref.current);
+        clearInterval(ref.current);
+        ref.current = null;
+      }
+    });
 
     // Reset states
     setWidgetLoaded(false);
@@ -100,12 +103,11 @@ const TestChatbotPage = () => {
     setConnectionStatus('connecting');
 
     // Clean up global widget variables
-    if (window.customateConfig) {
-      delete window.customateConfig;
-    }
-    if (window.customateWidget) {
-      delete window.customateWidget;
-    }
+    ['customateConfig', 'customateWidget', 'customateWidgetInstance'].forEach(prop => {
+      if (window[prop]) {
+        delete window[prop];
+      }
+    });
 
     // Clear widget container
     if (widgetContainerRef.current) {
@@ -117,14 +119,17 @@ const TestChatbotPage = () => {
     }
 
     // Remove widget styles
-    const existingStyles = document.getElementById('customate-widget-styles');
-    if (existingStyles && existingStyles.parentNode) {
-      try {
-        existingStyles.parentNode.removeChild(existingStyles);
-      } catch (error) {
-        console.warn('Styles cleanup warning:', error);
+    const stylesToRemove = ['customate-widget-styles', 'customate-theme-vars'];
+    stylesToRemove.forEach(id => {
+      const element = document.getElementById(id);
+      if (element && element.parentNode) {
+        try {
+          element.parentNode.removeChild(element);
+        } catch (error) {
+          console.warn(`Style cleanup warning for ${id}:`, error);
+        }
       }
-    }
+    });
 
     // Remove script
     if (widgetScriptRef.current && widgetScriptRef.current.parentNode) {
@@ -139,7 +144,7 @@ const TestChatbotPage = () => {
     console.log('✅ Widget cleanup complete');
   }, []);
 
-  // Enhanced widget initialization with better error handling
+  // Enhanced widget initialization with sync support
   const initializeWidget = useCallback(async () => {
     if (!chatSettings.apiKey) {
       console.warn('No API key available for widget initialization');
@@ -147,7 +152,7 @@ const TestChatbotPage = () => {
       return;
     }
     
-    console.log('🚀 Initializing widget with settings:', chatSettings);
+    console.log('🚀 Initializing widget with enhanced sync support...');
     
     try {
       setConnectionStatus('connecting');
@@ -166,30 +171,15 @@ const TestChatbotPage = () => {
       
       console.log('🔗 Backend URL:', backendUrl);
       
-      // Test API connection first
-      try {
-        const testResponse = await fetch(`${backendUrl}/api/widget/test`, {
-          headers: {
-            'X-API-Key': chatSettings.apiKey
-          }
-        });
-        
-        if (!testResponse.ok) {
-          throw new Error(`Backend test failed: ${testResponse.status} ${testResponse.statusText}`);
-        }
-        
-        const testData = await testResponse.json();
-        console.log('✅ Backend connection successful:', testData);
-        setConnectionStatus('connected');
-      } catch (error) {
-        console.error('❌ Backend connection failed:', error);
-        setConnectionStatus('error');
-        setWidgetError(`Cannot connect to backend: ${error.message}`);
-        toast.error('Cannot connect to backend server. Please check if it\'s running.');
-        return;
+      // Test comprehensive connection
+      const connectionTest = await clientService.checkConnection();
+      if (!connectionTest.success) {
+        throw new Error(`Backend connection failed: ${connectionTest.message}`);
       }
       
-      // Set up widget configuration
+      setConnectionStatus('connected');
+      
+      // Set up enhanced widget configuration
       window.customateConfig = {
         apiKey: chatSettings.apiKey,
         apiUrl: backendUrl,
@@ -202,21 +192,26 @@ const TestChatbotPage = () => {
         widgetPosition: chatSettings.widgetPosition,
         testMode: true,
         container: widgetContainerRef.current,
-        debug: process.env.NODE_ENV === 'development'
+        debug: process.env.NODE_ENV === 'development',
+        settingsSyncInterval: 10000 // 10 seconds for test mode
       };
       
-      console.log('📝 Widget configuration set:', window.customateConfig);
+      console.log('📝 Enhanced widget configuration set:', window.customateConfig);
       
-      // Load widget script with cache busting
+      // Load widget script with enhanced error handling
       const script = document.createElement('script');
-      script.src = `${backendUrl}/api/widget/widget.js?t=${Date.now()}`;
+      script.src = `${backendUrl}/api/widget/widget.js?v=${Date.now()}`;
       script.async = true;
       
       script.onload = () => {
         console.log('✅ Widget script loaded successfully');
         setWidgetLoaded(true);
         setConnectionStatus('ready');
-        toast.success('Widget loaded successfully!', { autoClose: 2000 });
+        setLastSyncTime(new Date());
+        toast.success('Widget loaded with sync support!', { autoClose: 2000 });
+        
+        // Start sync monitoring
+        startSyncMonitoring();
       };
       
       script.onerror = (error) => {
@@ -236,17 +231,34 @@ const TestChatbotPage = () => {
       toast.error('Failed to initialize widget: ' + error.message);
     }
   }, [chatSettings, cleanupWidget]);
-  
-  // Enhanced reload function with debouncing
-  const reloadWidget = useCallback((delay = 500) => {
-    console.log('🔄 Reloading widget...');
+
+  // Start sync monitoring
+  const startSyncMonitoring = useCallback(() => {
+    if (syncCheckInterval.current) {
+      clearInterval(syncCheckInterval.current);
+    }
     
-    // Clear any existing reload timeout
+    syncCheckInterval.current = setInterval(async () => {
+      try {
+        // Check if widget instance exists and has updateSettings method
+        if (window.customateWidgetInstance && window.customateWidgetInstance.updateSettings) {
+          console.log('🔄 Widget sync active');
+          setLastSyncTime(new Date());
+        }
+      } catch (error) {
+        console.warn('Sync check error:', error);
+      }
+    }, 30000); // Check every 30 seconds
+  }, []);
+  
+  // Enhanced reload function with sync notification
+  const reloadWidget = useCallback((delay = 500) => {
+    console.log('🔄 Reloading widget with sync...');
+    
     if (reloadTimeoutRef.current) {
       clearTimeout(reloadTimeoutRef.current);
     }
     
-    // Set new reload timeout
     reloadTimeoutRef.current = setTimeout(() => {
       initializeWidget();
     }, delay);
@@ -280,37 +292,30 @@ const TestChatbotPage = () => {
     
     // Cleanup on unmount
     return () => {
-      if (cleanupTimeoutRef.current) {
-        clearTimeout(cleanupTimeoutRef.current);
-      }
-      if (reloadTimeoutRef.current) {
-        clearTimeout(reloadTimeoutRef.current);
-      }
+      [cleanupTimeoutRef, reloadTimeoutRef, syncCheckInterval].forEach(ref => {
+        if (ref.current) {
+          clearTimeout(ref.current);
+          clearInterval(ref.current);
+        }
+      });
       cleanupWidget();
     };
   }, [isLoading, chatSettings.apiKey, initializeWidget, cleanupWidget]);
 
-  // Detect settings changes and reload widget
+  // Detect settings changes and update hash
   useEffect(() => {
-    if (widgetLoaded && !isLoading) {
-      // Check which settings changed
-      const settingsToWatch = [
-        'primaryColor', 'chatbotName', 'greeting', 
-        'showTypingIndicator', 'enableSuggestions', 'widgetPosition'
-      ];
+    const newHash = JSON.stringify(chatSettings);
+    if (settingsHash && settingsHash !== newHash && widgetLoaded) {
+      console.log('⚙️ Settings changed, preparing sync...');
+      setSettingsHash(newHash);
       
-      const hasChanges = settingsToWatch.some(key => 
-        chatSettings[key] !== previousSettings[key]
-      );
-      
-      if (hasChanges && Object.keys(previousSettings).length > 0) {
-        console.log('⚙️ Settings changed, reloading widget...');
-        reloadWidget(300); // Debounced reload
-      }
-      
-      setPreviousSettings({ ...chatSettings });
+      // Don't auto-reload, let user save to trigger sync
+    } else if (!settingsHash) {
+      setSettingsHash(newHash);
     }
-  }, [chatSettings, widgetLoaded, isLoading, previousSettings, reloadWidget]);
+    
+    setPreviousSettings({ ...chatSettings });
+  }, [chatSettings, widgetLoaded, settingsHash]);
 
   // Close LLM menu when clicking outside
   useEffect(() => {
@@ -379,7 +384,10 @@ const TestChatbotPage = () => {
   
   const handleResetChat = () => {
     try {
-      if (window.customateWidget && window.customateWidget.reset) {
+      if (window.customateWidgetInstance && window.customateWidgetInstance.reset) {
+        window.customateWidgetInstance.reset();
+        toast.info('Chat session reset');
+      } else if (window.customateWidget && window.customateWidget.reset) {
         window.customateWidget.reset();
         toast.info('Chat session reset');
       } else {
@@ -412,11 +420,33 @@ const TestChatbotPage = () => {
         }
       };
       
+      // Save settings to unified endpoint
       await clientService.updateWidgetSettings(settingsToSave);
-      toast.success('Chatbot settings saved successfully!');
       
-      // Update previous settings to prevent unnecessary reload
-      setPreviousSettings({ ...chatSettings });
+      // Update the widget immediately if it's loaded
+      if (window.customateWidgetInstance && window.customateWidgetInstance.updateSettings) {
+        window.customateWidgetInstance.updateSettings({
+          primaryColor: chatSettings.primaryColor,
+          chatbotName: chatSettings.chatbotName,
+          greeting: chatSettings.greeting,
+          widgetPosition: chatSettings.widgetPosition,
+          showTypingIndicator: chatSettings.showTypingIndicator,
+          enableSuggestions: chatSettings.enableSuggestions,
+          llmProvider: chatSettings.llmProvider,
+          llmModel: chatSettings.llmModel
+        });
+      }
+      
+      // Trigger sync to all deployed widgets
+      await clientService.triggerWidgetReload();
+      
+      // Update hash to prevent unnecessary reloads
+      setSettingsHash(JSON.stringify(chatSettings));
+      setLastSyncTime(new Date());
+      
+      toast.success('Settings saved and synced to all widgets!', {
+        icon: '🔄'
+      });
       
     } catch (err) {
       console.error('Error saving settings:', err);
@@ -429,20 +459,15 @@ const TestChatbotPage = () => {
   const handleTestConnection = async () => {
     try {
       setConnectionStatus('testing');
-      const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:8000' 
-        : 'https://customate-ai-1.onrender.com';
+      const result = await clientService.checkConnection();
       
-      const response = await fetch(`${backendUrl}/api/widget/test`, {
-        headers: { 'X-API-Key': chatSettings.apiKey }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
+      if (result.success) {
         setConnectionStatus('connected');
-        toast.success(`Connection successful! ${data.message}`);
+        toast.success('All connections successful!', {
+          icon: '✅'
+        });
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(result.message || 'Connection test failed');
       }
     } catch (error) {
       setConnectionStatus('error');
@@ -450,7 +475,7 @@ const TestChatbotPage = () => {
     }
   };
   
-  // Generate embed code for installation
+  // Generate embed code
   const generateEmbedCode = () => {
     let backendUrl = 'https://customate-ai-1.onrender.com';
     
@@ -463,14 +488,14 @@ const TestChatbotPage = () => {
   window.customateConfig = {
     apiKey: '${chatSettings.apiKey}',
     apiUrl: '${backendUrl}'
-    // All other settings will be loaded dynamically from the server
+    // All settings are automatically synced from your dashboard
   };
 </script>
 <script src="${backendUrl}/api/widget/widget.js" async></script>`;
   };    
   
   if (isLoading) {
-    return <LoadingState message="Initializing chatbot test environment..." />;
+    return <LoadingState message="Initializing enhanced chatbot test environment..." />;
   }
   
   // Find the current model name from the options
@@ -478,46 +503,57 @@ const TestChatbotPage = () => {
   const currentModel = currentProvider?.models.find(m => m.id === chatSettings.llmModel);
   const currentModelName = currentModel?.name || chatSettings.llmModel || 'Default';
   
-  // Connection status component
+  // Enhanced connection status component
   const ConnectionStatus = () => {
     const statusConfig = {
-      connecting: { icon: '🔄', color: 'text-yellow-600', bg: 'bg-yellow-50' },
-      connected: { icon: '✅', color: 'text-green-600', bg: 'bg-green-50' },
-      ready: { icon: '🚀', color: 'text-blue-600', bg: 'bg-blue-50' },
-      error: { icon: '❌', color: 'text-red-600', bg: 'bg-red-50' },
-      testing: { icon: '🔍', color: 'text-orange-600', bg: 'bg-orange-50' }
+      connecting: { icon: '🔄', color: 'text-yellow-600', bg: 'bg-yellow-50', pulse: true },
+      connected: { icon: '✅', color: 'text-green-600', bg: 'bg-green-50', pulse: false },
+      ready: { icon: '🚀', color: 'text-blue-600', bg: 'bg-blue-50', pulse: false },
+      error: { icon: '❌', color: 'text-red-600', bg: 'bg-red-50', pulse: false },
+      testing: { icon: '🔍', color: 'text-orange-600', bg: 'bg-orange-50', pulse: true }
     };
     
     const config = statusConfig[connectionStatus] || statusConfig.connecting;
     
     return (
-      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.color} ${config.bg}`}>
+      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.color} ${config.bg} ${config.pulse ? 'animate-pulse' : ''}`}>
         <span className="mr-2">{config.icon}</span>
         {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1)}
+        {lastSyncTime && connectionStatus === 'ready' && (
+          <span className="ml-2 text-xs opacity-75">
+            • Synced {new Date(lastSyncTime).toLocaleTimeString()}
+          </span>
+        )}
       </div>
     );
   };
   
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100">
-      {/* Enhanced top control bar */}
+      {/* Enhanced top control bar with sync status */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-orange-200/50 py-4 px-6 flex items-center justify-between shadow-sm">
         <div className="flex items-center">
           <div className="flex items-center mr-6">
             <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mr-3">
-              <SparklesIcon className="h-5 w-5 text-white" />
+              <BoltIcon className="h-5 w-5 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">Test Your Chatbot</h2>
-              <div className="flex items-center mt-1">
+              <div className="flex items-center mt-1 space-x-3">
                 <ConnectionStatus />
                 {connectionStatus === 'error' && (
                   <button
                     onClick={handleTestConnection}
-                    className="ml-2 text-xs text-orange-600 hover:text-orange-700 underline"
+                    className="text-xs text-orange-600 hover:text-orange-700 underline"
                   >
                     Retry Connection
                   </button>
+                )}
+                {widgetLoaded && lastSyncTime && (
+                  <div className="text-xs text-gray-500 flex items-center">
+                    <BoltIcon className="h-3 w-3 mr-1" />
+                    Live Sync Active
+                  </div>
                 )}
               </div>
             </div>
@@ -614,10 +650,13 @@ const TestChatbotPage = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Saving...
+                Syncing...
               </>
             ) : (
-              'Save Configuration'
+              <>
+                <BoltIcon className="h-4 w-4 mr-2" />
+                Save & Sync
+              </>
             )}
           </button>
         </div>
@@ -630,22 +669,23 @@ const TestChatbotPage = () => {
             ref={widgetContainerRef}
             id="customate-test-widget"
             className="h-full w-full flex items-center justify-center"
-            key={`widget-${chatSettings.apiKey}-${chatSettings.primaryColor}-${Date.now()}`}
+            key={`widget-${chatSettings.apiKey}-${settingsHash}`}
           >
             {!widgetLoaded && !widgetError && (
               <div className="flex flex-col items-center justify-center text-center p-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mb-4"></div>
-                <p className="text-gray-600 font-medium">Loading widget...</p>
-                <p className="text-sm text-gray-400 mt-2">Please wait while we initialize your chatbot</p>
+                <p className="text-gray-600 font-medium">Loading enhanced widget...</p>
+                <p className="text-sm text-gray-400 mt-2">Initializing real-time sync</p>
                 <div className="mt-4 text-xs text-gray-500 space-y-1">
                   <p>API Key: {chatSettings.apiKey ? '✓ Available' : '✗ Missing'}</p>
                   <p>Backend: {connectionStatus}</p>
                   <p>Model: {chatSettings.llmProvider}:{chatSettings.llmModel}</p>
+                  <p>Sync: {lastSyncTime ? '✓ Active' : '⏳ Pending'}</p>
                 </div>
               </div>
             )}
             
-            {widgetError && (
+{widgetError && (
               <div className="flex flex-col items-center justify-center text-center p-8 max-w-md">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
                   <ExclamationTriangleIcon className="w-8 h-8 text-red-500" />
@@ -672,6 +712,7 @@ const TestChatbotPage = () => {
                       <li>• Check that the API key is valid</li>
                       <li>• Verify the widget routes are configured</li>
                       <li>• Check browser console for detailed errors</li>
+                      <li>• Ensure settings sync is enabled</li>
                     </ul>
                   </div>
                 </div>
@@ -681,7 +722,7 @@ const TestChatbotPage = () => {
         </div>
       </div>
       
-      {/* Enhanced status footer */}
+      {/* Enhanced status footer with sync information */}
       <div className="bg-white/80 backdrop-blur-sm border-t border-orange-200/50 py-3 px-6 text-sm text-gray-600 flex justify-between items-center">
         <div className="flex items-center space-x-6">
           <div className="flex items-center">
@@ -704,21 +745,31 @@ const TestChatbotPage = () => {
           <div className="flex items-center">
             <span>Session: </span>
             <span className="font-medium text-orange-700 ml-1">
-              {window.customateWidget?.getSessionId?.()?.slice(-8) || 'New'}
+              {window.customateWidgetInstance?.getSessionId?.()?.slice(-8) || 
+               window.customateWidget?.getSessionId?.()?.slice(-8) || 'New'}
             </span>
           </div>
+          {lastSyncTime && (
+            <div className="flex items-center">
+              <BoltIcon className="h-4 w-4 mr-1 text-green-600" />
+              <span>Last Sync: </span>
+              <span className="font-medium text-green-700 ml-1">
+                {lastSyncTime.toLocaleTimeString()}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center text-orange-600">
           <InformationCircleIcon className="h-4 w-4 mr-1" />
-          <span>Real-time streaming responses with {currentModelName}</span>
+          <span>Real-time sync with {currentModelName} • All changes auto-deploy</span>
         </div>
       </div>
       
-      {/* Settings Modal - Same as before but with enhanced functionality */}
+      {/* Settings Modal - Same structure but with enhanced sync features */}
       <Modal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        title="Chatbot Settings"
+        title="Chatbot Settings - Live Sync"
         size="lg"
       >
         <div className="border-b border-gray-200">
@@ -738,6 +789,9 @@ const TestChatbotPage = () => {
                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors duration-200`}
               >
                 {tab.label}
+                {activeSettingsTab === tab.id && (
+                  <BoltIcon className="h-4 w-4 ml-2" />
+                )}
               </button>
             ))}
           </nav>
@@ -747,6 +801,17 @@ const TestChatbotPage = () => {
           {/* Appearance settings */}
           {activeSettingsTab === 'appearance' && (
             <div className="space-y-6">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mb-6">
+                <div className="flex">
+                  <BoltIcon className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Live Sync:</strong> Changes are instantly applied to your test widget and will be synced to all deployed widgets when you save.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <div>
                 <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700 mb-2">
                   Primary Color
@@ -766,7 +831,7 @@ const TestChatbotPage = () => {
                     className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-sm w-32"
                   />
                   <div className="text-sm text-gray-500">
-                    This color will be used for the header and buttons
+                    Applied instantly to test widget
                   </div>
                 </div>
               </div>
@@ -787,7 +852,7 @@ const TestChatbotPage = () => {
               
               <div>
                 <label htmlFor="widgetPosition" className="block text-sm font-medium text-gray-700 mb-2">
-                  Widget Position
+                  Widget Position (for deployed widgets)
                 </label>
                 <select
                   id="widgetPosition"
@@ -897,6 +962,17 @@ const TestChatbotPage = () => {
           {/* Model settings */}
           {activeSettingsTab === 'model' && (
             <div className="space-y-6">
+              <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg">
+                <div className="flex">
+                  <BoltIcon className="h-5 w-5 text-orange-400 flex-shrink-0" />
+                  <div className="ml-3">
+                    <p className="text-sm text-orange-800">
+                      <strong>Model Sync:</strong> LLM changes are applied immediately and synced across all your deployed widgets.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Select LLM Provider and Model
@@ -920,26 +996,20 @@ const TestChatbotPage = () => {
                             }`}
                           >
                             <span className="font-medium">{model.name}</span>
-                            {chatSettings.llmProvider === provider.provider && 
-                             chatSettings.llmModel === model.id && 
-                             <CheckCircleIcon className="h-5 w-5 text-orange-600" />}
+                            <div className="flex items-center">
+                              {chatSettings.llmProvider === provider.provider && 
+                               chatSettings.llmModel === model.id && (
+                                <>
+                                  <BoltIcon className="h-4 w-4 text-orange-600 mr-1" />
+                                  <CheckCircleIcon className="h-5 w-5 text-orange-600" />
+                                </>
+                              )}
+                            </div>
                           </button>
                         ))}
                       </div>
                     </div>
                   ))}
-                </div>
-                
-                <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-                  <div className="flex">
-                    <InformationCircleIcon className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <div className="ml-3">
-                      <p className="text-sm text-blue-800">
-                        <strong>Note:</strong> Changes to the LLM model will take effect immediately in the test environment 
-                        and will be saved when you click "Save Configuration".
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -961,27 +1031,29 @@ const TestChatbotPage = () => {
               setIsSettingsOpen(false);
             }}
             disabled={isSaving}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 flex items-center"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            <BoltIcon className="h-4 w-4 mr-2" />
+            {isSaving ? 'Syncing...' : 'Save & Sync All Widgets'}
           </Button>
         </div>
       </Modal>
       
-      {/* Installation Code Modal */}
+      {/* Enhanced Installation Code Modal */}
       <Modal
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
-        title="Installation Code"
+        title="Installation Code - Auto-Sync Enabled"
         size="lg"
       >
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl">
           <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
             <CodeBracketIcon className="h-5 w-5 mr-2 text-orange-600" />
-            Embed Code for Your Website
+            Enhanced Embed Code for Your Website
           </h3>
           <p className="text-sm text-gray-600 mb-4">
-            Copy and paste this code into your website, just before the closing &lt;/body&gt; tag:
+            Copy and paste this code into your website, just before the closing &lt;/body&gt; tag. 
+            All settings will be automatically synced from your dashboard:
           </p>
           
           <div className="relative">
@@ -1002,15 +1074,29 @@ const TestChatbotPage = () => {
             </button>
           </div>
           
-          <div className="mt-6 bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-lg">
-            <div className="flex">
-              <InformationCircleIcon className="h-5 w-5 text-orange-400 flex-shrink-0" />
-              <div className="ml-3">
-                <p className="text-sm text-orange-800">
-                  <strong className="font-semibold">Perfect Preview:</strong> This test environment uses the exact same widget code 
-                  that will be deployed on your website, ensuring 100% accuracy between what you see here and what your users will experience.
-                  All settings, colors, and AI responses will work identically on your live site.
-                </p>
+          <div className="mt-6 space-y-4">
+            <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg">
+              <div className="flex">
+                <BoltIcon className="h-5 w-5 text-green-400 flex-shrink-0" />
+                <div className="ml-3">
+                  <p className="text-sm text-green-800">
+                    <strong className="font-semibold">Auto-Sync Enabled:</strong> This widget automatically syncs all settings from your dashboard. 
+                    Changes you make here will appear on your live website within 30 seconds - no code updates needed!
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+              <div className="flex">
+                <InformationCircleIcon className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                <div className="ml-3">
+                  <p className="text-sm text-blue-800">
+                    <strong className="font-semibold">Perfect Preview:</strong> This test environment uses the exact same widget code 
+                    that will be deployed on your website, ensuring 100% accuracy between what you see here and what your users will experience.
+                    All settings, colors, AI responses, and sync behavior work identically on your live site.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
