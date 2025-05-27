@@ -36,10 +36,13 @@ from app.api.knowledge import (
     knowledge_router, document_router, collection_router, 
     crawl_router, enhanced_router
 )
-from app.api.widget import router as widget_router
-from app.api.widget.widget_js import get_widget_js
 
-# Import widget services for initialization (FIXED IMPORT PATH)
+# Import widget router (THIS IS THE KEY IMPORT)
+from app.api.widget import router as widget_router
+from app.api.widget.widget_app_routes import router as widget_app_router
+
+
+# Import widget services for initialization
 try:
     from app.services.widget.widget_chat_service import WidgetChatService
     WIDGET_SERVICE_AVAILABLE = True
@@ -168,7 +171,10 @@ app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
 app.include_router(integration_routes.router, prefix="/api")
+
+# WIDGET ROUTER - THIS IS THE KEY LINE
 app.include_router(widget_router, prefix="/api")
+
 app.include_router(subscription_routes.router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(admin_router)
@@ -179,12 +185,14 @@ app.include_router(crawl_router, prefix="/api/knowledge")
 app.include_router(enhanced_router, prefix="/api/knowledge")
 app.include_router(channel_router, prefix="/api")
 app.include_router(webhook_router, prefix="/api")
+app.include_router(widget_app_router, prefix="/api/widget", tags=["widget-app"])
 
-# Direct route for widget.js to handle the exact path
-@app.get("/api/widget/widget.js")
-async def serve_widget_js():
-    """Direct route for widget.js to ensure it's available at the expected path"""
-    return await get_widget_js()
+
+# REMOVE THIS REDUNDANT ROUTE - it's already handled in widget routes
+# @app.get("/api/widget/widget.js")
+# async def serve_widget_js():
+#     """Direct route for widget.js to ensure it's available at the expected path"""
+#     return await get_widget_js()
 
 # Enhanced widget health check endpoint
 @app.get("/api/widget/health")
@@ -199,13 +207,15 @@ async def widget_health_check():
             "llm_integration": WIDGET_SERVICE_AVAILABLE,
             "settings_sync": WIDGET_SERVICE_AVAILABLE,
             "markdown_formatting": True,
-            "cors_embedding": True
+            "cors_embedding": True,
+            "react_widget_app": True
         },
         "endpoints": [
             "/api/widget/settings",
             "/api/widget/message",
             "/api/widget/message/stream",
-            "/api/widget/widget.js"
+            "/api/widget/widget.js",
+            "/api/widget/app/"
         ],
         "backend_url": BACKEND_URL,
         "environment": "production" if IS_PRODUCTION else "development"
@@ -262,13 +272,15 @@ async def root():
             "website_crawling",
             "streaming_widget_responses",
             "real_time_settings_sync",
-            "multi_llm_support"
+            "multi_llm_support",
+            "react_widget_app"
         ],
         "widget": {
             "enabled": True,
             "streaming": WIDGET_SERVICE_AVAILABLE,
             "llm_integration": WIDGET_SERVICE_AVAILABLE,
-            "embed_url": f"{BACKEND_URL}/api/widget/widget.js"
+            "js_widget_url": f"{BACKEND_URL}/api/widget/widget.js",
+            "react_app_url": f"{BACKEND_URL}/api/widget/app/"
         }
     }
 
@@ -288,6 +300,7 @@ async def health_check():
         },
         "widget_info": {
             "javascript_url": f"{BACKEND_URL}/api/widget/widget.js",
+            "react_app_url": f"{BACKEND_URL}/api/widget/app/",
             "streaming_endpoint": f"{BACKEND_URL}/api/widget/message/stream",
             "settings_endpoint": f"{BACKEND_URL}/api/widget/settings",
             "test_endpoint": f"{BACKEND_URL}/api/widget/test"
