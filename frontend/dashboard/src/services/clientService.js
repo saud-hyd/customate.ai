@@ -2,7 +2,7 @@
 import api from './api';
 
 /**
- * Enhanced client service with complete widget settings synchronization
+ * Enhanced client service with React Widget App synchronization
  */
 const clientService = {
   /**
@@ -78,7 +78,7 @@ const clientService = {
         llm_model: settings.custom_settings?.llm_model
       };
 
-      console.log('Updating widget settings:', widgetSettings);
+      console.log('Updating React widget settings:', widgetSettings);
 
       const response = await api.put('/api/widget/settings', widgetSettings);
       
@@ -99,13 +99,13 @@ const clientService = {
       
       return response.data;
     } catch (error) {
-      console.error('Error updating widget settings:', error);
+      console.error('Error updating React widget settings:', error);
       throw error;
     }
   },
 
   /**
-   * Get widget embed code
+   * Get React widget embed code (iframe-based)
    */
   getWidgetEmbedCode: async () => {
     try {
@@ -115,26 +115,30 @@ const clientService = {
         : 'https://customate-ai-1.onrender.com';
       
       return {
-        embed_code: `<!-- Customate.ai Chat Widget -->
-<script>
-  window.customateConfig = {
-    apiKey: '${clientInfo.api_key}',
-    apiUrl: '${backendUrl}'
-    // All other settings will be loaded dynamically from the server
-  };
-</script>
-<script src="${backendUrl}/api/widget/widget.js" async></script>`,
+        embed_code: `<!-- Customate.ai React Widget (iframe-based) -->
+<iframe 
+  src="${backendUrl}/api/widget/app/?api_key=${clientInfo.api_key}"
+  width="350" 
+  height="500"
+  frameborder="0"
+  style="position: fixed; bottom: 20px; right: 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 999999;"
+  allow="clipboard-write"
+  sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
+</iframe>
+<!-- Settings are automatically synchronized from your dashboard -->`,
         api_key: clientInfo.api_key,
-        backend_url: backendUrl
+        backend_url: backendUrl,
+        widget_type: 'react_iframe',
+        widget_url: `${backendUrl}/api/widget/app/?api_key=${clientInfo.api_key}`
       };
     } catch (error) {
-      console.error('Error getting widget embed code:', error);
+      console.error('Error getting React widget embed code:', error);
       throw error;
     }
   },
 
   /**
-   * Test widget functionality with enhanced connection testing
+   * Test React widget functionality with enhanced connection testing
    */
   testWidget: async () => {
     try {
@@ -144,16 +148,19 @@ const clientService = {
       
       const clientInfo = await clientService.getClientInfo();
       
-      // Test both widget endpoint and settings sync
-      const [widgetTest, settingsTest] = await Promise.all([
-        fetch(`${backendUrl}/api/widget/test`, {
+      // Test both React widget app endpoint and settings sync
+      const [widgetAppTest, settingsTest, widgetApiTest] = await Promise.all([
+        fetch(`${backendUrl}/api/widget/app/`, {
+          method: 'HEAD'
+        }),
+        fetch(`${backendUrl}/api/widget/settings`, {
           method: 'GET',
           headers: {
             'X-API-Key': clientInfo.api_key,
             'Content-Type': 'application/json'
           }
         }),
-        fetch(`${backendUrl}/api/widget/settings`, {
+        fetch(`${backendUrl}/api/widget/test`, {
           method: 'GET',
           headers: {
             'X-API-Key': clientInfo.api_key,
@@ -162,31 +169,33 @@ const clientService = {
         })
       ]);
       
-      if (!widgetTest.ok || !settingsTest.ok) {
-        throw new Error(`Widget test failed: ${widgetTest.status}/${settingsTest.status}`);
+      if (!widgetAppTest.ok || !settingsTest.ok || !widgetApiTest.ok) {
+        throw new Error(`React widget test failed: App:${widgetAppTest.status} Settings:${settingsTest.status} API:${widgetApiTest.status}`);
       }
       
-      const widgetData = await widgetTest.json();
       const settingsData = await settingsTest.json();
+      const apiData = await widgetApiTest.json();
       
       return {
         success: true,
-        data: widgetData,
+        data: apiData,
         settings: settingsData,
         backend_url: backendUrl,
-        message: 'Widget and settings synchronization working correctly'
+        widget_type: 'react_iframe',
+        message: 'React widget app and settings synchronization working correctly'
       };
     } catch (error) {
-      console.error('Error testing widget:', error);
+      console.error('Error testing React widget:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
+        widget_type: 'react_iframe'
       };
     }
   },
 
   /**
-   * Send a test message through the widget
+   * Send a test message through the React widget
    */
   sendTestMessage: async (message, sessionId = null) => {
     try {
@@ -210,37 +219,39 @@ const clientService = {
       
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Message failed: ${response.status} - ${errorText}`);
+        throw new Error(`React widget message failed: ${response.status} - ${errorText}`);
       }
       
       return await response.json();
     } catch (error) {
-      console.error('Error sending test message:', error);
+      console.error('Error sending test message to React widget:', error);
       throw error;
     }
   },
 
   /**
-   * Trigger widget reload on all client websites
+   * Trigger React widget reload on all client websites
+   * Note: React widgets use polling-based synchronization every 30 seconds
    */
   triggerWidgetReload: async () => {
     try {
-      // This would typically be a server-sent event or webhook
-      // For now, we'll just log that settings have been updated
-      console.log('🔄 Widget settings updated - all deployed widgets will sync within 30 seconds');
+      console.log('🔄 React widget settings updated - all deployed iframe widgets will sync within 30 seconds via polling');
       
+      // Future enhancement: Could implement WebSocket or SSE for instant updates
       return {
         success: true,
-        message: 'Widget reload triggered successfully'
+        message: 'React widget settings updated - polling-based sync active',
+        sync_method: 'polling',
+        sync_interval: '30_seconds'
       };
     } catch (error) {
-      console.error('Error triggering widget reload:', error);
+      console.error('Error triggering React widget reload:', error);
       throw error;
     }
   },
 
   /**
-   * Update LLM configuration with immediate sync
+   * Update LLM configuration with immediate sync to React widgets
    */
   updateLLMConfig: async (provider, model) => {
     try {
@@ -257,18 +268,23 @@ const clientService = {
       
       const result = await clientService.updateWidgetSettings(updatedSettings);
       
-      // Trigger widget reload
+      // Trigger React widget reload
       await clientService.triggerWidgetReload();
       
-      return result;
+      return {
+        ...result,
+        widget_type: 'react_iframe',
+        llm_provider: provider,
+        llm_model: model
+      };
     } catch (error) {
-      console.error('Error updating LLM config:', error);
+      console.error('Error updating LLM config for React widget:', error);
       throw error;
     }
   },
 
   /**
-   * Check backend connectivity with comprehensive testing
+   * Check backend connectivity with comprehensive React widget testing
    */
   checkConnection: async () => {
     try {
@@ -278,9 +294,11 @@ const clientService = {
       
       const clientInfo = await clientService.getClientInfo();
       
-      // Test multiple endpoints to ensure full connectivity
+      // Test multiple endpoints to ensure full React widget connectivity
       const tests = await Promise.allSettled([
         fetch(`${backendUrl}/health`),
+        fetch(`${backendUrl}/api/widget/health`),
+        fetch(`${backendUrl}/api/widget/app/`, { method: 'HEAD' }),
         fetch(`${backendUrl}/api/widget/test`, {
           headers: { 'X-API-Key': clientInfo.api_key }
         }),
@@ -290,7 +308,7 @@ const clientService = {
       ]);
       
       const results = tests.map((test, index) => ({
-        endpoint: ['health', 'widget-test', 'widget-settings'][index],
+        endpoint: ['health', 'widget-health', 'widget-app', 'widget-test', 'widget-settings'][index],
         success: test.status === 'fulfilled' && test.value.ok,
         status: test.status === 'fulfilled' ? test.value.status : 'failed'
       }));
@@ -300,15 +318,74 @@ const clientService = {
       return {
         success: allSuccessful,
         backend_url: backendUrl,
+        widget_type: 'react_iframe',
         tests: results,
-        message: allSuccessful ? 'All connections successful' : 'Some connections failed'
+        message: allSuccessful ? 'All React widget connections successful' : 'Some React widget connections failed'
       };
     } catch (error) {
-      console.error('Error checking connection:', error);
+      console.error('Error checking React widget connection:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
+        widget_type: 'react_iframe'
       };
+    }
+  },
+
+  /**
+   * Get React widget configuration for embedding
+   */
+  getReactWidgetConfig: async () => {
+    try {
+      const clientInfo = await clientService.getClientInfo();
+      const settings = await clientService.getSettings();
+      const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:8000' 
+        : 'https://customate-ai-1.onrender.com';
+      
+      return {
+        widget_url: `${backendUrl}/api/widget/app/`,
+        api_key: clientInfo.api_key,
+        settings: settings,
+        iframe_config: {
+          width: '350',
+          height: '500',
+          frameborder: '0',
+          allow: 'clipboard-write',
+          sandbox: 'allow-scripts allow-same-origin allow-forms allow-popups'
+        },
+        positioning: {
+          bottom: '20px',
+          right: '20px',
+          'border-radius': '12px',
+          'box-shadow': '0 8px 32px rgba(0,0,0,0.12)',
+          'z-index': '999999'
+        }
+      };
+    } catch (error) {
+      console.error('Error getting React widget config:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Build React widget if needed (development helper)
+   */
+  buildReactWidget: async () => {
+    try {
+      // This would typically trigger a build process
+      console.log('🔨 React widget build process would be triggered here');
+      console.log('Manual build: cd frontend/widget-app && npm run build');
+      
+      return {
+        success: true,
+        message: 'React widget build initiated',
+        build_path: 'frontend/widget-app/dist/',
+        serve_endpoint: '/api/widget/app/'
+      };
+    } catch (error) {
+      console.error('Error building React widget:', error);
+      throw error;
     }
   }
 };

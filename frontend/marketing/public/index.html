@@ -14,35 +14,228 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     
-    <!-- Customate.ai Chatbot Widget with Environment Detection -->
+    <!-- Customate.ai React Widget (iframe-based) with Environment Detection -->
     <script>
       // Automatically detect environment based on hostname
       const isLocalhost = window.location.hostname === 'localhost' || 
                          window.location.hostname === '127.0.0.1';
       const backendUrl = isLocalhost ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
       
-      // Configure the widget
-      window.customateConfig = {
-        apiKey: 'eEx17lbp60FYeWlZxcrg6TYbsK-ZiA_unlkc8cUQTqA',
-        apiUrl: backendUrl,  // Set URL based on environment detection
-        primaryColor: '#4f46e5',
-        debug: isLocalhost  // Only enable debug in localhost environment
-      };
+      // API key for demo widget (replace with your actual API key)
+      const demoApiKey = 'eEx17lbp60FYeWlZxcrg6TYbsK-ZiA_unlkc8cUQTqA';
       
       // Log environment info in development
       if (isLocalhost) {
-        console.log('Running in development environment');
-        console.log('Using backend URL:', backendUrl);
+        console.log('🚀 Running in development environment');
+        console.log('📡 Using backend URL:', backendUrl);
+        console.log('🔑 Using demo API key for React widget');
       }
+      
+      console.log('🎯 Initializing React Widget (iframe-based)');
+      console.log('✨ Features: Real-time settings sync, streaming responses, responsive design');
     </script>
     
-    <!-- Dynamically insert script tag with correct URL -->
+    <!-- React Widget iframe -->
+    <iframe 
+      id="customate-react-widget"
+      src=""
+      width="350" 
+      height="500"
+      frameborder="0"
+      style="position: fixed; bottom: 20px; right: 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 999999; opacity: 0; transition: opacity 0.3s ease;"
+      allow="clipboard-write"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      title="Customate.ai Chat Widget">
+    </iframe>
+    
+    <!-- React Widget initialization and error handling -->
     <script>
-      const scriptSrc = `${window.customateConfig.apiUrl}/api/widget/widget.js`;
-      const scriptTag = document.createElement('script');
-      scriptTag.src = scriptSrc;
-      scriptTag.async = true;
-      document.body.appendChild(scriptTag);
+      document.addEventListener('DOMContentLoaded', function() {
+        const iframe = document.getElementById('customate-react-widget');
+        
+        // Build widget URL with API key
+        const widgetUrl = new URL(`${backendUrl}/api/widget/app/`);
+        widgetUrl.searchParams.set('api_key', demoApiKey);
+        
+        // Set the iframe source
+        iframe.src = widgetUrl.toString();
+        
+        // Handle iframe load success
+        iframe.onload = function() {
+          console.log('✅ React widget loaded successfully');
+          iframe.style.opacity = '1'; // Fade in the widget
+          
+          // Optional: Send a message to the widget
+          setTimeout(() => {
+            iframe.contentWindow?.postMessage({
+              type: 'PING'
+            }, '*');
+          }, 1000);
+        };
+        
+        // Handle iframe load error
+        iframe.onerror = function(error) {
+          console.error('❌ React widget failed to load:', error);
+          iframe.style.display = 'none';
+          
+          // Show fallback message
+          const fallback = document.createElement('div');
+          fallback.innerHTML = `
+            <div style="
+              position: fixed; 
+              bottom: 20px; 
+              right: 20px; 
+              background: #f87171; 
+              color: white; 
+              padding: 12px 16px; 
+              border-radius: 8px; 
+              font-size: 14px; 
+              z-index: 999999;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            ">
+              ⚠️ Widget temporarily unavailable
+            </div>
+          `;
+          document.body.appendChild(fallback);
+          
+          // Auto-hide fallback after 5 seconds
+          setTimeout(() => {
+            if (fallback.parentNode) {
+              fallback.parentNode.removeChild(fallback);
+            }
+          }, 5000);
+        };
+        
+        // Listen for messages from the React widget
+        window.addEventListener('message', function(event) {
+          if (event.origin !== backendUrl && !isLocalhost) {
+            return; // Security check
+          }
+          
+          if (event.data && typeof event.data === 'object') {
+            switch (event.data.type) {
+              case 'WIDGET_READY':
+                console.log('🚀 React widget is ready and responsive');
+                break;
+              
+              case 'WIDGET_STATUS':
+                console.log('📊 React widget status update:', event.data.data);
+                break;
+              
+              case 'PONG':
+                console.log('🏓 React widget responded to ping');
+                break;
+              
+              default:
+                console.log('📨 Message from React widget:', event.data);
+            }
+          }
+        });
+        
+        // Health check for the React widget
+        setInterval(() => {
+          if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'PING'
+            }, '*');
+          }
+        }, 30000); // Ping every 30 seconds
+        
+        // Responsive behavior for mobile
+        function handleResize() {
+          if (window.innerWidth <= 480) {
+            iframe.style.width = 'calc(100vw - 20px)';
+            iframe.style.height = 'calc(100vh - 100px)';
+            iframe.style.bottom = '10px';
+            iframe.style.right = '10px';
+            iframe.style.left = '10px';
+          } else {
+            iframe.style.width = '350px';
+            iframe.style.height = '500px';
+            iframe.style.bottom = '20px';
+            iframe.style.right = '20px';
+            iframe.style.left = 'auto';
+          }
+        }
+        
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Initial call
+        
+        console.log('🎉 React widget initialization complete');
+        console.log('🔄 Auto-sync enabled: Settings will update automatically');
+        console.log('📱 Responsive design: Adapts to mobile and desktop');
+      });
+      
+      // Expose widget control functions globally (for debugging)
+      window.customateWidget = {
+        reload: function() {
+          const iframe = document.getElementById('customate-react-widget');
+          if (iframe) {
+            iframe.src = iframe.src; // Force reload
+            console.log('🔄 React widget reloaded');
+          }
+        },
+        
+        hide: function() {
+          const iframe = document.getElementById('customate-react-widget');
+          if (iframe) {
+            iframe.style.display = 'none';
+            console.log('👁️ React widget hidden');
+          }
+        },
+        
+        show: function() {
+          const iframe = document.getElementById('customate-react-widget');
+          if (iframe) {
+            iframe.style.display = 'block';
+            console.log('👁️ React widget shown');
+          }
+        },
+        
+        sendMessage: function(message) {
+          const iframe = document.getElementById('customate-react-widget');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'SEND_MESSAGE',
+              message: message
+            }, '*');
+            console.log('📤 Message sent to React widget:', message);
+          }
+        },
+        
+        getStatus: function() {
+          const iframe = document.getElementById('customate-react-widget');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'GET_STATUS'
+            }, '*');
+            console.log('📊 Requested status from React widget');
+          }
+        }
+      };
+    </script>
+    
+    <!-- Development helpers -->
+    <script>
+      if (isLocalhost) {
+        console.log('🛠️ Development mode active');
+        console.log('💡 Available commands:');
+        console.log('   window.customateWidget.reload() - Reload widget');
+        console.log('   window.customateWidget.hide() - Hide widget');
+        console.log('   window.customateWidget.show() - Show widget');
+        console.log('   window.customateWidget.sendMessage("Hello") - Send test message');
+        console.log('   window.customateWidget.getStatus() - Get widget status');
+        
+        // Auto-reload widget on certain errors in development
+        window.addEventListener('error', function(e) {
+          if (e.message && e.message.includes('widget')) {
+            console.warn('🔄 Auto-reloading widget due to error in development mode');
+            setTimeout(() => {
+              window.customateWidget.reload();
+            }, 2000);
+          }
+        });
+      }
     </script>
   </body>
 </html>

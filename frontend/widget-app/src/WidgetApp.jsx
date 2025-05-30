@@ -7,6 +7,7 @@ const WidgetApp = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
   const [isFloating, setIsFloating] = useState(true);
+  const [settingsOverride, setSettingsOverride] = useState(null);
   const containerRef = useRef(null);
   
   // Get URL parameters
@@ -20,15 +21,88 @@ const WidgetApp = () => {
     setIsExpanded(testMode || inline); // Always expanded in test/inline mode
   }, []);
 
+  // Listen for postMessage updates from parent (TestChatbotPage)
+  useEffect(() => {
+    const handlePostMessage = (event) => {
+      // Security check - only accept messages from same origin or trusted origins
+      const trustedOrigins = [
+        'http://localhost:3000',
+        'https://customate.vercel.app',
+        'https://customate-ai-1.onrender.com'
+      ];
+      
+      if (!trustedOrigins.includes(event.origin) && event.origin !== window.location.origin) {
+        console.warn('Ignored postMessage from untrusted origin:', event.origin);
+        return;
+      }
+
+      if (event.data && typeof event.data === 'object') {
+        switch (event.data.type) {
+          case 'SETTINGS_UPDATE':
+            console.log('📨 Received settings update via postMessage:', event.data.settings);
+            setSettingsOverride(event.data.settings);
+            break;
+          
+          case 'RESET_CHAT':
+            console.log('🔄 Received chat reset command via postMessage');
+            // Trigger chat reset
+            if (window.resetChatFunction) {
+              window.resetChatFunction();
+            }
+            break;
+          
+          case 'PING':
+            // Respond to health check
+            event.source?.postMessage({
+              type: 'PONG',
+              timestamp: Date.now(),
+              status: 'healthy'
+            }, event.origin);
+            break;
+          
+          default:
+            console.log('📨 Received unknown postMessage:', event.data);
+        }
+      }
+    };
+
+    window.addEventListener('message', handlePostMessage);
+    
+    // Send ready signal to parent
+    if (window.parent !== window) {
+      window.parent.postMessage({
+        type: 'WIDGET_READY',
+        timestamp: Date.now()
+      }, '*');
+    }
+
+    return () => {
+      window.removeEventListener('message', handlePostMessage);
+    };
+  }, []);
+
   // Get settings and chat functionality
-  const { settings, loading: settingsLoading, error: settingsError } = useSettings();
+  const { settings: apiSettings, loading: settingsLoading, error: settingsError } = useSettings();
+  
+  // Merge API settings with postMessage overrides
+  const settings = settingsOverride ? { ...apiSettings, ...settingsOverride } : apiSettings;
+  
   const { 
     messages, 
     isTyping, 
     sendMessage, 
     sessionId,
-    error: chatError 
+    error: chatError,
+    resetChat
   } = useChat(settings);
+
+  // Expose reset function for postMessage
+  useEffect(() => {
+    window.resetChatFunction = resetChat;
+    return () => {
+      window.resetChatFunction = null;
+    };
+  }, [resetChat]);
 
   // Handle expand/collapse for floating mode
   const handleToggle = () => {
@@ -37,11 +111,36 @@ const WidgetApp = () => {
     }
   };
 
+  // Send status updates to parent
+  useEffect(() => {
+    if (window.parent !== window) {
+      const status = {
+        type: 'WIDGET_STATUS',
+        data: {
+          loaded: !settingsLoading,
+          expanded: isExpanded,
+          floating: isFloating,
+          testMode: isTestMode,
+          messagesCount: messages.length,
+          sessionId: sessionId,
+          settings: settings,
+          error: settingsError || chatError,
+          timestamp: Date.now()
+        }
+      };
+      
+      window.parent.postMessage(status, '*');
+    }
+  }, [settingsLoading, isExpanded, isFloating, isTestMode, messages.length, sessionId, settings, settingsError, chatError]);
+
   if (settingsLoading) {
     return (
       <div className="widget-loading">
         <div className="loading-spinner"></div>
-        <p>Loading widget...</p>
+        <p>Loading React widget...</p>
+        {isTestMode && (
+          <p className="text-xs text-gray-500 mt-2">Test mode active</p>
+        )}
       </div>
     );
   }
@@ -50,8 +149,14 @@ const WidgetApp = () => {
     return (
       <div className="widget-error">
         <div className="error-icon">⚠️</div>
-        <p>Failed to load widget</p>
+        <p>Failed to load React widget</p>
         <button onClick={() => window.location.reload()}>Retry</button>
+        {isTestMode && (
+          <div className="text-xs text-gray-500 mt-2">
+            <p>Test mode error details:</p>
+            <p>{settingsError}</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -61,8 +166,8 @@ const WidgetApp = () => {
       ref={containerRef}
       className={`widget-container ${isFloating ? 'floating' : 'inline'} ${isExpanded ? 'expanded' : 'collapsed'}`}
       style={{
-        '--primary-color': settings.primary_color || '#ea580c',
-        '--widget-position': settings.widget_position || 'bottom-right'
+        '--primary-color': settings?.primary_color || '#ea580c',
+        '--widget-position': settings?.widget_position || 'bottom-right'
       }}
     >
       {/* Floating toggle button */}
@@ -70,7 +175,8 @@ const WidgetApp = () => {
         <button 
           className="widget-toggle-button"
           onClick={handleToggle}
-          style={{ backgroundColor: settings.primary_color }}
+          style={{ backgroundColor: settings?.primary_color || '#ea580c' }}
+          title={`Open ${settings?.chatbot_name || 'AI Assistant'}`}
         >
           <ChatIcon />
         </button>
@@ -82,29 +188,43 @@ const WidgetApp = () => {
           {/* Header */}
           <div 
             className="widget-header"
-            style={{ background: `linear-gradient(135deg, ${settings.primary_color}, #f97316)` }}
+            style={{ 
+              background: `linear-gradient(135deg, ${settings?.primary_color || '#ea580c'}, #f97316)` 
+            }}
           >
             <div className="header-content">
               <div className="bot-avatar">
                 <BotIcon />
               </div>
               <div className="header-text">
-                <div className="bot-name">{settings.chatbot_name || 'AI Assistant'}</div>
+                <div className="bot-name">{settings?.chatbot_name || 'AI Assistant'}</div>
                 <div className="status">
                   <div className="status-dot"></div>
                   Online
+                  {settingsOverride && (
+                    <span className="ml-2 text-xs opacity-75">• Live sync</span>
+                  )}
                 </div>
               </div>
             </div>
             
             {isFloating && (
-              <button className="close-button" onClick={handleToggle}>
+              <button 
+                className="close-button" 
+                onClick={handleToggle}
+                title="Close chat"
+              >
                 <CloseIcon />
               </button>
             )}
             
             {isTestMode && (
-              <div className="test-badge">Testing Mode</div>
+              <div className="test-badge">
+                Test Mode
+                {settingsOverride && (
+                  <span className="ml-1">• Live</span>
+                )}
+              </div>
             )}
           </div>
 

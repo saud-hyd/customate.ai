@@ -8,3 +8,10 @@
     "three": "^0.176.0"
   }
 }
+{
+  "scripts": {
+    "build:widget": "cd frontend/widget-app && npm install && npm run build",
+    "dev:widget": "cd frontend/widget-app && npm start",
+    "build:all": "npm run build:widget && cd frontend/dashboard && npm run build"
+  }
+}
