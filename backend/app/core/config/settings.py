@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     
     # LLM settings
     DEEPSEEK_API_KEY: Optional[str] = Field(default=os.getenv("DEEPSEEK_API_KEY", "sk-457a5f4d6d0049d59c47469819b19703"))
-    OPENAI_API_KEY: Optional[str] = Field(default=os.getenv("OPENAI_API_KEY", "your_openai_api_key"))
+    OPENAI_API_KEY: Optional[str] = Field(default=os.getenv("OPENAI_API_KEY", "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"))
     
     # Storage settings
     STORAGE_PROVIDER: str = Field(default=os.getenv("STORAGE_PROVIDER", "local"))

@@ -35,8 +35,8 @@ const clientService = {
         reset_on_page_refresh: response.data.reset_on_page_refresh,
         session_timeout: response.data.session_timeout,
         custom_settings: {
-          llm_provider: response.data.llm_provider,
-          llm_model: response.data.llm_model
+          llm_provider: "openai",
+          llm_model: "gpt-4.1-mini-2025-04-14"
         }
       };
     } catch (error) {
@@ -52,8 +52,8 @@ const clientService = {
         reset_on_page_refresh: true,
         session_timeout: 30,
         custom_settings: {
-          llm_provider: 'deepseek',
-          llm_model: 'deepseek-chat'
+          llm_provider: 'openai',
+          llm_model: 'gpt-4.1-mini-2025-04-14'
         }
       };
     }
@@ -74,8 +74,8 @@ const clientService = {
         enable_suggestions: settings.enable_suggestions,
         reset_on_page_refresh: settings.reset_on_page_refresh,
         session_timeout: settings.session_timeout,
-        llm_provider: settings.custom_settings?.llm_provider,
-        llm_model: settings.custom_settings?.llm_model
+        llm_provider:"openai", 
+        llm_model: "gpt-4.1-mini-2025-04-14",
       };
 
       console.log('Updating React widget settings:', widgetSettings);
@@ -261,8 +261,8 @@ const clientService = {
         ...currentSettings,
         custom_settings: {
           ...currentSettings.custom_settings,
-          llm_provider: provider,
-          llm_model: model
+          llm_provider: "openai",
+          llm_model: "gpt-4.1-mini-2025-04-14"
         }
       };
       

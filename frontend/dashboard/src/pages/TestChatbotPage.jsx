@@ -105,8 +105,8 @@ const TestChatbotPage = () => {
         showTypingIndicator: settings.show_typing_indicator !== undefined ? settings.show_typing_indicator : prev.showTypingIndicator,
         enableSuggestions: settings.enable_suggestions !== undefined ? settings.enable_suggestions : prev.enableSuggestions,
         greeting: settings.greeting_message || prev.greeting,
-        llmProvider: settings.custom_settings?.llm_provider || prev.llmProvider,
-        llmModel: settings.custom_settings?.llm_model || prev.llmModel || "deepseek-chat",
+        llmProvider: "openai",
+        llmModel: "gpt-4.1-mini-2025-04-14",
       }));
     } catch (err) {
       console.error('❌ Error fetching current settings:', err);
@@ -212,6 +212,7 @@ const TestChatbotPage = () => {
   };
 
   // Save settings
+// Save settings
   const handleSaveSettings = async () => {
     try {
       setIsSaving(true);
@@ -224,13 +225,22 @@ const TestChatbotPage = () => {
         enable_suggestions: chatSettings.enableSuggestions,
         greeting_message: chatSettings.greeting,
         custom_settings: {
-          llm_provider: chatSettings.llmProvider,
-          llm_model: chatSettings.llmModel
+        llmProvider: "openai",
+        llmModel: "gpt-4.1-mini-2025-04-14",
         }
       };
       
       await clientService.updateWidgetSettings(settingsToSave);
-      reloadWidget();
+      
+      // Tell the iframe to refresh its settings (instead of reloading entire widget)
+      const iframe = document.querySelector('iframe[title="Test Widget"]');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: 'refreshSettings'
+        }, '*');
+        console.log('📨 Sent refresh settings message to widget');
+      }
+      
       toast.success('Settings saved and applied!');
       
     } catch (err) {

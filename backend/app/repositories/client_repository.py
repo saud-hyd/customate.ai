@@ -177,8 +177,8 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
             "enable_typing_indicator": True,
             "widget_position": "bottom-right",
             "custom_settings": {
-                "llm_provider": "deepseek",
-                "llm_model": "deepseek-chat",
+                "llm_provider": "openai",
+                "llm_model": "gpt-4.1-mini-2025-04-14",
                 "reset_on_page_refresh": True,
                 "session_timeout": 30
             }
@@ -256,8 +256,8 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
             "widget_position": settings.widget_position or "bottom-right",
             "show_typing_indicator": settings.enable_typing_indicator if settings.enable_typing_indicator is not None else True,
             "enable_suggestions": settings.enable_suggestions if settings.enable_suggestions is not None else True,
-            "llm_provider": custom.get("llm_provider", "deepseek"),
-            "llm_model": custom.get("llm_model", "deepseek-chat"),
+            "llm_provider": custom.get("llm_provider", "openai"),
+            "llm_model": custom.get("llm_model", "gpt-4.1-mini-2025-04-14"),
             "reset_on_page_refresh": custom.get("reset_on_page_refresh", True),
             "session_timeout": custom.get("session_timeout", 30)
         }

@@ -14,7 +14,7 @@ class OpenAIService(LLMService):
     def __init__(self, model_name="gpt-3.5-turbo"):
         self.api_key = settings.OPENAI_API_KEY
         self.api_base_url = "https://api.openai.com/v1"
-        self.model = model_name
+        self.model = "gpt-4.1-mini-2025-04-14"  
         self._mock_service = None  # Lazy-loaded mock service
         
         # Verify API key is set
@@ -243,3 +243,16 @@ class OpenAIService(LLMService):
         except Exception as e:
             logger.exception(f"Error in OpenAI streaming response: {str(e)}")
             yield "I apologize, but I'm having trouble generating a streaming response right now. Please try again later."
+            
+    def __init__(self, model_name="gpt-4.1-mini-2025-04-14"):
+        self.api_key = settings.OPENAI_API_KEY
+        self.api_base_url = "https://api.openai.com/v1"
+        self.model = model_name  # Use the specific model
+        self._mock_service = None  # Lazy-loaded mock service
+        
+        # Verify API key is set
+        if not self.api_key:
+            logger.error("OpenAI API key not configured. LLM service will not function.")
+            raise ValueError("OpenAI API key is required but not configured")
+        
+        logger.info(f"OpenAI service initialized with model: {self.model}")                
