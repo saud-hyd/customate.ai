@@ -6,25 +6,58 @@ import TypingIndicator from './TypingIndicator';
 const ChatInterface = ({ messages, isTyping, onSendMessage, settings, error }) => {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const [showError, setShowError] = useState(false);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or typing changes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+    };
+
+    // Small delay to ensure content is rendered
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [messages, isTyping]);
 
-  // Welcome message
+  // Handle error display
   useEffect(() => {
-    if (messages.length === 0 && settings.greeting_message) {
-      // Add welcome message if no messages exist
-      const welcomeMessage = {
-        id: 'welcome',
-        role: 'assistant',
-        content: settings.greeting_message,
-        created_at: new Date().toISOString()
-      };
-      // This would typically be handled by the parent component
+    if (error) {
+      setShowError(true);
+      // Auto-hide error after 5 seconds
+      const timeoutId = setTimeout(() => {
+        setShowError(false);
+      }, 5000);
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setShowError(false);
     }
-  }, [messages.length, settings.greeting_message]);
+  }, [error]);
+
+  // Enhanced message send handler with error handling
+  const handleSendMessage = async (messageText) => {
+    try {
+      setShowError(false); // Clear any existing errors
+      await onSendMessage(messageText);
+    } catch (error) {
+      console.error('Error in ChatInterface sendMessage:', error);
+      setShowError(true);
+    }
+  };
+
+  // Get welcome message
+  const getWelcomeMessage = () => {
+    return {
+      id: 'welcome',
+      role: 'assistant',
+      content: settings?.greeting_message || 'Hello! How can I help you today?',
+      created_at: new Date().toISOString()
+    };
+  };
 
   return (
     <div className="chat-interface">
@@ -36,12 +69,7 @@ const ChatInterface = ({ messages, isTyping, onSendMessage, settings, error }) =
         {/* Welcome message if no messages */}
         {messages.length === 0 && (
           <ChatMessage
-            message={{
-              id: 'welcome',
-              role: 'assistant',
-              content: settings.greeting_message || 'Hello! How can I help you today?',
-              created_at: new Date().toISOString()
-            }}
+            message={getWelcomeMessage()}
             settings={settings}
           />
         )}
@@ -55,17 +83,31 @@ const ChatInterface = ({ messages, isTyping, onSendMessage, settings, error }) =
           />
         ))}
 
-        {/* Typing indicator */}
-        {isTyping && settings.show_typing_indicator && (
-          <TypingIndicator />
+        {/* Typing indicator - ONLY show when actually typing */}
+        {isTyping && settings?.show_typing_indicator !== false && (
+          <TypingIndicator settings={settings} />
         )}
 
         {/* Error message */}
-        {error && (
+        {showError && error && (
           <div className="error-message">
             <div className="error-content">
               <span className="error-icon">⚠️</span>
-              {error}
+              <span>{error}</span>
+              <button 
+                onClick={() => setShowError(false)}
+                className="error-close"
+                style={{ 
+                  marginLeft: '8px', 
+                  background: 'none', 
+                  border: 'none', 
+                  color: 'inherit', 
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                ✕
+              </button>
             </div>
           </div>
         )}
@@ -75,9 +117,9 @@ const ChatInterface = ({ messages, isTyping, onSendMessage, settings, error }) =
 
       {/* Input Container */}
       <ChatInput 
-        onSendMessage={onSendMessage}
+        onSendMessage={handleSendMessage}
         settings={settings}
-        disabled={isTyping}
+        disabled={isTyping} // Disable input while typing indicator is active
       />
     </div>
   );

@@ -41,7 +41,7 @@ class WidgetApi {
     }
   }
 
-  // Send message with streaming
+  // FIXED: Enhanced streaming with robust completion handling
   async sendMessageStream(credentials, message, sessionId, callbacks) {
     const requestBody = {
       message,
@@ -53,6 +53,14 @@ class WidgetApi {
       body: requestBody,
       hasApiKey: !!credentials.apiKey
     });
+
+    // Track stream state
+    let streamState = {
+      completed: false,
+      hasContent: false,
+      messageCount: 0,
+      lastChunkTime: Date.now()
+    };
 
     try {
       const response = await fetch(`${this.baseURL}/api/widget/message/stream`, {
@@ -73,7 +81,14 @@ class WidgetApi {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let messageCount = 0;
+
+      // FIXED: Add timeout for stream completion
+      const streamTimeout = setTimeout(() => {
+        if (!streamState.completed) {
+          console.warn('⏰ Stream timeout reached, forcing completion');
+          this._forceStreamCompletion(callbacks, streamState);
+        }
+      }, 30000); // 30 second timeout
 
       while (true) {
         const { done, value } = await reader.read();
@@ -101,46 +116,64 @@ class WidgetApi {
               console.log('📨 Processing stream event:', eventData.substring(0, 100) + '...');
               
               const data = JSON.parse(eventData);
-              messageCount++;
+              streamState.messageCount++;
+              streamState.lastChunkTime = Date.now();
               
-    switch (data.type) {
-    case 'info':
-        console.log('📡 INFO event received:', data);
-        callbacks.onInfo?.(data);
-        break;
-        
-    case 'chunk':
-        console.log('📝 CHUNK event received:', data.content?.substring(0, 30) + '...');
-        callbacks.onChunk?.(data.content);
-        break;
-        
-    case 'complete':
-        console.log('✅ COMPLETE event received:', data);
-        callbacks.onComplete?.(data.content);
-        return;
-        
-    case 'done':
-        console.log('✅ DONE event received:', data);
-        // Handle both nested and direct content formats
-        const finalContent = data.message?.content || data.content || '';
-        console.log('📤 Final content length:', finalContent.length);
-        callbacks.onComplete?.(finalContent);
-        return;
-        
-    case 'error':
-        console.error('❌ ERROR event received:', data.error);
-        callbacks.onError?.(data.error);
-        return;
-        
-    case 'warning':
-        console.warn('⚠️ WARNING event received:', data.message);
-        break;
-        
-    default:
-        console.warn('🤷 UNKNOWN event type received:', data.type, data);
-        break;
-    }          
-  } catch (e) {
+              // FIXED: Enhanced event handling with completion tracking
+              switch (data.type) {
+                case 'info':
+                  console.log('📡 INFO event received:', data);
+                  callbacks.onInfo?.(data);
+                  break;
+                  
+                case 'chunk':
+                  if (!streamState.completed) {
+                    console.log('📝 CHUNK event received:', data.content?.substring(0, 30) + '...');
+                    streamState.hasContent = true;
+                    callbacks.onChunk?.(data.content);
+                  }
+                  break;
+                  
+                case 'complete':
+                  if (!streamState.completed) {
+                    console.log('✅ COMPLETE event received:', data);
+                    streamState.completed = true;
+                    clearTimeout(streamTimeout);
+                    callbacks.onComplete?.(data.content);
+                    return; // Exit immediately after completion
+                  }
+                  break;
+                  
+                case 'done':
+                  if (!streamState.completed) {
+                    console.log('✅ DONE event received:', data);
+                    streamState.completed = true;
+                    clearTimeout(streamTimeout);
+                    
+                    // Handle both nested and direct content formats
+                    const finalContent = data.message?.content || data.content || '';
+                    console.log('📤 Final content length:', finalContent.length);
+                    callbacks.onComplete?.(finalContent);
+                    return; // Exit immediately after done
+                  }
+                  break;
+                  
+                case 'error':
+                  console.error('❌ ERROR event received:', data.error);
+                  streamState.completed = true;
+                  clearTimeout(streamTimeout);
+                  callbacks.onError?.(data.error);
+                  return; // Exit immediately after error
+                  
+                case 'warning':
+                  console.warn('⚠️ WARNING event received:', data.message);
+                  break;
+                  
+                default:
+                  console.warn('🤷 UNKNOWN event type received:', data.type, data);
+                  break;
+              }
+            } catch (e) {
               console.error('❌ Error parsing stream data:', e);
               console.error('📄 Raw line that failed:', line);
               // Continue processing other lines - don't fail entire stream
@@ -150,17 +183,33 @@ class WidgetApi {
         }
       }
 
-      console.log(`📊 Stream processing complete. Processed ${messageCount} messages.`);
-
-      // If we reach here without a proper completion, it might be an issue
-      if (messageCount === 0) {
-        console.warn('⚠️ No stream messages received');
-        callbacks.onError?.('No response received from server');
+      // FIXED: Handle case where stream ends without explicit completion
+      if (!streamState.completed) {
+        console.warn('⚠️ Stream ended without completion event');
+        this._forceStreamCompletion(callbacks, streamState);
       }
+
+      console.log(`📊 Stream processing complete. Processed ${streamState.messageCount} messages.`);
 
     } catch (error) {
       console.error('❌ Stream processing error:', error);
       callbacks.onError?.(error.message);
+    }
+  }
+
+  // FIXED: Helper method to force stream completion
+  _forceStreamCompletion(callbacks, streamState) {
+    if (streamState.completed) return;
+    
+    streamState.completed = true;
+    console.log('🔧 Forcing stream completion...');
+    
+    if (streamState.hasContent) {
+      // If we received content, trigger completion
+      callbacks.onComplete?.('');
+    } else {
+      // If no content received, trigger error
+      callbacks.onError?.('Stream completed without content');
     }
   }
 

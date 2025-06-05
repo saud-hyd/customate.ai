@@ -17,8 +17,14 @@ const WidgetApp = () => {
     const inline = urlParams.get('inline') === 'true';
     
     setIsTestMode(testMode);
-    setIsFloating(!inline && !testMode);
-    setIsExpanded(testMode || inline); // Always expanded in test/inline mode
+    setIsFloating(!inline);
+    
+    // FIXED: Only auto-expand in test mode, not inline mode
+    if (testMode) {
+      setIsExpanded(true);
+    } else {
+      setIsExpanded(false); // Ensure it starts collapsed for normal floating mode
+    }
   }, []);
 
   // Listen for postMessage updates from parent (TestChatbotPage)
@@ -45,14 +51,12 @@ const WidgetApp = () => {
           
           case 'RESET_CHAT':
             console.log('🔄 Received chat reset command via postMessage');
-            // Trigger chat reset
             if (window.resetChatFunction) {
               window.resetChatFunction();
             }
             break;
           
           case 'PING':
-            // Respond to health check
             event.source?.postMessage({
               type: 'PONG',
               timestamp: Date.now(),
@@ -108,6 +112,7 @@ const WidgetApp = () => {
   const handleToggle = () => {
     if (isFloating) {
       setIsExpanded(!isExpanded);
+      console.log('🔄 Widget toggled:', !isExpanded ? 'expanded' : 'collapsed');
     }
   };
 
@@ -137,7 +142,7 @@ const WidgetApp = () => {
     return (
       <div className="widget-loading">
         <div className="loading-spinner"></div>
-        <p>Loading React widget...</p>
+        <p>Loading widget...</p>
         {isTestMode && (
           <p className="text-xs text-gray-500 mt-2">Test mode active</p>
         )}
@@ -149,7 +154,7 @@ const WidgetApp = () => {
     return (
       <div className="widget-error">
         <div className="error-icon">⚠️</div>
-        <p>Failed to load React widget</p>
+        <p>Failed to load widget</p>
         <button onClick={() => window.location.reload()}>Retry</button>
         {isTestMode && (
           <div className="text-xs text-gray-500 mt-2">
@@ -170,7 +175,7 @@ const WidgetApp = () => {
         '--widget-position': settings?.widget_position || 'bottom-right'
       }}
     >
-      {/* Floating toggle button */}
+      {/* FIXED: Only show toggle button when floating AND not expanded */}
       {isFloating && !isExpanded && (
         <button 
           className="widget-toggle-button"
@@ -182,8 +187,8 @@ const WidgetApp = () => {
         </button>
       )}
 
-      {/* Chat interface */}
-      {(isExpanded || !isFloating) && (
+      {/* FIXED: Only show chat interface when explicitly expanded OR in inline/test mode */}
+      {(isExpanded || (!isFloating && isTestMode)) && (
         <div className="widget-chat-container">
           {/* Header */}
           <div 
@@ -208,6 +213,7 @@ const WidgetApp = () => {
               </div>
             </div>
             
+            {/* FIXED: Only show close button in floating mode */}
             {isFloating && (
               <button 
                 className="close-button" 
@@ -242,7 +248,7 @@ const WidgetApp = () => {
   );
 };
 
-// Simple icons as components
+// Enhanced orange chat icon
 const ChatIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>

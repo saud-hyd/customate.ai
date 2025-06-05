@@ -24,27 +24,65 @@
   position: relative;
 }
 
-/* Toggle button */
+/* FIXED: Enhanced toggle button with proper orange color */
 .widget-toggle-button {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   border: none;
+  background-color: #ea580c; /* Orange color */
+  background: linear-gradient(135deg, #ea580c, #f97316);
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .widget-toggle-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+  background: linear-gradient(135deg, #dc2626, #ea580c);
 }
 
-/* Chat container */
+.widget-toggle-button:active {
+  transform: scale(0.95);
+}
+
+/* Add a subtle pulse animation to make it more noticeable */
+.widget-toggle-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ea580c, #f97316);
+  z-index: -1;
+  animation: pulse 2s infinite;
+  opacity: 0.6;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* FIXED: Larger chat container for better user experience */
 .widget-chat-container {
   background: white;
   border-radius: 12px;
@@ -52,11 +90,14 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease;
 }
 
 .floating .widget-chat-container {
-  width: 350px;
-  height: 500px;
+  width: 380px; /* FIXED: Increased from 350px */
+  height: 600px; /* FIXED: Increased from 500px */
   margin-bottom: 10px;
 }
 
@@ -65,7 +106,7 @@
   height: 100%;
 }
 
-/* Header */
+/* Enhanced header with better orange gradient */
 .widget-header {
   padding: 16px 20px;
   color: white;
@@ -73,6 +114,7 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #ea580c, #f97316) !important;
 }
 
 .header-content {
@@ -115,6 +157,12 @@
   background: #22c55e;
   border-radius: 50%;
   margin-right: 6px;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.5; }
 }
 
 .close-button {
@@ -122,13 +170,16 @@
   border: none;
   color: white;
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
   border-radius: 6px;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  opacity: 0.8;
 }
 
 .close-button:hover {
   background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .test-badge {
@@ -138,12 +189,13 @@
   border-radius: 12px;
 }
 
-/* Chat interface */
+/* FIXED: Better chat interface with proper height distribution */
 .chat-interface {
   display: flex;
   flex-direction: column;
   height: 100%;
   flex: 1;
+  min-height: 0; /* Important for flex child */
 }
 
 .messages-container {
@@ -152,6 +204,7 @@
   padding: 20px;
   background-color: #f8fafc;
   scroll-behavior: smooth;
+  min-height: 400px; /* FIXED: Minimum height for content */
 }
 
 .messages-container::-webkit-scrollbar {
@@ -164,11 +217,15 @@
 }
 
 .messages-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--primary-color, #ea580c), #f97316);
+  background: linear-gradient(135deg, #ea580c, #f97316);
   border-radius: 3px;
 }
 
-/* Messages */
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+}
+
+/* Messages styling */
 .message {
   display: flex;
   margin-bottom: 16px;
@@ -194,10 +251,14 @@
 }
 
 .message.user .message-bubble {
+  background-color: #ea580c; /* FIXED: Use orange for user messages */
+  color: white;
   border-bottom-right-radius: 4px;
 }
 
 .message.assistant .message-bubble {
+  background-color: #ffffff;
+  color: #1f2937;
   border-bottom-left-radius: 4px;
   border: 1px solid #e5e7eb;
 }
@@ -233,16 +294,21 @@
 }
 
 .message-bubble a {
-  color: inherit;
+  color: #ea580c;
   text-decoration: underline;
 }
 
-/* Typing indicator */
+.message.user .message-bubble a {
+  color: white;
+}
+
+/* FIXED: Enhanced typing indicator */
 .typing-bubble {
   background-color: white !important;
   color: #6b7280 !important;
   display: flex;
   padding: 14px 16px !important;
+  border: 1px solid #e5e7eb !important;
 }
 
 .typing-indicator {
@@ -255,7 +321,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #aaa;
+  background-color: #ea580c; /* FIXED: Orange typing dots */
   animation: bounce 1.4s infinite ease-in-out both;
 }
 
@@ -263,11 +329,12 @@
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
-/* Input */
+/* FIXED: Enhanced input area */
 .chat-input-container {
   padding: 16px 20px;
   border-top: 1px solid #e5e7eb;
   background-color: white;
+  min-height: 80px; /* FIXED: Ensure input area has proper height */
 }
 
 .input-wrapper {
@@ -279,18 +346,25 @@
 .message-input {
   flex: 1;
   padding: 12px 16px;
-  border: 1px solid #d1d5db;
+  border: 2px solid #d1d5db;
   border-radius: 22px;
   outline: none;
   font-size: 14px;
   background-color: #f9fafb;
   transition: all 0.2s;
   resize: none;
+  min-height: 44px;
 }
 
 .message-input:focus {
-  border-color: var(--primary-color, #ea580c);
+  border-color: #ea580c; /* FIXED: Orange focus border */
   box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+  background-color: white;
+}
+
+.message-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .send-button {
@@ -298,6 +372,7 @@
   height: 44px;
   border-radius: 50%;
   border: none;
+  background: linear-gradient(135deg, #ea580c, #f97316); /* FIXED: Orange gradient */
   color: white;
   cursor: pointer;
   display: flex;
@@ -309,10 +384,18 @@
 
 .send-button:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
+  background: #9ca3af;
 }
 
 .send-button:not(:disabled):hover {
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+}
+
+.send-button:not(:disabled):active {
+  transform: scale(0.95);
 }
 
 /* Loading states */
@@ -324,13 +407,14 @@
   height: 100%;
   padding: 20px;
   text-align: center;
+  min-height: 200px;
 }
 
 .loading-spinner {
   width: 32px;
   height: 32px;
   border: 3px solid #f3f4f6;
-  border-top: 3px solid var(--primary-color, #ea580c);
+  border-top: 3px solid #ea580c; /* FIXED: Orange spinner */
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -365,13 +449,25 @@
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%, 100% { 
+    transform: translateY(0); 
+    opacity: 1;
+  }
+  50% { 
+    transform: translateY(-5px); 
+    opacity: 0.7;
+  }
 }
 
 @keyframes spin {
@@ -379,11 +475,11 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Responsive */
+/* FIXED: Enhanced responsive design */
 @media (max-width: 480px) {
   .floating .widget-chat-container {
     width: calc(100vw - 20px);
-    height: calc(100vh - 100px);
+    height: calc(100vh - 120px); /* FIXED: Better mobile height */
     position: fixed;
     bottom: 80px;
     right: 10px;
@@ -393,5 +489,56 @@
   .widget-toggle-button {
     width: 56px;
     height: 56px;
+    bottom: 20px;
+    right: 20px;
   }
+  
+  .messages-container {
+    min-height: 300px;
+    padding: 15px;
+  }
+  
+  .chat-input-container {
+    padding: 12px 15px;
+  }
+}
+
+@media (max-width: 320px) {
+  .floating .widget-chat-container {
+    width: calc(100vw - 10px);
+    right: 5px;
+    left: 5px;
+  }
+  
+  .widget-toggle-button {
+    width: 52px;
+    height: 52px;
+    right: 15px;
+  }
+}
+
+/* FIXED: Ensure widget container doesn't interfere when collapsed */
+.widget-container.floating.collapsed {
+  pointer-events: none;
+}
+
+.widget-container.floating.collapsed .widget-toggle-button {
+  pointer-events: all;
+}
+
+.widget-container.floating.expanded {
+  pointer-events: all;
+}
+
+/* Ensure proper z-index stacking */
+.widget-container.floating {
+  z-index: 999999;
+}
+
+.widget-toggle-button {
+  z-index: 1000000;
+}
+
+.widget-chat-container {
+  z-index: 999999;
 }

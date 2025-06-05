@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import widgetApi from '../services/widgetApi';
 
 const useChat = (settings) => {
@@ -6,6 +6,10 @@ const useChat = (settings) => {
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [error, setError] = useState(null);
+  
+  // FIXED: Use refs to track state and prevent race conditions
+  const isProcessingRef = useRef(false);
+  const typingTimeoutRef = useRef(null);
 
   // Get credentials
   const getCredentials = () => {
@@ -17,11 +21,50 @@ const useChat = (settings) => {
     };
   };
 
+  // FIXED: Enhanced typing indicator management
+  const startTyping = () => {
+    console.log('🔄 Starting typing indicator...');
+    setIsTyping(true);
+    setError(null);
+    
+    // Clear any existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Safety timeout to ensure typing indicator doesn't get stuck
+    typingTimeoutRef.current = setTimeout(() => {
+      console.log('⏰ Typing indicator safety timeout reached');
+      stopTyping();
+    }, 30000); // 30 second safety timeout
+  };
+
+  const stopTyping = () => {
+    console.log('🛑 Stopping typing indicator...');
+    setIsTyping(false);
+    isProcessingRef.current = false;
+    
+    // Clear timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    
+    console.log('✅ Typing indicator stopped, ready for new messages');
+  };
+
   // Send message with streaming
   const sendMessage = useCallback(async (messageText) => {
     if (!messageText.trim()) return;
+    
+    // FIXED: Prevent multiple simultaneous requests
+    if (isProcessingRef.current) {
+      console.log('⚠️ Already processing a message, ignoring new request');
+      return;
+    }
 
     console.log('🚀 Starting message send process...');
+    isProcessingRef.current = true;
 
     // Add user message
     const userMessage = {
@@ -32,8 +75,7 @@ const useChat = (settings) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
-    setError(null);
+    startTyping();
 
     console.log('✅ User message added, typing indicator started');
 
@@ -54,6 +96,7 @@ const useChat = (settings) => {
 
       let accumulatedContent = '';
       let chunkCount = 0;
+      let streamCompleted = false;
 
       // Handle streaming response
       await widgetApi.sendMessageStream(
@@ -62,6 +105,8 @@ const useChat = (settings) => {
         sessionId,
         {
           onChunk: (chunk) => {
+            if (streamCompleted) return; // Ignore chunks after completion
+            
             chunkCount++;
             accumulatedContent += chunk;
             console.log(`📝 Chunk ${chunkCount} received:`, chunk.substring(0, 50) + '...');
@@ -72,61 +117,96 @@ const useChat = (settings) => {
                 : msg
             ));
           },
+          
           onInfo: (info) => {
             console.log('📡 Info received:', info);
             if (info.session_id) {
               setSessionId(info.session_id);
             }
           },
+          
           onComplete: (completeContent) => {
-            console.log('✅ Stream completed! Final content length:', completeContent?.length);
-            console.log('🛑 Setting typing to false...');
+            if (streamCompleted) return; // Prevent double completion
+            streamCompleted = true;
             
+            console.log('✅ Stream completed! Final content length:', completeContent?.length);
+            console.log('🛑 Stopping typing indicator...');
+            
+            // Update final message content
             setMessages(prev => prev.map(msg => 
               msg.id === assistantMessageId 
                 ? { ...msg, content: completeContent || accumulatedContent }
                 : msg
             ));
             
-            // CRITICAL: Stop the typing indicator
-            setIsTyping(false);
-            
-            console.log('✅ Typing indicator stopped, chat ready for new messages');
+            // FIXED: Ensure typing stops after a brief delay to show completion
+            setTimeout(() => {
+              stopTyping();
+            }, 100);
           },
+          
           onError: (error) => {
+            if (streamCompleted) return; // Ignore errors after completion
+            streamCompleted = true;
+            
             console.error('❌ Streaming error:', error);
-            console.log('🛑 Setting typing to false due to error...');
+            console.log('🛑 Stopping typing indicator due to error...');
             
             setError('Failed to get response. Please try again.');
-            setIsTyping(false);
+            stopTyping();
             
-            console.log('✅ Error handled, typing indicator stopped');
+            // Remove the empty assistant message on error
+            setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
           }
         }
       );
 
       console.log(`📊 Stream process completed. Total chunks: ${chunkCount}`);
+      
+      // FIXED: Final safety check to ensure typing is stopped
+      setTimeout(() => {
+        if (isProcessingRef.current) {
+          console.log('🔧 Final safety check: forcing typing indicator to stop');
+          stopTyping();
+        }
+      }, 1000);
 
     } catch (error) {
       console.error('❌ Error in sendMessage:', error);
-      console.log('🛑 Setting typing to false due to catch error...');
+      console.log('🛑 Stopping typing indicator due to catch error...');
       
       setError('Failed to send message. Please try again.');
-      setIsTyping(false);
-      
-      console.log('✅ Catch error handled, typing indicator stopped');
+      stopTyping();
     }
   }, [sessionId]);
 
   // Reset chat
   const resetChat = useCallback(() => {
     console.log('🔄 Resetting chat...');
+    
+    // Stop any ongoing processes
+    stopTyping();
+    
     setMessages([]);
     setSessionId(null);
     setError(null);
-    setIsTyping(false);
+    
     console.log('✅ Chat reset complete');
   }, []);
+
+  // FIXED: Cleanup function to prevent memory leaks
+  const cleanup = useCallback(() => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    isProcessingRef.current = false;
+  }, []);
+
+  // FIXED: Add cleanup on unmount
+  React.useEffect(() => {
+    return cleanup;
+  }, [cleanup]);
 
   return {
     messages,
@@ -134,7 +214,8 @@ const useChat = (settings) => {
     sessionId,
     error,
     sendMessage,
-    resetChat
+    resetChat,
+    cleanup
   };
 };
 

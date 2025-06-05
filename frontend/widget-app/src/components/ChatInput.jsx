@@ -1,26 +1,48 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const ChatInput = ({ onSendMessage, settings, disabled }) => {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const inputRef = useRef(null);
 
+  // Sync internal sending state with external disabled state
+  useEffect(() => {
+    if (!disabled && isSending) {
+      setIsSending(false);
+    }
+  }, [disabled]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!message.trim() || disabled || isSending) return;
+    if (!message.trim() || disabled || isSending) {
+      console.log('❌ Cannot send message:', { 
+        hasMessage: !!message.trim(), 
+        disabled, 
+        isSending 
+      });
+      return;
+    }
 
     const messageText = message.trim();
-    setMessage('');
+    console.log('📤 Sending message:', messageText);
+    
+    setMessage(''); // Clear input immediately
     setIsSending(true);
 
     try {
       await onSendMessage(messageText);
+      console.log('✅ Message sent successfully');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+      // Restore message on error
+      setMessage(messageText);
     } finally {
       setIsSending(false);
-      inputRef.current?.focus();
+      // Focus input after sending (with small delay)
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -31,6 +53,9 @@ const ChatInput = ({ onSendMessage, settings, disabled }) => {
     }
   };
 
+  const isInputDisabled = disabled || isSending;
+  const canSend = message.trim() && !isInputDisabled;
+
   return (
     <form onSubmit={handleSubmit} className="chat-input-container">
       <div className="input-wrapper">
@@ -40,27 +65,48 @@ const ChatInput = ({ onSendMessage, settings, disabled }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
-          disabled={disabled || isSending}
+          placeholder={
+            isInputDisabled 
+              ? "Please wait..." 
+              : "Type your message..."
+          }
+          disabled={isInputDisabled}
           className="message-input"
+          autoComplete="off"
+          autoFocus={!isInputDisabled}
         />
         
         <button
           type="submit"
-          disabled={!message.trim() || disabled || isSending}
+          disabled={!canSend}
           className="send-button"
+          title={
+            !canSend 
+              ? (isInputDisabled ? "Please wait..." : "Enter a message")
+              : "Send message"
+          }
           style={{ 
-            backgroundColor: settings.primary_color,
-            opacity: (!message.trim() || disabled || isSending) ? 0.6 : 1
+            backgroundColor: settings?.primary_color || '#ea580c',
+            opacity: !canSend ? 0.6 : 1,
+            cursor: !canSend ? 'not-allowed' : 'pointer'
           }}
         >
-          {isSending ? (
+          {isSending || disabled ? (
             <div className="loading-spinner small"></div>
           ) : (
             <SendIcon />
           )}
         </button>
       </div>
+      
+      {/* Debug info (only in development) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
+          Disabled: {disabled ? 'Yes' : 'No'} | 
+          Sending: {isSending ? 'Yes' : 'No'} | 
+          Can Send: {canSend ? 'Yes' : 'No'}
+        </div>
+      )}
     </form>
   );
 };
