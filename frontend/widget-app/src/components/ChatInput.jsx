@@ -2,33 +2,34 @@ import React, { useState, useRef, useEffect } from 'react';
 
 const ChatInput = ({ onSendMessage, settings, disabled }) => {
   const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
+  const [isLocalSending, setIsLocalSending] = useState(false);
   const inputRef = useRef(null);
 
-  // Sync internal sending state with external disabled state
-  useEffect(() => {
-    if (!disabled && isSending) {
-      setIsSending(false);
-    }
-  }, [disabled]);
+  // FIXED: Simple disabled state management
+  const isDisabled = disabled || isLocalSending;
 
+  // Reset local sending state when external disabled changes
+  useEffect(() => {
+    if (!disabled && isLocalSending) {
+      setIsLocalSending(false);
+    }
+  }, [disabled, isLocalSending]);
+
+  // FIXED: Simplified submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!message.trim() || disabled || isSending) {
-      console.log('❌ Cannot send message:', { 
-        hasMessage: !!message.trim(), 
-        disabled, 
-        isSending 
-      });
+    if (!message.trim() || isDisabled) {
+      console.log('❌ Cannot send - disabled or empty message');
       return;
     }
 
     const messageText = message.trim();
     console.log('📤 Sending message:', messageText);
     
-    setMessage(''); // Clear input immediately
-    setIsSending(true);
+    // Clear input and set local sending state
+    setMessage('');
+    setIsLocalSending(true);
 
     try {
       await onSendMessage(messageText);
@@ -38,23 +39,27 @@ const ChatInput = ({ onSendMessage, settings, disabled }) => {
       // Restore message on error
       setMessage(messageText);
     } finally {
-      setIsSending(false);
-      // Focus input after sending (with small delay)
+      // Always reset local sending state
+      setIsLocalSending(false);
+      
+      // Focus input after brief delay
       setTimeout(() => {
-        inputRef.current?.focus();
+        if (inputRef.current && !disabled) {
+          inputRef.current.focus();
+        }
       }, 100);
     }
   };
 
+  // Handle Enter key
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isDisabled) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
 
-  const isInputDisabled = disabled || isSending;
-  const canSend = message.trim() && !isInputDisabled;
+  const canSend = message.trim() && !isDisabled;
 
   return (
     <form onSubmit={handleSubmit} className="chat-input-container">
@@ -66,14 +71,15 @@ const ChatInput = ({ onSendMessage, settings, disabled }) => {
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={
-            isInputDisabled 
-              ? "Please wait..." 
+            isDisabled 
+              ? "AI is responding..." 
               : "Type your message..."
           }
-          disabled={isInputDisabled}
+          disabled={isDisabled}
           className="message-input"
           autoComplete="off"
-          autoFocus={!isInputDisabled}
+          autoFocus={!isDisabled}
+          maxLength={1000} // Reasonable limit
         />
         
         <button
@@ -82,16 +88,15 @@ const ChatInput = ({ onSendMessage, settings, disabled }) => {
           className="send-button"
           title={
             !canSend 
-              ? (isInputDisabled ? "Please wait..." : "Enter a message")
+              ? (isDisabled ? "Please wait for response..." : "Enter a message")
               : "Send message"
           }
           style={{ 
-            backgroundColor: settings?.primary_color || '#ea580c',
-            opacity: !canSend ? 0.6 : 1,
-            cursor: !canSend ? 'not-allowed' : 'pointer'
+            backgroundColor: canSend ? (settings?.primary_color || '#ea580c') : '#9ca3af',
+            cursor: canSend ? 'pointer' : 'not-allowed'
           }}
         >
-          {isSending || disabled ? (
+          {isDisabled ? (
             <div className="loading-spinner small"></div>
           ) : (
             <SendIcon />
@@ -99,11 +104,16 @@ const ChatInput = ({ onSendMessage, settings, disabled }) => {
         </button>
       </div>
       
-      {/* Debug info (only in development) */}
+      {/* Status indicator for debugging */}
       {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
-          Disabled: {disabled ? 'Yes' : 'No'} | 
-          Sending: {isSending ? 'Yes' : 'No'} | 
+        <div style={{ 
+          fontSize: '10px', 
+          color: '#666', 
+          marginTop: '4px',
+          fontFamily: 'monospace'
+        }}>
+          External Disabled: {disabled ? 'Yes' : 'No'} | 
+          Local Sending: {isLocalSending ? 'Yes' : 'No'} | 
           Can Send: {canSend ? 'Yes' : 'No'}
         </div>
       )}

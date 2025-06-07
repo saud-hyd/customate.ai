@@ -19,18 +19,65 @@ const WidgetApp = () => {
     setIsTestMode(testMode);
     setIsFloating(!inline);
     
-    // FIXED: Only auto-expand in test mode, not inline mode
-    if (testMode) {
+    // CRITICAL: For floating widgets, ALWAYS start collapsed
+    if (inline) {
       setIsExpanded(true);
+      console.log('🔧 Inline mode: Widget starts expanded');
     } else {
-      setIsExpanded(false); // Ensure it starts collapsed for normal floating mode
+      setIsExpanded(false);
+      console.log('🔧 Floating mode: Widget starts collapsed (iframe will be button size)');
     }
   }, []);
 
-  // Listen for postMessage updates from parent (TestChatbotPage)
+  // CRITICAL: Send immediate status to parent when state changes
+  const sendStatusToParent = (expanded, immediate = false) => {
+    if (window.parent !== window) {
+      const status = {
+        type: 'WIDGET_STATUS',
+        data: {
+          loaded: true,
+          expanded: expanded,
+          floating: isFloating,
+          testMode: isTestMode,
+          timestamp: Date.now()
+        }
+      };
+      
+      if (immediate) {
+        // Send immediately for state changes
+        window.parent.postMessage(status, '*');
+        console.log('📡 IMMEDIATE status sent to parent:', { expanded, floating: isFloating });
+      } else {
+        // Small delay for initial load
+        setTimeout(() => {
+          window.parent.postMessage(status, '*');
+          console.log('📡 Status sent to parent:', { expanded, floating: isFloating });
+        }, 100);
+      }
+    }
+  };
+
+  // Handle expand/collapse for floating mode
+  const handleToggle = () => {
+    if (isFloating) {
+      const newState = !isExpanded;
+      console.log(`🔄 Widget toggling: ${isExpanded ? 'EXPANDED' : 'COLLAPSED'} → ${newState ? 'EXPANDED' : 'COLLAPSED'}`);
+      
+      setIsExpanded(newState);
+      
+      // CRITICAL: Send status immediately when toggling
+      sendStatusToParent(newState, true);
+    }
+  };
+
+  // Send status when expansion state changes
+  useEffect(() => {
+    sendStatusToParent(isExpanded);
+  }, [isExpanded, isFloating, isTestMode]);
+
+  // Listen for postMessage updates from parent
   useEffect(() => {
     const handlePostMessage = (event) => {
-      // Security check - only accept messages from same origin or trusted origins
       const trustedOrigins = [
         'http://localhost:3000',
         'https://customate.vercel.app',
@@ -38,7 +85,6 @@ const WidgetApp = () => {
       ];
       
       if (!trustedOrigins.includes(event.origin) && event.origin !== window.location.origin) {
-        console.warn('Ignored postMessage from untrusted origin:', event.origin);
         return;
       }
 
@@ -60,7 +106,9 @@ const WidgetApp = () => {
             event.source?.postMessage({
               type: 'PONG',
               timestamp: Date.now(),
-              status: 'healthy'
+              status: 'healthy',
+              expanded: isExpanded,
+              floating: isFloating
             }, event.origin);
             break;
           
@@ -76,6 +124,8 @@ const WidgetApp = () => {
     if (window.parent !== window) {
       window.parent.postMessage({
         type: 'WIDGET_READY',
+        expanded: isExpanded,
+        floating: isFloating,
         timestamp: Date.now()
       }, '*');
     }
@@ -83,7 +133,7 @@ const WidgetApp = () => {
     return () => {
       window.removeEventListener('message', handlePostMessage);
     };
-  }, []);
+  }, [isExpanded, isFloating]);
 
   // Get settings and chat functionality
   const { settings: apiSettings, loading: settingsLoading, error: settingsError } = useSettings();
@@ -108,44 +158,11 @@ const WidgetApp = () => {
     };
   }, [resetChat]);
 
-  // Handle expand/collapse for floating mode
-  const handleToggle = () => {
-    if (isFloating) {
-      setIsExpanded(!isExpanded);
-      console.log('🔄 Widget toggled:', !isExpanded ? 'expanded' : 'collapsed');
-    }
-  };
-
-  // Send status updates to parent
-  useEffect(() => {
-    if (window.parent !== window) {
-      const status = {
-        type: 'WIDGET_STATUS',
-        data: {
-          loaded: !settingsLoading,
-          expanded: isExpanded,
-          floating: isFloating,
-          testMode: isTestMode,
-          messagesCount: messages.length,
-          sessionId: sessionId,
-          settings: settings,
-          error: settingsError || chatError,
-          timestamp: Date.now()
-        }
-      };
-      
-      window.parent.postMessage(status, '*');
-    }
-  }, [settingsLoading, isExpanded, isFloating, isTestMode, messages.length, sessionId, settings, settingsError, chatError]);
-
   if (settingsLoading) {
     return (
       <div className="widget-loading">
         <div className="loading-spinner"></div>
         <p>Loading widget...</p>
-        {isTestMode && (
-          <p className="text-xs text-gray-500 mt-2">Test mode active</p>
-        )}
       </div>
     );
   }
@@ -156,15 +173,37 @@ const WidgetApp = () => {
         <div className="error-icon">⚠️</div>
         <p>Failed to load widget</p>
         <button onClick={() => window.location.reload()}>Retry</button>
-        {isTestMode && (
-          <div className="text-xs text-gray-500 mt-2">
-            <p>Test mode error details:</p>
-            <p>{settingsError}</p>
-          </div>
-        )}
       </div>
     );
   }
+
+  // CRITICAL: Determine what to render based on mode and state
+  const shouldShowChatContainer = () => {
+    if (!isFloating) {
+      // Inline mode: always show chat
+      return true;
+    }
+    
+    // Floating mode: only show when expanded
+    return isExpanded;
+  };
+
+  const shouldShowToggleButton = () => {
+    if (!isFloating) {
+      // Inline mode: never show toggle button
+      return false;
+    }
+    
+    // Floating mode: show toggle button when collapsed
+    return !isExpanded;
+  };
+
+  console.log('🎯 Widget render decision:', {
+    isFloating,
+    isExpanded,
+    shouldShowChatContainer: shouldShowChatContainer(),
+    shouldShowToggleButton: shouldShowToggleButton()
+  });
 
   return (
     <div 
@@ -172,24 +211,51 @@ const WidgetApp = () => {
       className={`widget-container ${isFloating ? 'floating' : 'inline'} ${isExpanded ? 'expanded' : 'collapsed'}`}
       style={{
         '--primary-color': settings?.primary_color || '#ea580c',
-        '--widget-position': settings?.widget_position || 'bottom-right'
+        '--widget-position': settings?.widget_position || 'bottom-right',
+        // CRITICAL: Ensure container fills iframe appropriately
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden'
       }}
     >
-      {/* FIXED: Only show toggle button when floating AND not expanded */}
-      {isFloating && !isExpanded && (
-        <button 
-          className="widget-toggle-button"
-          onClick={handleToggle}
-          style={{ backgroundColor: settings?.primary_color || '#ea580c' }}
-          title={`Open ${settings?.chatbot_name || 'AI Assistant'}`}
+      {/* TOGGLE BUTTON: Only show for floating widgets when collapsed */}
+      {shouldShowToggleButton() && (
+        <div 
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
         >
-          <ChatIcon />
-        </button>
+          <button 
+            className="widget-toggle-button"
+            onClick={handleToggle}
+            style={{ 
+              backgroundColor: settings?.primary_color || '#ea580c',
+              // Ensure button fits in smaller iframe
+              width: '60px',
+              height: '60px'
+            }}
+            title={`Open ${settings?.chatbot_name || 'AI Assistant'}`}
+          >
+            <ChatIcon />
+          </button>
+        </div>
       )}
 
-      {/* FIXED: Only show chat interface when explicitly expanded OR in inline/test mode */}
-      {(isExpanded || (!isFloating && isTestMode)) && (
-        <div className="widget-chat-container">
+      {/* CHAT CONTAINER: Only render when should be visible */}
+      {shouldShowChatContainer() && (
+        <div 
+          className="widget-chat-container"
+          style={{
+            // CRITICAL: Fill entire iframe when expanded
+            width: '100%',
+            height: '100%',
+            position: 'relative'
+          }}
+        >
           {/* Header */}
           <div 
             className="widget-header"
@@ -213,7 +279,7 @@ const WidgetApp = () => {
               </div>
             </div>
             
-            {/* FIXED: Only show close button in floating mode */}
+            {/* Close button for floating mode */}
             {isFloating && (
               <button 
                 className="close-button" 
@@ -227,9 +293,6 @@ const WidgetApp = () => {
             {isTestMode && (
               <div className="test-badge">
                 Test Mode
-                {settingsOverride && (
-                  <span className="ml-1">• Live</span>
-                )}
               </div>
             )}
           </div>
@@ -244,11 +307,32 @@ const WidgetApp = () => {
           />
         </div>
       )}
+
+      {/* Debug info for development */}
+      {isTestMode && (
+        <div style={{
+          position: 'fixed',
+          top: '10px',
+          left: '10px',
+          background: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          padding: '8px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          zIndex: 1000001,
+          fontFamily: 'monospace'
+        }}>
+          Mode: {isFloating ? 'Floating' : 'Inline'} | 
+          State: {isExpanded ? 'EXPANDED' : 'COLLAPSED'} | 
+          Chat: {shouldShowChatContainer() ? 'VISIBLE' : 'HIDDEN'} |
+          Button: {shouldShowToggleButton() ? 'VISIBLE' : 'HIDDEN'}
+        </div>
+      )}
     </div>
   );
 };
 
-// Enhanced orange chat icon
+// Chat icon
 const ChatIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>

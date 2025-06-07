@@ -113,14 +113,14 @@ const Header = () => {
                 {t('header.features')}
                 <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-orange-600 transition-all duration-300 group-hover:w-8 transform -translate-x-1/2"></span>
               </button>
-              <button
-                onClick={(e) => handleNavClick('/#pricing', e)}
+              <Link
+                to="/pricing"
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 relative group"
               >
                 {t('header.pricing')}
                 <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-orange-600 transition-all duration-300 group-hover:w-8 transform -translate-x-1/2"></span>
-              </button>
-              <Link
+              </Link> 
+               <Link
                 to="/blog"
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 relative group"
               >
@@ -304,12 +304,13 @@ const Header = () => {
                 >
                   {t('header.features')}
                 </button>
-                <button
-                  onClick={(e) => handleNavClick('/#pricing', e)}
-                  className="block w-full text-left px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                <Link
+                  to="/pricing"
+                  className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   {t('header.pricing')}
-                </button>
+                </Link>
                 <Link
                   to="/blog"
                   className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
