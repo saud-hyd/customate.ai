@@ -44,7 +44,7 @@ const FAQSection = () => {
       id: 7,
       question: 'Is there a limit to the number of messages?',
       answer:
-        'Yes, each pricing plan comes with a monthly message limit. The Free plan includes 500 messages per month, Basic includes 5,000, Professional includes 20,000, and Enterprise includes 100,000. If you need more messages, you can upgrade your plan or contact us for a custom solution.',
+        'Yes, each pricing plan comes with a monthly message limit. The Free plan includes 100 messages per month.',
     },
     {
       id: 8,

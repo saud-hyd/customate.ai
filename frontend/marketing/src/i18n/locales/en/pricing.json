@@ -12,9 +12,9 @@
       "name": "Free",
       "description": "Perfect for trying out Customate.ai",
       "features": [
-        "500 messages per month",
+        "100 messages per month",
         "5 active users",
-        "50 MB storage",
+        "500 KB storage",
         "3 knowledge collections",
         "Basic chatbot customization",
         "Community support"
@@ -25,9 +25,9 @@
       "name": "Basic",
       "description": "For small businesses and startups",
       "features": [
-        "5,000 messages per month",
+        "2,000 messages per month",
         "25 active users",
-        "500 MB storage",
+        "5 MB storage",
         "10 knowledge collections",
         "Custom branding",
         "Email support",
@@ -40,9 +40,9 @@
       "name": "Professional",
       "description": "For growing businesses with advanced needs",
       "features": [
-        "20,000 messages per month",
+        "5,000 messages per month",
         "100 active users",
-        "2 GB storage",
+        "25 MB storage",
         "50 knowledge collections",
         "Advanced chatbot customization",
         "Priority email support",
@@ -58,7 +58,7 @@
       "features": [
         "100,000 messages per month",
         "500 active users",
-        "10 GB storage",
+        "100 MB storage",
         "250 knowledge collections",
         "Custom deployment options",
         "Dedicated account manager",

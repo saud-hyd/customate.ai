@@ -1,76 +1,81 @@
 {
-  "badge": "Enkel Prissetting",
-  "title": {
-    "part1": "Fleksible Planer for",
-    "part2": "Alle Bedriftsstørrelser"
+  "title": "Enkle og Transparente Priser",
+  "subtitle": "Velg den rette planen for din bedrift",
+  "billing": {
+    "monthly": "Månedlig",
+    "annual": "Årlig",
+    "annualSave": "(Spar 20%)"
   },
-  "subtitle": "Velg den perfekte planen for dine behov. Alle planer inkluderer grunnleggende funksjoner med tilleggsfunksjoner etter hvert som du skalerer.",
-  "plans": [
-    {
-      "name": "Starter",
-      "price": "Gratis",
-      "period": "",
-      "description": "Perfekt for små bedrifter som kommer i gang",
+  "billedAnnually": "Faktureres årlig",
+  "plans": {
+    "free": {
+      "name": "Gratis",
+      "description": "Perfekt for å teste Customate.ai",
       "features": [
-        "Opptil 500 meldinger/måned",
-        "1 chatbot",
-        "Grunnleggende tilpasning",
-        "E-poststøtte",
-        "Integrasjon med nettsted"
+        "100 meldinger per måned",
+        "5 aktive brukere",
+        "500 KB lagringsplass",
+        "3 kunnskapssamlinger",
+        "Grunnleggende chatbot-tilpasning",
+        "Fellesskapsstøtte"
       ],
-      "cta": "Start Gratis",
-      "popular": false
+      "cta": "Start Gratis"
     },
-    {
-      "name": "Profesjonell",
-      "price": "49",
-      "period": "/måned",
-      "description": "For voksende bedrifter med høyere volum",
+    "basic": {
+      "name": "Grunnleggende",
+      "description": "For små bedrifter og oppstartsselskaper",
       "features": [
-        "Opptil 5 000 meldinger/måned",
-        "3 chatboter",
-        "Avansert tilpasning",
-        "Prioritet støtte",
-        "Alle integrasjoner",
-        "Analyser og rapporter",
-        "Flerspråklig støtte"
-      ],
-      "cta": "Start Prøveperiode",
-      "popular": true
-    },
-    {
-      "name": "Enterprise",
-      "price": "Tilpasset",
-      "period": "",
-      "description": "For store organisasjoner med tilpassede behov",
-      "features": [
-        "Ubegrensede meldinger",
-        "Ubegrensede chatboter",
+        "2,000 meldinger per måned",
+        "25 aktive brukere",
+        "5 MB lagringsplass",
+        "10 kunnskapssamlinger",
         "Tilpasset merkevarebygging",
-        "Dedikert kontoadministrator",
-        "SLA-garantier",
-        "Avansert sikkerhet",
-        "On-premise implementering"
+        "E-poststøtte",
+        "Analyse-dashboard",
+        "API-tilgang"
       ],
-      "cta": "Kontakt Salg",
-      "popular": false
+      "cta": "Start med Grunnleggende"
+    },
+    "professional": {
+      "name": "Profesjonell",
+      "description": "For voksende bedrifter med avanserte behov",
+      "features": [
+        "5,000 meldinger per måned",
+        "100 aktive brukere",
+        "50 MB lagringsplass",
+        "50 kunnskapssamlinger",
+        "Avansert chatbot-tilpasning",
+        "Prioritert e-poststøtte",
+        "Avanserte analyser",
+        "Tilpasset domene",
+        "Teamsamarbeid"
+      ],
+      "cta": "Start med Profesjonell"
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "description": "For organisasjoner med komplekse krav",
+      "features": [
+        "100,000 meldinger per måned",
+        "500 aktive brukere",
+        "100 MB lagringsplass",
+        "250 kunnskapssamlinger",
+        "Tilpassede distribusjonsmuligheter",
+        "Dedikert kundeansvarlig",
+        "Telefon- og e-poststøtte",
+        "SLA-garantier",
+        "Avanserte sikkerhetsfunksjoner",
+        "Tilpassede integrasjoner"
+      ],
+      "cta": "Kontakt Salg"
     }
-  ],
-  "faq": {
-    "title": "Ofte Stilte Spørsmål",
-    "items": [
-      {
-        "question": "Kan jeg endre plan når som helst?",
-        "answer": "Ja, du kan oppgradere eller nedgradere planen din når som helst. Endringer trer i kraft umiddelbart og vi prorate faktureringen din."
-      },
-      {
-        "question": "Hva skjer hvis jeg overskrider meldingsgrensen?",
-        "answer": "Vi vil varsle deg når du nærmer deg grensen. Du kan oppgradere planen din eller kjøpe tilleggsmeldinger. Vi stopper aldri tjenesten din plutselig."
-      },
-      {
-        "question": "Tilbyr dere rabatter for årlige planer?",
-        "answer": "Ja, vi tilbyr 20% rabatt på alle planer når du betaler årlig. Kontakt salg for tilpassede enterprise-avtaler."
-      }
-    ]
+  },
+  "badges": {
+    "popular": "Populær"
+  },
+  "footer": {
+    "customPlan": "Ser du etter en tilpasset plan?",
+    "contactUs": "Kontakt oss",
+    "tailoredSolution": "for en skreddersydd løsning."
   }
 }

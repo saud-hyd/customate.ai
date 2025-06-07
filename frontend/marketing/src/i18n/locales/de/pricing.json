@@ -12,9 +12,9 @@
       "name": "Kostenlos",
       "description": "Perfekt zum Testen von Customate.ai",
       "features": [
-        "500 Nachrichten pro Monat",
+        "100 Nachrichten pro Monat",
         "5 aktive Nutzer",
-        "50 MB Speicher",
+        "500 KB Speicher",
         "3 Wissenssammlungen",
         "Grundlegende Chatbot-Anpassung",
         "Community-Support"
@@ -25,9 +25,9 @@
       "name": "Basic",
       "description": "Für kleine Unternehmen und Startups",
       "features": [
-        "5.000 Nachrichten pro Monat",
+        "2.000 Nachrichten pro Monat",
         "25 aktive Nutzer",
-        "500 MB Speicher",
+        "5 MB Speicher",
         "10 Wissenssammlungen",
         "Individuelles Branding",
         "E-Mail-Support",
@@ -40,9 +40,9 @@
       "name": "Professional",
       "description": "Für wachsende Unternehmen mit erweiterten Anforderungen",
       "features": [
-        "20.000 Nachrichten pro Monat",
+        "5.000 Nachrichten pro Monat",
         "100 aktive Nutzer",
-        "2 GB Speicher",
+        "50 MB Speicher",
         "50 Wissenssammlungen",
         "Erweiterte Chatbot-Anpassung",
         "Prioritäts-E-Mail-Support",
@@ -56,9 +56,9 @@
       "name": "Enterprise",
       "description": "Für Organisationen mit komplexen Anforderungen",
       "features": [
-        "100.000 Nachrichten pro Monat",
+        "10.000 Nachrichten pro Monat",
         "500 aktive Nutzer",
-        "10 GB Speicher",
+        "100 MB Speicher",
         "250 Wissenssammlungen",
         "Individuelle Bereitstellungsoptionen",
         "Dedizierter Account Manager",
