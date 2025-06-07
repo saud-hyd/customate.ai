@@ -17,7 +17,7 @@ const useChat = (settings) => {
     };
   };
 
-  // SIMPLIFIED: Send message with clean state management
+  // SIMPLIFIED: Send message with clean state management - FIXED VERSION
   const sendMessage = useCallback(async (messageText) => {
     if (!messageText.trim() || isTyping) {
       return;
@@ -34,24 +34,16 @@ const useChat = (settings) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true); // Start typing
+    setIsTyping(true); // Start typing indicator
     setError(null);
 
     try {
       const credentials = getCredentials();
       
-      // Create assistant message placeholder
+      // FIXED: Prepare assistant message ID but DON'T create the message yet
       const assistantMessageId = `assistant-${Date.now()}`;
-      const assistantMessage = {
-        id: assistantMessageId,
-        role: 'assistant',
-        content: '',
-        created_at: new Date().toISOString()
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-
       let accumulatedContent = '';
+      let assistantMessageCreated = false; // Track if message is created
 
       // SIMPLIFIED: Single stream handling
       await widgetApi.sendMessageStream(
@@ -61,11 +53,29 @@ const useChat = (settings) => {
         {
           onChunk: (chunk) => {
             accumulatedContent += chunk;
-            setMessages(prev => prev.map(msg => 
-              msg.id === assistantMessageId 
-                ? { ...msg, content: accumulatedContent }
-                : msg
-            ));
+            
+            // FIXED: Create assistant message only on first chunk
+            if (!assistantMessageCreated) {
+              assistantMessageCreated = true;
+              
+              // Create assistant message with actual content
+              const assistantMessage = {
+                id: assistantMessageId,
+                role: 'assistant',
+                content: chunk,
+                created_at: new Date().toISOString()
+              };
+              
+              setMessages(prev => [...prev, assistantMessage]);
+              setIsTyping(false); // Stop typing when content appears
+            } else {
+              // Update existing message
+              setMessages(prev => prev.map(msg => 
+                msg.id === assistantMessageId 
+                  ? { ...msg, content: accumulatedContent }
+                  : msg
+              ));
+            }
           },
           
           onInfo: (info) => {
@@ -77,12 +87,25 @@ const useChat = (settings) => {
           onComplete: (finalContent) => {
             console.log('✅ Message completed');
             
-            // Update final content
-            setMessages(prev => prev.map(msg => 
-              msg.id === assistantMessageId 
-                ? { ...msg, content: finalContent || accumulatedContent }
-                : msg
-            ));
+            const content = finalContent || accumulatedContent;
+            
+            // FIXED: Handle completion without chunks (edge case)
+            if (!assistantMessageCreated && content) {
+              const assistantMessage = {
+                id: assistantMessageId,
+                role: 'assistant',
+                content: content,
+                created_at: new Date().toISOString()
+              };
+              setMessages(prev => [...prev, assistantMessage]);
+            } else if (assistantMessageCreated) {
+              // Update final content
+              setMessages(prev => prev.map(msg => 
+                msg.id === assistantMessageId 
+                  ? { ...msg, content: content }
+                  : msg
+              ));
+            }
             
             // ALWAYS stop typing on completion
             setIsTyping(false);
@@ -92,8 +115,10 @@ const useChat = (settings) => {
             console.error('❌ Message error:', error);
             setError('Failed to get response. Please try again.');
             
-            // Remove empty assistant message on error
-            setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
+            // FIXED: Only remove message if it was created
+            if (assistantMessageCreated) {
+              setMessages(prev => prev.filter(msg => msg.id !== assistantMessageId));
+            }
             
             // ALWAYS stop typing on error
             setIsTyping(false);
