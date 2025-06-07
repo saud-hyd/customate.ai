@@ -11,15 +11,16 @@ import HomePage from './pages/HomePage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
 import FeaturesPage from './pages/FeaturesPage';
-
-// Blog components
-import BlogPage from './pages/BlogPage';
-
-// Policy and info pages
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import AboutPage from './pages/AboutPage';
 import CookiesPage from './pages/CookiesPage';
+import TestPage from './pages/TestPage';
+
+
+// Blog components
+import BlogPage from './pages/BlogPage';
+
 
 // Individual blog posts (if you have the blog subdirectory)
 // import SavingsBlogPost from './pages/blog/SavingsBlogPost';
@@ -107,7 +108,10 @@ function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/cookies" element={<CookiesPage />} />
-              
+              <Route path="/test" element={<TestPage />} />
+
+
+
               {/* Existing checkout pages */}
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/checkout/success" element={<CheckoutSuccessPage />} />

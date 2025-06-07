@@ -51,6 +51,10 @@
         "title": "Média Riche",
         "description": "Envoyez des images, boutons, cartes et plus"
       },
+      "realtimeTranslation": {
+        "title": "Traduction en Temps Réel",
+        "description": "Communiquez automatiquement avec les clients dans plus de 100 langues"
+      },
       "availability": {
         "title": "Disponibilité 24/7",
         "description": "Support toujours actif pour vos clients"

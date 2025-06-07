@@ -1,9 +1,115 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
+  const { i18n } = useTranslation();
   const location = useLocation();
   const currentYear = new Date().getFullYear();
+
+  // All translations in one object - UPDATED WITH NORWEGIAN
+  const translations = {
+    en: {
+      description: "AI-powered chatbots for businesses. Build intelligent customer support with industry-specific behaviors and custom knowledge bases.",
+      product: "Product",
+      company: "Company",
+      features: "Features",
+      pricing: "Pricing",
+      blog: "Blog",
+      contact: "Contact",
+      aboutUs: "About Us",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy",
+      cookies: "Cookie Policy",
+      rights: `© ${currentYear} Customated S&A UG. All rights reserved.`,
+      systemStatus: "System Online",
+      madeIn: "Made in Germany 🇩🇪"
+    },
+    es: {
+      description: "Chatbots impulsados por IA para empresas. Construye soporte al cliente inteligente con comportamientos específicos de la industria y bases de conocimiento personalizadas.",
+      product: "Producto",
+      company: "Empresa",
+      features: "Características",
+      pricing: "Precios",
+      blog: "Blog",
+      contact: "Contacto",
+      aboutUs: "Acerca de Nosotros",
+      terms: "Términos de Servicio",
+      privacy: "Política de Privacidad",
+      cookies: "Política de Cookies",
+      rights: `© ${currentYear} Customated S&A UG. Todos los derechos reservados.`,
+      systemStatus: "Sistema En Línea",
+      madeIn: "Hecho en Alemania 🇩🇪"
+    },
+    de: {
+      description: "KI-gestützte Chatbots für Unternehmen. Erstellen Sie intelligenten Kundensupport mit branchenspezifischen Verhaltensweisen und benutzerdefinierten Wissensbasen.",
+      product: "Produkt",
+      company: "Unternehmen",
+      features: "Funktionen",
+      pricing: "Preise",
+      blog: "Blog",
+      contact: "Kontakt",
+      aboutUs: "Über Uns",
+      terms: "Nutzungsbedingungen",
+      privacy: "Datenschutzrichtlinie",
+      cookies: "Cookie-Richtlinie",
+      rights: `© ${currentYear} Customated S&A UG. Alle Rechte vorbehalten.`,
+      systemStatus: "System Online",
+      madeIn: "Hergestellt in Deutschland 🇩🇪"
+    },
+    fr: {
+      description: "Chatbots alimentés par l'IA pour les entreprises. Créez un support client intelligent avec des comportements spécifiques à l'industrie et des bases de connaissances personnalisées.",
+      product: "Produit",
+      company: "Entreprise",
+      features: "Fonctionnalités",
+      pricing: "Tarifs",
+      blog: "Blog",
+      contact: "Contact",
+      aboutUs: "À Propos de Nous",
+      terms: "Conditions d'Utilisation",
+      privacy: "Politique de Confidentialité",
+      cookies: "Politique des Cookies",
+      rights: `© ${currentYear} Customated S&A UG. Tous droits réservés.`,
+      systemStatus: "Système En Ligne",
+      madeIn: "Fabriqué en Allemagne 🇩🇪"
+    },
+    zh: {
+      description: "为企业提供AI驱动的聊天机器人。构建具有行业特定行为和自定义知识库的智能客户支持。",
+      product: "产品",
+      company: "公司",
+      features: "功能",
+      pricing: "价格",
+      blog: "博客",
+      contact: "联系我们",
+      aboutUs: "关于我们",
+      terms: "服务条款",
+      privacy: "隐私政策",
+      cookies: "Cookie政策",
+      rights: `© ${currentYear} Customated S&A UG. 保留所有权利。`,
+      systemStatus: "系统在线",
+      madeIn: "德国制造 🇩🇪"
+    },
+    // NEW: Norwegian translations
+    no: {
+      description: "AI-drevne chatboter for bedrifter. Bygg intelligent kundestøtte med bransjespesifikk oppførsel og tilpassede kunnskapsbaser.",
+      product: "Produkt",
+      company: "Selskap",
+      features: "Funksjoner",
+      pricing: "Priser",
+      blog: "Blogg",
+      contact: "Kontakt",
+      aboutUs: "Om Oss",
+      terms: "Vilkår for Bruk",
+      privacy: "Personvernpolicy",
+      cookies: "Informasjonskapsel-policy",
+      rights: `© ${currentYear} Customated S&A UG. Alle rettigheter forbeholdt.`,
+      systemStatus: "System Pålogget",
+      madeIn: "Laget i Tyskland 🇩🇪"
+    }
+  };
+
+  // Get current language, fallback to English
+  const currentLang = translations[i18n.language] || translations.en;
 
   // Function to handle smooth scrolling to sections
   const scrollToSection = (sectionId) => {
@@ -51,7 +157,7 @@ const Footer = () => {
             </div>
             
             <p className="text-gray-600 text-sm leading-relaxed mb-6">
-              AI-powered chatbots for businesses. Build intelligent customer support with industry-specific behaviors and custom knowledge bases.
+              {currentLang.description}
             </p>
           </div>
           
@@ -60,14 +166,16 @@ const Footer = () => {
             
             {/* Product & Resources */}
             <div>
-              <h4 className="font-semibold text-orange-500 mb-4">Product</h4>
+              <h4 className="font-semibold text-orange-500 mb-4">
+                {currentLang.product}
+              </h4>
               <ul className="space-y-3">
                 <li>
                   <button
                     onClick={(e) => handleNavClick('/#features', e)}
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    Features
+                    {currentLang.features}
                   </button>
                 </li>
                 <li>
@@ -75,7 +183,7 @@ const Footer = () => {
                     to="/pricing"
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    Pricing
+                    {currentLang.pricing}
                   </Link>
                 </li>
                 <li>
@@ -83,7 +191,7 @@ const Footer = () => {
                     to="/blog"
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    Blog
+                    {currentLang.blog}
                   </Link>
                 </li>
                 <li>
@@ -91,7 +199,7 @@ const Footer = () => {
                     to="/contact"
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    Contact
+                    {currentLang.contact}
                   </Link>
                 </li>
               </ul>
@@ -99,14 +207,16 @@ const Footer = () => {
 
             {/* Company & Legal */}
             <div>
-              <h4 className="font-semibold text-orange-500 mb-4">Company</h4>
+              <h4 className="font-semibold text-orange-500 mb-4">
+                {currentLang.company}
+              </h4>
               <ul className="space-y-3">
                 <li>
                   <Link
                     to="/about"
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    About Us
+                    {currentLang.aboutUs}
                   </Link>
                 </li>
                 <li>
@@ -114,7 +224,7 @@ const Footer = () => {
                     to="/terms"
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    Terms of Service
+                    {currentLang.terms}
                   </Link>
                 </li>
                 <li>
@@ -122,7 +232,7 @@ const Footer = () => {
                     to="/privacy"
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    Privacy Policy
+                    {currentLang.privacy}
                   </Link>
                 </li>
                 <li>
@@ -130,7 +240,7 @@ const Footer = () => {
                     to="/cookies"
                     className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    Cookie Policy
+                    {currentLang.cookies}
                   </Link>
                 </li>
               </ul>
@@ -141,15 +251,15 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm mb-4 md:mb-0">
-            © {currentYear} Customated S&A UG. All rights reserved.
+            {currentLang.rights}
           </p>
           
           <div className="flex items-center space-x-6 text-sm text-gray-500">
             <span className="flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              System Online
+              {currentLang.systemStatus}
             </span>
-            <span>Made in Germany 🇩🇪</span>
+            <span>{currentLang.madeIn}</span>
           </div>
         </div>
       </div>

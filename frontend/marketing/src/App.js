@@ -20,6 +20,12 @@ import ContactPage from './pages/ContactPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 
+// New pages that were missing
+import AboutPage from './pages/AboutPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import CookiesPage from './pages/CookiesPage';
+
 // CSS
 import './App.css';
 
@@ -51,6 +57,12 @@ function App() {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+                
+                {/* New routes for missing pages */}
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/cookies" element={<CookiesPage />} />
                 
                 {/* Redirect to dashboard app for these routes */}
                 <Route 

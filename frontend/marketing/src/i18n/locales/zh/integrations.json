@@ -51,6 +51,10 @@
         "title": "富媒体",
         "description": "发送图片、按钮、卡片等"
       },
+      "realtimeTranslation": {
+        "title": "实时翻译",
+        "description": "自动与客户进行100多种语言的交流"
+      },
       "availability": {
         "title": "24/7可用性",
         "description": "为您的客户提供始终在线的支持"

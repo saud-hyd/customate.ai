@@ -29,6 +29,8 @@ const Header = () => {
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
     { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'no', name: 'Norsk', flag: '🇳🇴' },
+
   ];
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];

@@ -1,0 +1,38 @@
+{
+  "header": {
+    "features": "Funksjoner",
+    "pricing": "Priser",
+    "blog": "Blogg",
+    "contact": "Kontakt",
+    "login": "Logg Inn",
+    "signup": "Registrer Deg"
+  },
+  "footer": {
+    "rights": "© {{year}} Customate.ai. Alle rettigheter forbeholdt.",
+    "privacy": "Personvernpolicy",
+    "terms": "Vilkår for Bruk",
+    "cookies": "Informasjonskapsel-policy",
+    "description": "Bygg, tilpass og distribuer AI-drevne chatboter med bransjespesifikk oppførsel og tilpassede kunnskapsbaser for transformative kundeinteraksjoner.",
+    "product": {
+      "title": "PRODUKT",
+      "useCases": "Bruksområder",
+      "roadmap": "Veikart"
+    },
+    "resources": {
+      "title": "RESSURSER",
+      "documentation": "Dokumentasjon",
+      "apiReference": "API-referanse"
+    },
+    "company": {
+      "title": "SELSKAP",
+      "about": "Om Oss"
+    }
+  },
+  "cta": {
+    "getStarted": "Kom i Gang",
+    "startFree": "Start Gratis Prøveperiode",
+    "learnMore": "Lær Mer",
+    "watchDemo": "Se Demo",
+    "contactSales": "Kontakt Salg"
+  }
+}

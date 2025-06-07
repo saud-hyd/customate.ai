@@ -9,13 +9,14 @@ export const LanguageProvider = ({ children }) => {
   const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language || 'en');
   
-  // Available languages
+  // Available languages - UPDATED with Norwegian
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'zh', name: '中文', flag: '🇨🇳' }
+    { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'no', name: 'Norsk', flag: '🇳🇴' } // NEW: Norwegian
   ];
   
   // Change language

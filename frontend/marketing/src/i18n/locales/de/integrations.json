@@ -51,6 +51,10 @@
         "title": "Rich Media",
         "description": "Senden Sie Bilder, Buttons, Karten und mehr"
       },
+      "realtimeTranslation": {
+        "title": "Echtzeit-Übersetzung",
+        "description": "Kommunizieren Sie automatisch mit Kunden in über 100 Sprachen"
+      },
       "availability": {
         "title": "24/7 Verfügbarkeit",
         "description": "Immer verfügbarer Support für Ihre Kunden"

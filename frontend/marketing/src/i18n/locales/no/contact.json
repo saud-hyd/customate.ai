@@ -1,0 +1,63 @@
+{
+  "hero": {
+    "badge": "Kom i Kontakt",
+    "title": {
+      "part1": "La Oss Hjelpe Deg",
+      "part2": "Komme i Gang"
+    },
+    "subtitle": "Har du spørsmål om våre AI-chatbot løsninger? Vårt team er her for å hjelpe deg med å finne den perfekte løsningen for din bedrift."
+  },
+  "form": {
+    "title": "Send Oss en Melding",
+    "subtitle": "Fyll ut skjemaet nedenfor så kommer vi tilbake til deg innen 24 timer.",
+    "fields": {
+      "name": {
+        "label": "Fullt Navn",
+        "placeholder": "Ditt fulte navn"
+      },
+      "email": {
+        "label": "E-postadresse",
+        "placeholder": "din.epost@selskap.com"
+      },
+      "company": {
+        "label": "Selskapsnavn",
+        "placeholder": "Ditt selskap"
+      },
+      "subject": {
+        "label": "Emne",
+        "placeholder": "Hvordan kan vi hjelpe?"
+      },
+      "message": {
+        "label": "Melding",
+        "placeholder": "Fortell oss om ditt prosjekt og dine behov..."
+      }
+    },
+    "submit": "Send Melding",
+    "sending": "Sender...",
+    "success": "Takk! Vi har mottatt meldingen din og kommer tilbake til deg snart.",
+    "error": "Beklager, det oppstod en feil. Vennligst prøv igjen."
+  },
+  "info": {
+    "title": "Andre Måter å Nå Oss På",
+    "email": {
+      "title": "E-post Støtte",
+      "description": "Send oss en e-post når som helst",
+      "value": "support@customate.ai"
+    },
+    "sales": {
+      "title": "Salgsteam",
+      "description": "Snakk med vårt salgsteam",
+      "value": "sales@customate.ai"
+    },
+    "phone": {
+      "title": "Telefon",
+      "description": "Ring oss i arbeidstiden",
+      "value": "+47 123 45 678"
+    }
+  },
+  "office": {
+    "title": "Vårt Kontor",
+    "address": "Oslo, Norge",
+    "hours": "Man - Fre: 9:00 - 17:00 CET"
+  }
+}

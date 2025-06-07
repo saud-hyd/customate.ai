@@ -51,6 +51,10 @@
         "title": "Rich Media",
         "description": "Send images, buttons, cards, and more"
       },
+      "realtimeTranslation": {
+        "title": "Real-time Translation",
+        "description": "Communicate with customers in 100+ languages automatically"
+      },
       "availability": {
         "title": "24/7 Availability",
         "description": "Always-on support for your customers"

@@ -1,182 +1,187 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import SectionContainer from '../components/ui/SectionContainer';
-import ContactSection from '../components/sections/ContactSection';
 
 const PrivacyPage = () => {
   return (
     <>
       <Helmet>
-        <title>Contact Us - Customate.ai | AI Chatbot Platform</title>
-        <meta 
-          name="description" 
-          content="Get in touch with the Customate.ai team. We're here to answer your questions and help you build the perfect AI chatbot solution for your business." 
-        />
+        <title>Privacy Policy - Customate.ai</title>
+        <meta name="description" content="Privacy Policy and Data Protection information for Customate.ai services." />
       </Helmet>
       
-      <SectionContainer background="primary-50" paddingY="py-16 md:py-20">
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
-            Get in Touch
-          </h1>
-          <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-            We'd love to hear from you. Reach out with any questions, feedback, or inquiries about Customate.ai.
-          </p>
-        </div>
-      </SectionContainer>
-      
-      <ContactSection />
-      
-      <SectionContainer background="white" paddingY="py-16 md:py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Visit Our Office
-            </h2>
-            <p className="mt-4 text-xl text-gray-600">
-              Drop by for a coffee and chat about how we can help your business
-            </p>
-          </div>
-          
-          <div className="bg-gray-100 rounded-xl overflow-hidden h-96 shadow-md">
-            {/* Replace with your actual map embed */}
-            <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-              <p className="text-gray-600 text-lg">Interactive Map Embed</p>
-            </div>
-          </div>
-          
-          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-primary-200 transition-colors duration-300">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">San Francisco (HQ)</h3>
-                  <p className="mt-1 text-gray-600">
-                    123 Tech Boulevard<br />
-                    San Francisco, CA 94107<br />
-                    United States
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-primary-200 transition-colors duration-300">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">Phone</h3>
-                  <p className="mt-1 text-gray-600">
-                    <a href="tel:+15551234567" className="text-primary-600 hover:text-primary-500">
-                      +1 (555) 123-4567
-                    </a><br />
-                    <span className="text-sm text-gray-500">Mon-Fri, 9am-6pm PT</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-primary-200 transition-colors duration-300">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">Email</h3>
-                  <p className="mt-1 text-gray-600">
-                    <a href="mailto:info@customate.ai" className="text-primary-600 hover:text-primary-500">
-                      info@customate.ai
-                    </a><br />
-                    <a href="mailto:support@customate.ai" className="text-primary-600 hover:text-primary-500">
-                      support@customate.ai
-                    </a>
-                  </p>
-                </div>
-              </div>
-            </div>
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-orange-50 to-orange-100 py-16">
+          <div className="max-w-4xl mx-auto px-6">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Data Protection and Privacy Policy</h1>
+            <p className="text-lg text-gray-600">Last updated: January 2025</p>
           </div>
         </div>
-      </SectionContainer>
-      
-      {/* Support Options */}
-      <SectionContainer background="primary-50" paddingY="py-16 md:py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Support Options
-            </h2>
-            <p className="mt-4 text-xl text-gray-600">
-              We offer multiple ways to get the help you need
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Documentation</h3>
-              <p className="text-gray-600 mb-4">
-                Browse our comprehensive guides and documentation to get the most out of Customate.ai.
-              </p>
-              <a href="https://docs.customate.ai" className="text-primary-600 hover:text-primary-500 font-medium flex items-center">
-                Visit Documentation
-                <svg className="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </a>
-            </div>
+
+        {/* Content */}
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          <div className="prose prose-lg max-w-none">
             
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">FAQ & Knowledge Base</h3>
-              <p className="text-gray-600 mb-4">
-                Find answers to common questions and learn how to resolve common issues.
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
+              
+              <h3 className="text-xl font-medium text-gray-800 mb-3">1.1 Purpose of the Policy</h3>
+              <p className="text-gray-700 mb-4">
+                This Data Protection and Privacy Policy outlines how Customate collects, uses, and protects the User's personal data in compliance with the applicable data protection laws, including the General Data Protection Regulation (GDPR). Our goal is to ensure transparency regarding our data processing practices and to inform the User about their rights.
               </p>
-              <a href="/faq" className="text-primary-600 hover:text-primary-500 font-medium flex items-center">
-                Browse FAQs
-                <svg className="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </a>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Community Forum</h3>
-              <p className="text-gray-600 mb-4">
-                Join our community of users to exchange ideas, share best practices, and get help.
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">1.2 Scope and Applicability</h3>
+              <p className="text-gray-700 mb-6">
+                This policy applies to all individuals who interact with our services, including users of any Customate service, website visitors, and clients. It covers all personal data collected during the User's interaction with the service, regardless of the platform or device used.
               </p>
-              <a href="https://community.customate.ai" className="text-primary-600 hover:text-primary-500 font-medium flex items-center">
-                Join Community
-                <svg className="ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-              </a>
-            </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Data Collection and Processing</h2>
+              
+              <h3 className="text-xl font-medium text-gray-800 mb-3">2.1 Types of Data Collected</h3>
+              <p className="text-gray-700 mb-4">We collect both personal and non-personal data from the User:</p>
+              <ul className="list-disc pl-6 text-gray-700 mb-4">
+                <li><strong>Personal Data:</strong> This may include, but is not limited to, the User's name, contact information (email, phone number), account credentials, communication records, and any other information directly provided during interactions with the service.</li>
+                <li><strong>Non-Personal Data:</strong> This includes data such as usage statistics, technical information about the User's device, browsing patterns, IP address, and other anonymous data collected to improve service functionality and performance.</li>
+              </ul>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">2.2 Methods of Data Collection</h3>
+              <p className="text-gray-700 mb-4">Data is collected through various methods:</p>
+              <ul className="list-disc pl-6 text-gray-700 mb-4">
+                <li><strong>User Input:</strong> Personal data provided directly by the User when creating an account, interacting with the chatbot, or submitting forms.</li>
+                <li><strong>Automated Tracking:</strong> We may collect data automatically through cookies, analytics tools, and tracking technologies to monitor how the User interacts with our platform.</li>
+                <li><strong>AI Interactions:</strong> As the User interacts with the AI-powered chatbot, data related to the conversation, queries, and responses may be logged for the purpose of improving the service, training the AI model, or providing better support.</li>
+              </ul>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">2.3 Purpose of Data Processing</h3>
+              <p className="text-gray-700 mb-4">The collected data is processed for the following purposes:</p>
+              <ul className="list-disc pl-6 text-gray-700 mb-6">
+                <li>Providing the Service: To facilitate, manage, and improve the User's experience with the chatbot and related services.</li>
+                <li>User Support: To assist with customer support queries, troubleshoot issues, and enhance service delivery.</li>
+                <li>Service Improvement and Development: To analyze usage patterns, refine AI performance, and optimize features.</li>
+                <li>Compliance and Legal Obligations: To comply with legal and regulatory requirements, including ensuring the security of personal data and preventing fraudulent activities.</li>
+              </ul>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Legal Basis for Processing (GDPR Compliance)</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Consent (Art. 6(1)(a) GDPR)</h3>
+                  <p className="text-sm text-gray-700">Where consent is required, the User's explicit consent will be obtained before data collection or processing begins.</p>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Contract Performance (Art. 6(1)(b) GDPR)</h3>
+                  <p className="text-sm text-gray-700">Personal data may be processed when necessary for the performance of a contract between the User and the service provider.</p>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Legitimate Interests (Art. 6(1)(f) GDPR)</h3>
+                  <p className="text-sm text-gray-700">We may process personal data based on legitimate interests, provided these interests do not override the User's rights and freedoms.</p>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Legal Obligations (Art. 6(1)(c) GDPR)</h3>
+                  <p className="text-sm text-gray-700">Personal data may be processed to comply with legal obligations, such as maintaining records for tax or regulatory purposes.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. User Rights Under GDPR</h2>
+              
+              <div className="space-y-4">
+                <div className="border-l-4 border-orange-500 pl-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Right to Access (Art. 15 GDPR)</h3>
+                  <p className="text-gray-700">The User has the right to request confirmation as to whether their personal data is being processed, and if so, to obtain a copy of the personal data along with relevant information about the processing activities.</p>
+                </div>
+                
+                <div className="border-l-4 border-orange-500 pl-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Right to Rectification (Art. 16 GDPR)</h3>
+                  <p className="text-gray-700">The User has the right to request the correction of inaccurate or incomplete personal data held about them.</p>
+                </div>
+                
+                <div className="border-l-4 border-orange-500 pl-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Right to Erasure (Art. 17 GDPR)</h3>
+                  <p className="text-gray-700">The User has the right to request the deletion of their personal data under certain conditions.</p>
+                </div>
+                
+                <div className="border-l-4 border-orange-500 pl-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Right to Data Portability (Art. 20 GDPR)</h3>
+                  <p className="text-gray-700">The User has the right to receive their personal data in a structured, commonly used, and machine-readable format.</p>
+                </div>
+                
+                <div className="border-l-4 border-orange-500 pl-4">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">Right to Object (Art. 21 GDPR)</h3>
+                  <p className="text-gray-700">The User has the right to object to the processing of their personal data based on legitimate interests, direct marketing, or profiling.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Data Security Measures</h2>
+              
+              <h3 className="text-xl font-medium text-gray-800 mb-3">5.1 Encryption and Secure Storage</h3>
+              <p className="text-gray-700 mb-4">
+                The service implements industry-standard encryption methods to protect personal data both during transmission (via SSL/TLS) and at rest (via encrypted storage systems). This ensures that sensitive information, such as User credentials and payment details, is secure from unauthorized access or interception.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">5.2 Access Controls and Authentication</h3>
+              <p className="text-gray-700 mb-4">
+                Access to personal data is restricted to authorized personnel only. The service uses role-based access controls (RBAC) to ensure that only individuals with the necessary clearance can access sensitive data. Additionally, multi-factor authentication (MFA) is employed for all accounts with administrative access.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">5.3 Incident Response and Data Breach Procedures</h3>
+              <p className="text-gray-700 mb-6">
+                In the event of a data breach or security incident, the service has an established incident response plan to quickly detect, contain, and mitigate the impact. If required, the service will notify the relevant supervisory authorities within 72 hours of becoming aware of a breach.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. AI-Specific Data Considerations</h2>
+              
+              <h3 className="text-xl font-medium text-gray-800 mb-3">6.1 How AI Processes User Data</h3>
+              <p className="text-gray-700 mb-4">
+                The AI-powered chatbot processes User data to generate responses and improve service quality. This processing may involve Natural Language Processing (NLP), context retention, and service optimization while ensuring compliance with data protection laws.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">6.2 AI Training and Anonymization Practices</h3>
+              <p className="text-gray-700 mb-4">
+                Where possible, data used for AI training is anonymized to prevent the identification of individual Users. AI model improvements are based on aggregated patterns and trends rather than individual conversations. The User may request that their interactions are not used for AI training by contacting the service provider.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">6.3 Limitation of Automated Decision-Making</h3>
+              <p className="text-gray-700 mb-6">
+                The service does not use AI for fully automated decision-making that produces legal effects or significantly impacts the User without human intervention. If automated decision-making is used in any capacity, the User will be informed and will have the right to request human review of decisions that affect them.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Contact Information</h2>
+              
+              <h3 className="text-xl font-medium text-gray-800 mb-3">7.1 How to File a Complaint</h3>
+              <p className="text-gray-700 mb-4">
+                The User has the right to file a complaint if they believe their personal data has been mishandled or if the service provider has not complied with GDPR regulations. Complaints can be submitted via:
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <p className="text-gray-700"><strong>Email:</strong> contact@customate.ai</p>
+                <p className="text-gray-700"><strong>Address:</strong> August-Bebel-Str. 89 - Haus 7, 14482 Potsdam, Germany</p>
+              </div>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">7.2 Supervisory Authority</h3>
+              <p className="text-gray-700 mb-4">
+                If the User is not satisfied with the resolution of their complaint, they have the right to contact the German Data Protection Authority (BfDI):
+              </p>
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <p className="text-gray-700"><strong>Website:</strong> https://www.bfdi.bund.de</p>
+                <p className="text-gray-700"><strong>Phone:</strong> +49 (0)228 997799-0</p>
+                <p className="text-gray-700"><strong>Address:</strong> Der Bundesbeauftragte für den Datenschutz und die Informationsfreiheit (BfDI), Graurheindorfer Str. 153, 53117 Bonn, Germany</p>
+              </div>
+            </section>
+
           </div>
         </div>
-      </SectionContainer>
+      </div>
     </>
   );
 };

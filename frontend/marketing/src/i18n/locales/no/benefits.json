@@ -1,0 +1,37 @@
+{
+  "title": "Fordeler",
+  "cards": {
+    "topService": {
+      "title": "Førsteklasses Service",
+      "description": "Lever pålitelig, skalerbar og uavbrutt kundeservice med alltid klare og nøyaktige informasjon."
+    },
+    "lowestTime": {
+      "title": "Kortest Løsningstid",
+      "description": "Unngå forsinkelser. Dine kunder kan få umiddelbare svar 24/7 uten å vente på menneskelige agenter."
+    },
+    "multichannel": {
+      "title": "Multikanal-støtte",
+      "description": "Mer enn bare en chatbot-widget - vår løsning fungerer for e-post, Facebook, WhatsApp og mer. (Telefonkanaler kommer snart.)"
+    },
+    "reduceExpenses": {
+      "title": "Reduser Utgifter",
+      "description": "Betal mindre for støttepersonell, eller la dine ansatte fokusere på mer produktive aktiviteter."
+    },
+    "increaseIncome": {
+      "title": "Øk Inntekter",
+      "description": "Generer leads, tilbakemeldinger og viktig informasjon for å drive salg og forbedre kundeservice."
+    },
+    "integrations": {
+      "title": "Integrasjoner",
+      "description": "Vi tilpasser oss dine behov. Koble appene du bruker for drift til vår portal. Vi henter bare relevant informasjon."
+    },
+    "advancedAi": {
+      "title": "Avansert AI-analyse",
+      "description": "Gjennom våre proprietære maskinlæringsmodeller gir vi den beste informasjonsbehandlingen og utdata."
+    },
+    "continuousLearning": {
+      "title": "Kontinuerlig Læring",
+      "description": "Din Customate Bot utvikler seg kontinuerlig etter hvert som kunnskapsbasen din vokser."
+    }
+  }
+}

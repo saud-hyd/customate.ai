@@ -51,6 +51,10 @@
         "title": "Multimedia Rica",
         "description": "Envía imágenes, botones, tarjetas y más"
       },
+      "realtimeTranslation": {
+        "title": "Traducción en Tiempo Real",
+        "description": "Comunícate con clientes en más de 100 idiomas automáticamente"
+      },
       "availability": {
         "title": "Disponibilidad 24/7",
         "description": "Soporte siempre activo para tus clientes"

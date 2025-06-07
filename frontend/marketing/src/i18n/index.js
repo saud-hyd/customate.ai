@@ -1,4 +1,3 @@
-// i18n/index.js - Updated configuration
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -45,6 +44,15 @@ import zhIntegrations from './locales/zh/integrations.json';
 import zhPricing from './locales/zh/pricing.json';
 import zhContact from './locales/zh/contact.json';
 
+// NEW: Norwegian imports
+import noCommon from './locales/no/common.json';
+import noHome from './locales/no/home.json';
+import noBenefits from './locales/no/benefits.json';
+import noHowItWorks from './locales/no/howItWorks.json';
+import noIntegrations from './locales/no/integrations.json';
+import noPricing from './locales/no/pricing.json';
+import noContact from './locales/no/contact.json';
+
 const resources = {
   en: {
     common: enCommon,
@@ -90,6 +98,16 @@ const resources = {
     integrations: zhIntegrations,
     pricing: zhPricing,
     contact: zhContact
+  },
+  // NEW: Norwegian resources
+  no: {
+    common: noCommon,
+    home: noHome,
+    benefits: noBenefits,
+    howItWorks: noHowItWorks,
+    integrations: noIntegrations,
+    pricing: noPricing,
+    contact: noContact
   }
 };
 
