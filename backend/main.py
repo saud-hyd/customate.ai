@@ -36,24 +36,8 @@ from app.api.knowledge import (
     knowledge_router, document_router, collection_router, 
     crawl_router, enhanced_router
 )
-
-# CRITICAL: Import widget router properly
-try:
-    from app.api.widget import router as widget_router
-    WIDGET_ROUTES_AVAILABLE = True
-    logger.info("✅ Widget router imported successfully")
-except ImportError as e:
-    WIDGET_ROUTES_AVAILABLE = False
-    logger.error(f"❌ Failed to import widget router: {e}")
-
-# Import widget services for initialization
-try:
-    from app.services.widget.widget_chat_service import WidgetChatService
-    WIDGET_SERVICE_AVAILABLE = True
-    logger.info("✅ Widget chat service imported successfully")
-except ImportError as e:
-    WIDGET_SERVICE_AVAILABLE = False
-    logger.warning(f"⚠️ Widget chat service not available: {e}")
+from app.api.widget import router as widget_router
+from app.api.widget.widget_js import get_widget_js
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -110,29 +94,14 @@ def get_allowed_origins():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Run before the application starts
-    logger.info(f"🚀 Starting application in {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'} mode")
-    logger.info(f"📡 Backend URL: {BACKEND_URL}")
-    
-    # Initialize widget services
-    if WIDGET_SERVICE_AVAILABLE:
-        logger.info("🚀 Widget chat service available for streaming responses")
-        logger.info("   Features: Real-time streaming, LLM integration, settings sync")
-    else:
-        logger.warning("⚠️ Widget chat service not available - using basic widget functionality")
-    
-    # Log widget configuration
-    logger.info("🔧 Widget configuration:")
-    logger.info(f"   - Widget routes: {'✅ Available' if WIDGET_ROUTES_AVAILABLE else '❌ Not Available'}")
-    logger.info(f"   - Streaming responses: {'✅ Enabled' if WIDGET_SERVICE_AVAILABLE else '❌ Basic mode'}")
-    logger.info(f"   - LLM integration: {'✅ Available' if WIDGET_SERVICE_AVAILABLE else '❌ Limited'}")
-    logger.info(f"   - Settings sync: {'✅ Real-time' if WIDGET_SERVICE_AVAILABLE else '❌ Manual'}")
-    logger.info(f"   - CORS origins: {len(get_allowed_origins())} configured")
+    logger.info(f"Starting application in {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'} mode")
+    logger.info(f"Backend URL: {BACKEND_URL}")
     
     crawler_task = asyncio.create_task(run_crawler_worker())
-    logger.info("🕷️ Started crawler worker in background")
+    logger.info("Started crawler worker in background")
     yield
     # Shutdown: Run when the application is shutting down
-    logger.info("🛑 Shutting down crawler worker")
+    logger.info("Shutting down crawler worker")
     crawler_task.cancel()
     try:
         await crawler_task
@@ -143,14 +112,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.API_VERSION,
-    description="Multi-tenant chatbot platform API with React widget, knowledge integration, streaming responses, and real-time widget embedding",
+    description="Multi-tenant chatbot platform API with knowledge integration and analytics",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
 
-# Configure CORS with enhanced widget support
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_allowed_origins(),
@@ -165,9 +134,7 @@ app.add_middleware(ClientContextMiddleware)
 app.add_middleware(SubscriptionLimitMiddleware)
 app.add_middleware(AnalyticsMiddleware)
 
-# Include routes with proper error handling
-logger.info("📚 Registering API routes...")
-
+# Include routes
 app.include_router(auth_routes.router, prefix="/api")
 app.include_router(client_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
@@ -178,27 +145,7 @@ app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
 app.include_router(integration_routes.router, prefix="/api")
-
-# CRITICAL: Widget router registration with error handling
-if WIDGET_ROUTES_AVAILABLE:
-    try:
-        app.include_router(widget_router, prefix="/api/widget", tags=["widget"])
-        logger.info("✅ Widget routes registered successfully at /api/widget/*")
-    except Exception as e:
-        logger.error(f"❌ Failed to register widget routes: {e}")
-        WIDGET_ROUTES_AVAILABLE = False
-else:
-    logger.error("❌ Widget routes not available - widget functionality will be limited")
-    
-    # Create fallback widget health endpoint
-    @app.get("/api/widget/health")
-    async def fallback_widget_health():
-        return {
-            "status": "error",
-            "message": "Widget routes not available",
-            "error": "Widget router import failed"
-        }
-
+app.include_router(widget_router, prefix="/api")
 app.include_router(subscription_routes.router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(admin_router)
@@ -210,95 +157,13 @@ app.include_router(enhanced_router, prefix="/api/knowledge")
 app.include_router(channel_router, prefix="/api")
 app.include_router(webhook_router, prefix="/api")
 
-logger.info("✅ All routes registered successfully")
+# Direct route for widget.js to handle the exact path
+@app.get("/api/widget/widget.js")
+async def serve_widget_js():
+    """Direct route for widget.js to ensure it's available at the expected path"""
+    return await get_widget_js()
 
-# Enhanced debugging endpoints
-@app.get("/debug/routes")
-async def debug_routes():
-    """Debug endpoint to check all loaded routes."""
-    routes_info = []
-    for route in app.routes:
-        if hasattr(route, 'path') and hasattr(route, 'methods'):
-            routes_info.append({
-                "path": route.path,
-                "methods": list(route.methods) if route.methods else [],
-                "name": getattr(route, 'name', 'unknown')
-            })
-    
-    return {
-        "total_routes": len(routes_info),
-        "all_routes": routes_info
-    }
-
-@app.get("/debug/widget-routes")
-async def debug_widget_routes():
-    """Debug endpoint to check widget routes specifically."""
-    widget_routes = []
-    for route in app.routes:
-        if hasattr(route, 'path') and '/widget' in route.path:
-            widget_routes.append({
-                "path": route.path,
-                "methods": list(route.methods) if hasattr(route, 'methods') and route.methods else [],
-                "name": getattr(route, 'name', 'unknown')
-            })
-    
-    expected_routes = [
-        "/api/widget/settings",
-        "/api/widget/test", 
-        "/api/widget/app/",
-        "/api/widget/health",
-        "/api/widget/embed",
-        "/api/widget/status"
-    ]
-    
-    return {
-        "widget_routes_available": WIDGET_ROUTES_AVAILABLE,
-        "total_widget_routes": len(widget_routes),
-        "found_widget_routes": widget_routes,
-        "expected_routes": expected_routes,
-        "missing_routes": [route for route in expected_routes if not any(route in wr['path'] for wr in widget_routes)]
-    }
-
-@app.get("/debug/widget-status")
-async def debug_widget_status():
-    """Comprehensive widget system status."""
-    return {
-        "widget_routes_available": WIDGET_ROUTES_AVAILABLE,
-        "widget_service_available": WIDGET_SERVICE_AVAILABLE,
-        "backend_url": BACKEND_URL,
-        "environment": "production" if IS_PRODUCTION else "development",
-        "cors_origins_count": len(get_allowed_origins()),
-        "widget_endpoints": {
-            "settings": f"{BACKEND_URL}/api/widget/settings",
-            "app": f"{BACKEND_URL}/api/widget/app/",
-            "test": f"{BACKEND_URL}/api/widget/test",
-            "health": f"{BACKEND_URL}/api/widget/health",
-            "embed": f"{BACKEND_URL}/api/widget/embed"
-        }
-    }
-
-# Enhanced widget health check endpoint (fallback if widget routes not available)
-if not WIDGET_ROUTES_AVAILABLE:
-    @app.get("/api/widget/settings")
-    async def fallback_widget_settings():
-        """Fallback widget settings endpoint."""
-        logger.warning("⚠️ Using fallback widget settings - widget routes not available")
-        return {
-            "primary_color": "#ea580c",
-            "chatbot_name": "AI Assistant",
-            "greeting_message": "Hello! How can I help you today?",
-            "widget_position": "bottom-right",
-            "show_typing_indicator": True,
-            "enable_suggestions": True,
-            "llm_provider": "deepseek",
-            "llm_model": "deepseek-chat",
-            "reset_on_page_refresh": True,
-            "session_timeout": 30,
-            "_fallback": True,
-            "_warning": "Widget routes not properly loaded"
-        }
-
-# Request logging middleware with enhanced widget request tracking
+# Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
@@ -308,31 +173,16 @@ async def log_requests(request: Request, call_next):
     # Calculate process time
     process_time = time.time() - start_time
     
-    # Enhanced logging for widget requests
-    if request.url.path.startswith("/api/widget"):
-        log_level = "INFO"
-        if request.url.path.endswith("/stream"):
-            log_level = "DEBUG"  # Streaming requests can be verbose
-        
-        logger.log(
-            getattr(logging, log_level),
-            f"🔧 Widget Request: {request.method} {request.url.path} "
-            f"- Status: {response.status_code} "
-            f"- Process Time: {process_time:.4f}s "
-            f"- Origin: {request.headers.get('origin', 'N/A')} "
-            f"- API Key: {request.headers.get('X-API-Key', 'N/A')[:8] + '...' if request.headers.get('X-API-Key') else 'None'}"
-        )
-    else:
-        # Standard request logging
-        logger.debug(
-            f"📡 Request: {request.method} {request.url.path} "
-            f"- Status: {response.status_code} "
-            f"- Process Time: {process_time:.4f}s"
-        )
+    # Log request details
+    logger.info(
+        f"Request: {request.method} {request.url.path} "
+        f"- Status: {response.status_code} "
+        f"- Process Time: {process_time:.4f}s"
+    )
     
     return response
 
-# Root endpoint for health check with enhanced widget info
+# Root endpoint for health check
 @app.get("/")
 async def root():
     return {
@@ -347,89 +197,23 @@ async def root():
             "analytics", 
             "conversation_history", 
             "external_integrations",
-            "website_crawling",
-            "streaming_widget_responses",
-            "real_time_settings_sync",
-            "multi_llm_support",
-            "react_widget_app"
-        ],
-        "widget": {
-            "enabled": WIDGET_ROUTES_AVAILABLE,
-            "streaming": WIDGET_SERVICE_AVAILABLE,
-            "llm_integration": WIDGET_SERVICE_AVAILABLE,
-            "settings_url": f"{BACKEND_URL}/api/widget/settings",
-            "app_url": f"{BACKEND_URL}/api/widget/app/",
-            "health_url": f"{BACKEND_URL}/api/widget/health"
-        }
+            "website_crawling"
+        ]
     }
 
-# Enhanced health check endpoint with detailed component status
+# Health check endpoint
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
-        "timestamp": int(time.time()),
         "environment": "production" if IS_PRODUCTION else "development",
         "backend_url": BACKEND_URL,
         "components": {
             "api": "up",
-            "database": "up",
-            "widget_routes": "up" if WIDGET_ROUTES_AVAILABLE else "down",
-            "widget_service": "up" if WIDGET_SERVICE_AVAILABLE else "limited",
-            "streaming": "available" if WIDGET_SERVICE_AVAILABLE else "unavailable",
-            "cors": "configured"
-        },
-        "widget_info": {
-            "routes_available": WIDGET_ROUTES_AVAILABLE,
-            "service_available": WIDGET_SERVICE_AVAILABLE,
-            "settings_endpoint": f"{BACKEND_URL}/api/widget/settings",
-            "app_endpoint": f"{BACKEND_URL}/api/widget/app/",
-            "test_endpoint": f"{BACKEND_URL}/api/widget/test",
-            "embed_endpoint": f"{BACKEND_URL}/api/widget/embed"
-        },
-        "debug_endpoints": {
-            "all_routes": f"{BACKEND_URL}/debug/routes",
-            "widget_routes": f"{BACKEND_URL}/debug/widget-routes", 
-            "widget_status": f"{BACKEND_URL}/debug/widget-status"
+            "database": "up"
         }
-    }
-
-# CORS preflight handler for widget embedding
-@app.options("/api/widget/{path:path}")
-async def widget_options_handler(path: str):
-    """Handle CORS preflight requests for all widget endpoints."""
-    return {
-        "message": "CORS preflight handled",
-        "path": path,
-        "methods": ["GET", "POST", "PUT", "HEAD", "OPTIONS"],
-        "headers": ["Content-Type", "X-API-Key", "Authorization"]
-    }
-
-# Emergency widget endpoints (if main widget routes fail)
-@app.get("/api/widget-emergency/health")
-async def emergency_widget_health():
-    """Emergency widget health check."""
-    return {
-        "status": "emergency_mode",
-        "message": "Widget routes may not be properly loaded",
-        "widget_routes_available": WIDGET_ROUTES_AVAILABLE,
-        "widget_service_available": WIDGET_SERVICE_AVAILABLE,
-        "recommendations": [
-            "Check widget router import in main.py",
-            "Verify widget routes are properly defined",
-            "Check for import errors in widget module",
-            "Build React widget app: cd frontend/widget-app && npm run build"
-        ]
     }
 
 if __name__ == "__main__":
     import uvicorn
-    
-    # Log startup information
-    logger.info("🚀 Starting Customate.ai Backend Server")
-    logger.info(f"📡 Environment: {os.environ.get('ENVIRONMENT', 'development')}")
-    logger.info(f"🔗 Backend URL: {BACKEND_URL}")
-    logger.info(f"🔧 Widget Routes: {'Available' if WIDGET_ROUTES_AVAILABLE else 'NOT AVAILABLE'}")
-    logger.info(f"🌊 Widget Service: {'Available' if WIDGET_SERVICE_AVAILABLE else 'Limited'}")
-    
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
