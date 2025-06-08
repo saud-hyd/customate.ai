@@ -6,15 +6,15 @@ services:
       # Install Python dependencies
       pip install -r requirements.txt
       
-      # Install Node.js and npm (if not available)
-      curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-      sudo apt-get install -y nodejs
-      
-      # Build the React widget app
-      cd frontend/widget-app
-      npm install
-      npm run build
-      cd ../..
+      # Verify widget files exist (optional check)
+      if [ -f "frontend/widget-app/dist/index.html" ]; then
+        echo "✅ Widget files found and ready to serve"
+        ls -la frontend/widget-app/dist/
+      else
+        echo "⚠️ Warning: Widget files not found"
+        echo "Expected: frontend/widget-app/dist/index.html"
+        echo "Make sure widget is built and committed"
+      fi
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
@@ -27,4 +27,12 @@ services:
         sync: false
       - key: CLAUDE_API_KEY
         sync: false
+      - key: ENVIRONMENT
+        value: production
+    plan: starter
+
+databases:
+  - name: customate-db
+    databaseName: customate
+    user: customate_user
     plan: starter
