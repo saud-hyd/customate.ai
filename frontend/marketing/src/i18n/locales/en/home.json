@@ -1,15 +1,15 @@
 {
   "hero": {
-    "badge": "Seamlessly Smart",
+    "badge": "This is Customate",
     "title": {
-      "part1": "Your Business,",
-      "part2": "Enhanced by AI"
+      "part1": "Automate your Business,",
+      "part2": "customer support operations."
     },
-    "subtitle": "Customate.ai transforms customer interactions with intelligent, conversational AI agents tailored to your unique business needs."
+    "subtitle": "An AI-powered chatbot that answer's all your clients questions. Engage, assist, and convert—directly from your websites corner and across all your social media channels."
   },
   "features": {
     "heading": "Supercharging Business Conversations",
-    "subheading": "Customate.ai delivers intelligent, context-aware experiences",
+    "subheading": "“Customate delivers intelligent, context-aware answers to your clients questions",
     "cards": {
       "knowledgeIntegration": {
         "title": "Knowledge Integration",
@@ -21,7 +21,7 @@
       },
       "multiChannel": {
         "title": "Multi-channel Integration",
-        "description": "Deploy your AI agent across website, mobile app, SMS, social media, and all your customer engagement platforms."
+        "description": "Deploy your AI agent across website, mobile app, social media, and all your customer engagement platforms."
       },
       "semantic": {
         "title": "Semantic Understanding",

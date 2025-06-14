@@ -336,8 +336,7 @@ const HeroSection = () => {
     <section 
       ref={heroRef} 
       id="hero"
-      className="relative mt-16 pt-20 pb-24 overflow-hidden bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900"
-    >
+      className="relative mt-16 pt-4 pb-8 overflow-hidden bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900"    >
       {/* Modern Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Static Gradients */}
@@ -394,31 +393,7 @@ const HeroSection = () => {
               <p className="text-xl md:text-2xl font-light max-w-2xl text-gray-300">
                 {t('hero.subtitle')}
               </p>
-              
-              <div className="flex flex-wrap gap-4 pt-6">
-                <Button
-                  as="a"
-                  href="/register"
-                  variant="primary"
-                  size="lg"
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 border-0 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-orange-500/20"
-                >
-                  {t('cta.startFree', { ns: 'common' })}
-                </Button>
-                
-              <Button
-                as="a"
-                href="https://youtu.be/sW2XR_rTfi0"
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="outline"
-                size="lg"
-                className="text-white border-white/30 hover:bg-white/10 backdrop-blur-sm"
-              >
-                {t('cta.watchDemo', { ns: 'common' })}
-              </Button>
-
-              </div>
+              {/* Buttons removed per request */}
             </div>
           </div>
           

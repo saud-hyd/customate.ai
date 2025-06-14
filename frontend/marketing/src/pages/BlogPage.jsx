@@ -8,28 +8,31 @@ const BlogPage = () => {
       id: 'savings-calculator',
       title: 'How Much Are You Saving with Customate?',
       excerpt: 'Discover the real cost savings of AI-powered customer support compared to traditional human agents across different regions and markets.',
-      date: 'January 15, 2025',
       readTime: '5 min read',
       category: 'Cost Analysis',
-      featured: true
+      featured: true,
+      gradient: 'from-green-400 via-blue-500 to-purple-600',
+      icon: '💰'
     },
     {
       id: 'traditional-vs-ai',
       title: 'Traditional Vs. AI Customer Support Bots',
       excerpt: 'A comprehensive comparison between rule-based chatbots and modern AI-powered solutions, exploring limitations and opportunities.',
-      date: 'January 10, 2025',
       readTime: '8 min read',
       category: 'Technology',
-      featured: true
+      featured: true,
+      gradient: 'from-blue-400 via-purple-500 to-pink-500',
+      icon: '🤖'
     },
     {
       id: 'choose-chatbot',
       title: 'How to Choose a Customer Support Chatbot for Your Website?',
       excerpt: 'Essential guide to selecting the right AI chatbot for your business needs, covering key features and evaluation criteria.',
-      date: 'January 5, 2025',
       readTime: '6 min read',
       category: 'Guide',
-      featured: false
+      featured: false,
+      gradient: 'from-teal-400 via-blue-500 to-indigo-600',
+      icon: '🔍'
     }
   ];
 
@@ -89,9 +92,12 @@ const BlogPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {blogPosts.filter(post => post.featured).map((post) => (
                   <article key={post.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                    <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                      <div className="w-full h-48 bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                        <span className="text-orange-600 font-semibold">Featured Article</span>
+                    <div className="aspect-w-16 aspect-h-9">
+                      <div className={`w-full h-48 bg-gradient-to-br ${post.gradient} flex items-center justify-center`}>
+                        <div className="text-center text-white">
+                          <div className="text-4xl mb-2">{post.icon}</div>
+                          <div className="text-lg font-semibold">{post.category}</div>
+                        </div>
                       </div>
                     </div>
                     <div className="p-6">
@@ -110,8 +116,7 @@ const BlogPage = () => {
                         </Link>
                       </h3>
                       <p className="text-gray-600 mb-4 line-clamp-3">{post.excerpt}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">{post.date}</span>
+                      <div className="flex items-center justify-end">
                         <Link 
                           to={`/blog/${post.id}`}
                           className="text-orange-600 font-medium hover:text-orange-700 transition-colors"
@@ -136,9 +141,12 @@ const BlogPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredPosts.map((post) => (
                 <article key={post.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                    <div className="w-full h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <span className="text-gray-500 font-medium">{post.category}</span>
+                  <div className="aspect-w-16 aspect-h-9">
+                    <div className={`w-full h-40 bg-gradient-to-br ${post.gradient} flex items-center justify-center`}>
+                      <div className="text-center text-white">
+                        <div className="text-3xl mb-2">{post.icon}</div>
+                        <div className="text-sm font-medium opacity-90">{post.category}</div>
+                      </div>
                     </div>
                   </div>
                   <div className="p-6">
@@ -157,8 +165,7 @@ const BlogPage = () => {
                       </Link>
                     </h3>
                     <p className="text-gray-600 text-sm mb-4 line-clamp-3">{post.excerpt}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{post.date}</span>
+                    <div className="flex items-center justify-end">
                       <Link 
                         to={`/blog/${post.id}`}
                         className="text-orange-600 text-sm font-medium hover:text-orange-700 transition-colors"
@@ -180,13 +187,13 @@ const BlogPage = () => {
             <p className="text-xl text-orange-100 mb-8">
               Get the latest insights on AI customer support and chatbot technology delivered to your inbox.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+            <div className="max-w-md mx-auto flex gap-4">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-lg border-0 focus:ring-2 focus:ring-orange-300 focus:outline-none"
+                className="flex-1 px-4 py-3 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
-              <button className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-colors">
+              <button className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
                 Subscribe
               </button>
             </div>

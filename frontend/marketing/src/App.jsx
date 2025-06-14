@@ -17,15 +17,13 @@ import AboutPage from './pages/AboutPage';
 import CookiesPage from './pages/CookiesPage';
 import TestPage from './pages/TestPage';
 
-
 // Blog components
 import BlogPage from './pages/BlogPage';
 
-
-// Individual blog posts (if you have the blog subdirectory)
-// import SavingsBlogPost from './pages/blog/SavingsBlogPost';
-// import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
-// import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
+// Individual blog posts
+import SavingsBlogPost from './pages/blog/SavingsBlogPost';
+import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
+import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
 
 // Existing pages
 import CheckoutPage from './pages/CheckoutPage';
@@ -97,40 +95,27 @@ function App() {
               
               {/* Blog pages */}
               <Route path="/blog" element={<BlogPage />} />
-              {/* Uncomment when you have blog posts:
               <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
               <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
               <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
-              */}
               
-              {/* Policy and info pages */}
+              {/* Other pages */}
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/about" element={<AboutPage />} />
               <Route path="/cookies" element={<CookiesPage />} />
               <Route path="/test" element={<TestPage />} />
-
-
-
-              {/* Existing checkout pages */}
+              
+              {/* Checkout pages */}
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
               
-              {/* Redirect to dashboard app for these routes */}
-              <Route 
-                path="/login" 
-                element={<RedirectPage url="https://app.customate.ai/login" />}
-              />
-              <Route 
-                path="/register" 
-                element={<RedirectPage url="https://app.customate.ai/register" />}
-              />
-              <Route 
-                path="/dashboard" 
-                element={<RedirectPage url="https://app.customate.ai/dashboard" />}
-              />
+              {/* External redirects */}
+              <Route path="/app" element={<RedirectPage url="https://app.customate.ai" />} />
+              <Route path="/login" element={<RedirectPage url="https://app.customate.ai/login" />} />
+              <Route path="/signup" element={<RedirectPage url="https://app.customate.ai/signup" />} />
               
-              {/* Fallback route - 404 */}
+              {/* 404 page */}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
