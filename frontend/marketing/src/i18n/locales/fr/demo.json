@@ -3,37 +3,73 @@
     "ecommerce": [
       {
         "role": "user",
-        "text": "Quelle est votre politique de retour ?"
+        "text": "Avez-vous cette chemise en taille M?"
       },
       {
         "role": "bot",
-        "text": "Nous offrons une politique de retour de 30 jours pour tous les articles. Les retours doivent être dans leur état d'origine. Aimeriez-vous que je vous aide avec un retour spécifique ?"
+        "text": "Oui! Nous avons la chemise Sunset Horizon en taille M avec 5 en stock. Voulez-vous que je l'ajoute à votre panier?"
       },
       {
         "role": "user",
-        "text": "Avez-vous ceci en taille medium ?"
+        "text": "Quelle est votre politique de retour?"
       },
       {
         "role": "bot",
-        "text": "Laissez-moi vérifier notre inventaire pour vous. Oui ! Nous avons cet article disponible en medium. Il est actuellement en stock et prêt à expédier."
+        "text": "Nous offrons des retours sans tracas dans les 30 jours. Expédition de retour gratuite sur toutes les commandes de plus de 50€!"
+      }
+    ],
+    "healthcare": [
+      {
+        "role": "user",
+        "text": "Quand le Dr Thompson est-il disponible cette semaine?"
+      },
+      {
+        "role": "bot",
+        "text": "Le Dr Thompson a des créneaux mercredi à 14h00 et vendredi à 10h30. Voulez-vous prendre rendez-vous?"
+      },
+      {
+        "role": "user",
+        "text": "Quelles assurances acceptez-vous?"
+      },
+      {
+        "role": "bot",
+        "text": "Nous acceptons la plupart des principales assurances y compris Aetna, Blue Cross, UnitedHealthcare et Medicare. Voulez-vous que je vérifie votre plan spécifique?"
+      }
+    ],
+    "finance": [
+      {
+        "role": "user",
+        "text": "Quel est le solde de mon compte actuel?"
+      },
+      {
+        "role": "bot",
+        "text": "Le solde de votre compte courant est de 3 487,52€. Vous avez aussi un paiement programmé de 150€ à la Compagnie d'Électricité dû demain."
+      },
+      {
+        "role": "user",
+        "text": "Puis-je augmenter ma limite de crédit?"
+      },
+      {
+        "role": "bot",
+        "text": "Basé sur l'historique de votre compte, vous êtes éligible pour une augmentation de limite de crédit. Voulez-vous que je vous aide à faire la demande maintenant?"
       }
     ],
     "education": [
       {
         "role": "user",
-        "text": "Quand est-ce que mon devoir de Science des Données est dû ?"
+        "text": "Quand le devoir est-il dû?"
       },
       {
         "role": "bot",
-        "text": "Votre projet de Science des Données est dû vendredi prochain, le 24 mai. Vous avez complété 3 des 5 sections requises jusqu'à présent."
+        "text": "Votre projet de Data Science est dû vendredi prochain, le 24 mai. Vous avez complété 3 des 5 sections requises jusqu'à présent."
       },
       {
         "role": "user",
-        "text": "Quelles ressources sont disponibles pour l'examen de physique ?"
+        "text": "Quelles ressources sont disponibles pour l'examen de physique?"
       },
       {
         "role": "bot",
-        "text": "Nous avons des tests pratiques, des tutoriels vidéo et des guides d'étude disponibles dans le centre d'apprentissage. Je peux aussi vous connecter avec un tuteur si nécessaire."
+        "text": "Nous avons des tests d'entraînement, des tutoriels vidéo et des guides d'étude disponibles dans le centre d'apprentissage. Je peux aussi vous connecter avec un tuteur si nécessaire."
       }
     ],
     "support": [
@@ -43,16 +79,27 @@
       },
       {
         "role": "bot",
-        "text": "Je suis désolé d'entendre cela. Laissez-moi vous aider à résoudre le problème. Quel problème spécifique rencontrez-vous avec votre abonnement ?"
+        "text": "Je suis désolé d'entendre cela. Laissez-moi vous aider à diagnostiquer. Quel problème spécifique rencontrez-vous avec votre abonnement?"
       },
       {
         "role": "user",
-        "text": "Je ne peux pas accéder aux fonctionnalités premium après le paiement"
+        "text": "Je ne peux pas accéder aux fonctionnalités premium après paiement"
       },
       {
         "role": "bot",
-        "text": "Laissez-moi vérifier cela pour vous. Je vois que votre paiement a été traité mais il y a un problème de synchronisation. J'ai actualisé l'accès à votre compte. Pouvez-vous essayer de vous déconnecter puis de vous reconnecter ?"
+        "text": "Laissez-moi vérifier cela pour vous. Je vois que votre paiement a été traité mais il y a un problème de synchronisation. J'ai actualisé l'accès à votre compte. Pouvez-vous essayer de vous déconnecter et vous reconnecter?"
       }
     ]
+  },
+  "tabs": {
+    "ecommerce": "E-commerce",
+    "healthcare": "Santé",
+    "finance": "Finance",
+    "education": "Éducation",
+    "support": "Support"
+  },
+  "chatHeader": {
+    "name": "Assistant Customate",
+    "status": "En ligne"
   }
 }

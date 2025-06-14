@@ -3,25 +3,61 @@
     "ecommerce": [
       {
         "role": "user",
+        "text": "¿Tienen esta camisa en talla M?"
+      },
+      {
+        "role": "bot",
+        "text": "¡Sí! Tenemos la Camisa Sunset Horizon en talla M con 5 en stock. ¿Te gustaría que la agregue a tu carrito?"
+      },
+      {
+        "role": "user",
         "text": "¿Cuál es su política de devoluciones?"
       },
       {
         "role": "bot",
-        "text": "Ofrecemos una política de devolución de 30 días para todos los artículos. Las devoluciones deben estar en condición original. ¿Te gustaría que te ayude con una devolución específica?"
-      },
+        "text": "¡Ofrecemos devoluciones sin complicaciones dentro de 30 días. Envío de devolución gratuito en todos los pedidos superiores a 50€!"
+      }
+    ],
+    "healthcare": [
       {
         "role": "user",
-        "text": "¿Tienen esto en talla mediana?"
+        "text": "¿Cuándo está disponible el Dr. Thompson esta semana?"
       },
       {
         "role": "bot",
-        "text": "Déjame revisar nuestro inventario para ti. ¡Sí! Tenemos este artículo disponible en mediano. Actualmente está en stock y listo para enviar."
+        "text": "El Dr. Thompson tiene citas disponibles el miércoles a las 2:00 PM y el viernes a las 10:30 AM. ¿Te gustaría reservar una cita?"
+      },
+      {
+        "role": "user",
+        "text": "¿Qué seguros aceptan?"
+      },
+      {
+        "role": "bot",
+        "text": "Aceptamos la mayoría de los principales planes de seguro incluyendo Aetna, Blue Cross, UnitedHealthcare y Medicare. ¿Te gustaría que verifique tu plan específico?"
+      }
+    ],
+    "finance": [
+      {
+        "role": "user",
+        "text": "¿Cuál es el saldo actual de mi cuenta?"
+      },
+      {
+        "role": "bot",
+        "text": "El saldo de tu cuenta corriente es de 3.487,52€. También tienes un pago programado de 150€ a la Compañía Eléctrica venciendo mañana."
+      },
+      {
+        "role": "user",
+        "text": "¿Puedo aumentar mi límite de crédito?"
+      },
+      {
+        "role": "bot",
+        "text": "Basado en el historial de tu cuenta, eres elegible para un aumento del límite de crédito. ¿Te gustaría que te ayude a solicitarlo ahora?"
       }
     ],
     "education": [
       {
         "role": "user",
-        "text": "¿Cuándo vence mi tarea de Ciencia de Datos?"
+        "text": "¿Cuándo vence la tarea?"
       },
       {
         "role": "bot",
@@ -33,13 +69,13 @@
       },
       {
         "role": "bot",
-        "text": "Tenemos exámenes de práctica, video tutoriales y guías de estudio disponibles en el centro de aprendizaje. También puedo conectarte con un tutor si es necesario."
+        "text": "Tenemos pruebas de práctica, tutoriales en video y guías de estudio disponibles en el centro de aprendizaje. También puedo conectarte con un tutor si es necesario."
       }
     ],
     "support": [
       {
         "role": "user",
-        "text": "Mi suscripción no funciona correctamente."
+        "text": "Mi suscripción no está funcionando correctamente."
       },
       {
         "role": "bot",
@@ -47,12 +83,23 @@
       },
       {
         "role": "user",
-        "text": "No puedo acceder a las funciones premium después del pago"
+        "text": "No puedo acceder a las características premium después del pago"
       },
       {
         "role": "bot",
-        "text": "Déjame verificar eso para ti. Veo que tu pago fue procesado pero hay un problema de sincronización. He actualizado el acceso a tu cuenta. ¿Puedes intentar cerrar sesión y volver a entrar?"
+        "text": "Déjame verificar eso por ti. Veo que tu pago fue procesado pero hay un problema de sincronización. He actualizado el acceso a tu cuenta. ¿Puedes intentar cerrar sesión y volver a iniciar sesión?"
       }
     ]
+  },
+  "tabs": {
+    "ecommerce": "E-commerce",
+    "healthcare": "Salud",
+    "finance": "Finanzas",
+    "education": "Educación",
+    "support": "Soporte"
+  },
+  "chatHeader": {
+    "name": "Asistente Customate",
+    "status": "En línea"
   }
 }

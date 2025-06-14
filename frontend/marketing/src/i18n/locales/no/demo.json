@@ -3,29 +3,65 @@
     "ecommerce": [
       {
         "role": "user",
+        "text": "Har dere denne skjorten i størrelse M?"
+      },
+      {
+        "role": "bot",
+        "text": "Ja! Vi har Sunset Horizon-skjorten i størrelse M med 5 på lager. Vil du at jeg skal legge den i handlekurven din?"
+      },
+      {
+        "role": "user",
         "text": "Hva er returpolitikken deres?"
       },
       {
         "role": "bot",
-        "text": "Vi tilbyr en 30-dagers returpolitikk for alle varer. Returer må være i original tilstand. Vil du at jeg skal hjelpe deg med en spesifikk retur?"
-      },
+        "text": "Vi tilbyr problemfri retur innen 30 dager. Gratis returforsendelse på alle bestillinger over 500 kr!"
+      }
+    ],
+    "healthcare": [
       {
         "role": "user",
-        "text": "Har dere dette i størrelse medium?"
+        "text": "Når er Dr. Thompson tilgjengelig denne uken?"
       },
       {
         "role": "bot",
-        "text": "La meg sjekke lageret vårt for deg. Ja! Vi har denne varen tilgjengelig i medium. Den er for øyeblikket på lager og klar til levering."
+        "text": "Dr. Thompson har ledige timer onsdag kl. 14:00 og fredag kl. 10:30. Vil du bestille en time?"
+      },
+      {
+        "role": "user",
+        "text": "Hvilke forsikringer aksepterer dere?"
+      },
+      {
+        "role": "bot",
+        "text": "Vi aksepterer de fleste store forsikringsplaner inkludert Aetna, Blue Cross, UnitedHealthcare og Medicare. Vil du at jeg skal sjekke din spesifikke plan?"
+      }
+    ],
+    "finance": [
+      {
+        "role": "user",
+        "text": "Hva er min nåværende kontosaldo?"
+      },
+      {
+        "role": "bot",
+        "text": "Din brukskontosaldo er 34.875,20 kr. Du har også en planlagt betaling på 1.500 kr til Strømselskapet som forfaller i morgen."
+      },
+      {
+        "role": "user",
+        "text": "Kan jeg øke kredittgrensen min?"
+      },
+      {
+        "role": "bot",
+        "text": "Basert på kontohistorikken din er du kvalifisert for en økning av kredittgrensen. Vil du at jeg skal hjelpe deg med å søke om det nå?"
       }
     ],
     "education": [
       {
         "role": "user",
-        "text": "Når skal Data Science-oppgaven min leveres?"
+        "text": "Når skal oppgaven leveres?"
       },
       {
         "role": "bot",
-        "text": "Data Science-prosjektet ditt skal leveres neste fredag, 24. mai. Du har fullført 3 av 5 påkrevde seksjoner så langt."
+        "text": "Ditt Data Science-prosjekt skal leveres neste fredag, 24. mai. Du har fullført 3 av 5 påkrevde seksjoner så langt."
       },
       {
         "role": "user",
@@ -33,13 +69,13 @@
       },
       {
         "role": "bot",
-        "text": "Vi har prøvetester, videoveiledninger og studieguider tilgjengelig i læringssenteret. Jeg kan også koble deg til en veileder hvis nødvendig."
+        "text": "Vi har øvingstester, video-tutorials og studieguider tilgjengelig i læringssenteret. Jeg kan også koble deg til en veileder hvis nødvendig."
       }
     ],
     "support": [
       {
         "role": "user",
-        "text": "Abonnementet mitt fungerer ikke riktig."
+        "text": "Abonnementet mitt fungerer ikke ordentlig."
       },
       {
         "role": "bot",
@@ -51,8 +87,19 @@
       },
       {
         "role": "bot",
-        "text": "La meg sjekke det for deg. Jeg ser at betalingen din ble behandlet, men det er et synkroniseringsproblem. Jeg har oppdatert kontotilgangen din. Kan du prøve å logge ut og inn igjen?"
+        "text": "La meg sjekke det for deg. Jeg ser at betalingen din ble behandlet, men det er et synkroniseringsproblem. Jeg har oppdatert kontotilgangen din. Kan du prøve å logge ut og logge inn igjen?"
       }
     ]
+  },
+  "tabs": {
+    "ecommerce": "E-handel",
+    "healthcare": "Helsevesen",
+    "finance": "Finans",
+    "education": "Utdanning",
+    "support": "Støtte"
+  },
+  "chatHeader": {
+    "name": "Customate Assistent",
+    "status": "Pålogget"
   }
 }
