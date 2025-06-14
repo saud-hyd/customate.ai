@@ -1,48 +1,25 @@
 {
   "form": {
-    "title": "Kontakt",
-    "subtitle": "Wir würden gerne von Ihnen hören. Füllen Sie das untenstehende Formular aus und wir melden uns in Kürze bei Ihnen.",
-    "fields": {
-      "name": "Vollständiger Name",
-      "email": "E-Mail",
-      "company": "Unternehmen",
-      "message": "Nachricht"
-    },
-    "submit": "Vertrieb Kontaktieren",
-    "sending": "Sende...",
-    "success": {
-      "title": "Nachricht erfolgreich gesendet!",
-      "message": "Vielen Dank für Ihre Nachricht. Wir melden uns so schnell wie möglich bei Ihnen.",
-      "sendAnother": "Weitere Nachricht senden"
-    },
-    "error": "Beim Senden des Formulars ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+    "title": "Kontakt aufnehmen",
+    "subtitle": "Haben Sie Fragen zu Customate.ai? Wir würden gerne von Ihnen hören.",
+    "name": "Vollständiger Name",
+    "namePlaceholder": "Geben Sie Ihren Namen ein",
+    "email": "E-Mail-Adresse",
+    "emailPlaceholder": "Geben Sie Ihre E-Mail ein",
+    "company": "Unternehmen", 
+    "companyPlaceholder": "Geben Sie Ihren Firmennamen ein",
+    "message": "Nachricht",
+    "messagePlaceholder": "Erzählen Sie uns von Ihrem Projekt oder fragen Sie uns alles",
+    "submit": "Nachricht Senden",
+    "submitting": "Wird gesendet...",
+    "success": "Vielen Dank! Wir melden uns bald bei Ihnen.",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
   },
   "info": {
     "title": "Kontaktinformationen",
-    "email": {
-      "title": "E-Mail",
-      "value": "info@customate.ai"
-    },
-    "phone": {
-      "title": "Telefon",
-      "value": "+1 (555) 123-4567"
-    },
-    "office": {
-      "title": "Büro",
-      "address": "123 Tech Boulevard\nSan Francisco, CA 94107\nVereinigte Staaten"
-    },
-    "followUs": "Folgen Sie uns",
-    "social": {
-      "twitter": "Twitter",
-      "linkedin": "LinkedIn",
-      "github": "GitHub"
-    }
-  },
-  "quickSupport": {
-    "title": "Schneller Support",
-    "message": "Benötigen Sie sofortige Hilfe? Schauen Sie in unsere",
-    "faq": "FAQ",
-    "or": "oder senden Sie eine E-Mail an unser Support-Team unter",
-    "supportEmail": "support@customate.ai"
+    "email": "hello@customate.ai",
+    "response": "Wir antworten normalerweise innerhalb von 24 Stunden",
+    "support": "Brauchen Sie sofortigen Support?",
+    "documentation": "Schauen Sie sich unsere Dokumentation an"
   }
 }

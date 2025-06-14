@@ -1,48 +1,25 @@
 {
   "form": {
     "title": "联系我们",
-    "subtitle": "我们很乐意听到您的声音。请填写下面的表格，我们会尽快回复您。",
-    "fields": {
-      "name": "全名",
-      "email": "邮箱",
-      "company": "公司",
-      "message": "消息"
-    },
-    "submit": "联系销售",
-    "sending": "发送中...",
-    "success": {
-      "title": "消息发送成功！",
-      "message": "感谢您的联系。我们会尽快回复您。",
-      "sendAnother": "发送另一条消息"
-    },
-    "error": "提交表单时出错。请重试。"
+    "subtitle": "对 Customate.ai 有疑问吗？我们很乐意听取您的意见。",
+    "name": "全名",
+    "namePlaceholder": "请输入您的姓名",
+    "email": "邮箱地址",
+    "emailPlaceholder": "请输入您的邮箱",
+    "company": "公司",
+    "companyPlaceholder": "请输入您的公司名称",
+    "message": "留言",
+    "messagePlaceholder": "告诉我们您的项目或向我们提问",
+    "submit": "发送消息",
+    "submitting": "发送中...",
+    "success": "谢谢！我们会尽快回复您。",
+    "error": "出现错误，请重试。"
   },
   "info": {
     "title": "联系信息",
-    "email": {
-      "title": "邮箱",
-      "value": "info@customate.ai"
-    },
-    "phone": {
-      "title": "电话",
-      "value": "+1 (555) 123-4567"
-    },
-    "office": {
-      "title": "办公室",
-      "address": "123 Tech Boulevard\nSan Francisco, CA 94107\n美国"
-    },
-    "followUs": "关注我们",
-    "social": {
-      "twitter": "Twitter",
-      "linkedin": "LinkedIn",
-      "github": "GitHub"
-    }
-  },
-  "quickSupport": {
-    "title": "快速支持",
-    "message": "需要立即帮助？查看我们的",
-    "faq": "常见问题解答",
-    "or": "或发送邮件给我们的支持团队",
-    "supportEmail": "support@customate.ai"
+    "email": "hello@customate.ai", 
+    "response": "我们通常在24小时内回复",
+    "support": "需要即时支持？",
+    "documentation": "查看我们的文档"
   }
 }

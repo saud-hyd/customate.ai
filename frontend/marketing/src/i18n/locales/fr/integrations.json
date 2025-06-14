@@ -4,7 +4,7 @@
     "part1": "Une IA,",
     "part2": "Partout"
   },
-  "subtitle": "Connectez vos données métier et atteignez les clients sur chaque plateforme avec des interactions IA cohérentes et intelligentes.",
+  "subtitle": "Connectez vos données d'entreprise et atteignez les clients sur chaque plateforme avec des interactions IA intelligentes et cohérentes.",
   "tabs": {
     "dataSources": "Sources de Données",
     "chatPlatforms": "Plateformes de Chat"
@@ -17,19 +17,19 @@
     "integrations": {
       "knowledge": {
         "name": "Base de Connaissances",
-        "description": "Votre IA apprend de vos documents, FAQ et contenu web"
+        "description": "Votre IA apprend de vos documents, FAQ et contenu de site web"
       },
       "crm": {
         "name": "Systèmes CRM",
-        "description": "Connectez les données client de Salesforce, Zendesk et plus"
+        "description": "Connectez les données clients depuis Salesforce, Zendesk et plus"
       },
       "erp": {
         "name": "ERP/Inventaire",
-        "description": "Intégration en temps réel des informations produits et stocks"
+        "description": "Intégration en temps réel des informations produits et stock"
       },
       "helpdesk": {
-        "name": "Service d'Assistance",
-        "description": "Liez les tickets de support, historique de chat et problèmes clients"
+        "name": "Help Desk",
+        "description": "Liez les tickets de support, l'historique de chat et les problèmes clients"
       }
     }
   },
@@ -45,10 +45,10 @@
       },
       "nativeInterface": {
         "title": "Interface Native",
-        "description": "Ressemble et se comporte comme la plateforme originale"
+        "description": "Ressemble et fonctionne comme la plateforme originale"
       },
       "richMedia": {
-        "title": "Média Riche",
+        "title": "Médias Enrichis",
         "description": "Envoyez des images, boutons, cartes et plus"
       },
       "realtimeTranslation": {
@@ -57,7 +57,7 @@
       },
       "availability": {
         "title": "Disponibilité 24/7",
-        "description": "Support toujours actif pour vos clients"
+        "description": "Support toujours disponible pour vos clients"
       },
       "consistentVoice": {
         "title": "Voix Cohérente",
@@ -71,9 +71,9 @@
     "deployMessage": "Déployez sur n'importe quelle plateforme en minutes sans codage"
   },
   "cta": {
-    "title": "Prêt à élever votre expérience client ?",
+    "title": "Prêt à améliorer votre expérience client ?",
     "subtitle": "Déployez l'IA sur tous vos canaux en minutes, pas en mois. Aucun codage requis.",
-    "startTrial": "Essai Gratuit",
+    "startTrial": "Commencer l'Essai Gratuit",
     "watchDemo": "Voir la Démo"
   }
 }

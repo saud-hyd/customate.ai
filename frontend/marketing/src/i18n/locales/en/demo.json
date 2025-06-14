@@ -1,0 +1,58 @@
+{
+  "conversations": {
+    "ecommerce": [
+      {
+        "role": "user",
+        "text": "What's your return policy?"
+      },
+      {
+        "role": "bot", 
+        "text": "We offer a 30-day return policy for all items. Returns must be in original condition. Would you like me to help you with a specific return?"
+      },
+      {
+        "role": "user",
+        "text": "Do you have this in size medium?"
+      },
+      {
+        "role": "bot",
+        "text": "Let me check our inventory for you. Yes! We have this item available in medium. It's currently in stock and ready to ship."
+      }
+    ],
+    "education": [
+      {
+        "role": "user",
+        "text": "When is my Data Science assignment due?"
+      },
+      {
+        "role": "bot",
+        "text": "Your Data Science project is due next Friday, May 24th. You've completed 3 out of 5 required sections so far."
+      },
+      {
+        "role": "user", 
+        "text": "What resources are available for the physics exam?"
+      },
+      {
+        "role": "bot",
+        "text": "We have practice tests, video tutorials, and study guides available in the learning center. I can also connect you with a tutor if needed."
+      }
+    ],
+    "support": [
+      {
+        "role": "user",
+        "text": "My subscription isn't working correctly."
+      },
+      {
+        "role": "bot",
+        "text": "I'm sorry to hear that. Let me help troubleshoot. What specific issue are you experiencing with your subscription?"
+      },
+      {
+        "role": "user",
+        "text": "I can't access premium features after payment"
+      },
+      {
+        "role": "bot", 
+        "text": "Let me check that for you. I see your payment was processed but there's a sync issue. I've refreshed your account access. Can you try logging out and back in?"
+      }
+    ]
+  }
+}

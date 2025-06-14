@@ -1,0 +1,85 @@
+{
+  "loading": {
+    "default": "Cargando...",
+    "processing": "Procesando...",
+    "submitting": "Enviando...",
+    "sending": "Enviando...",
+    "checking": "Verificando...",
+    "saving": "Guardando...",
+    "updating": "Actualizando..."
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "email": "Por favor ingresa una dirección de email válida",
+    "minLength": "Se requieren mínimo {{min}} caracteres",
+    "maxLength": "Máximo {{max}} caracteres permitidos",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "invalidPhone": "Por favor ingresa un número de teléfono válido",
+    "invalidCard": "Por favor ingresa un número de tarjeta válido"
+  },
+  "newsletter": {
+    "title": "Mantente al día con las noticias de chatbots AI",
+    "subtitle": "Suscríbete a nuestro boletín para obtener las últimas actualizaciones, consejos y mejores prácticas para chatbots AI.",
+    "placeholder": "Ingresa tu dirección de email",
+    "subscribe": "Suscribirse",
+    "subscribing": "Suscribiendo...",
+    "success": "¡Gracias por suscribirte!",
+    "error": "Error al suscribirse. Por favor intenta de nuevo más tarde.",
+    "invalidEmail": "Por favor ingresa una dirección de email válida"
+  },
+  "faq": {
+    "title": "Preguntas Frecuentes",
+    "subtitle": "Todo lo que necesitas saber sobre Customate.ai"
+  },
+  "checkout": {
+    "title": "Completa tu Compra",
+    "subtitle": "Estás a solo unos pasos de crear tu chatbot personalizado",
+    "orderSummary": "Resumen del Pedido",
+    "plan": "Plan",
+    "billing": "Facturación",
+    "monthly": "mes",
+    "annually": "mes, facturado anualmente",
+    "processing": "Procesando pago...",
+    "error": "Hubo un error procesando tu pago. Por favor intenta de nuevo.",
+    "billingInfo": "Información de Facturación",
+    "paymentInfo": "Información de Pago",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Email",
+    "company": "Empresa",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "state": "Estado",
+    "zip": "Código Postal",
+    "country": "País",
+    "cardNumber": "Número de Tarjeta",
+    "cardExpiry": "MM/AA",
+    "cardCvc": "CVC",
+    "completePurchase": "Completar Compra"
+  },
+  "buttons": {
+    "getStarted": "Comenzar",
+    "startFree": "Prueba Gratuita",
+    "learnMore": "Más Información",
+    "watchDemo": "Ver Demo",
+    "contactSales": "Contactar Ventas",
+    "tryAgain": "Intentar de Nuevo",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "submit": "Enviar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente"
+  },
+  "status": {
+    "online": "En Línea",
+    "offline": "Desconectado",
+    "connecting": "Conectando...",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "success": "Éxito",
+    "error": "Error",
+    "warning": "Advertencia",
+    "info": "Información"
+  }
+}

@@ -3,113 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
-  const { i18n } = useTranslation();
+  const { t } = useTranslation(['common', 'ui']);
   const location = useLocation();
   const currentYear = new Date().getFullYear();
-
-  // All translations in one object - UPDATED WITH NORWEGIAN
-  const translations = {
-    en: {
-      description: "Automate Customer Support.",
-      product: "Product",
-      company: "Company",
-      features: "Features",
-      pricing: "Pricing",
-      blog: "Blog",
-      contact: "Contact",
-      aboutUs: "About Us",
-      terms: "Terms of Service",
-      privacy: "Privacy Policy",
-      cookies: "Cookie Policy",
-      rights: `© ${currentYear} Customated S&A UG. All rights reserved.`,
-      systemStatus: "System Online",
-      madeIn: "Made in Germany 🇩🇪"
-    },
-    es: {
-      description: "Chatbots impulsados por IA para empresas. Construye soporte al cliente inteligente con comportamientos específicos de la industria y bases de conocimiento personalizadas.",
-      product: "Producto",
-      company: "Empresa",
-      features: "Características",
-      pricing: "Precios",
-      blog: "Blog",
-      contact: "Contacto",
-      aboutUs: "Acerca de Nosotros",
-      terms: "Términos de Servicio",
-      privacy: "Política de Privacidad",
-      cookies: "Política de Cookies",
-      rights: `© ${currentYear} Customated S&A UG. Todos los derechos reservados.`,
-      systemStatus: "Sistema En Línea",
-      madeIn: "Hecho en Alemania 🇩🇪"
-    },
-    de: {
-      description: "KI-gestützte Chatbots für Unternehmen. Erstellen Sie intelligenten Kundensupport mit branchenspezifischen Verhaltensweisen und benutzerdefinierten Wissensbasen.",
-      product: "Produkt",
-      company: "Unternehmen",
-      features: "Funktionen",
-      pricing: "Preise",
-      blog: "Blog",
-      contact: "Kontakt",
-      aboutUs: "Über Uns",
-      terms: "Nutzungsbedingungen",
-      privacy: "Datenschutzrichtlinie",
-      cookies: "Cookie-Richtlinie",
-      rights: `© ${currentYear} Customated S&A UG. Alle Rechte vorbehalten.`,
-      systemStatus: "System Online",
-      madeIn: "Hergestellt in Deutschland 🇩🇪"
-    },
-    fr: {
-      description: "Chatbots alimentés par l'IA pour les entreprises. Créez un support client intelligent avec des comportements spécifiques à l'industrie et des bases de connaissances personnalisées.",
-      product: "Produit",
-      company: "Entreprise",
-      features: "Fonctionnalités",
-      pricing: "Tarifs",
-      blog: "Blog",
-      contact: "Contact",
-      aboutUs: "À Propos de Nous",
-      terms: "Conditions d'Utilisation",
-      privacy: "Politique de Confidentialité",
-      cookies: "Politique des Cookies",
-      rights: `© ${currentYear} Customated S&A UG. Tous droits réservés.`,
-      systemStatus: "Système En Ligne",
-      madeIn: "Fabriqué en Allemagne 🇩🇪"
-    },
-    zh: {
-      description: "为企业提供AI驱动的聊天机器人。构建具有行业特定行为和自定义知识库的智能客户支持。",
-      product: "产品",
-      company: "公司",
-      features: "功能",
-      pricing: "价格",
-      blog: "博客",
-      contact: "联系我们",
-      aboutUs: "关于我们",
-      terms: "服务条款",
-      privacy: "隐私政策",
-      cookies: "Cookie政策",
-      rights: `© ${currentYear} Customated S&A UG. 保留所有权利。`,
-      systemStatus: "系统在线",
-      madeIn: "德国制造 🇩🇪"
-    },
-    // NEW: Norwegian translations
-    no: {
-      description: "AI-drevne chatboter for bedrifter. Bygg intelligent kundestøtte med bransjespesifikk oppførsel og tilpassede kunnskapsbaser.",
-      product: "Produkt",
-      company: "Selskap",
-      features: "Funksjoner",
-      pricing: "Priser",
-      blog: "Blogg",
-      contact: "Kontakt",
-      aboutUs: "Om Oss",
-      terms: "Vilkår for Bruk",
-      privacy: "Personvernpolicy",
-      cookies: "Informasjonskapsel-policy",
-      rights: `© ${currentYear} Customated S&A UG. Alle rettigheter forbeholdt.`,
-      systemStatus: "System Pålogget",
-      madeIn: "Laget i Tyskland 🇩🇪"
-    }
-  };
-
-  // Get current language, fallback to English
-  const currentLang = translations[i18n.language] || translations.en;
 
   // Function to handle smooth scrolling to sections
   const scrollToSection = (sectionId) => {
@@ -157,111 +53,162 @@ const Footer = () => {
             </div>
             
             <p className="text-gray-600 text-sm leading-relaxed mb-6">
-              {currentLang.description}
+              {t('footer.description')}
             </p>
           </div>
           
-          {/* Navigation Links - Two Clean Columns */}
-          <div className="lg:col-span-2 grid grid-cols-2 gap-8">
-            
-            {/* Product & Resources */}
-            <div>
-              <h4 className="font-semibold text-orange-500 mb-4">
-                {currentLang.product}
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <button
-                    onClick={(e) => handleNavClick('/#features', e)}
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.features}
-                  </button>
-                </li>
-                <li>
-                  <Link
-                    to="/pricing"
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.pricing}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/blog"
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.blog}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/contact"
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.contact}
-                  </Link>
-                </li>
-              </ul>
-            </div>
+          {/* Navigation Links */}
+          <div className="lg:col-span-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+              
+              {/* Product Column */}
+              <div>
+                <h4 className="text-gray-900 font-semibold mb-4 uppercase tracking-wider text-sm">
+                  {t('footer.product.title')}
+                </h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link 
+                      to="/features" 
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm"
+                    >
+                      {t('header.features')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/pricing" 
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm"
+                    >
+                      {t('header.pricing')}
+                    </Link>
+                  </li>
+                  <li>
+                    <a 
+                      href="/#use-cases" 
+                      onClick={(e) => handleNavClick('/#use-cases', e)}
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm cursor-pointer"
+                    >
+                      {t('footer.product.useCases')}
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="/#roadmap" 
+                      onClick={(e) => handleNavClick('/#roadmap', e)}
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm cursor-pointer"
+                    >
+                      {t('footer.product.roadmap')}
+                    </a>
+                  </li>
+                </ul>
+              </div>
 
-            {/* Company & Legal */}
-            <div>
-              <h4 className="font-semibold text-orange-500 mb-4">
-                {currentLang.company}
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    to="/about"
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.aboutUs}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/terms"
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.terms}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/privacy"
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.privacy}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/cookies"
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
-                  >
-                    {currentLang.cookies}
-                  </Link>
-                </li>
-              </ul>
+              {/* Resources Column */}
+              <div>
+                <h4 className="text-gray-900 font-semibold mb-4 uppercase tracking-wider text-sm">
+                  {t('footer.resources.title')}
+                </h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link 
+                      to="/blog" 
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm"
+                    >
+                      {t('header.blog')}
+                    </Link>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://docs.customate.ai" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm"
+                    >
+                      {t('footer.resources.documentation')}
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://api.customate.ai" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm"
+                    >
+                      {t('footer.resources.apiReference')}
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Company Column */}
+              <div>
+                <h4 className="text-gray-900 font-semibold mb-4 uppercase tracking-wider text-sm">
+                  {t('footer.company.title')}
+                </h4>
+                <ul className="space-y-3">
+                  <li>
+                    <Link 
+                      to="/contact" 
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm"
+                    >
+                      {t('header.contact')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/about" 
+                      className="text-gray-600 hover:text-orange-500 transition-colors text-sm"
+                    >
+                      {t('footer.company.about')}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              
             </div>
           </div>
+          
         </div>
         
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm mb-4 md:mb-0">
-            {currentLang.rights}
-          </p>
+        {/* Bottom Section */}
+        <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-200 space-y-4 md:space-y-0">
           
-          <div className="flex items-center space-x-6 text-sm text-gray-500">
-            <span className="flex items-center">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              {currentLang.systemStatus}
-            </span>
-            <span>{currentLang.madeIn}</span>
+          {/* Copyright */}
+          <div className="flex items-center space-x-4">
+            <p className="text-gray-500 text-sm">
+              {t('footer.rights', { year: currentYear })}
+            </p>
+            <div className="flex items-center">
+              <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+              <span className="text-gray-500 text-sm">{t('ui:status.online')}</span>
+            </div>
           </div>
+          
+          {/* Legal Links */}
+          <div className="flex items-center space-x-6">
+            <Link 
+              to="/privacy" 
+              className="text-gray-500 hover:text-orange-500 transition-colors text-sm"
+            >
+              {t('footer.privacy')}
+            </Link>
+            <Link 
+              to="/terms" 
+              className="text-gray-500 hover:text-orange-500 transition-colors text-sm"
+            >
+              {t('footer.terms')}
+            </Link>
+            <Link 
+              to="/cookies" 
+              className="text-gray-500 hover:text-orange-500 transition-colors text-sm"
+            >
+              {t('footer.cookies')}
+            </Link>
+          </div>
+          
         </div>
+        
       </div>
     </footer>
   );

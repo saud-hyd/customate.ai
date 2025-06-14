@@ -20,6 +20,11 @@ import ContactPage from './pages/ContactPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 
+// Individual blog posts - ADD THESE IMPORTS
+import SavingsBlogPost from './pages/blog/SavingsBlogPost';
+import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
+import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
+
 // New pages that were missing
 import AboutPage from './pages/AboutPage';
 import TermsPage from './pages/TermsPage';
@@ -40,6 +45,22 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Redirect component for external links
+const RedirectPage = ({ url }) => {
+  useEffect(() => {
+    window.location.href = url;
+  }, [url]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Redirecting...</p>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <HelmetProvider>
@@ -54,6 +75,12 @@ function App() {
                 <Route path="/features" element={<FeaturesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/blog" element={<BlogPage />}/>
+                
+                {/* ADD THESE BLOG POST ROUTES */}
+                <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
+                <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
+                <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
+                
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
@@ -83,9 +110,6 @@ function App() {
                     <RedirectPage url="https://app.customate.ai/dashboard" />
                   } 
                 />
-                
-                {/* Fallback route - 404 */}
-                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
             <Footer />
@@ -95,46 +119,5 @@ function App() {
     </HelmetProvider>
   );
 }
-
-// Simple redirect component
-const RedirectPage = ({ url }) => {
-  useEffect(() => {
-    window.location.href = url;
-  }, [url]);
-
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold mb-2">Redirecting...</h2>
-        <p className="text-gray-600">You are being redirected to Customate.ai application.</p>
-        <div className="mt-4">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 404 page
-const NotFoundPage = () => {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center max-w-lg px-4">
-        <h1 className="text-6xl font-bold text-primary-600">404</h1>
-        <h2 className="text-3xl font-semibold mt-4 mb-2">Page Not Found</h2>
-        <p className="text-gray-600 mb-8">
-          The page you are looking for might have been removed, had its name changed, 
-          or is temporarily unavailable.
-        </p>
-        <a 
-          href="/"
-          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
-        >
-          Back to Home
-        </a>
-      </div>
-    </div>
-  );
-};
 
 export default App;

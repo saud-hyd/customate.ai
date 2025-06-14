@@ -1,0 +1,58 @@
+{
+  "conversations": {
+    "ecommerce": [
+      {
+        "role": "user",
+        "text": "Quelle est votre politique de retour ?"
+      },
+      {
+        "role": "bot",
+        "text": "Nous offrons une politique de retour de 30 jours pour tous les articles. Les retours doivent être dans leur état d'origine. Aimeriez-vous que je vous aide avec un retour spécifique ?"
+      },
+      {
+        "role": "user",
+        "text": "Avez-vous ceci en taille medium ?"
+      },
+      {
+        "role": "bot",
+        "text": "Laissez-moi vérifier notre inventaire pour vous. Oui ! Nous avons cet article disponible en medium. Il est actuellement en stock et prêt à expédier."
+      }
+    ],
+    "education": [
+      {
+        "role": "user",
+        "text": "Quand est-ce que mon devoir de Science des Données est dû ?"
+      },
+      {
+        "role": "bot",
+        "text": "Votre projet de Science des Données est dû vendredi prochain, le 24 mai. Vous avez complété 3 des 5 sections requises jusqu'à présent."
+      },
+      {
+        "role": "user",
+        "text": "Quelles ressources sont disponibles pour l'examen de physique ?"
+      },
+      {
+        "role": "bot",
+        "text": "Nous avons des tests pratiques, des tutoriels vidéo et des guides d'étude disponibles dans le centre d'apprentissage. Je peux aussi vous connecter avec un tuteur si nécessaire."
+      }
+    ],
+    "support": [
+      {
+        "role": "user",
+        "text": "Mon abonnement ne fonctionne pas correctement."
+      },
+      {
+        "role": "bot",
+        "text": "Je suis désolé d'entendre cela. Laissez-moi vous aider à résoudre le problème. Quel problème spécifique rencontrez-vous avec votre abonnement ?"
+      },
+      {
+        "role": "user",
+        "text": "Je ne peux pas accéder aux fonctionnalités premium après le paiement"
+      },
+      {
+        "role": "bot",
+        "text": "Laissez-moi vérifier cela pour vous. Je vois que votre paiement a été traité mais il y a un problème de synchronisation. J'ai actualisé l'accès à votre compte. Pouvez-vous essayer de vous déconnecter puis de vous reconnecter ?"
+      }
+    ]
+  }
+}

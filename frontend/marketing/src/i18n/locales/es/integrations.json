@@ -4,7 +4,7 @@
     "part1": "Una IA,",
     "part2": "En Todas Partes"
   },
-  "subtitle": "Conecta los datos de tu negocio y alcanza a los clientes en cada plataforma con interacciones de IA consistentes e inteligentes.",
+  "subtitle": "Conecta los datos de tu negocio y llega a los clientes en cada plataforma con interacciones de IA inteligentes y consistentes.",
   "tabs": {
     "dataSources": "Fuentes de Datos",
     "chatPlatforms": "Plataformas de Chat"
@@ -16,16 +16,16 @@
     },
     "integrations": {
       "knowledge": {
-        "name": "Base de Conocimientos",
-        "description": "Tu IA aprende de tus documentos, FAQs y contenido web"
+        "name": "Base de Conocimiento",
+        "description": "Tu IA aprende de tus documentos, FAQs y contenido del sitio web"
       },
       "crm": {
         "name": "Sistemas CRM",
-        "description": "Conecta datos de clientes de Salesforce, Zendesk y más"
+        "description": "Conecta datos de clientes desde Salesforce, Zendesk y más"
       },
       "erp": {
         "name": "ERP/Inventario",
-        "description": "Integración de información de productos y stock en tiempo real"
+        "description": "Integración de información de productos e inventario en tiempo real"
       },
       "helpdesk": {
         "name": "Mesa de Ayuda",
@@ -36,7 +36,7 @@
   "chatPlatforms": {
     "title": {
       "part1": "Mensajería",
-      "part2": "Multiplataforma"
+      "part2": "Multi-Plataforma"
     },
     "features": {
       "omnichannelPresence": {
@@ -48,7 +48,7 @@
         "description": "Se ve y se siente como la plataforma original"
       },
       "richMedia": {
-        "title": "Multimedia Rica",
+        "title": "Medios Enriquecidos",
         "description": "Envía imágenes, botones, tarjetas y más"
       },
       "realtimeTranslation": {
@@ -61,19 +61,19 @@
       },
       "consistentVoice": {
         "title": "Voz Consistente",
-        "description": "La misma experiencia de marca en todas partes"
+        "description": "Misma experiencia de marca en todas partes"
       },
       "smartHandoff": {
         "title": "Transferencia Inteligente",
-        "description": "Transferencia fluida a agentes humanos"
+        "description": "Transición perfecta a agentes humanos"
       }
     },
-    "deployMessage": "Despliega en cualquier plataforma en minutos sin programar"
+    "deployMessage": "Despliega en cualquier plataforma en minutos sin codificación"
   },
   "cta": {
     "title": "¿Listo para elevar tu experiencia del cliente?",
-    "subtitle": "Despliega IA en todos tus canales en minutos, no meses. Sin programación requerida.",
-    "startTrial": "Prueba Gratuita",
+    "subtitle": "Despliega IA en todos tus canales en minutos, no meses. Sin codificación requerida.",
+    "startTrial": "Comenzar Prueba Gratuita",
     "watchDemo": "Ver Demo"
   }
 }

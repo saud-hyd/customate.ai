@@ -1,0 +1,58 @@
+{
+  "conversations": {
+    "ecommerce": [
+      {
+        "role": "user",
+        "text": "¿Cuál es su política de devoluciones?"
+      },
+      {
+        "role": "bot",
+        "text": "Ofrecemos una política de devolución de 30 días para todos los artículos. Las devoluciones deben estar en condición original. ¿Te gustaría que te ayude con una devolución específica?"
+      },
+      {
+        "role": "user",
+        "text": "¿Tienen esto en talla mediana?"
+      },
+      {
+        "role": "bot",
+        "text": "Déjame revisar nuestro inventario para ti. ¡Sí! Tenemos este artículo disponible en mediano. Actualmente está en stock y listo para enviar."
+      }
+    ],
+    "education": [
+      {
+        "role": "user",
+        "text": "¿Cuándo vence mi tarea de Ciencia de Datos?"
+      },
+      {
+        "role": "bot",
+        "text": "Tu proyecto de Ciencia de Datos vence el próximo viernes, 24 de mayo. Has completado 3 de 5 secciones requeridas hasta ahora."
+      },
+      {
+        "role": "user",
+        "text": "¿Qué recursos están disponibles para el examen de física?"
+      },
+      {
+        "role": "bot",
+        "text": "Tenemos exámenes de práctica, video tutoriales y guías de estudio disponibles en el centro de aprendizaje. También puedo conectarte con un tutor si es necesario."
+      }
+    ],
+    "support": [
+      {
+        "role": "user",
+        "text": "Mi suscripción no funciona correctamente."
+      },
+      {
+        "role": "bot",
+        "text": "Lamento escuchar eso. Déjame ayudarte a solucionarlo. ¿Qué problema específico estás experimentando con tu suscripción?"
+      },
+      {
+        "role": "user",
+        "text": "No puedo acceder a las funciones premium después del pago"
+      },
+      {
+        "role": "bot",
+        "text": "Déjame verificar eso para ti. Veo que tu pago fue procesado pero hay un problema de sincronización. He actualizado el acceso a tu cuenta. ¿Puedes intentar cerrar sesión y volver a entrar?"
+      }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "conversations": {
+    "ecommerce": [
+      {
+        "role": "user",
+        "text": "Hva er returpolitikken deres?"
+      },
+      {
+        "role": "bot",
+        "text": "Vi tilbyr en 30-dagers returpolitikk for alle varer. Returer må være i original tilstand. Vil du at jeg skal hjelpe deg med en spesifikk retur?"
+      },
+      {
+        "role": "user",
+        "text": "Har dere dette i størrelse medium?"
+      },
+      {
+        "role": "bot",
+        "text": "La meg sjekke lageret vårt for deg. Ja! Vi har denne varen tilgjengelig i medium. Den er for øyeblikket på lager og klar til levering."
+      }
+    ],
+    "education": [
+      {
+        "role": "user",
+        "text": "Når skal Data Science-oppgaven min leveres?"
+      },
+      {
+        "role": "bot",
+        "text": "Data Science-prosjektet ditt skal leveres neste fredag, 24. mai. Du har fullført 3 av 5 påkrevde seksjoner så langt."
+      },
+      {
+        "role": "user",
+        "text": "Hvilke ressurser er tilgjengelige for fysikkeksamen?"
+      },
+      {
+        "role": "bot",
+        "text": "Vi har prøvetester, videoveiledninger og studieguider tilgjengelig i læringssenteret. Jeg kan også koble deg til en veileder hvis nødvendig."
+      }
+    ],
+    "support": [
+      {
+        "role": "user",
+        "text": "Abonnementet mitt fungerer ikke riktig."
+      },
+      {
+        "role": "bot",
+        "text": "Beklager å høre det. La meg hjelpe med feilsøking. Hvilket spesifikt problem opplever du med abonnementet ditt?"
+      },
+      {
+        "role": "user",
+        "text": "Jeg kan ikke få tilgang til premium-funksjoner etter betaling"
+      },
+      {
+        "role": "bot",
+        "text": "La meg sjekke det for deg. Jeg ser at betalingen din ble behandlet, men det er et synkroniseringsproblem. Jeg har oppdatert kontotilgangen din. Kan du prøve å logge ut og inn igjen?"
+      }
+    ]
+  }
+}

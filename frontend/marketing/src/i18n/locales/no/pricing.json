@@ -1,20 +1,20 @@
 {
-  "title": "Enkle og Transparente Priser",
-  "subtitle": "Velg den rette planen for din bedrift",
+  "title": "Enkle, Transparente Priser",
+  "subtitle": "Velg planen som passer for din bedrift",
   "billing": {
     "monthly": "Månedlig",
     "annual": "Årlig",
     "annualSave": "(Spar 20%)"
   },
-  "billedAnnually": "Faktureres årlig",
+  "billedAnnually": "Fakturert årlig",
   "plans": {
     "free": {
       "name": "Gratis",
-      "description": "Perfekt for å teste Customate.ai",
+      "description": "Perfekt for å prøve Customate.ai",
       "features": [
         "100 meldinger per måned",
         "5 aktive brukere",
-        "500 KB lagringsplass",
+        "500 KB lagring",
         "3 kunnskapssamlinger",
         "Grunnleggende chatbot-tilpasning",
         "Fellesskapsstøtte"
@@ -22,46 +22,46 @@
       "cta": "Start Gratis"
     },
     "basic": {
-      "name": "Grunnleggende",
-      "description": "For små bedrifter og oppstartsselskaper",
+      "name": "Basic",
+      "description": "For små bedrifter og oppstartsbedrifter",
       "features": [
-        "2,000 meldinger per måned",
+        "2 000 meldinger per måned",
         "25 aktive brukere",
-        "5 MB lagringsplass",
+        "5 MB lagring",
         "10 kunnskapssamlinger",
         "Tilpasset merkevarebygging",
         "E-poststøtte",
         "Analyse-dashboard",
         "API-tilgang"
       ],
-      "cta": "Start med Grunnleggende"
+      "cta": "Start med Basic"
     },
     "professional": {
-      "name": "Profesjonell",
+      "name": "Professional",
       "description": "For voksende bedrifter med avanserte behov",
       "features": [
-        "5,000 meldinger per måned",
+        "5 000 meldinger per måned",
         "100 aktive brukere",
-        "50 MB lagringsplass",
+        "25 MB lagring",
         "50 kunnskapssamlinger",
         "Avansert chatbot-tilpasning",
         "Prioritert e-poststøtte",
-        "Avanserte analyser",
+        "Avansert analyse",
         "Tilpasset domene",
         "Teamsamarbeid"
       ],
-      "cta": "Start med Profesjonell"
+      "cta": "Start med Professional"
     },
     "enterprise": {
       "name": "Enterprise",
       "description": "For organisasjoner med komplekse krav",
       "features": [
-        "100,000 meldinger per måned",
+        "100 000 meldinger per måned",
         "500 aktive brukere",
-        "100 MB lagringsplass",
+        "100 MB lagring",
         "250 kunnskapssamlinger",
-        "Tilpassede distribusjonsmuligheter",
-        "Dedikert kundeansvarlig",
+        "Tilpassede distribusjonsalternativer",
+        "Dedikert kontoansvarlig",
         "Telefon- og e-poststøtte",
         "SLA-garantier",
         "Avanserte sikkerhetsfunksjoner",
@@ -74,7 +74,7 @@
     "popular": "Populær"
   },
   "footer": {
-    "customPlan": "Ser du etter en tilpasset plan?",
+    "customPlan": "Leter du etter en tilpasset plan?",
     "contactUs": "Kontakt oss",
     "tailoredSolution": "for en skreddersydd løsning."
   }

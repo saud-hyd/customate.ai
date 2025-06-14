@@ -1,5 +1,5 @@
 {
-  "title": "Tarification Simple et Transparente",
+  "title": "Prix Simples et Transparents",
   "subtitle": "Choisissez le plan qui convient à votre entreprise",
   "billing": {
     "monthly": "Mensuel",
@@ -16,7 +16,7 @@
         "5 utilisateurs actifs",
         "500 KB de stockage",
         "3 collections de connaissances",
-        "Personnalisation de base du chatbot",
+        "Personnalisation basique du chatbot",
         "Support communautaire"
       ],
       "cta": "Commencer Gratuitement"
@@ -25,12 +25,12 @@
       "name": "Basic",
       "description": "Pour les petites entreprises et startups",
       "features": [
-        "2000 messages par mois",
+        "2 000 messages par mois",
         "25 utilisateurs actifs",
         "5 MB de stockage",
         "10 collections de connaissances",
         "Image de marque personnalisée",
-        "Support par e-mail",
+        "Support par email",
         "Tableau de bord analytique",
         "Accès API"
       ],
@@ -42,11 +42,11 @@
       "features": [
         "5 000 messages par mois",
         "100 utilisateurs actifs",
-        "50 MB de stockage",
+        "25 MB de stockage",
         "50 collections de connaissances",
         "Personnalisation avancée du chatbot",
-        "Support e-mail prioritaire",
-        "Analyses avancées",
+        "Support email prioritaire",
+        "Analytiques avancées",
         "Domaine personnalisé",
         "Collaboration d'équipe"
       ],
@@ -54,7 +54,7 @@
     },
     "enterprise": {
       "name": "Enterprise",
-      "description": "Pour les organisations aux exigences complexes",
+      "description": "Pour les organisations avec des exigences complexes",
       "features": [
         "100 000 messages par mois",
         "500 utilisateurs actifs",
@@ -62,7 +62,7 @@
         "250 collections de connaissances",
         "Options de déploiement personnalisées",
         "Gestionnaire de compte dédié",
-        "Support téléphonique et e-mail",
+        "Support téléphonique et email",
         "Garanties SLA",
         "Fonctionnalités de sécurité avancées",
         "Intégrations personnalisées"
