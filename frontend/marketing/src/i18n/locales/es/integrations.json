@@ -31,6 +31,39 @@
         "name": "Mesa de Ayuda",
         "description": "Vincula tickets de soporte, historial de chat y problemas de clientes"
       }
+    },
+    "knowledgeBase": {
+      "title": "Base de Conocimiento IA",
+      "subtitle": "Sistema inteligente de gestión de contenido",
+      "description": "Tu IA aprende de tus documentos, FAQs y contenido del sitio web para proporcionar respuestas precisas y contextuales a cada consulta del cliente.",
+      "features": [
+        "Carga de documentos",
+        "Rastreo de sitios web", 
+        "Comprensión contextual",
+        "Preguntas y respuestas personalizadas"
+      ],
+      "tools": {
+        "documentImport": {
+          "name": "Importación de Documentos",
+          "description": "Sube PDFs, documentos y manuales"
+        },
+        "webCrawler": {
+          "name": "Rastreador Web",
+          "description": "Extrae datos de tu sitio web"
+        },
+        "faqBuilder": {
+          "name": "Constructor de FAQ",
+          "description": "Crea pares de preguntas y respuestas personalizados"
+        },
+        "knowledgeEditor": {
+          "name": "Editor de Conocimiento",
+          "description": "Ajusta las respuestas de la IA"
+        }
+      },
+      "visualText": {
+        "unifiedKnowledge": "Conocimiento Unificado",
+        "instantlyAccessible": "Accesible instantáneamente para tu IA"
+      }
     }
   },
   "chatPlatforms": {

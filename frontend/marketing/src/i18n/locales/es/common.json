@@ -5,34 +5,50 @@
     "blog": "Blog",
     "contact": "Contacto",
     "login": "Iniciar Sesión",
-    "signup": "Registrarse"
+    "getStarted": "Empezar",
+    "demo": "Demo"
   },
   "footer": {
-    "rights": "© {{year}} Customate.ai. Todos los derechos reservados.",
-    "privacy": "Política de Privacidad",
-    "terms": "Términos de Servicio",
-    "cookies": "Política de Cookies",
-    "description": "Construye, personaliza y despliega chatbots potenciados por IA con comportamientos específicos de la industria y bases de conocimiento personalizadas para interacciones transformadoras con clientes.",
     "product": {
-      "title": "PRODUCTO",
+      "title": "Producto",
+      "features": "Características",
+      "pricing": "Precios",
       "useCases": "Casos de Uso",
       "roadmap": "Hoja de Ruta"
     },
     "resources": {
-      "title": "RECURSOS",
+      "title": "Recursos",
+      "blog": "Blog",
       "documentation": "Documentación",
-      "apiReference": "Referencia de API"
+      "apiReference": "Referencia API",
+      "help": "Centro de Ayuda"
     },
     "company": {
-      "title": "EMPRESA",
-      "about": "Acerca de Nosotros"
-    }
+      "title": "Empresa",
+      "about": "Acerca de",
+      "contact": "Contacto",
+      "careers": "Carreras",
+      "press": "Prensa"
+    },
+    "legal": {
+      "title": "Legal",
+      "terms": "Términos de Servicio",
+      "privacy": "Política de Privacidad",
+      "cookies": "Política de Cookies"
+    },
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad",
+    "cookies": "Política de Cookies",
+    "rights": "© {{year}} Customate.ai. Todos los derechos reservados.",
+    "description": "Transforma tu experiencia de cliente con chatbots impulsados por IA que entienden tu negocio y se conectan con clientes en todas las plataformas.",
+    "followUs": "Síguenos"
   },
-  "cta": {
-    "getStarted": "Comenzar",
-    "startFree": "Prueba Gratuita",
-    "learnMore": "Más Información",
-    "watchDemo": "Ver Demo",
-    "contactSales": "Contactar Ventas"
+  "navigation": {
+    "home": "Inicio",
+    "features": "Características",
+    "pricing": "Precios",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "blog": "Blog"
   }
 }

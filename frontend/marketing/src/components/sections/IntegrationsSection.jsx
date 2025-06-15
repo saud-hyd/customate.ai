@@ -529,6 +529,7 @@ const IntegrationsSection = () => {
                       ))}
                     </div>
                     
+
                   </motion.div>
                 </div>
                 

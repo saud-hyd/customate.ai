@@ -5,34 +5,50 @@
     "blog": "Blog",
     "contact": "Kontakt",
     "login": "Anmelden",
-    "signup": "Registrieren"
+    "getStarted": "Loslegen",
+    "demo": "Demo"
   },
   "footer": {
-    "rights": "© {{year}} Customate.ai. Alle Rechte vorbehalten.",
-    "privacy": "Datenschutzrichtlinie",
-    "terms": "Nutzungsbedingungen",
-    "cookies": "Cookie-Richtlinie",
-    "description": "Erstellen, anpassen und bereitstellen Sie KI-gestützte Chatbots mit branchenspezifischen Verhaltensweisen und benutzerdefinierten Wissensbasen für transformative Kundeninteraktionen.",
     "product": {
-      "title": "PRODUKT",
+      "title": "Produkt",
+      "features": "Funktionen",
+      "pricing": "Preise",
       "useCases": "Anwendungsfälle",
       "roadmap": "Roadmap"
     },
     "resources": {
-      "title": "RESSOURCEN",
+      "title": "Ressourcen",
+      "blog": "Blog",
       "documentation": "Dokumentation",
-      "apiReference": "API-Referenz"
+      "apiReference": "API-Referenz",
+      "help": "Hilfe-Center"
     },
     "company": {
-      "title": "UNTERNEHMEN",
-      "about": "Über Uns"
-    }
+      "title": "Unternehmen",
+      "about": "Über uns",
+      "contact": "Kontakt",
+      "careers": "Karriere",
+      "press": "Presse"
+    },
+    "legal": {
+      "title": "Rechtliches",
+      "terms": "Nutzungsbedingungen",
+      "privacy": "Datenschutzerklärung",
+      "cookies": "Cookie-Richtlinie"
+    },
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutzerklärung",
+    "cookies": "Cookie-Richtlinie",
+    "rights": "© {{year}} Customate.ai. Alle Rechte vorbehalten.",
+    "description": "Transformieren Sie Ihre Kundenerfahrung mit KI-gestützten Chatbots, die Ihr Unternehmen verstehen und sich über jede Plattform mit Kunden verbinden.",
+    "followUs": "Folgen Sie uns"
   },
-  "cta": {
-    "getStarted": "Loslegen",
-    "startFree": "Kostenlos Testen",
-    "learnMore": "Mehr Erfahren",
-    "watchDemo": "Demo Ansehen",
-    "contactSales": "Vertrieb Kontaktieren"
+  "navigation": {
+    "home": "Startseite",
+    "features": "Funktionen",
+    "pricing": "Preise",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "blog": "Blog"
   }
 }

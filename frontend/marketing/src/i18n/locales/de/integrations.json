@@ -31,6 +31,39 @@
         "name": "Help Desk",
         "description": "Verknüpfen Sie Support-Tickets, Chat-Verlauf und Kundenprobleme"
       }
+    },
+    "knowledgeBase": {
+      "title": "KI-Wissensbasis",
+      "subtitle": "Intelligentes Content-Management-System",
+      "description": "Ihre KI lernt aus Ihren Dokumenten, FAQs und Website-Inhalten, um präzise, kontextuelle Antworten auf jede Kundenanfrage zu liefern.",
+      "features": [
+        "Dokumente hochladen",
+        "Website-Crawling", 
+        "Kontextverständnis",
+        "Benutzerdefinierte Q&A"
+      ],
+      "tools": {
+        "documentImport": {
+          "name": "Dokument-Import",
+          "description": "PDFs, Dokumente und Handbücher hochladen"
+        },
+        "webCrawler": {
+          "name": "Web-Crawler",
+          "description": "Daten von Ihrer Website extrahieren"
+        },
+        "faqBuilder": {
+          "name": "FAQ-Builder",
+          "description": "Benutzerdefinierte Frage-Antwort-Paare erstellen"
+        },
+        "knowledgeEditor": {
+          "name": "Wissens-Editor",
+          "description": "KI-Antworten feinabstimmen"
+        }
+      },
+      "visualText": {
+        "unifiedKnowledge": "Vereinheitlichtes Wissen",
+        "instantlyAccessible": "Sofort für Ihre KI verfügbar"
+      }
     }
   },
   "chatPlatforms": {

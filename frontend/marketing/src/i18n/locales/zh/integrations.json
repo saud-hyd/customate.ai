@@ -31,6 +31,39 @@
         "name": "服务台",
         "description": "链接支持工单、聊天历史和客户问题"
       }
+    },
+    "knowledgeBase": {
+      "title": "AI知识库",
+      "subtitle": "智能内容管理系统",
+      "description": "您的AI从文档、常见问题和网站内容中学习，为每个客户查询提供准确、相关的回答。",
+      "features": [
+        "文档上传",
+        "网站爬取", 
+        "上下文理解",
+        "自定义问答"
+      ],
+      "tools": {
+        "documentImport": {
+          "name": "文档导入",
+          "description": "上传PDF、文档和手册"
+        },
+        "webCrawler": {
+          "name": "网页爬虫",
+          "description": "从您的网站提取数据"
+        },
+        "faqBuilder": {
+          "name": "FAQ构建器",
+          "description": "创建自定义问答对"
+        },
+        "knowledgeEditor": {
+          "name": "知识编辑器",
+          "description": "微调AI回答"
+        }
+      },
+      "visualText": {
+        "unifiedKnowledge": "统一知识",
+        "instantlyAccessible": "您的AI可立即访问"
+      }
     }
   },
   "chatPlatforms": {

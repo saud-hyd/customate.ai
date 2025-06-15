@@ -1,9 +1,115 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
-  const { t, i18n } = useTranslation('common');
+  const { i18n } = useTranslation();
+  const location = useLocation();
   const currentYear = new Date().getFullYear();
+
+  // All translations in one object - UPDATED WITH NORWEGIAN
+  const translations = {
+    en: {
+      description: "Automate Customer Support.",
+      product: "Product",
+      company: "Company",
+      features: "Features",
+      pricing: "Pricing",
+      blog: "Blog",
+      contact: "Contact",
+      aboutUs: "About Us",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy",
+      cookies: "Cookie Policy",
+      rights: `© ${currentYear} Customated S&A UG. All rights reserved.`,
+      systemStatus: "System Online",
+      madeIn: "Made in Germany 🇩🇪"
+    },
+    es: {
+      description: "Chatbots impulsados por IA para empresas. Construye soporte al cliente inteligente con comportamientos específicos de la industria y bases de conocimiento personalizadas.",
+      product: "Producto",
+      company: "Empresa",
+      features: "Características",
+      pricing: "Precios",
+      blog: "Blog",
+      contact: "Contacto",
+      aboutUs: "Acerca de Nosotros",
+      terms: "Términos de Servicio",
+      privacy: "Política de Privacidad",
+      cookies: "Política de Cookies",
+      rights: `© ${currentYear} Customated S&A UG. Todos los derechos reservados.`,
+      systemStatus: "Sistema En Línea",
+      madeIn: "Hecho en Alemania 🇩🇪"
+    },
+    de: {
+      description: "KI-gestützte Chatbots für Unternehmen. Erstellen Sie intelligenten Kundensupport mit branchenspezifischen Verhaltensweisen und benutzerdefinierten Wissensbasen.",
+      product: "Produkt",
+      company: "Unternehmen",
+      features: "Funktionen",
+      pricing: "Preise",
+      blog: "Blog",
+      contact: "Kontakt",
+      aboutUs: "Über Uns",
+      terms: "Nutzungsbedingungen",
+      privacy: "Datenschutzrichtlinie",
+      cookies: "Cookie-Richtlinie",
+      rights: `© ${currentYear} Customated S&A UG. Alle Rechte vorbehalten.`,
+      systemStatus: "System Online",
+      madeIn: "Hergestellt in Deutschland 🇩🇪"
+    },
+    fr: {
+      description: "Chatbots alimentés par l'IA pour les entreprises. Créez un support client intelligent avec des comportements spécifiques à l'industrie et des bases de connaissances personnalisées.",
+      product: "Produit",
+      company: "Entreprise",
+      features: "Fonctionnalités",
+      pricing: "Tarifs",
+      blog: "Blog",
+      contact: "Contact",
+      aboutUs: "À Propos de Nous",
+      terms: "Conditions d'Utilisation",
+      privacy: "Politique de Confidentialité",
+      cookies: "Politique des Cookies",
+      rights: `© ${currentYear} Customated S&A UG. Tous droits réservés.`,
+      systemStatus: "Système En Ligne",
+      madeIn: "Fabriqué en Allemagne 🇩🇪"
+    },
+    zh: {
+      description: "为企业提供AI驱动的聊天机器人。构建具有行业特定行为和自定义知识库的智能客户支持。",
+      product: "产品",
+      company: "公司",
+      features: "功能",
+      pricing: "价格",
+      blog: "博客",
+      contact: "联系我们",
+      aboutUs: "关于我们",
+      terms: "服务条款",
+      privacy: "隐私政策",
+      cookies: "Cookie政策",
+      rights: `© ${currentYear} Customated S&A UG. 保留所有权利。`,
+      systemStatus: "系统在线",
+      madeIn: "德国制造 🇩🇪"
+    },
+    // NEW: Norwegian translations
+    no: {
+      description: "AI-drevne chatboter for bedrifter. Bygg intelligent kundestøtte med bransjespesifikk oppførsel og tilpassede kunnskapsbaser.",
+      product: "Produkt",
+      company: "Selskap",
+      features: "Funksjoner",
+      pricing: "Priser",
+      blog: "Blogg",
+      contact: "Kontakt",
+      aboutUs: "Om Oss",
+      terms: "Vilkår for Bruk",
+      privacy: "Personvernpolicy",
+      cookies: "Informasjonskapsel-policy",
+      rights: `© ${currentYear} Customated S&A UG. Alle rettigheter forbeholdt.`,
+      systemStatus: "System Pålogget",
+      madeIn: "Laget i Tyskland 🇩🇪"
+    }
+  };
+
+  // Get current language, fallback to English
+  const currentLang = translations[i18n.language] || translations.en;
 
   // Function to handle smooth scrolling to sections
   const scrollToSection = (sectionId) => {
@@ -26,8 +132,7 @@ const Footer = () => {
       e.preventDefault();
       const sectionId = href.replace('/#', '');
       
-      // Check if we're on the homepage
-      if (window.location.pathname !== '/') {
+      if (location.pathname !== '/') {
         window.location.href = href;
       } else {
         scrollToSection(sectionId);
@@ -36,178 +141,107 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-br from-gray-50 via-white to-gray-50 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 py-16">
+    <footer className="bg-white border-t border-gray-100">
+      <div className="max-w-7xl mx-auto px-6 py-12">
         
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-8">
           
           {/* Company Info */}
           <div className="lg:col-span-1">
-            <div className="flex items-center mb-6">
-              {/* Header Logo */}
-              <div className="relative mr-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
-                </div>
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                <span className="text-white font-bold text-lg">C</span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                Customate.ai
-              </span>
+              <h3 className="text-xl font-bold text-gray-900">Customate.ai</h3>
             </div>
             
-            <p className="text-gray-700 mb-6 leading-relaxed">
-              {t('footer.description')}
+            <p className="text-gray-600 text-sm leading-relaxed mb-6">
+              {currentLang.description}
             </p>
-            
-            {/* Social Links */}
-            <div className="flex space-x-4">
-              <a 
-                href="https://twitter.com" 
-                className="w-10 h-10 bg-gray-200 hover:bg-orange-500 rounded-full flex items-center justify-center transition-all duration-200 group"
-                aria-label="Twitter"
-              >
-                <svg className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                </svg>
-              </a>
-              <a 
-                href="https://linkedin.com" 
-                className="w-10 h-10 bg-gray-200 hover:bg-orange-500 rounded-full flex items-center justify-center transition-all duration-200 group"
-                aria-label="LinkedIn"
-              >
-                <svg className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-              </a>
-            </div>
           </div>
-
-          {/* Navigation Links */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          {/* Navigation Links - Two Clean Columns */}
+          <div className="lg:col-span-2 grid grid-cols-2 gap-8">
             
-            {/* Product Column */}
+            {/* Product & Resources */}
             <div>
-              <h4 className="font-bold text-gray-900 text-lg mb-6 uppercase tracking-wider">
-                {t('footer.product.title')}
+              <h4 className="font-semibold text-orange-500 mb-4">
+                {currentLang.product}
               </h4>
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 <li>
-                  <a
-                    href="/"
-                    onClick={(e) => handleNavClick('/#hero', e)}
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <button
+                    onClick={(e) => handleNavClick('/#features', e)}
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('header.features')}
-                  </a>
+                    {currentLang.features}
+                  </button>
                 </li>
                 <li>
-                  <a
-                    href="/pricing"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <Link
+                    to="/pricing"
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('header.pricing')}
-                  </a>
+                    {currentLang.pricing}
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/contact"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <Link
+                    to="/blog"
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('footer.product.useCases')}
-                  </a>
+                    {currentLang.blog}
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/blog"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <Link
+                    to="/contact"
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('footer.product.roadmap')}
-                  </a>
+                    {currentLang.contact}
+                  </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Resources Column */}
+            {/* Company & Legal */}
             <div>
-              <h4 className="font-bold text-gray-900 text-lg mb-6 uppercase tracking-wider">
-                {t('footer.resources.title')}
+              <h4 className="font-semibold text-orange-500 mb-4">
+                {currentLang.company}
               </h4>
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 <li>
-                  <a
-                    href="/blog"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <Link
+                    to="/about"
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('header.blog')}
-                  </a>
+                    {currentLang.aboutUs}
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/contact"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <Link
+                    to="/terms"
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('footer.resources.documentation')}
-                  </a>
+                    {currentLang.terms}
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/contact"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <Link
+                    to="/privacy"
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('footer.resources.apiReference')}
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Company Column */}
-            <div>
-              <h4 className="font-bold text-gray-900 text-lg mb-6 uppercase tracking-wider">
-                {t('footer.company.title')}
-              </h4>
-              <ul className="space-y-4">
-                <li>
-                  <a
-                    href="/about"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
-                  >
-                    {t('footer.company.about')}
-                  </a>
+                    {currentLang.privacy}
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="/contact"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
+                  <Link
+                    to="/cookies"
+                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
                   >
-                    {t('header.contact')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/terms"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
-                  >
-                    {t('footer.terms')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/privacy"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
-                  >
-                    {t('footer.privacy')}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/cookies"
-                    className="text-gray-700 hover:text-orange-600 font-medium transition-all duration-200 hover:translate-x-1 inline-block"
-                  >
-                    {t('footer.cookies')}
-                  </a>
+                    {currentLang.cookies}
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -215,22 +249,17 @@ const Footer = () => {
         </div>
         
         {/* Bottom Bar */}
-        <div className="border-t border-gray-200 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-600 font-medium">
-              {t('footer.rights', { year: currentYear })}
-            </p>
-            
-            <div className="flex items-center space-x-8 text-gray-600">
-              <span className="flex items-center font-medium">
-                <span className="relative mr-3">
-                  <span className="w-2 h-2 bg-green-500 rounded-full block"></span>
-                  <span className="absolute inset-0 w-2 h-2 bg-green-400 rounded-full animate-ping"></span>
-                </span>
-                {t('ui:status.online')}
-              </span>
-              <span className="font-medium">🇩🇪 Made in Germany</span>
-            </div>
+        <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-500 text-sm mb-4 md:mb-0">
+            {currentLang.rights}
+          </p>
+          
+          <div className="flex items-center space-x-6 text-sm text-gray-500">
+            <span className="flex items-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              {currentLang.systemStatus}
+            </span>
+            <span>{currentLang.madeIn}</span>
           </div>
         </div>
       </div>
