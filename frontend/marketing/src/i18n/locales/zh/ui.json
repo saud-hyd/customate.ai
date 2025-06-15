@@ -10,29 +10,29 @@
   },
   "validation": {
     "required": "此字段为必填项",
-    "email": "请输入有效的邮箱地址",
-    "minLength": "至少需要 {{min}} 个字符",
-    "maxLength": "最多允许 {{max}} 个字符",
+    "email": "请输入有效的电子邮件地址",
+    "minLength": "最少需要{{min}}个字符",
+    "maxLength": "最多允许{{max}}个字符",
     "passwordMismatch": "密码不匹配",
     "invalidPhone": "请输入有效的电话号码",
     "invalidCard": "请输入有效的卡号"
   },
   "newsletter": {
     "title": "获取AI聊天机器人最新资讯",
-    "subtitle": "订阅我们的通讯，获取AI聊天机器人的最新更新、技巧和最佳实践。",
-    "placeholder": "输入您的邮箱地址",
+    "subtitle": "订阅我们的通讯，获取最新更新、技巧和AI聊天机器人最佳实践。",
+    "placeholder": "输入您的电子邮件地址",
     "subscribe": "订阅",
     "subscribing": "订阅中...",
-    "success": "感谢订阅！",
-    "error": "订阅失败，请稍后重试。",
-    "invalidEmail": "请输入有效的邮箱地址"
+    "success": "感谢您的订阅！",
+    "error": "订阅失败。请稍后重试。",
+    "invalidEmail": "请输入有效的电子邮件地址"
   },
   "faq": {
     "title": "常见问题",
-    "subtitle": "关于 Customate.ai 您需要了解的一切"
+    "subtitle": "关于Customate.ai您需要了解的一切"
   },
   "checkout": {
-    "title": "完成购买",
+    "title": "完成您的购买",
     "subtitle": "您距离创建自定义聊天机器人只有几步之遥",
     "orderSummary": "订单摘要",
     "plan": "计划",
@@ -40,12 +40,12 @@
     "monthly": "月",
     "annually": "月，按年计费",
     "processing": "处理付款中...",
-    "error": "处理付款时出错，请重试。",
+    "error": "处理您的付款时出现错误。请重试。",
     "billingInfo": "账单信息",
     "paymentInfo": "付款信息",
     "firstName": "名",
     "lastName": "姓",
-    "email": "邮箱",
+    "email": "电子邮件",
     "company": "公司",
     "address": "地址",
     "city": "城市",

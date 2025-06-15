@@ -1,94 +1,85 @@
 {
+  "loading": {
+    "default": "Loading...",
+    "processing": "Processing...",
+    "submitting": "Submitting...",
+    "sending": "Sending...",
+    "checking": "Checking...",
+    "saving": "Saving...",
+    "updating": "Updating..."
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "minLength": "Minimum {{min}} characters required",
+    "maxLength": "Maximum {{max}} characters allowed",
+    "passwordMismatch": "Passwords do not match",
+    "invalidPhone": "Please enter a valid phone number",
+    "invalidCard": "Please enter a valid card number"
+  },
+  "newsletter": {
+    "title": "Stay updated with AI chatbot news",
+    "subtitle": "Subscribe to our newsletter for the latest updates, tips, and best practices in AI chatbots.",
+    "placeholder": "Enter your email address",
+    "subscribe": "Subscribe",
+    "subscribing": "Subscribing...",
+    "success": "Thank you for subscribing!",
+    "error": "Failed to subscribe. Please try again later.",
+    "invalidEmail": "Please enter a valid email address"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about Customate.ai"
+  },
+  "checkout": {
+    "title": "Complete Your Purchase",
+    "subtitle": "You're just a few steps away from creating your custom chatbot",
+    "orderSummary": "Order Summary",
+    "plan": "Plan",
+    "billing": "Billing",
+    "monthly": "month",
+    "annually": "month, billed annually",
+    "processing": "Processing payment...",
+    "error": "There was an error processing your payment. Please try again.",
+    "billingInfo": "Billing Information",
+    "paymentInfo": "Payment Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "company": "Company",
+    "address": "Address",
+    "city": "City",
+    "state": "State",
+    "zip": "ZIP Code",
+    "country": "Country",
+    "cardNumber": "Card Number",
+    "cardExpiry": "MM/YY",
+    "cardCvc": "CVC",
+    "completePurchase": "Complete Purchase"
+  },
   "buttons": {
     "getStarted": "Get Started",
+    "startFree": "Start Free Trial",
     "learnMore": "Learn More",
-    "tryDemo": "Try Demo",
-    "watchVideo": "Watch Video",
-    "readMore": "Read More",
-    "bookDemo": "Book a Demo",
-    "contactUs": "Contact Us",
-    "signUp": "Sign Up",
-    "logIn": "Log In",
-    "startTrial": "Start Free Trial",
-    "upgrade": "Upgrade",
-    "download": "Download",
-    "share": "Share",
-    "copy": "Copy",
-    "edit": "Edit",
-    "delete": "Delete",
-    "save": "Save",
+    "watchDemo": "Watch Demo",
+    "contactSales": "Contact Sales",
+    "tryAgain": "Try Again",
     "cancel": "Cancel",
+    "continue": "Continue",
     "submit": "Submit",
-    "next": "Next",
-    "previous": "Previous",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back",
+    "next": "Next"
   },
   "status": {
     "online": "Online",
     "offline": "Offline",
-    "typing": "Typing...",
     "connecting": "Connecting...",
     "connected": "Connected",
-    "disconnected": "Disconnected"
-  },
-  "time": {
-    "now": "now",
-    "seconds": "seconds",
-    "minutes": "minutes",
-    "hours": "hours",
-    "days": "days",
-    "weeks": "weeks",
-    "months": "months",
-    "years": "years",
-    "ago": "ago",
-    "justNow": "Just now"
-  },
-  "forms": {
-    "name": "Name",
-    "email": "Email",
-    "phone": "Phone",
-    "company": "Company",
-    "message": "Message",
-    "subject": "Subject",
-    "required": "Required",
-    "optional": "Optional",
-    "placeholder": {
-      "name": "Enter your name",
-      "email": "Enter your email",
-      "phone": "Enter your phone number",
-      "company": "Enter your company name",
-      "message": "Enter your message",
-      "subject": "Enter subject"
-    },
-    "validation": {
-      "required": "This field is required",
-      "invalidEmail": "Please enter a valid email address",
-      "invalidPhone": "Please enter a valid phone number",
-      "tooShort": "This field is too short",
-      "tooLong": "This field is too long"
-    }
-  },
-  "loading": {
-    "loading": "Loading...",
-    "please_wait": "Please wait",
-    "processing": "Processing...",
-    "sending": "Sending...",
-    "saving": "Saving...",
-    "uploading": "Uploading..."
-  },
-  "errors": {
-    "general": "Something went wrong. Please try again.",
-    "network": "Network error. Please check your connection.",
-    "timeout": "Request timed out. Please try again.",
-    "notFound": "Page not found",
-    "unauthorized": "You are not authorized to access this page",
-    "forbidden": "Access denied"
-  },
-  "success": {
-    "saved": "Saved successfully",
-    "sent": "Sent successfully", 
-    "updated": "Updated successfully",
-    "deleted": "Deleted successfully",
-    "uploaded": "Uploaded successfully"
+    "disconnected": "Disconnected",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
   }
 }

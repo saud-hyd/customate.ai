@@ -1,105 +1,69 @@
 {
-  "conversations": {
-    "ecommerce": [
-      {
-        "role": "user",
-        "text": "Do you have this shirt in medium?"
-      },
-      {
-        "role": "bot",
-        "text": "Yes! We have the Sunset Horizon Shirt in Medium with 5 in stock. Would you like me to add it to your cart?"
-      },
-      {
-        "role": "user",
-        "text": "What's your return policy?"
-      },
-      {
-        "role": "bot",
-        "text": "We offer hassle-free returns within 30 days. Free return shipping on all orders over $50!"
-      }
-    ],
-    "healthcare": [
-      {
-        "role": "user",
-        "text": "When is Dr. Thompson available this week?"
-      },
-      {
-        "role": "bot",
-        "text": "Dr. Thompson has openings on Wednesday at 2:00 PM and Friday at 10:30 AM. Would you like to book an appointment?"
-      },
-      {
-        "role": "user",
-        "text": "What insurance do you accept?"
-      },
-      {
-        "role": "bot",
-        "text": "We accept most major insurance plans including Aetna, Blue Cross, UnitedHealthcare, and Medicare. Would you like me to verify your specific plan?"
-      }
-    ],
-    "finance": [
-      {
-        "role": "user",
-        "text": "What's my current account balance?"
-      },
-      {
-        "role": "bot",
-        "text": "Your checking account balance is $3,487.52. You also have a scheduled payment of $150 to Electric Company due tomorrow."
-      },
-      {
-        "role": "user",
-        "text": "Can I increase my credit limit?"
-      },
-      {
-        "role": "bot",
-        "text": "Based on your account history, you're eligible for a credit limit increase. Would you like me to help you apply for that now?"
-      }
-    ],
-    "education": [
-      {
-        "role": "user",
-        "text": "When is the assignment due?"
-      },
-      {
-        "role": "bot",
-        "text": "Your Data Science project is due next Friday, May 24th. You've completed 3 out of 5 required sections so far."
-      },
-      {
-        "role": "user",
-        "text": "What resources are available for the physics exam?"
-      },
-      {
-        "role": "bot",
-        "text": "We have practice tests, video tutorials, and study guides available in the learning center. I can also connect you with a tutor if needed."
-      }
-    ],
-    "support": [
-      {
-        "role": "user",
-        "text": "My subscription isn't working correctly."
-      },
-      {
-        "role": "bot",
-        "text": "I'm sorry to hear that. Let me help troubleshoot. What specific issue are you experiencing with your subscription?"
-      },
-      {
-        "role": "user",
-        "text": "I can't access premium features after payment"
-      },
-      {
-        "role": "bot",
-        "text": "Let me check that for you. I see your payment was processed but there's a sync issue. I've refreshed your account access. Can you try logging out and back in?"
-      }
-    ]
-  },
-  "tabs": {
-    "ecommerce": "E-commerce",
-    "healthcare": "Healthcare",
-    "finance": "Finance",
-    "education": "Education",
-    "support": "Support"
-  },
-  "chatHeader": {
-    "name": "Customate Assistant",
-    "status": "Online"
+  "heroChat": {
+    "assistant": {
+      "name": "Customate Assistant",
+      "status": "Online"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "Do you have this t-shirt in size Medium?"
+        },
+        {
+          "role": "bot", 
+          "text": "Yes! We have the Premium Cotton T-shirt in Medium. It's currently in stock and available in 3 colors: Navy, White, and Gray."
+        },
+        {
+          "role": "user",
+          "text": "What's the return policy?"
+        },
+        {
+          "role": "bot",
+          "text": "We offer free returns within 30 days of purchase. No questions asked! Just use our prepaid return label."
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "When is my Data Science project due?"
+        },
+        {
+          "role": "bot",
+          "text": "Your Data Science project is due next Friday, May 24th. You've completed 3 out of 5 required sections so far."
+        },
+        {
+          "role": "user",
+          "text": "What resources are available for the physics exam?"
+        },
+        {
+          "role": "bot",
+          "text": "We have practice tests, video tutorials, and study guides available in the learning center. I can also connect you with a tutor if needed."
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "My subscription isn't working correctly."
+        },
+        {
+          "role": "bot",
+          "text": "I'm sorry to hear that. Let me help troubleshoot. What specific issue are you experiencing with your subscription?"
+        },
+        {
+          "role": "user",
+          "text": "I can't access premium features after payment"
+        },
+        {
+          "role": "bot",
+          "text": "Let me check that for you. I see your payment was processed but there's a sync issue. I've refreshed your account access. Can you try logging out and back in?"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "E-commerce",
+      "education": "Education",
+      "support": "Support"
+    }
   }
 }

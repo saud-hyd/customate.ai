@@ -1,105 +1,69 @@
 {
-  "conversations": {
-    "ecommerce": [
-      {
-        "role": "user",
-        "text": "Haben Sie dieses Hemd in Größe M?"
-      },
-      {
-        "role": "bot",
-        "text": "Ja! Wir haben das Sunset Horizon Hemd in Größe M mit 5 Stück auf Lager. Soll ich es in Ihren Warenkorb legen?"
-      },
-      {
-        "role": "user",
-        "text": "Wie sind Ihre Rückgabebedingungen?"
-      },
-      {
-        "role": "bot",
-        "text": "Wir bieten problemlose Rückgaben innerhalb von 30 Tagen. Kostenloser Rückversand bei allen Bestellungen über 50€!"
-      }
-    ],
-    "healthcare": [
-      {
-        "role": "user",
-        "text": "Wann ist Dr. Thompson diese Woche verfügbar?"
-      },
-      {
-        "role": "bot",
-        "text": "Dr. Thompson hat freie Termine am Mittwoch um 14:00 Uhr und Freitag um 10:30 Uhr. Möchten Sie einen Termin buchen?"
-      },
-      {
-        "role": "user",
-        "text": "Welche Versicherungen akzeptieren Sie?"
-      },
-      {
-        "role": "bot",
-        "text": "Wir akzeptieren die meisten großen Versicherungen einschließlich Aetna, Blue Cross, UnitedHealthcare und Medicare. Soll ich Ihre spezielle Versicherung prüfen?"
-      }
-    ],
-    "finance": [
-      {
-        "role": "user",
-        "text": "Wie hoch ist mein aktueller Kontostand?"
-      },
-      {
-        "role": "bot",
-        "text": "Ihr Girokonto-Saldo beträgt 3.487,52€. Sie haben auch eine geplante Zahlung von 150€ an die Stadtwerke, die morgen fällig ist."
-      },
-      {
-        "role": "user",
-        "text": "Kann ich meinen Kreditrahmen erhöhen?"
-      },
-      {
-        "role": "bot",
-        "text": "Basierend auf Ihrer Kontohistorie sind Sie berechtigt für eine Kreditlimit-Erhöhung. Soll ich Ihnen jetzt dabei helfen, den Antrag zu stellen?"
-      }
-    ],
-    "education": [
-      {
-        "role": "user",
-        "text": "Wann ist die Abgabe fällig?"
-      },
-      {
-        "role": "bot",
-        "text": "Ihr Data Science Projekt ist nächsten Freitag, den 24. Mai fällig. Sie haben bisher 3 von 5 erforderlichen Abschnitten abgeschlossen."
-      },
-      {
-        "role": "user",
-        "text": "Welche Ressourcen gibt es für die Physikprüfung?"
-      },
-      {
-        "role": "bot",
-        "text": "Wir haben Übungstests, Video-Tutorials und Lernanleitungen im Lernzentrum verfügbar. Ich kann Sie auch mit einem Tutor verbinden, falls nötig."
-      }
-    ],
-    "support": [
-      {
-        "role": "user",
-        "text": "Mein Abonnement funktioniert nicht richtig."
-      },
-      {
-        "role": "bot",
-        "text": "Das tut mir leid zu hören. Lassen Sie mich bei der Fehlerbehebung helfen. Welches spezifische Problem haben Sie mit Ihrem Abonnement?"
-      },
-      {
-        "role": "user",
-        "text": "Ich kann nach der Zahlung nicht auf Premium-Funktionen zugreifen"
-      },
-      {
-        "role": "bot",
-        "text": "Lassen Sie mich das für Sie überprüfen. Ich sehe, dass Ihre Zahlung verarbeitet wurde, aber es gibt ein Synchronisationsproblem. Ich habe Ihren Kontozugang aktualisiert. Können Sie sich aus- und wieder einloggen?"
-      }
-    ]
-  },
-  "tabs": {
-    "ecommerce": "E-Commerce",
-    "healthcare": "Gesundheitswesen",
-    "finance": "Finanzen",
-    "education": "Bildung",
-    "support": "Support"
-  },
-  "chatHeader": {
-    "name": "Customate Assistent",
-    "status": "Online"
+  "heroChat": {
+    "assistant": {
+      "name": "Customate Assistent",
+      "status": "Online"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "Haben Sie dieses T-Shirt in Größe Medium?"
+        },
+        {
+          "role": "bot",
+          "text": "Ja! Wir haben das Premium Baumwoll-T-Shirt in Medium. Es ist derzeit auf Lager und in 3 Farben erhältlich: Navy, Weiß und Grau."
+        },
+        {
+          "role": "user",
+          "text": "Wie ist die Rückgaberichtlinie?"
+        },
+        {
+          "role": "bot",
+          "text": "Wir bieten kostenlose Rückgaben innerhalb von 30 Tagen nach dem Kauf. Keine Fragen gestellt! Verwenden Sie einfach unser vorausbezahltes Rücksendeetikett."
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "Wann ist mein Data Science Projekt fällig?"
+        },
+        {
+          "role": "bot",
+          "text": "Ihr Data Science Projekt ist nächsten Freitag, den 24. Mai fällig. Sie haben bisher 3 von 5 erforderlichen Abschnitten abgeschlossen."
+        },
+        {
+          "role": "user",
+          "text": "Welche Ressourcen sind für die Physikprüfung verfügbar?"
+        },
+        {
+          "role": "bot",
+          "text": "Wir haben Übungstests, Video-Tutorials und Studienführer im Lernzentrum verfügbar. Ich kann Sie auch mit einem Tutor verbinden, falls nötig."
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "Mein Abonnement funktioniert nicht richtig."
+        },
+        {
+          "role": "bot",
+          "text": "Das tut mir leid zu hören. Lassen Sie mich bei der Fehlerbehebung helfen. Welches spezifische Problem haben Sie mit Ihrem Abonnement?"
+        },
+        {
+          "role": "user",
+          "text": "Ich kann nach der Zahlung nicht auf Premium-Funktionen zugreifen"
+        },
+        {
+          "role": "bot",
+          "text": "Lassen Sie mich das für Sie überprüfen. Ich sehe, dass Ihre Zahlung verarbeitet wurde, aber es gibt ein Synchronisierungsproblem. Ich habe Ihren Kontozugang aktualisiert. Können Sie versuchen, sich abzumelden und wieder anzumelden?"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "E-Commerce",
+      "education": "Bildung",
+      "support": "Support"
+    }
   }
 }

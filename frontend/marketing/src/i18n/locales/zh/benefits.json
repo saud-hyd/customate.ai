@@ -1,37 +1,36 @@
 {
-  "title": "优势",
-  "cards": {
-    "topService": {
-      "title": "顶级服务",
-      "description": "提供可靠、可扩展且不间断的客户服务，信息始终清晰准确。"
+  "title": "为什么选择Customate.ai？",
+  "subtitle": "发现使我们成为智能客户支持首选解决方案的功能",
+  "cards": [
+    {
+      "title": "24/7可用性",
+      "description": "您的AI助手永不休息，确保客户在需要时随时获得支持。",
+      "icon": "clock"
     },
-    "lowestTime": {
-      "title": "最短解决时间",
-      "description": "避免延迟。您的客户可以全天候立即获得答案，无需等待人工代理。"
+    {
+      "title": "智能学习",
+      "description": "从每次互动中学习，随着时间推移提供越来越好的响应。",
+      "icon": "brain"
     },
-    "multichannel": {
-      "title": "多渠道支持",
-      "description": "不仅仅是聊天机器人小部件——我们的解决方案适用于电子邮件、Facebook、WhatsApp 等。（电话渠道即将推出。）"
+    {
+      "title": "无缝集成",
+      "description": "轻松集成到您现有的网站和工作流程中，设置时间不到5分钟。",
+      "icon": "plug"
     },
-    "reduceExpenses": {
-      "title": "降低费用",
-      "description": "支付更少的支持人员费用，或让您的员工专注于更有成效的活动。"
+    {
+      "title": "多语言支持",
+      "description": "用多种语言与客户交流，打破语言障碍。",
+      "icon": "globe"
     },
-    "increaseIncome": {
-      "title": "增加收入",
-      "description": "获得潜在客户、反馈和关键信息，以促进销售并改善客户服务。"
+    {
+      "title": "成本效益",
+      "description": "减少支持成本，同时提高客户满意度和响应时间。",
+      "icon": "dollar"
     },
-    "integrations": {
-      "title": "集成",
-      "description": "我们适应您的需求。将您用于运营的应用程序连接到我们的门户。我们只检索相关信息。"
-    },
-    "advancedAi": {
-      "title": "高级AI分析",
-      "description": "通过我们专有的机器学习模型，我们提供最佳的信息处理和输出。"
-    },
-    "continuousLearning": {
-      "title": "持续学习",
-      "description": "您的 Customate Bot 随着知识库的发展而不断进化。"
+    {
+      "title": "可扩展性",
+      "description": "从初创公司到企业，我们的解决方案随着您的业务增长而扩展。",
+      "icon": "trending"
     }
-  }
+  ]
 }

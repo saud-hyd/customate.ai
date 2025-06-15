@@ -1,105 +1,69 @@
 {
-  "conversations": {
-    "ecommerce": [
-      {
-        "role": "user",
-        "text": "¿Tienen esta camisa en talla M?"
-      },
-      {
-        "role": "bot",
-        "text": "¡Sí! Tenemos la Camisa Sunset Horizon en talla M con 5 en stock. ¿Te gustaría que la agregue a tu carrito?"
-      },
-      {
-        "role": "user",
-        "text": "¿Cuál es su política de devoluciones?"
-      },
-      {
-        "role": "bot",
-        "text": "¡Ofrecemos devoluciones sin complicaciones dentro de 30 días. Envío de devolución gratuito en todos los pedidos superiores a 50€!"
-      }
-    ],
-    "healthcare": [
-      {
-        "role": "user",
-        "text": "¿Cuándo está disponible el Dr. Thompson esta semana?"
-      },
-      {
-        "role": "bot",
-        "text": "El Dr. Thompson tiene citas disponibles el miércoles a las 2:00 PM y el viernes a las 10:30 AM. ¿Te gustaría reservar una cita?"
-      },
-      {
-        "role": "user",
-        "text": "¿Qué seguros aceptan?"
-      },
-      {
-        "role": "bot",
-        "text": "Aceptamos la mayoría de los principales planes de seguro incluyendo Aetna, Blue Cross, UnitedHealthcare y Medicare. ¿Te gustaría que verifique tu plan específico?"
-      }
-    ],
-    "finance": [
-      {
-        "role": "user",
-        "text": "¿Cuál es el saldo actual de mi cuenta?"
-      },
-      {
-        "role": "bot",
-        "text": "El saldo de tu cuenta corriente es de 3.487,52€. También tienes un pago programado de 150€ a la Compañía Eléctrica venciendo mañana."
-      },
-      {
-        "role": "user",
-        "text": "¿Puedo aumentar mi límite de crédito?"
-      },
-      {
-        "role": "bot",
-        "text": "Basado en el historial de tu cuenta, eres elegible para un aumento del límite de crédito. ¿Te gustaría que te ayude a solicitarlo ahora?"
-      }
-    ],
-    "education": [
-      {
-        "role": "user",
-        "text": "¿Cuándo vence la tarea?"
-      },
-      {
-        "role": "bot",
-        "text": "Tu proyecto de Ciencia de Datos vence el próximo viernes, 24 de mayo. Has completado 3 de 5 secciones requeridas hasta ahora."
-      },
-      {
-        "role": "user",
-        "text": "¿Qué recursos están disponibles para el examen de física?"
-      },
-      {
-        "role": "bot",
-        "text": "Tenemos pruebas de práctica, tutoriales en video y guías de estudio disponibles en el centro de aprendizaje. También puedo conectarte con un tutor si es necesario."
-      }
-    ],
-    "support": [
-      {
-        "role": "user",
-        "text": "Mi suscripción no está funcionando correctamente."
-      },
-      {
-        "role": "bot",
-        "text": "Lamento escuchar eso. Déjame ayudarte a solucionarlo. ¿Qué problema específico estás experimentando con tu suscripción?"
-      },
-      {
-        "role": "user",
-        "text": "No puedo acceder a las características premium después del pago"
-      },
-      {
-        "role": "bot",
-        "text": "Déjame verificar eso por ti. Veo que tu pago fue procesado pero hay un problema de sincronización. He actualizado el acceso a tu cuenta. ¿Puedes intentar cerrar sesión y volver a iniciar sesión?"
-      }
-    ]
-  },
-  "tabs": {
-    "ecommerce": "E-commerce",
-    "healthcare": "Salud",
-    "finance": "Finanzas",
-    "education": "Educación",
-    "support": "Soporte"
-  },
-  "chatHeader": {
-    "name": "Asistente Customate",
-    "status": "En línea"
+  "heroChat": {
+    "assistant": {
+      "name": "Asistente Customate",
+      "status": "En línea"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "¿Tienen esta camiseta en talla Mediana?"
+        },
+        {
+          "role": "bot",
+          "text": "¡Sí! Tenemos la Camiseta de Algodón Premium en Mediana. Está disponible en stock en 3 colores: Azul marino, Blanco y Gris."
+        },
+        {
+          "role": "user",
+          "text": "¿Cuál es la política de devoluciones?"
+        },
+        {
+          "role": "bot",
+          "text": "Ofrecemos devoluciones gratuitas dentro de 30 días de la compra. ¡Sin preguntas! Solo usa nuestra etiqueta de devolución prepagada."
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "¿Cuándo vence mi proyecto de Ciencia de Datos?"
+        },
+        {
+          "role": "bot",
+          "text": "Tu proyecto de Ciencia de Datos vence el próximo viernes, 24 de mayo. Has completado 3 de 5 secciones requeridas hasta ahora."
+        },
+        {
+          "role": "user",
+          "text": "¿Qué recursos están disponibles para el examen de física?"
+        },
+        {
+          "role": "bot",
+          "text": "Tenemos exámenes de práctica, tutoriales en video y guías de estudio disponibles en el centro de aprendizaje. También puedo conectarte con un tutor si lo necesitas."
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "Mi suscripción no está funcionando correctamente."
+        },
+        {
+          "role": "bot",
+          "text": "Lamento escuchar eso. Déjame ayudarte a resolver el problema. ¿Qué problema específico estás experimentando con tu suscripción?"
+        },
+        {
+          "role": "user",
+          "text": "No puedo acceder a las funciones premium después del pago"
+        },
+        {
+          "role": "bot",
+          "text": "Déjame verificar eso por ti. Veo que tu pago fue procesado pero hay un problema de sincronización. He actualizado el acceso a tu cuenta. ¿Puedes intentar cerrar sesión e iniciar sesión nuevamente?"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "Comercio electrónico",
+      "education": "Educación", 
+      "support": "Soporte"
+    }
   }
 }

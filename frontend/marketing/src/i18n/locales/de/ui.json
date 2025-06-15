@@ -1,12 +1,12 @@
 {
   "loading": {
-    "default": "Wird geladen...",
-    "processing": "Wird verarbeitet...",
-    "submitting": "Wird gesendet...",
-    "sending": "Wird gesendet...",
-    "checking": "Wird überprüft...",
-    "saving": "Wird gespeichert...",
-    "updating": "Wird aktualisiert..."
+    "default": "Laden...",
+    "processing": "Verarbeitung...",
+    "submitting": "Senden...",
+    "sending": "Senden...",
+    "checking": "Überprüfung...",
+    "saving": "Speichern...",
+    "updating": "Aktualisierung..."
   },
   "validation": {
     "required": "Dieses Feld ist erforderlich",
@@ -18,21 +18,21 @@
     "invalidCard": "Bitte geben Sie eine gültige Kartennummer ein"
   },
   "newsletter": {
-    "title": "Bleiben Sie mit AI-Chatbot-Nachrichten auf dem Laufenden",
-    "subtitle": "Abonnieren Sie unseren Newsletter, um die neuesten Updates, Tipps und Best Practices für AI-Chatbots zu erhalten.",
+    "title": "Bleiben Sie über AI-Chatbot-News auf dem Laufenden",
+    "subtitle": "Abonnieren Sie unseren Newsletter für die neuesten Updates, Tipps und Best Practices für AI-Chatbots.",
     "placeholder": "Geben Sie Ihre E-Mail-Adresse ein",
     "subscribe": "Abonnieren",
-    "subscribing": "Wird abonniert...",
-    "success": "Danke fürs Abonnieren!",
-    "error": "Abonnement fehlgeschlagen. Bitte versuchen Sie es später erneut.",
+    "subscribing": "Abonnieren...",
+    "success": "Vielen Dank für Ihr Abonnement!",
+    "error": "Fehler beim Abonnieren. Bitte versuchen Sie es später erneut.",
     "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
   },
   "faq": {
-    "title": "Häufig Gestellte Fragen",
+    "title": "Häufig gestellte Fragen",
     "subtitle": "Alles was Sie über Customate.ai wissen müssen"
   },
   "checkout": {
-    "title": "Schließen Sie Ihren Kauf ab",
+    "title": "Vervollständigen Sie Ihren Kauf",
     "subtitle": "Sie sind nur wenige Schritte davon entfernt, Ihren benutzerdefinierten Chatbot zu erstellen",
     "orderSummary": "Bestellübersicht",
     "plan": "Plan",
@@ -40,7 +40,7 @@
     "monthly": "Monat",
     "annually": "Monat, jährlich abgerechnet",
     "processing": "Zahlung wird verarbeitet...",
-    "error": "Es gab einen Fehler bei der Verarbeitung Ihrer Zahlung. Bitte versuchen Sie es erneut.",
+    "error": "Bei der Verarbeitung Ihrer Zahlung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
     "billingInfo": "Rechnungsinformationen",
     "paymentInfo": "Zahlungsinformationen",
     "firstName": "Vorname",
@@ -55,18 +55,18 @@
     "cardNumber": "Kartennummer",
     "cardExpiry": "MM/JJ",
     "cardCvc": "CVC",
-    "completePurchase": "Kauf Abschließen"
+    "completePurchase": "Kauf abschließen"
   },
   "buttons": {
     "getStarted": "Loslegen",
-    "startFree": "Kostenlos Testen",
-    "learnMore": "Mehr Erfahren",
-    "watchDemo": "Demo Ansehen",
-    "contactSales": "Vertrieb Kontaktieren",
-    "tryAgain": "Erneut Versuchen",
+    "startFree": "Kostenlos testen",
+    "learnMore": "Mehr erfahren",
+    "watchDemo": "Demo ansehen",
+    "contactSales": "Vertrieb kontaktieren",
+    "tryAgain": "Erneut versuchen",
     "cancel": "Abbrechen",
     "continue": "Fortfahren",
-    "submit": "Senden",
+    "submit": "Absenden",
     "close": "Schließen",
     "back": "Zurück",
     "next": "Weiter"

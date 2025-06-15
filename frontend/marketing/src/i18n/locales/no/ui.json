@@ -10,29 +10,29 @@
   },
   "validation": {
     "required": "Dette feltet er påkrevd",
-    "email": "Vennligst skriv inn en gyldig e-postadresse",
+    "email": "Vennligst angi en gyldig e-postadresse",
     "minLength": "Minimum {{min}} tegn påkrevd",
     "maxLength": "Maksimum {{max}} tegn tillatt",
     "passwordMismatch": "Passordene stemmer ikke overens",
-    "invalidPhone": "Vennligst skriv inn et gyldig telefonnummer",
-    "invalidCard": "Vennligst skriv inn et gyldig kortnummer"
+    "invalidPhone": "Vennligst angi et gyldig telefonnummer",
+    "invalidCard": "Vennligst angi et gyldig kortnummer"
   },
   "newsletter": {
-    "title": "Hold deg oppdatert på AI chatbot-nyheter",
-    "subtitle": "Abonner på vårt nyhetsbrev for å få de siste oppdateringene, tipsene og beste praksisene for AI-chatboter.",
-    "placeholder": "Skriv inn e-postadressen din",
+    "title": "Hold deg oppdatert med AI chatbot nyheter",
+    "subtitle": "Abonner på vårt nyhetsbrev for de siste oppdateringene, tipsene og beste praksis innen AI chatbots.",
+    "placeholder": "Skriv inn din e-postadresse",
     "subscribe": "Abonner",
     "subscribing": "Abonnerer...",
     "success": "Takk for at du abonnerer!",
     "error": "Kunne ikke abonnere. Vennligst prøv igjen senere.",
-    "invalidEmail": "Vennligst skriv inn en gyldig e-postadresse"
+    "invalidEmail": "Vennligst angi en gyldig e-postadresse"
   },
   "faq": {
-    "title": "Ofte Stilte Spørsmål",
+    "title": "Ofte stilte spørsmål",
     "subtitle": "Alt du trenger å vite om Customate.ai"
   },
   "checkout": {
-    "title": "Fullfør Kjøpet Ditt",
+    "title": "Fullfør ditt kjøp",
     "subtitle": "Du er bare noen få skritt unna å lage din tilpassede chatbot",
     "orderSummary": "Bestillingssammendrag",
     "plan": "Plan",
@@ -40,7 +40,7 @@
     "monthly": "måned",
     "annually": "måned, fakturert årlig",
     "processing": "Behandler betaling...",
-    "error": "Det oppstod en feil ved behandling av betalingen din. Vennligst prøv igjen.",
+    "error": "Det oppstod en feil ved behandling av betalingen. Vennligst prøv igjen.",
     "billingInfo": "Faktureringsinformasjon",
     "paymentInfo": "Betalingsinformasjon",
     "firstName": "Fornavn",
@@ -49,21 +49,21 @@
     "company": "Selskap",
     "address": "Adresse",
     "city": "By",
-    "state": "Stat",
+    "state": "Stat/Region",
     "zip": "Postnummer",
     "country": "Land",
     "cardNumber": "Kortnummer",
     "cardExpiry": "MM/ÅÅ",
     "cardCvc": "CVC",
-    "completePurchase": "Fullfør Kjøp"
+    "completePurchase": "Fullfør kjøp"
   },
   "buttons": {
-    "getStarted": "Kom i Gang",
-    "startFree": "Start Gratis Prøveperiode",
-    "learnMore": "Lær Mer",
-    "watchDemo": "Se Demo",
-    "contactSales": "Kontakt Salg",
-    "tryAgain": "Prøv Igjen",
+    "getStarted": "Kom i gang",
+    "startFree": "Start gratis prøveperiode",
+    "learnMore": "Lær mer",
+    "watchDemo": "Se demo",
+    "contactSales": "Kontakt salg",
+    "tryAgain": "Prøv igjen",
     "cancel": "Avbryt",
     "continue": "Fortsett",
     "submit": "Send inn",
@@ -80,6 +80,6 @@
     "success": "Suksess",
     "error": "Feil",
     "warning": "Advarsel",
-    "info": "Info"
+    "info": "Informasjon"
   }
 }

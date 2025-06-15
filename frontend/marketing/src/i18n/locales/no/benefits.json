@@ -1,37 +1,36 @@
 {
-  "title": "Fordeler",
-  "cards": {
-    "topService": {
-      "title": "Førsteklasses Service",
-      "description": "Lever pålitelig, skalerbar og uavbrutt kundeservice med alltid klare og nøyaktige informasjon."
+  "title": "Hvorfor velge Customate.ai?",
+  "subtitle": "Oppdag funksjonene som gjør oss til den foretrukne løsningen for intelligent kundesupport",
+  "cards": [
+    {
+      "title": "24/7 tilgjengelighet",
+      "description": "Din AI-assistent sover aldri, og sikrer at kunder får støtte når de trenger det.",
+      "icon": "clock"
     },
-    "lowestTime": {
-      "title": "Kortest Løsningstid",
-      "description": "Unngå forsinkelser. Dine kunder kan få umiddelbare svar 24/7 uten å vente på menneskelige agenter."
+    {
+      "title": "Smart læring",
+      "description": "Lærer fra hver interaksjon og gir bedre og bedre svar over tid.",
+      "icon": "brain"
     },
-    "multichannel": {
-      "title": "Multikanal-støtte",
-      "description": "Mer enn bare en chatbot-widget - vår løsning fungerer for e-post, Facebook, WhatsApp og mer. (Telefonkanaler kommer snart.)"
+    {
+      "title": "Sømløs integrasjon",
+      "description": "Integreres enkelt i ditt eksisterende nettsted og arbeidsflyt på under 5 minutter.",
+      "icon": "plug"
     },
-    "reduceExpenses": {
-      "title": "Reduser Utgifter",
-      "description": "Betal mindre for støttepersonell, eller la dine ansatte fokusere på mer produktive aktiviteter."
+    {
+      "title": "Flerspråklig støtte",
+      "description": "Kommuniser med kunder på flere språk og bryt ned språkbarrierer.",
+      "icon": "globe"
     },
-    "increaseIncome": {
-      "title": "Øk Inntekter",
-      "description": "Generer leads, tilbakemeldinger og viktig informasjon for å drive salg og forbedre kundeservice."
+    {
+      "title": "Kostnadseffektiv",
+      "description": "Reduser støttekostnader samtidig som du øker kundetilfredshet og responstider.",
+      "icon": "dollar"
     },
-    "integrations": {
-      "title": "Integrasjoner",
-      "description": "Vi tilpasser oss dine behov. Koble appene du bruker for drift til vår portal. Vi henter bare relevant informasjon."
-    },
-    "advancedAi": {
-      "title": "Avansert AI-analyse",
-      "description": "Gjennom våre proprietære maskinlæringsmodeller gir vi den beste informasjonsbehandlingen og utdata."
-    },
-    "continuousLearning": {
-      "title": "Kontinuerlig Læring",
-      "description": "Din Customate Bot utvikler seg kontinuerlig etter hvert som kunnskapsbasen din vokser."
+    {
+      "title": "Skalerbarhet",
+      "description": "Fra oppstartsselskap til bedrift, vår løsning skalerer med din virksomhetsvekst.",
+      "icon": "trending"
     }
-  }
+  ]
 }

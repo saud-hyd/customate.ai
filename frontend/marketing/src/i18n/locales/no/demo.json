@@ -1,105 +1,69 @@
 {
-  "conversations": {
-    "ecommerce": [
-      {
-        "role": "user",
-        "text": "Har dere denne skjorten i størrelse M?"
-      },
-      {
-        "role": "bot",
-        "text": "Ja! Vi har Sunset Horizon-skjorten i størrelse M med 5 på lager. Vil du at jeg skal legge den i handlekurven din?"
-      },
-      {
-        "role": "user",
-        "text": "Hva er returpolitikken deres?"
-      },
-      {
-        "role": "bot",
-        "text": "Vi tilbyr problemfri retur innen 30 dager. Gratis returforsendelse på alle bestillinger over 500 kr!"
-      }
-    ],
-    "healthcare": [
-      {
-        "role": "user",
-        "text": "Når er Dr. Thompson tilgjengelig denne uken?"
-      },
-      {
-        "role": "bot",
-        "text": "Dr. Thompson har ledige timer onsdag kl. 14:00 og fredag kl. 10:30. Vil du bestille en time?"
-      },
-      {
-        "role": "user",
-        "text": "Hvilke forsikringer aksepterer dere?"
-      },
-      {
-        "role": "bot",
-        "text": "Vi aksepterer de fleste store forsikringsplaner inkludert Aetna, Blue Cross, UnitedHealthcare og Medicare. Vil du at jeg skal sjekke din spesifikke plan?"
-      }
-    ],
-    "finance": [
-      {
-        "role": "user",
-        "text": "Hva er min nåværende kontosaldo?"
-      },
-      {
-        "role": "bot",
-        "text": "Din brukskontosaldo er 34.875,20 kr. Du har også en planlagt betaling på 1.500 kr til Strømselskapet som forfaller i morgen."
-      },
-      {
-        "role": "user",
-        "text": "Kan jeg øke kredittgrensen min?"
-      },
-      {
-        "role": "bot",
-        "text": "Basert på kontohistorikken din er du kvalifisert for en økning av kredittgrensen. Vil du at jeg skal hjelpe deg med å søke om det nå?"
-      }
-    ],
-    "education": [
-      {
-        "role": "user",
-        "text": "Når skal oppgaven leveres?"
-      },
-      {
-        "role": "bot",
-        "text": "Ditt Data Science-prosjekt skal leveres neste fredag, 24. mai. Du har fullført 3 av 5 påkrevde seksjoner så langt."
-      },
-      {
-        "role": "user",
-        "text": "Hvilke ressurser er tilgjengelige for fysikkeksamen?"
-      },
-      {
-        "role": "bot",
-        "text": "Vi har øvingstester, video-tutorials og studieguider tilgjengelig i læringssenteret. Jeg kan også koble deg til en veileder hvis nødvendig."
-      }
-    ],
-    "support": [
-      {
-        "role": "user",
-        "text": "Abonnementet mitt fungerer ikke ordentlig."
-      },
-      {
-        "role": "bot",
-        "text": "Beklager å høre det. La meg hjelpe med feilsøking. Hvilket spesifikt problem opplever du med abonnementet ditt?"
-      },
-      {
-        "role": "user",
-        "text": "Jeg kan ikke få tilgang til premium-funksjoner etter betaling"
-      },
-      {
-        "role": "bot",
-        "text": "La meg sjekke det for deg. Jeg ser at betalingen din ble behandlet, men det er et synkroniseringsproblem. Jeg har oppdatert kontotilgangen din. Kan du prøve å logge ut og logge inn igjen?"
-      }
-    ]
-  },
-  "tabs": {
-    "ecommerce": "E-handel",
-    "healthcare": "Helsevesen",
-    "finance": "Finans",
-    "education": "Utdanning",
-    "support": "Støtte"
-  },
-  "chatHeader": {
-    "name": "Customate Assistent",
-    "status": "Pålogget"
+  "heroChat": {
+    "assistant": {
+      "name": "Customate 助手",
+      "status": "在线"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "你们有这件T恤的中号吗？"
+        },
+        {
+          "role": "bot",
+          "text": "有的！我们有优质棉质T恤的中号。目前有库存，有3种颜色可选：海军蓝、白色和灰色。"
+        },
+        {
+          "role": "user",
+          "text": "退货政策是什么？"
+        },
+        {
+          "role": "bot",
+          "text": "我们提供购买后30天内的免费退货。无需理由！只需使用我们的预付退货标签即可。"
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "我的数据科学项目什么时候到期？"
+        },
+        {
+          "role": "bot",
+          "text": "您的数据科学项目将于下周五5月24日到期。到目前为止，您已经完成了5个必需部分中的3个。"
+        },
+        {
+          "role": "user",
+          "text": "物理考试有哪些可用资源？"
+        },
+        {
+          "role": "bot",
+          "text": "我们在学习中心有练习测试、视频教程和学习指南。如果需要，我还可以为您联系导师。"
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "我的订阅无法正常工作。"
+        },
+        {
+          "role": "bot",
+          "text": "很抱歉听到这个问题。让我帮助您解决问题。您的订阅遇到了什么具体问题？"
+        },
+        {
+          "role": "user",
+          "text": "付款后我无法访问高级功能"
+        },
+        {
+          "role": "bot",
+          "text": "让我为您检查一下。我看到您的付款已处理，但存在同步问题。我已刷新了您的账户访问权限。您可以尝试注销并重新登录吗？"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "电子商务",
+      "education": "教育",
+      "support": "支持"
+    }
   }
 }

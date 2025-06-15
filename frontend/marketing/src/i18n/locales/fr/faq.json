@@ -1,0 +1,56 @@
+{
+  "title": "Questions Fréquemment Posées",
+  "subtitle": "Tout ce que vous devez savoir sur Customate.ai",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Qu'est-ce que Customate.ai ?",
+      "answer": "Customate.ai est une plateforme de chatbot multi-tenant qui permet aux entreprises de créer, personnaliser et déployer des chatbots alimentés par l'IA avec des comportements spécifiques à l'industrie et des bases de connaissances personnalisées. Notre solution aide les entreprises à fournir un meilleur support client, augmenter les conversions et économiser du temps grâce à l'automatisation intelligente."
+    },
+    {
+      "id": 2,
+      "question": "Comment fonctionne la base de connaissances ?",
+      "answer": "Notre plateforme utilise la Génération Augmentée par Récupération (RAG) pour fournir des réponses précises à partir de votre base de connaissances. Vous pouvez télécharger des documents (PDFs, DOCs, etc.), des FAQ ou des informations produits, et notre système extraira, traitera et vectorisera automatiquement le contenu. Quand un utilisateur pose une question, notre IA recherche dans votre base de connaissances les informations les plus pertinentes et génère une réponse contextuellement appropriée."
+    },
+    {
+      "id": 3,
+      "question": "Puis-je personnaliser l'apparence du chatbot ?",
+      "answer": "Oui ! Customate.ai offre des options étendues de marque blanche. Vous pouvez personnaliser les couleurs, le logo, les messages d'accueil, les polices du chatbot et plus encore pour correspondre à l'identité de votre marque. Vous pouvez aussi positionner le widget de chat où vous voulez sur votre site web."
+    },
+    {
+      "id": 4,
+      "question": "Quelles industries supportez-vous ?",
+      "answer": "Notre plateforme supporte plusieurs industries avec des modèles de comportement spécialisés. Actuellement, nous offrons des paramètres optimisés pour le e-commerce, la santé, SaaS, l'éducation, la finance et les affaires générales. Chaque configuration d'industrie vient avec des intentions, réponses et workflows pré-construits adaptés aux cas d'usage communs dans ce secteur."
+    },
+    {
+      "id": 5,
+      "question": "Comment ajouter le chatbot à mon site web ?",
+      "answer": "Ajouter le chatbot à votre site web est simple. Après avoir configuré votre chatbot dans notre tableau de bord, vous recevrez un extrait JavaScript à copier et coller dans le HTML de votre site web. Cela va typiquement juste avant la balise fermante </body>. Une fois ajouté, le widget de chat apparaîtra sur votre site en quelques minutes."
+    },
+    {
+      "id": 6,
+      "question": "Quelles langues le chatbot supporte-t-il ?",
+      "answer": "Notre chatbot supporte plusieurs langues incluant l'anglais, l'espagnol, le français, l'allemand, le portugais, l'italien, le néerlandais, le chinois, le japonais et le coréen. Vous pouvez configurer différents modèles de langue pour différents marchés ou avoir un seul chatbot qui peut détecter et répondre en plusieurs langues."
+    },
+    {
+      "id": 7,
+      "question": "Y a-t-il une limite au nombre de messages ?",
+      "answer": "Oui, chaque plan tarifaire vient avec une limite mensuelle de messages. Le plan Gratuit inclut 100 messages par mois, tandis que nos plans payants offrent des limites plus élevées basées sur les besoins de votre entreprise."
+    },
+    {
+      "id": 8,
+      "question": "Mes données sont-elles sécurisées ?",
+      "answer": "Nous prenons la sécurité très au sérieux. Toutes les données sont chiffrées en transit et au repos. Notre architecture multi-tenant assure une isolation complète des données entre les clients. Nous nous conformons au RGPD, CCPA et autres réglementations de confidentialité. De plus, vous gardez la propriété complète de vos données, et nous n'utilisons jamais vos données pour entraîner nos modèles d'IA sans permission explicite."
+    },
+    {
+      "id": 9,
+      "question": "Puis-je intégrer avec mes outils existants ?",
+      "answer": "Oui, Customate.ai offre des intégrations avec les systèmes CRM populaires, logiciels de support client et autres outils d'entreprise. Nous fournissons des APIs pour les intégrations personnalisées et des webhooks pour les workflows dirigés par événements. Nos plans Professionnel et Entreprise incluent des options d'intégration avancées pour une connexion transparente avec votre pile technologique."
+    },
+    {
+      "id": 10,
+      "question": "Quel type d'analytiques fournissez-vous ?",
+      "answer": "Notre tableau de bord analytique fournit des insights complets sur la performance de votre chatbot. Vous pouvez suivre des métriques comme le volume de conversation, la satisfaction utilisateur, les questions communes, les taux de résolution et la durée de conversation. Vous pouvez aussi identifier les tendances, les heures de pointe et les opportunités d'amélioration."
+    }
+  ]
+}
