@@ -19,55 +19,6 @@ const DataSourceIcons = {
       <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
     </svg>
   ),
-  CRM: (props) => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      className={props.className || "w-6 h-6"}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  ),
-  ERP: (props) => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      className={props.className || "w-6 h-6"}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M2 9a3 3 0 0 1 0-6h12a3 3 0 0 1 0 6h-3" />
-      <path d="M14 15a3 3 0 1 0 0-6H2" />
-      <path d="M2 15a3 3 0 1 0 0 6h12a3 3 0 1 0 0-6H2" />
-      <path d="M14 21h8" />
-      <path d="M18 17v8" />
-    </svg>
-  ),
-  HelpDesk: (props) => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      className={props.className || "w-6 h-6"}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-    </svg>
-  ),
 };
 
 // Chat Platform Icons
@@ -101,28 +52,13 @@ const integrations = {
     name: "Knowledge Base",
     description: "Your AI learns from your docs, FAQs & website content",
     icon: "KnowledgeBase",
-    color: "#8B5CF6"
-  },
-  crm: {
-    id: "crm",
-    name: "CRM Systems",
-    description: "Connect customer data from Salesforce, Zendesk & more",
-    icon: "CRM",
-    color: "#3B82F6"
-  },
-  erp: {
-    id: "erp",
-    name: "ERP/Inventory",
-    description: "Real-time product and stock information integration",
-    icon: "ERP",
-    color: "#10B981"
-  },
-  helpdesk: {
-    id: "helpdesk",
-    name: "Help Desk",
-    description: "Link support tickets, chat history & customer issues",
-    icon: "HelpDesk",
-    color: "#F59E0B"
+    color: "#8B5CF6",
+    features: [
+      "Documents upload",
+      "website crawling", 
+      "Contextual understanding",
+      "Custom Q&A ",
+    ]
   }
 };
 
@@ -139,84 +75,57 @@ const FeatureCard = ({ icon, title, description }) => (
   </div>
 );
 
-// Modified IntegrationsVisual component - removed animated dots
+// Enhanced IntegrationsVisual component
 const IntegrationsVisual = ({ type }) => {
-  // Specific integration tools for each category
   const integrationTools = {
     knowledge: [
       { name: "Document Import", icon: "📄", desc: "Upload PDFs, docs, and manuals" },
       { name: "Web Crawler", icon: "🌐", desc: "Extract data from your website" },
       { name: "FAQ Builder", icon: "❓", desc: "Create custom Q&A pairs" },
       { name: "Knowledge Editor", icon: "✏️", desc: "Fine-tune AI responses" }
-    ],
-    crm: [
-      { name: "Salesforce", icon: "☁️", desc: "Full CRM integration" },
-      { name: "Zendesk", icon: "🎯", desc: "Customer support data" },
-      { name: "Shopify", icon: "🛒", desc: "E-commerce integration" },
-      { name: "HubSpot", icon: "🔄", desc: "Marketing automation" }
-    ],
-    erp: [
-      { name: "SAP", icon: "📊", desc: "Enterprise resource planning" },
-      { name: "Oracle", icon: "🔮", desc: "Business intelligence" },
-      { name: "Microsoft Dynamics", icon: "📱", desc: "Business applications" },
-      { name: "NetSuite", icon: "☁️", desc: "Cloud ERP solution" }
-    ],
-    helpdesk: [
-      { name: "Zendesk", icon: "🎯", desc: "Ticketing system" },
-      { name: "Intercom", icon: "💬", desc: "Customer messaging" },
-      { name: "Freshdesk", icon: "🥇", desc: "Customer engagement" },
-      { name: "ServiceNow", icon: "⚙️", desc: "IT service management" }
     ]
   };
-
+  
   const tools = integrationTools[type] || integrationTools.knowledge;
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 h-full">
-      <div className="flex items-center mb-6">
-        <div className="p-2 rounded-lg bg-orange-500/20 mr-3">
-          {type === 'knowledge' && <DataSourceIcons.KnowledgeBase className="w-6 h-6 text-orange-400" />}
-          {type === 'crm' && <DataSourceIcons.CRM className="w-6 h-6 text-blue-400" />}
-          {type === 'erp' && <DataSourceIcons.ERP className="w-6 h-6 text-green-400" />}
-          {type === 'helpdesk' && <DataSourceIcons.HelpDesk className="w-6 h-6 text-purple-400" />}
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 h-full">
+      <div className="flex items-center mb-8">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 mr-4">
+          <DataSourceIcons.KnowledgeBase className="w-8 h-8 text-orange-400" />
         </div>
-        <h3 className="text-white font-semibold">
-          {type === 'knowledge' && 'AI Knowledge Base'}
-          {type === 'crm' && 'CRM Integration'}
-          {type === 'erp' && 'ERP/Inventory System'}
-          {type === 'helpdesk' && 'Help Desk Connection'}
-        </h3>
+        <div>
+          <h3 className="text-white font-bold text-xl">AI Knowledge Base</h3>
+          <p className="text-gray-400 text-sm">Intelligent content management system</p>
+        </div>
       </div>
       
       <div className="grid grid-cols-2 gap-4 mb-8">
         {tools.map((tool, index) => (
-          <div key={index} className="bg-white/10 rounded-lg p-4 border border-white/10 hover:border-white/30 transition-all">
-            <div className="flex items-center mb-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center mr-3">
-                <span className="text-lg">{tool.icon}</span>
+          <div key={index} className="bg-white/10 rounded-xl p-5 border border-white/10 hover:border-orange-500/30 hover:bg-white/15 transition-all group">
+            <div className="flex items-center mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center mr-3 group-hover:from-orange-500/30 group-hover:to-amber-500/30 transition-all">
+                <span className="text-xl">{tool.icon}</span>
               </div>
-              <h4 className="text-white text-sm font-medium">{tool.name}</h4>
+              <h4 className="text-white text-sm font-semibold">{tool.name}</h4>
             </div>
-            <p className="text-xs text-gray-400">{tool.desc}</p>
+            <p className="text-xs text-gray-400 leading-relaxed">{tool.desc}</p>
           </div>
         ))}
       </div>
       
-      {/* Visual representation - removed animated dots */}
-      <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-4 h-36 overflow-hidden">
+      {/* Enhanced Visual representation */}
+      <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6 h-40 overflow-hidden border border-white/10">
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full opacity-20 animate-pulse"></div>
+          <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full opacity-20 animate-pulse"></div>
         </div>
         
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="text-center">
-            <p className="text-white text-sm font-medium">
-              {type === 'knowledge' && 'Unified Knowledge'}
-              {type === 'crm' && 'Customer Insights'}
-              {type === 'erp' && 'Inventory Intelligence'}
-              {type === 'helpdesk' && 'Support History'}
-            </p>
-            <p className="text-gray-400 text-xs">Instantly accessible to your AI</p>
+            <p className="text-white text-lg font-semibold mb-1">Unified Knowledge</p>
+            <p className="text-gray-400 text-sm">Instantly accessible to your AI</p>
+            <div className="flex items-center justify-center mt-3 space-x-2">
+            </div>
           </div>
         </div>
       </div>
@@ -439,7 +348,7 @@ const TwitterChat = ({ message }) => {
   );
 };
 
-// Main component with changes
+// Main component with enhanced UI
 const IntegrationsSection = () => {
   const { t } = useTranslation('integrations');
   const [activeTab, setActiveTab] = useState("data");
@@ -540,7 +449,7 @@ const IntegrationsSection = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="max-w-md mx-auto mb-10">
+        <div className="max-w-md mx-auto mb-12">
           <div className="inline-flex bg-white/5 backdrop-blur-sm p-1.5 rounded-full border border-white/10 shadow-inner">
             <button
               onClick={() => setActiveTab("data")}
@@ -576,51 +485,56 @@ const IntegrationsSection = () => {
               transition={{ duration: 0.5 }}
               className="max-w-6xl mx-auto"
             >
-              {/* Data Sources Tab - Modified to remove animations and fix layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-6">
-                    {t('dataSources.title.part1', { defaultValue: 'Smart' })} <span className="text-orange-400">{t('dataSources.title.part2', { defaultValue: 'Data Sources' })}</span>
+              {/* Enhanced Data Sources Tab Layout */}
+              <div className="flex flex-col lg:flex-row gap-12 items-center">
+                {/* Enhanced Left Column - Knowledge Base Card */}
+                <div className="lg:w-1/2 w-full">
+                  <h3 className="text-3xl font-bold text-white mb-8 text-center lg:text-left">
+                    {t('dataSources.title.part1', { defaultValue: 'Smart' })} <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-400">{t('dataSources.title.part2', { defaultValue: 'Data Sources' })}</span>
                   </h3>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-8">
-                    {Object.values(integrations).map((integration) => {
-                      const IconComponent = DataSourceIcons[integration.icon];
-                      return (
-                        <motion.div
-                          key={integration.id}
-                          onClick={() => setActiveIntegration(integration.id)}
-                          className={`cursor-pointer p-4 rounded-xl transition-all ${
-                            activeIntegration === integration.id 
-                            ? 'bg-gradient-to-br from-white/10 to-white/5 border border-orange-500/50 shadow-lg shadow-orange-500/20' 
-                            : 'bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/30'
-                          }`}
-                          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                        >
-                          <div className="flex items-center mb-2">
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3" 
-                                style={{ backgroundColor: `${integration.color}30` }}>
-                              {IconComponent && <IconComponent className="w-6 h-6" style={{ color: integration.color }} />}
-                            </div>
-                            <h3 className="font-semibold text-white">{integration.name}</h3>
-                          </div>
-                          <p className="text-sm text-gray-400">{integration.description}</p>
-                          
-                          {/* Removed the animated white dot indicator */}
-                          {activeIntegration === integration.id && (
-                            <div className="mt-2">
-                              <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full">
-                                {/* Animation removed */}
-                              </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                  {/* Single Enhanced Knowledge Base Card */}
+                  <motion.div
+                    className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-orange-500/30 rounded-2xl p-8 shadow-2xl shadow-orange-500/10"
+                    whileHover={{ 
+                      y: -8, 
+                      scale: 1.02,
+                      boxShadow: "0 25px 50px -12px rgba(249, 115, 22, 0.25)",
+                      transition: { duration: 0.3 } 
+                    }}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center mb-6">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center mr-5 border border-orange-500/30">
+                        <DataSourceIcons.KnowledgeBase className="w-8 h-8 text-orange-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white text-2xl">Knowledge Base</h3>
+                        <p className="text-gray-300 text-sm">AI-powered content intelligence</p>
+                      </div>
+                    </div>
+                    
+                    {/* Description */}
+                    <p className="text-gray-300 text-base mb-6 leading-relaxed">
+                      Your AI learns from your docs, FAQs & website content to provide accurate, contextual responses to every customer query.
+                    </p>
+                    
+                    {/* Features List */}
+                    <div className="space-y-3 mb-6">
+                      {integrations.knowledge.features.map((feature, index) => (
+                        <div key={index} className="flex items-center text-gray-300">
+                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 mr-3 flex-shrink-0"></div>
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+
+                  </motion.div>
                 </div>
                 
-                <div>
+                {/* Right Column - Enhanced Visualization */}
+                <div className="lg:w-1/2 w-full">
                   <IntegrationsVisual type={activeIntegration} />
                 </div>
               </div>
@@ -635,10 +549,10 @@ const IntegrationsSection = () => {
               className="max-w-6xl mx-auto"
             >
               {/* Chat Platforms Tab */}
-              <h2 className="text-2xl font-bold text-white mb-8">{t('chatPlatforms.title.part1', { defaultValue: 'Multi-Platform' })} <span className="text-orange-400">{t('chatPlatforms.title.part2', { defaultValue: 'Messaging' })}</span></h2>
+              <h2 className="text-3xl font-bold text-white mb-8 text-center">{t('chatPlatforms.title.part1', { defaultValue: 'Multi-Platform' })} <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-400">{t('chatPlatforms.title.part2', { defaultValue: 'Messaging' })}</span></h2>
               
-              {/* Platform Selection - Smaller and Centered */}
-              <div className="max-w-md mx-auto bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 border border-white/10 shadow-xl mb-6">
+              {/* Platform Selection */}
+              <div className="max-w-md mx-auto bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 border border-white/10 shadow-xl mb-8">
                 <div className="flex justify-center items-center">
                   {Object.values(channels).map((channel) => {
                     const IconComponent = ChatIcons[channel.icon];
@@ -646,9 +560,9 @@ const IntegrationsSection = () => {
                       <button
                         key={channel.id}
                         onClick={() => setActiveChannel(channel.id)}
-                        className={`flex flex-col items-center justify-center py-1.5 px-2 mx-1 rounded-lg transition-all ${
+                        className={`flex flex-col items-center justify-center py-2 px-3 mx-1 rounded-xl transition-all ${
                           activeChannel === channel.id 
-                          ? 'bg-gradient-to-br from-orange-500/90 to-amber-500/90 shadow-lg shadow-orange-500/20' 
+                          ? 'bg-gradient-to-br from-orange-500/90 to-amber-500/90 shadow-lg shadow-orange-500/20 transform scale-105' 
                           : 'hover:bg-white/10'
                         }`}
                       >
@@ -670,9 +584,9 @@ const IntegrationsSection = () => {
                 </div>
               </div>
               
-              {/* Main Content - Chat Platforms - SWAPPED LAYOUT */}
+              {/* Main Content - Chat Platforms */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column - Chat Interface (SWAPPED FROM RIGHT) */}
+                {/* Left Column - Chat Interface */}
                 <div>
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -688,7 +602,7 @@ const IntegrationsSection = () => {
                   </AnimatePresence>
                 </div>
                 
-                {/* Right Column - Features (SWAPPED FROM LEFT) */}
+                {/* Right Column - Features */}
                 <div>
                   <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 shadow-xl h-full">
                     <div className="flex items-center mb-8">
@@ -703,7 +617,7 @@ const IntegrationsSection = () => {
                       </div>
                     </div>
                     
-                    {/* Main Features */}
+                    {/* Features */}
                     <div className="space-y-4 mb-6">
                       <FeatureCard 
                         icon={
@@ -727,7 +641,6 @@ const IntegrationsSection = () => {
                         description={t('chatPlatforms.features.richMedia.description', { defaultValue: 'Send images, buttons, cards, and more' })}
                       />
                       
-                      {/* NEW: Language Translation Feature */}
                       <FeatureCard 
                         icon={
                           <svg className="w-6 h-6 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -786,31 +699,6 @@ const IntegrationsSection = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        
-        {/* Call to Action */}
-        <div className="mt-16 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="max-w-3xl mx-auto px-4"
-          >
-            <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">
-              {t('cta.title', { defaultValue: 'Ready to elevate your customer experience?' })}
-            </h3>
-            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-              {t('cta.subtitle', { defaultValue: 'Deploy AI across all your channels in minutes, not months. No coding required.' })}
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a href="#" className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium rounded-full shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:from-orange-600 hover:to-amber-600 transition-all">
-                {t('cta.startTrial', { defaultValue: 'Start Free Trial' })}
-              </a>
-              <a href="#" className="px-8 py-3 bg-white/10 backdrop-blur-sm text-white font-medium rounded-full border border-white/20 hover:bg-white/20 transition-all">
-                {t('cta.watchDemo', { defaultValue: 'Watch Demo' })}
-              </a>
-            </div>
-          </motion.div>
-        </div>
       </div>
     </section>
   );

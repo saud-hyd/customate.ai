@@ -1,0 +1,85 @@
+{
+  "loading": {
+    "default": "Laster...",
+    "processing": "Behandler...",
+    "submitting": "Sender inn...",
+    "sending": "Sender...",
+    "checking": "Sjekker...",
+    "saving": "Lagrer...",
+    "updating": "Oppdaterer..."
+  },
+  "validation": {
+    "required": "Dette feltet er påkrevd",
+    "email": "Vennligst angi en gyldig e-postadresse",
+    "minLength": "Minimum {{min}} tegn påkrevd",
+    "maxLength": "Maksimum {{max}} tegn tillatt",
+    "passwordMismatch": "Passordene stemmer ikke overens",
+    "invalidPhone": "Vennligst angi et gyldig telefonnummer",
+    "invalidCard": "Vennligst angi et gyldig kortnummer"
+  },
+  "newsletter": {
+    "title": "Hold deg oppdatert med AI chatbot nyheter",
+    "subtitle": "Abonner på vårt nyhetsbrev for de siste oppdateringene, tipsene og beste praksis innen AI chatbots.",
+    "placeholder": "Skriv inn din e-postadresse",
+    "subscribe": "Abonner",
+    "subscribing": "Abonnerer...",
+    "success": "Takk for at du abonnerer!",
+    "error": "Kunne ikke abonnere. Vennligst prøv igjen senere.",
+    "invalidEmail": "Vennligst angi en gyldig e-postadresse"
+  },
+  "faq": {
+    "title": "Ofte stilte spørsmål",
+    "subtitle": "Alt du trenger å vite om Customate.ai"
+  },
+  "checkout": {
+    "title": "Fullfør ditt kjøp",
+    "subtitle": "Du er bare noen få skritt unna å lage din tilpassede chatbot",
+    "orderSummary": "Bestillingssammendrag",
+    "plan": "Plan",
+    "billing": "Fakturering",
+    "monthly": "måned",
+    "annually": "måned, fakturert årlig",
+    "processing": "Behandler betaling...",
+    "error": "Det oppstod en feil ved behandling av betalingen. Vennligst prøv igjen.",
+    "billingInfo": "Faktureringsinformasjon",
+    "paymentInfo": "Betalingsinformasjon",
+    "firstName": "Fornavn",
+    "lastName": "Etternavn",
+    "email": "E-post",
+    "company": "Selskap",
+    "address": "Adresse",
+    "city": "By",
+    "state": "Stat/Region",
+    "zip": "Postnummer",
+    "country": "Land",
+    "cardNumber": "Kortnummer",
+    "cardExpiry": "MM/ÅÅ",
+    "cardCvc": "CVC",
+    "completePurchase": "Fullfør kjøp"
+  },
+  "buttons": {
+    "getStarted": "Kom i gang",
+    "startFree": "Start gratis prøveperiode",
+    "learnMore": "Lær mer",
+    "watchDemo": "Se demo",
+    "contactSales": "Kontakt salg",
+    "tryAgain": "Prøv igjen",
+    "cancel": "Avbryt",
+    "continue": "Fortsett",
+    "submit": "Send inn",
+    "close": "Lukk",
+    "back": "Tilbake",
+    "next": "Neste"
+  },
+  "status": {
+    "online": "Pålogget",
+    "offline": "Frakoblet",
+    "connecting": "Kobler til...",
+    "connected": "Tilkoblet",
+    "disconnected": "Frakoblet",
+    "success": "Suksess",
+    "error": "Feil",
+    "warning": "Advarsel",
+    "info": "Informasjon"
+  }
+}

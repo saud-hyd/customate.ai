@@ -1,6 +1,6 @@
 {
   "title": "Precios Simples y Transparentes",
-  "subtitle": "Elige el plan adecuado para tu negocio",
+  "subtitle": "Elige el plan perfecto para tu negocio",
   "billing": {
     "monthly": "Mensual",
     "annual": "Anual",
@@ -9,14 +9,14 @@
   "billedAnnually": "Facturado anualmente",
   "plans": {
     "free": {
-      "name": "Gratis",
+      "name": "Gratuito",
       "description": "Perfecto para probar Customate.ai",
       "features": [
         "100 mensajes por mes",
         "5 usuarios activos",
         "500 KB de almacenamiento",
         "3 colecciones de conocimiento",
-        "Personalización básica de chatbot",
+        "Personalización básica del chatbot",
         "Soporte de la comunidad"
       ],
       "cta": "Comenzar Gratis"
@@ -30,7 +30,7 @@
         "5 MB de almacenamiento",
         "10 colecciones de conocimiento",
         "Marca personalizada",
-        "Soporte por correo",
+        "Soporte por email",
         "Panel de análisis",
         "Acceso a API"
       ],
@@ -42,10 +42,10 @@
       "features": [
         "5,000 mensajes por mes",
         "100 usuarios activos",
-        "50 MB de almacenamiento",
+        "25 MB de almacenamiento",
         "50 colecciones de conocimiento",
-        "Personalización avanzada de chatbot",
-        "Soporte prioritario por correo",
+        "Personalización avanzada del chatbot",
+        "Soporte prioritario por email",
         "Análisis avanzados",
         "Dominio personalizado",
         "Colaboración en equipo"
@@ -60,9 +60,9 @@
         "500 usuarios activos",
         "100 MB de almacenamiento",
         "250 colecciones de conocimiento",
-        "Opciones de implementación personalizada",
+        "Opciones de implementación personalizadas",
         "Gerente de cuenta dedicado",
-        "Soporte telefónico y por correo",
+        "Soporte telefónico y por email",
         "Garantías de SLA",
         "Características de seguridad avanzadas",
         "Integraciones personalizadas"

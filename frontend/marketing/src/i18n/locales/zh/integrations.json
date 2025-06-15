@@ -4,7 +4,7 @@
     "part1": "一个AI，",
     "part2": "无处不在"
   },
-  "subtitle": "连接您的业务数据，在每个平台上通过一致的智能AI互动触达客户。",
+  "subtitle": "连接您的业务数据，在每个平台上通过一致、智能的AI交互接触客户。",
   "tabs": {
     "dataSources": "数据源",
     "chatPlatforms": "聊天平台"
@@ -17,7 +17,7 @@
     "integrations": {
       "knowledge": {
         "name": "知识库",
-        "description": "您的AI从文档、常见问题解答和网站内容中学习"
+        "description": "您的AI从文档、常见问题和网站内容中学习"
       },
       "crm": {
         "name": "CRM系统",
@@ -28,8 +28,41 @@
         "description": "实时产品和库存信息集成"
       },
       "helpdesk": {
-        "name": "帮助台",
-        "description": "链接支持工单、聊天记录和客户问题"
+        "name": "服务台",
+        "description": "链接支持工单、聊天历史和客户问题"
+      }
+    },
+    "knowledgeBase": {
+      "title": "AI知识库",
+      "subtitle": "智能内容管理系统",
+      "description": "您的AI从文档、常见问题和网站内容中学习，为每个客户查询提供准确、相关的回答。",
+      "features": [
+        "文档上传",
+        "网站爬取", 
+        "上下文理解",
+        "自定义问答"
+      ],
+      "tools": {
+        "documentImport": {
+          "name": "文档导入",
+          "description": "上传PDF、文档和手册"
+        },
+        "webCrawler": {
+          "name": "网页爬虫",
+          "description": "从您的网站提取数据"
+        },
+        "faqBuilder": {
+          "name": "FAQ构建器",
+          "description": "创建自定义问答对"
+        },
+        "knowledgeEditor": {
+          "name": "知识编辑器",
+          "description": "微调AI回答"
+        }
+      },
+      "visualText": {
+        "unifiedKnowledge": "统一知识",
+        "instantlyAccessible": "您的AI可立即访问"
       }
     }
   },
@@ -45,7 +78,7 @@
       },
       "nativeInterface": {
         "title": "原生界面",
-        "description": "外观和感觉就像原始平台"
+        "description": "外观和感觉都像原始平台"
       },
       "richMedia": {
         "title": "富媒体",
@@ -57,23 +90,23 @@
       },
       "availability": {
         "title": "24/7可用性",
-        "description": "为您的客户提供始终在线的支持"
+        "description": "为您的客户提供全天候支持"
       },
       "consistentVoice": {
         "title": "一致的声音",
         "description": "在任何地方都有相同的品牌体验"
       },
       "smartHandoff": {
-        "title": "智能交接",
-        "description": "无缝转移到人工代理"
+        "title": "智能转接",
+        "description": "无缝转接到人工客服"
       }
     },
-    "deployMessage": "几分钟内部署到任何平台，无需编码"
+    "deployMessage": "在几分钟内部署到任何平台，无需编码"
   },
   "cta": {
-    "title": "准备提升您的客户体验了吗？",
-    "subtitle": "几分钟内在所有渠道部署AI，而不是几个月。无需编码。",
-    "startTrial": "免费试用",
+    "title": "准备好提升您的客户体验了吗？",
+    "subtitle": "在几分钟内而不是几个月内在所有渠道上部署AI。无需编码。",
+    "startTrial": "开始免费试用",
     "watchDemo": "观看演示"
   }
 }

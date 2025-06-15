@@ -4,35 +4,51 @@
     "pricing": "Tarifs",
     "blog": "Blog",
     "contact": "Contact",
-    "login": "Connexion",
-    "signup": "S'inscrire"
+    "login": "Se connecter",
+    "getStarted": "Commencer",
+    "demo": "Démo"
   },
   "footer": {
-    "rights": "© {{year}} Customate.ai. Tous droits réservés.",
-    "privacy": "Politique de Confidentialité",
-    "terms": "Conditions d'Utilisation",
-    "cookies": "Politique des Cookies",
-    "description": "Construisez, personnalisez et déployez des chatbots alimentés par l'IA avec des comportements spécifiques à l'industrie et des bases de connaissances personnalisées pour des interactions client transformatrices.",
     "product": {
-      "title": "PRODUIT",
-      "useCases": "Cas d'Usage",
-      "roadmap": "Feuille de Route"
+      "title": "Produit",
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "useCases": "Cas d'usage",
+      "roadmap": "Feuille de route"
     },
     "resources": {
-      "title": "RESSOURCES",
+      "title": "Ressources",
+      "blog": "Blog",
       "documentation": "Documentation",
-      "apiReference": "Référence API"
+      "apiReference": "Référence API",
+      "help": "Centre d'aide"
     },
     "company": {
-      "title": "ENTREPRISE",
-      "about": "À Propos de Nous"
-    }
+      "title": "Entreprise",
+      "about": "À propos",
+      "contact": "Contact",
+      "careers": "Carrières",
+      "press": "Presse"
+    },
+    "legal": {
+      "title": "Légal",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "cookies": "Politique des cookies"
+    },
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "cookies": "Politique des cookies",
+    "rights": "© {{year}} Customate.ai. Tous droits réservés.",
+    "description": "Transformez votre expérience client avec des chatbots alimentés par l'IA qui comprennent votre entreprise et se connectent avec les clients sur toutes les plateformes.",
+    "followUs": "Suivez-nous"
   },
-  "cta": {
-    "getStarted": "Commencer",
-    "startFree": "Essai Gratuit",
-    "learnMore": "En Savoir Plus",
-    "watchDemo": "Voir la Démo",
-    "contactSales": "Contacter les Ventes"
+  "navigation": {
+    "home": "Accueil",
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "about": "À propos",
+    "contact": "Contact",
+    "blog": "Blog"
   }
 }

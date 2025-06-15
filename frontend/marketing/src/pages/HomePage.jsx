@@ -18,9 +18,9 @@ const HomePage = () => {
       <Header />
       <main>
         <HeroSection />
+        <HowItWorksSection />
         <FeaturesSection />
         <IntegrationsSection />
-        <HowItWorksSection />
         <CTASection />
       </main>
     </>

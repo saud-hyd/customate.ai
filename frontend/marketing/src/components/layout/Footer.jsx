@@ -10,7 +10,7 @@ const Footer = () => {
   // All translations in one object - UPDATED WITH NORWEGIAN
   const translations = {
     en: {
-      description: "AI-powered chatbots for businesses. Build intelligent customer support with industry-specific behaviors and custom knowledge bases.",
+      description: "Automate Customer Support.",
       product: "Product",
       company: "Company",
       features: "Features",

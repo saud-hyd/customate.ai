@@ -1,0 +1,56 @@
+{
+  "title": "Preguntas Frecuentes",
+  "subtitle": "Todo lo que necesitas saber sobre Customate.ai",
+  "questions": [
+    {
+      "id": 1,
+      "question": "¿Qué es Customate.ai?",
+      "answer": "Customate.ai es una plataforma de chatbot multiusuario que permite a las empresas crear, personalizar y desplegar chatbots impulsados por IA con comportamientos específicos de la industria y bases de conocimiento personalizadas. Nuestra solución ayuda a las empresas a brindar mejor soporte al cliente, aumentar conversiones y ahorrar tiempo a través de automatización inteligente."
+    },
+    {
+      "id": 2,
+      "question": "¿Cómo funciona la base de conocimiento?",
+      "answer": "Nuestra plataforma utiliza Generación Aumentada por Recuperación (RAG) para proporcionar respuestas precisas desde tu base de conocimiento. Puedes subir documentos (PDFs, DOCs, etc.), FAQs o información de productos, y nuestro sistema automáticamente extraerá, procesará y vectorizará el contenido. Cuando un usuario hace una pregunta, nuestra IA busca en tu base de conocimiento la información más relevante y genera una respuesta contextualmente apropiada."
+    },
+    {
+      "id": 3,
+      "question": "¿Puedo personalizar la apariencia del chatbot?",
+      "answer": "¡Sí! Customate.ai ofrece amplias opciones de marca blanca. Puedes personalizar los colores del chatbot, logo, mensajes de saludo, fuentes y más para que coincidan con la identidad de tu marca. También puedes posicionar el widget de chat donde quieras en tu sitio web."
+    },
+    {
+      "id": 4,
+      "question": "¿Qué industrias apoyan?",
+      "answer": "Nuestra plataforma apoya múltiples industrias con patrones de comportamiento especializados. Actualmente, ofrecemos configuraciones optimizadas para e-commerce, salud, SaaS, educación, finanzas y negocios generales. Cada configuración de industria viene con intenciones, respuestas y flujos de trabajo preestablecidos adaptados a casos de uso comunes en ese sector."
+    },
+    {
+      "id": 5,
+      "question": "¿Cómo agrego el chatbot a mi sitio web?",
+      "answer": "Agregar el chatbot a tu sitio web es simple. Después de configurar tu chatbot en nuestro panel, recibirás un fragmento de JavaScript para copiar y pegar en el HTML de tu sitio web. Esto típicamente va justo antes de la etiqueta de cierre </body>. Una vez agregado, el widget de chat aparecerá en tu sitio en minutos."
+    },
+    {
+      "id": 6,
+      "question": "¿Qué idiomas soporta el chatbot?",
+      "answer": "Nuestro chatbot soporta múltiples idiomas incluyendo inglés, español, francés, alemán, portugués, italiano, holandés, chino, japonés y coreano. Puedes configurar diferentes modelos de idioma para diferentes mercados o tener un solo chatbot que pueda detectar y responder en múltiples idiomas."
+    },
+    {
+      "id": 7,
+      "question": "¿Hay un límite en el número de mensajes?",
+      "answer": "Sí, cada plan de precios viene con un límite mensual de mensajes. El plan Gratuito incluye 100 mensajes por mes, mientras que nuestros planes pagos ofrecen límites más altos basados en las necesidades de tu negocio."
+    },
+    {
+      "id": 8,
+      "question": "¿Qué tan segura está mi información?",
+      "answer": "Tomamos la seguridad muy en serio. Todos los datos están encriptados tanto en tránsito como en reposo. Nuestra arquitectura multiusuario asegura completo aislamiento de datos entre clientes. Cumplimos con GDPR, CCPA y otras regulaciones de privacidad. Además, mantienes completa propiedad de tus datos, y nunca usamos tus datos para entrenar nuestros modelos de IA sin permiso explícito."
+    },
+    {
+      "id": 9,
+      "question": "¿Puedo integrar con mis herramientas existentes?",
+      "answer": "Sí, Customate.ai ofrece integraciones con sistemas CRM populares, software de mesa de ayuda y otras herramientas de negocio. Proporcionamos APIs para integraciones personalizadas y webhooks para flujos de trabajo dirigidos por eventos. Nuestros planes Profesional y Empresarial incluyen opciones de integración avanzadas para conexión perfecta con tu stack tecnológico."
+    },
+    {
+      "id": 10,
+      "question": "¿Qué tipo de analíticas proporcionan?",
+      "answer": "Nuestro panel de analíticas proporciona insights comprensivos sobre el rendimiento de tu chatbot. Puedes rastrear métricas como volumen de conversación, satisfacción del usuario, preguntas comunes, tasas de resolución y duración de conversación. También puedes identificar tendencias, horarios pico y oportunidades de mejora."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "title": "Ofte stilte spørsmål",
+  "subtitle": "Alt du trenger å vite om Customate.ai",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Hva er Customate.ai?",
+      "answer": "Customate.ai er en multi-tenant chatbot-plattform som gjør det mulig for bedrifter å lage, tilpasse og distribuere AI-drevne chatbots med bransjespesifikke atferd og tilpassede kunnskapsbaser. Vår løsning hjelper bedrifter med å gi bedre kundesupport, øke konverteringer og spare tid gjennom intelligent automatisering."
+    },
+    {
+      "id": 2,
+      "question": "Hvordan fungerer kunnskapsbasen?",
+      "answer": "Vår plattform bruker Retrieval-Augmented Generation (RAG) for å gi nøyaktige svar fra din kunnskapsbase. Du kan laste opp dokumenter (PDF-er, DOC-er, etc.), FAQ-er eller produktinformasjon, og vårt system vil automatisk ekstraktere, behandle og vektorisere innholdet. Når en bruker stiller et spørsmål, søker vår AI i kunnskapsbasen din etter den mest relevante informasjonen og genererer et kontekstuelt passende svar."
+    },
+    {
+      "id": 3,
+      "question": "Kan jeg tilpasse chatbotens utseende?",
+      "answer": "Ja! Customate.ai tilbyr omfattende white-label alternativer. Du kan tilpasse chatbotens farger, logo, hilsensmeldinger, fonter og mer for å matche din merkevareidentitet. Du kan også posisjonere chat-widgeten hvor du vil på nettstedet ditt."
+    },
+    {
+      "id": 4,
+      "question": "Hvilke bransjer støtter dere?",
+      "answer": "Vår plattform støtter flere bransjer med spesialiserte atferdsmønstre. For øyeblikket tilbyr vi optimaliserte innstillinger for e-handel, helsevesen, SaaS, utdanning, finans og generell virksomhet. Hver bransjekonfigurasjon kommer med forhåndsbygde intensjoner, svar og arbeidsflyter skreddersydd for vanlige brukstilfeller i den sektoren."
+    },
+    {
+      "id": 5,
+      "question": "Hvordan legger jeg til chatboten på nettstedet mitt?",
+      "answer": "Å legge til chatboten på nettstedet ditt er enkelt. Etter å ha konfigurert chatboten din i vårt dashbord, vil du motta et JavaScript-utdrag å kopiere og lime inn i nettstedets HTML. Dette går typisk rett før den avsluttende </body>-taggen. Når den er lagt til, vil chat-widgeten vises på nettstedet ditt innen minutter."
+    },
+    {
+      "id": 6,
+      "question": "Hvilke språk støtter chatboten?",
+      "answer": "Vår chatbot støtter flere språk inkludert engelsk, spansk, fransk, tysk, portugisisk, italiensk, nederlandsk, kinesisk, japansk og koreansk. Du kan konfigurere forskjellige språkmodeller for forskjellige markeder eller ha en enkelt chatbot som kan oppdage og svare på flere språk."
+    },
+    {
+      "id": 7,
+      "question": "Er det en grense på antall meldinger?",
+      "answer": "Ja, hver prisplan kommer med en månedlig meldingsgrense. Gratisplanen inkluderer 100 meldinger per måned, mens våre betalte planer tilbyr høyere grenser basert på dine forretningsbehov."
+    },
+    {
+      "id": 8,
+      "question": "Hvor sikre er mine data?",
+      "answer": "Vi tar sikkerhet svært alvorlig. All data er kryptert både under overføring og i hvile. Vår multi-tenant arkitektur sikrer fullstendig dataisolasjon mellom klienter. Vi overholder GDPR, CCPA og andre personvernforskrifter. I tillegg beholder du fullt eierskap til dine data, og vi bruker aldri dine data til å trene våre AI-modeller uten eksplisitt tillatelse."
+    },
+    {
+      "id": 9,
+      "question": "Kan jeg integrere med mine eksisterende verktøy?",
+      "answer": "Ja, Customate.ai tilbyr integrasjoner med populære CRM-systemer, helpdesk-programvare og andre forretningsverktøy. Vi tilbyr API-er for tilpassede integrasjoner og webhooks for hendelsesdrevne arbeidsflyter. Våre Professional- og Enterprise-planer inkluderer avanserte integrasjonsalternativer for sømløs tilkobling med din teknologistakk."
+    },
+    {
+      "id": 10,
+      "question": "Hva slags analyser tilbyr dere?",
+      "answer": "Vårt analysedashbord gir omfattende innsikt i chatbotens ytelse. Du kan spore målinger som samtaleomfang, brukertilfredshet, vanlige spørsmål, løsningsrater og samtalevarighet. Du kan også identifisere trender, toppbrukstider og forbedringsmuligheter."
+    }
+  ]
+}

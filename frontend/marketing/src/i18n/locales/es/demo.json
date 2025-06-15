@@ -1,0 +1,69 @@
+{
+  "heroChat": {
+    "assistant": {
+      "name": "Asistente Customate",
+      "status": "En línea"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "¿Tienen esta camiseta en talla Mediana?"
+        },
+        {
+          "role": "bot",
+          "text": "¡Sí! Tenemos la Camiseta de Algodón Premium en Mediana. Está disponible en stock en 3 colores: Azul marino, Blanco y Gris."
+        },
+        {
+          "role": "user",
+          "text": "¿Cuál es la política de devoluciones?"
+        },
+        {
+          "role": "bot",
+          "text": "Ofrecemos devoluciones gratuitas dentro de 30 días de la compra. ¡Sin preguntas! Solo usa nuestra etiqueta de devolución prepagada."
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "¿Cuándo vence mi proyecto de Ciencia de Datos?"
+        },
+        {
+          "role": "bot",
+          "text": "Tu proyecto de Ciencia de Datos vence el próximo viernes, 24 de mayo. Has completado 3 de 5 secciones requeridas hasta ahora."
+        },
+        {
+          "role": "user",
+          "text": "¿Qué recursos están disponibles para el examen de física?"
+        },
+        {
+          "role": "bot",
+          "text": "Tenemos exámenes de práctica, tutoriales en video y guías de estudio disponibles en el centro de aprendizaje. También puedo conectarte con un tutor si lo necesitas."
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "Mi suscripción no está funcionando correctamente."
+        },
+        {
+          "role": "bot",
+          "text": "Lamento escuchar eso. Déjame ayudarte a resolver el problema. ¿Qué problema específico estás experimentando con tu suscripción?"
+        },
+        {
+          "role": "user",
+          "text": "No puedo acceder a las funciones premium después del pago"
+        },
+        {
+          "role": "bot",
+          "text": "Déjame verificar eso por ti. Veo que tu pago fue procesado pero hay un problema de sincronización. He actualizado el acceso a tu cuenta. ¿Puedes intentar cerrar sesión e iniciar sesión nuevamente?"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "Comercio electrónico",
+      "education": "Educación", 
+      "support": "Soporte"
+    }
+  }
+}

@@ -4,35 +4,51 @@
     "pricing": "Pricing",
     "blog": "Blog",
     "contact": "Contact",
-    "login": "Log In",
-    "signup": "Sign Up"
+    "login": "Login",
+    "getStarted": "Get Started",
+    "demo": "Demo"
   },
   "footer": {
-    "rights": "© {{year}} Customate.ai. All rights reserved.",
-    "privacy": "Privacy Policy",
-    "terms": "Terms of Service",
-    "cookies": "Cookie Policy",
-    "description": "Build, customize, and deploy AI-powered chatbots with industry-specific behaviors and custom knowledge bases for transformative customer interactions.",
     "product": {
-      "title": "PRODUCT",
+      "title": "Product",
+      "features": "Features",
+      "pricing": "Pricing",
       "useCases": "Use Cases",
       "roadmap": "Roadmap"
     },
     "resources": {
-      "title": "RESOURCES",
+      "title": "Resources",
+      "blog": "Blog",
       "documentation": "Documentation",
-      "apiReference": "API Reference"
+      "apiReference": "API Reference",
+      "help": "Help Center"
     },
     "company": {
-      "title": "COMPANY",
-      "about": "About Us"
-    }
+      "title": "Company",
+      "about": "About",
+      "contact": "Contact",
+      "careers": "Careers",
+      "press": "Press"
+    },
+    "legal": {
+      "title": "Legal",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Policy"
+    },
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "cookies": "Cookie Policy",
+    "rights": "© {{year}} Customate.ai. All rights reserved.",
+    "description": "Transform your customer experience with AI-powered chatbots that understand your business and connect with customers across every platform.",
+    "followUs": "Follow us"
   },
-  "cta": {
-    "getStarted": "Get Started",
-    "startFree": "Start Free Trial",
-    "learnMore": "Learn More",
-    "watchDemo": "Watch Demo",
-    "contactSales": "Contact Sales"
+  "navigation": {
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "blog": "Blog"
   }
 }

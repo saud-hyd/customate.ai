@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from '../ui/Button';
 import contactService from '../../services/contactService';
 
 const NewsletterSection = () => {
+  const { t } = useTranslation(['ui']);
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState({
     submitted: false,
@@ -17,7 +19,7 @@ const NewsletterSection = () => {
     if (!email || !email.includes('@')) {
       setStatus({
         ...status,
-        error: 'Please enter a valid email address'
+        error: t('newsletter.invalidEmail')
       });
       return;
     }
@@ -45,7 +47,7 @@ const NewsletterSection = () => {
       setStatus({
         submitted: true,
         loading: false,
-        error: 'Failed to subscribe. Please try again later.',
+        error: t('newsletter.error'),
         success: false
       });
     }
@@ -57,47 +59,17 @@ const NewsletterSection = () => {
         <div className="rounded-3xl bg-primary-600 py-10 px-6 sm:py-12 sm:px-12 lg:flex lg:items-center lg:p-16">
           <div className="lg:w-0 lg:flex-1">
             <h2 className="text-3xl font-extrabold tracking-tight text-white">
-              Stay up to date with AI chatbot news
+              {t('newsletter.title')}
             </h2>
             <p className="mt-4 max-w-3xl text-lg text-primary-100">
-              Subscribe to our newsletter to get the latest updates, tips, and best practices for AI chatbots.
+              {t('newsletter.subtitle')}
             </p>
-            
-            {status.success && (
-              <div className="mt-6 rounded-md bg-green-50 p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-green-800">Thanks for subscribing!</p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {status.error && (
-              <div className="mt-6 rounded-md bg-red-50 p-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-red-800">{status.error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
           
           <div className="mt-8 lg:mt-0 lg:ml-8">
             <form className="sm:flex" onSubmit={handleSubmit}>
               <label htmlFor="email-address" className="sr-only">
-                Email address
+                {t('newsletter.placeholder')}
               </label>
               <input
                 id="email-address"
@@ -105,30 +77,34 @@ const NewsletterSection = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full rounded-md border-white px-5 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary-700"
-                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={status.loading || status.success}
+                className="w-full px-5 py-3 border-white placeholder-gray-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-700 focus:ring-white focus:border-white sm:max-w-xs rounded-lg"
+                placeholder={t('newsletter.placeholder')}
               />
-              <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3 sm:flex-shrink-0">
+              
+              <div className="mt-3 rounded-lg shadow sm:mt-0 sm:ml-3 sm:flex-shrink-0">
                 <Button
                   type="submit"
-                  variant="secondary"
-                  className="w-full bg-white text-primary-600 hover:bg-primary-50"
-                  disabled={status.loading || status.success}
+                  disabled={status.loading}
+                  className="w-full flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary-500 hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-700 focus:ring-white"
                 >
-                  {status.loading ? 'Subscribing...' : 'Subscribe'}
+                  {status.loading ? t('newsletter.subscribing') : t('newsletter.subscribe')}
                 </Button>
               </div>
             </form>
-            <p className="mt-3 text-sm text-primary-100">
-              We care about your data. Read our{' '}
-              <a href="/privacy" className="font-medium text-white underline">
-                Privacy Policy
-              </a>
-              .
-            </p>
+            
+            {status.success && (
+              <p className="mt-3 text-sm text-green-300">
+                {t('newsletter.success')}
+              </p>
+            )}
+            
+            {status.error && (
+              <p className="mt-3 text-sm text-red-300">
+                {status.error}
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@
     "part1": "Eine KI,",
     "part2": "Überall"
   },
-  "subtitle": "Verbinden Sie Ihre Geschäftsdaten und erreichen Sie Kunden auf jeder Plattform mit konsistenten, intelligenten KI-Interaktionen.",
+  "subtitle": "Verbinden Sie Ihre Unternehmensdaten und erreichen Sie Kunden auf jeder Plattform mit konsistenten, intelligenten KI-Interaktionen.",
   "tabs": {
     "dataSources": "Datenquellen",
     "chatPlatforms": "Chat-Plattformen"
@@ -21,7 +21,7 @@
       },
       "crm": {
         "name": "CRM-Systeme",
-        "description": "Verbinden Sie Kundendaten von Salesforce, Zendesk und mehr"
+        "description": "Verbinden Sie Kundendaten aus Salesforce, Zendesk und mehr"
       },
       "erp": {
         "name": "ERP/Inventar",
@@ -31,11 +31,44 @@
         "name": "Help Desk",
         "description": "Verknüpfen Sie Support-Tickets, Chat-Verlauf und Kundenprobleme"
       }
+    },
+    "knowledgeBase": {
+      "title": "KI-Wissensbasis",
+      "subtitle": "Intelligentes Content-Management-System",
+      "description": "Ihre KI lernt aus Ihren Dokumenten, FAQs und Website-Inhalten, um präzise, kontextuelle Antworten auf jede Kundenanfrage zu liefern.",
+      "features": [
+        "Dokumente hochladen",
+        "Website-Crawling", 
+        "Kontextverständnis",
+        "Benutzerdefinierte Q&A"
+      ],
+      "tools": {
+        "documentImport": {
+          "name": "Dokument-Import",
+          "description": "PDFs, Dokumente und Handbücher hochladen"
+        },
+        "webCrawler": {
+          "name": "Web-Crawler",
+          "description": "Daten von Ihrer Website extrahieren"
+        },
+        "faqBuilder": {
+          "name": "FAQ-Builder",
+          "description": "Benutzerdefinierte Frage-Antwort-Paare erstellen"
+        },
+        "knowledgeEditor": {
+          "name": "Wissens-Editor",
+          "description": "KI-Antworten feinabstimmen"
+        }
+      },
+      "visualText": {
+        "unifiedKnowledge": "Vereinheitlichtes Wissen",
+        "instantlyAccessible": "Sofort für Ihre KI verfügbar"
+      }
     }
   },
   "chatPlatforms": {
     "title": {
-      "part1": "Multiplattform",
+      "part1": "Multi-Plattform",
       "part2": "Messaging"
     },
     "features": {
@@ -44,7 +77,7 @@
         "description": "Eine KI, jede Kommunikationsplattform"
       },
       "nativeInterface": {
-        "title": "Native Oberfläche",
+        "title": "Native Benutzeroberfläche",
         "description": "Sieht aus und fühlt sich an wie die ursprüngliche Plattform"
       },
       "richMedia": {
@@ -60,7 +93,7 @@
         "description": "Immer verfügbarer Support für Ihre Kunden"
       },
       "consistentVoice": {
-        "title": "Konsistente Stimme",
+        "title": "Einheitliche Stimme",
         "description": "Gleiche Markenerfahrung überall"
       },
       "smartHandoff": {
@@ -68,12 +101,12 @@
         "description": "Nahtlose Übertragung an menschliche Agenten"
       }
     },
-    "deployMessage": "Bereitstellung auf jeder Plattform in Minuten ohne Programmierung"
+    "deployMessage": "Bereitstellung auf jeder Plattform in Minuten ohne Codierung"
   },
   "cta": {
     "title": "Bereit, Ihre Kundenerfahrung zu verbessern?",
-    "subtitle": "Stellen Sie KI in allen Ihren Kanälen in Minuten, nicht Monaten bereit. Keine Programmierung erforderlich.",
-    "startTrial": "Kostenlose Testversion",
+    "subtitle": "Stellen Sie KI in Minuten, nicht Monaten, auf allen Ihren Kanälen bereit. Keine Codierung erforderlich.",
+    "startTrial": "Kostenlose Testversion Starten",
     "watchDemo": "Demo Ansehen"
   }
 }

@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import Button from '../ui/Button';
 
 const HeroSection = () => {
-  const { t } = useTranslation('home'); 
+  // Include both namespaces
+  const { t, i18n } = useTranslation(['home', 'demo']); 
 
   const [activeTab, setActiveTab] = useState('ecommerce');
   const [messages, setMessages] = useState([]);
@@ -13,6 +14,7 @@ const HeroSection = () => {
   const [showInputCursor, setShowInputCursor] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [conversationActive, setConversationActive] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
   
   const chatContainerRef = useRef(null);
   const heroRef = useRef(null);
@@ -20,39 +22,106 @@ const HeroSection = () => {
   const currentConversationRef = useRef(null);
   const tabTimerRef = useRef(null);
 
-  // Industry-specific chat examples (simplified to prevent duplicates)
-  const chatExamples = {
+  // Fallback conversations - will be used until translation files are created
+  const fallbackConversations = {
     ecommerce: [
-      { role: 'user', text: "Do you have this shirt in medium?" },
-      { role: 'bot', text: "Yes! We have the Sunset Horizon Shirt in Medium with 5 in stock. Would you like me to add it to your cart?" },
-      { role: 'user', text: "What's your return policy?" },
-      { role: 'bot', text: "We offer hassle-free returns within 30 days. Free return shipping on all orders over $50!" }
+      { role: 'user', text: 'Do you have this t-shirt in size Medium?' },
+      { role: 'bot', text: 'Yes! We have the Premium Cotton T-shirt in Medium. Currently in stock in 3 colors: Navy, White, and Gray.' },
+      { role: 'user', text: 'What\'s the return policy?' },
+      { role: 'bot', text: 'We offer free returns within 30 days of purchase. No questions asked! Just use our prepaid return label.' }
     ],
     healthcare: [
-      { role: 'user', text: "When is Dr. Thompson available this week?" },
-      { role: 'bot', text: "Dr. Thompson has openings on Wednesday at 2:00 PM and Friday at 10:30 AM. Would you like to book an appointment?" },
-      { role: 'user', text: "What insurance do you accept?" },
-      { role: 'bot', text: "We accept most major insurance plans including Aetna, Blue Cross, UnitedHealthcare, and Medicare. Would you like me to verify your specific plan?" }
+      { role: 'user', text: 'What are your operating hours?' },
+      { role: 'bot', text: 'We are open Monday-Friday 8AM-6PM, Saturday 9AM-4PM. Emergency services available 24/7.' },
+      { role: 'user', text: 'Can I schedule a telehealth appointment?' },
+      { role: 'bot', text: 'Absolutely! We offer telehealth consultations. I can help you book an appointment with one of our specialists.' }
     ],
     finance: [
-      { role: 'user', text: "What's my current account balance?" },
-      { role: 'bot', text: "Your checking account balance is $3,487.52. You also have a scheduled payment of $150 to Electric Company due tomorrow." },
-      { role: 'user', text: "Can I increase my credit limit?" },
-      { role: 'bot', text: "Based on your account history, you're eligible for a credit limit increase. Would you like me to help you apply for that now?" }
+      { role: 'user', text: 'What is the current interest rate?' },
+      { role: 'bot', text: 'Our current savings account rate is 4.5% APY. Would you like to learn about our other investment options?' },
+      { role: 'user', text: 'How do I apply for a loan?' },
+      { role: 'bot', text: 'I can help you start the loan application process. First, let me gather some basic information.' }
     ],
     education: [
-      { role: 'user', text: "When is the assignment due?" },
-      { role: 'bot', text: "Your Data Science project is due next Friday, May 24th. You've completed 3 out of 5 required sections so far." },
-      { role: 'user', text: "What resources are available for the physics exam?" },
-      { role: 'bot', text: "We have practice tests, video tutorials, and study guides available in the learning center. I can also connect you with a tutor if needed." }
+      { role: 'user', text: 'When is my Data Science project due?' },
+      { role: 'bot', text: 'Your Data Science project is due next Friday, May 24th. You\'ve completed 3 out of 5 required sections so far.' },
+      { role: 'user', text: 'What resources are available for the physics exam?' },
+      { role: 'bot', text: 'We have practice tests, video tutorials, and study guides available in the learning center.' }
     ],
     support: [
-      { role: 'user', text: "My subscription isn't working correctly." },
-      { role: 'bot', text: "I'm sorry to hear that. Let me help troubleshoot. What specific issue are you experiencing with your subscription?" },
-      { role: 'user', text: "I can't access premium features after payment" },
-      { role: 'bot', text: "Let me check that for you. I see your payment was processed but there's a sync issue. I've refreshed your account access. Can you try logging out and back in?" }
+      { role: 'user', text: 'My subscription isn\'t working correctly.' },
+      { role: 'bot', text: 'I\'m sorry to hear that. Let me help troubleshoot. What specific issue are you experiencing?' },
+      { role: 'user', text: 'I can\'t access premium features after payment' },
+      { role: 'bot', text: 'Let me check that for you. I see your payment was processed but there\'s a sync issue. I\'ve refreshed your account access.' }
     ]
   };
+
+  // Get chat examples with robust fallback - NOW REACTIVE
+  const getChatExamples = () => {
+    const examples = {};
+    
+    Object.keys(fallbackConversations).forEach(key => {
+      try {
+        const translated = t(`demo:heroChat.conversations.${key}`, { returnObjects: true });
+        // Check if translation returned a valid array with proper structure
+        if (Array.isArray(translated) && translated.length > 0 && translated[0]?.role && translated[0]?.text) {
+          examples[key] = translated;
+        } else {
+          examples[key] = fallbackConversations[key];
+        }
+      } catch (error) {
+        examples[key] = fallbackConversations[key];
+      }
+    });
+    
+    return examples;
+  };
+
+  // Get tab labels with fallback - NOW REACTIVE
+  const getTabLabels = () => {
+    const fallbackLabels = {
+      ecommerce: 'E-commerce',
+      healthcare: 'Healthcare',
+      finance: 'Finance',
+      education: 'Education',
+      support: 'Support'
+    };
+
+    try {
+      const translated = t('demo:heroChat.tabLabels', { returnObjects: true });
+      // Check if translation returned a valid object
+      if (translated && typeof translated === 'object' && !Array.isArray(translated)) {
+        return { ...fallbackLabels, ...translated };
+      } else {
+        return fallbackLabels;
+      }
+    } catch (error) {
+      return fallbackLabels;
+    }
+  };
+
+  // Get assistant info with fallback - NOW REACTIVE
+  const getAssistantInfo = () => {
+    try {
+      const name = t('demo:heroChat.assistant.name');
+      const status = t('demo:heroChat.assistant.status');
+      
+      return {
+        name: (name && name !== 'demo:heroChat.assistant.name') ? name : 'Customate Assistant',
+        status: (status && status !== 'demo:heroChat.assistant.status') ? status : 'Online'
+      };
+    } catch (error) {
+      return {
+        name: 'Customate Assistant',
+        status: 'Online'
+      };
+    }
+  };
+
+  // NOW THESE ARE REACTIVE - they update when language changes
+  const chatExamples = getChatExamples();
+  const tabLabels = getTabLabels();
+  const assistantInfo = getAssistantInfo();
 
   // Helper function to clear all timers
   const clearAllTimers = () => {
@@ -80,6 +149,34 @@ const HeroSection = () => {
     timerIdsRef.current.push(id);
     return id;
   };
+
+  // NEW: Handle language changes
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      // Clear current conversation and reset chat
+      clearAllTimers();
+      setMessages([]);
+      setInputValue('');
+      setIsTyping(false);
+      setShowInputCursor(false);
+      setConversationActive(false);
+      
+      // Update current language
+      setCurrentLanguage(i18n.language);
+      
+      // Start new conversation with new language after a short delay
+      createTimer(() => {
+        startConversation();
+      }, 500);
+    };
+
+    // Listen for language changes
+    i18n.on('languageChanged', handleLanguageChange);
+    
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
 
   // Handle page visibility changes
   useEffect(() => {
@@ -143,7 +240,7 @@ const HeroSection = () => {
     return () => {
       clearAllTimers();
     };
-  }, [activeTab, isHidden]);
+  }, [activeTab, isHidden, currentLanguage]); // ADD currentLanguage as dependency
   
   // Setup tab rotation
   const setupTabRotation = () => {
@@ -184,9 +281,11 @@ const HeroSection = () => {
     // Set flag to prevent other conversations from starting
     setConversationActive(true);
     
-    // Get conversation messages for current tab
-    const conversation = chatExamples[activeTab];
-    if (!conversation || conversation.length === 0) {
+    // Get conversation messages for current tab (NOW ALWAYS FRESH)
+    const currentChatExamples = getChatExamples();
+    const conversation = currentChatExamples[activeTab];
+    
+    if (!conversation || !Array.isArray(conversation) || conversation.length === 0) {
       setConversationActive(false);
       return;
     }
@@ -207,6 +306,18 @@ const HeroSection = () => {
       }
       
       const currentMessage = conversation[messageIndex];
+      
+      // Validate message structure
+      if (!currentMessage || !currentMessage.role || !currentMessage.text) {
+        messageIndex++;
+        if (messageIndex < conversation.length) {
+          createTimer(runConversation, 100);
+        } else {
+          setConversationActive(false);
+          currentConversationRef.current = null;
+        }
+        return;
+      }
       
       if (currentMessage.role === 'user') {
         // Handle user message
@@ -239,6 +350,12 @@ const HeroSection = () => {
   
   // Handle user message display
   const handleUserMessage = (message, onComplete) => {
+    // Validate message
+    if (!message || !message.text) {
+      if (onComplete) onComplete();
+      return;
+    }
+    
     // First simulate typing
     simulateTyping(message.text, () => {
       // Then add the message to the chat
@@ -252,6 +369,12 @@ const HeroSection = () => {
   
   // Handle bot message display
   const handleBotMessage = (message, onComplete) => {
+    // Validate message
+    if (!message || !message.text) {
+      if (onComplete) onComplete();
+      return;
+    }
+    
     // Show typing indicator
     setIsTyping(true);
     
@@ -270,6 +393,12 @@ const HeroSection = () => {
   
   // Simulate typing animation
   const simulateTyping = (text, onComplete) => {
+    // Validate text
+    if (!text) {
+      if (onComplete) createTimer(onComplete, 300);
+      return;
+    }
+    
     // Clear input and show cursor
     setInputValue('');
     setShowInputCursor(true);
@@ -305,6 +434,11 @@ const HeroSection = () => {
 
   // Message bubble component
   const MessageBubble = ({ message }) => {
+    // Validate message
+    if (!message || !message.role || !message.text) {
+      return null;
+    }
+    
     const { role, text } = message;
     
     return (
@@ -336,8 +470,7 @@ const HeroSection = () => {
     <section 
       ref={heroRef} 
       id="hero"
-      className="relative mt-16 pt-20 pb-24 overflow-hidden bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900"
-    >
+      className="relative mt-16 pt-4 pb-8 overflow-hidden bg-gradient-to-br from-slate-900 via-gray-800 to-slate-900"    >
       {/* Modern Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Static Gradients */}
@@ -383,42 +516,18 @@ const HeroSection = () => {
             <div className="space-y-6">
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-orange-400">
                 <span className="h-2 w-2 rounded-full bg-orange-500 mr-2"></span>
-                <span className="text-sm font-medium uppercase tracking-wider">{t('hero.badge')}</span>
+                <span className="text-sm font-medium uppercase tracking-wider">{t('home:hero.badge')}</span>
               </div>
               
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-none text-white">
-                  {t('hero.title.part1')} <br/>
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-300">{t('hero.title.part2')}</span>
+                  {t('home:hero.title.part1')} <br/>
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-300">{t('home:hero.title.part2')}</span>
                 </h1>
               
               <p className="text-xl md:text-2xl font-light max-w-2xl text-gray-300">
-                {t('hero.subtitle')}
+                {t('home:hero.subtitle')}
               </p>
-              
-              <div className="flex flex-wrap gap-4 pt-6">
-                <Button
-                  as="a"
-                  href="/register"
-                  variant="primary"
-                  size="lg"
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 border-0 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-orange-500/20"
-                >
-                  {t('cta.startFree', { ns: 'common' })}
-                </Button>
-                
-              <Button
-                as="a"
-                href="https://youtu.be/sW2XR_rTfi0"
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="outline"
-                size="lg"
-                className="text-white border-white/30 hover:bg-white/10 backdrop-blur-sm"
-              >
-                {t('cta.watchDemo', { ns: 'common' })}
-              </Button>
-
-              </div>
+              {/* Buttons removed per request */}
             </div>
           </div>
           
@@ -433,10 +542,10 @@ const HeroSection = () => {
                     <div className="text-2xl font-bold text-orange-600">C</div>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">Customate Assistant</h3>
+                    <h3 className="text-white font-bold text-lg">{assistantInfo.name}</h3>
                     <div className="flex items-center">
                       <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-                      <p className="text-orange-100 text-sm">Online</p>
+                      <p className="text-orange-100 text-sm">{assistantInfo.status}</p>
                     </div>
                   </div>
                 </div>
@@ -448,7 +557,7 @@ const HeroSection = () => {
                 >
                   {messages.map((msg, index) => (
                     <MessageBubble
-                      key={`${activeTab}-${index}`}
+                      key={`${activeTab}-${index}-${currentLanguage}`}
                       message={msg}
                     />
                   ))}
@@ -509,7 +618,7 @@ const HeroSection = () => {
                           : 'text-white/70 hover:text-white'
                         }`}
                     >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {tabLabels[tab] || tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                   ))}
                 </div>

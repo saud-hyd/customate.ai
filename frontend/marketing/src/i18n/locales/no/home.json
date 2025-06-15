@@ -1,54 +1,44 @@
 {
   "hero": {
-    "badge": "AI-drevet kundeservice",
+    "badge": "Dette er Customate",
     "title": {
-      "part1": "Bygg Intelligente",
-      "part2": "AI-Chatboter",
-      "part3": "for Din Bedrift"
+      "part1": "Automatiser din virksomhet,",
+      "part2": "kundesupport operasjoner."
     },
-    "subtitle": "Transformer kundeinteraksjoner med tilpassede AI-assistenter som forstår din bedrift og gir eksepsjonell support 24/7.",
-    "cta": {
-      "primary": "Start Gratis Prøveperiode",
-      "secondary": "Se Demo"
-    },
-    "features": [
-      "Ingen kredittkort påkrevd",
-      "Sett opp på 5 minutter",
-      "24/7 kundesupport"
-    ]
+    "subtitle": "En AI-drevet chatbot som svarer på alle dine kunders spørsmål. Engasjer, assist og konverter—direkte fra ditt nettstedets hjørne og på tvers av alle dine sosiale mediekanaler."
   },
   "features": {
-    "badge": "Kraftige Funksjoner",
-    "title": {
-      "part1": "Alt du trenger for",
-      "part2": "Intelligent Kundeservice"
-    },
-    "subtitle": "Fra tilpassede kunnskapsbaser til sømløse integrasjoner - vi har alt du trenger for å bygge eksepsjonelle AI-assistenter.",
-    "items": [
-      {
-        "title": "Tilpassede Kunnskapsbaser",
-        "description": "Tren din AI med dine egne dokumenter, FAQ-er og innhold for presise, merkespesifikke svar."
+    "heading": "Oppladning av virksomhetssamtaler",
+    "subheading": "Customate leverer intelligente, kontekstbevisste svar på dine kunders spørsmål",
+    "cards": {
+      "knowledgeIntegration": {
+        "title": "Kunnskapsintegrasjon",
+        "description": "Vår RAG-implementering kobler dine dokumenter, FAQ-er og data direkte til samtale-AI for kontekstbevisste responser."
       },
-      {
-        "title": "Multi-kanal Distribusjon",
-        "description": "Distribuer på nettsted, mobilapp, sosiale medier og meldingsplattformer med ett enkelt dashboard."
+      "industryBehaviors": {
+        "title": "Industriatferd",
+        "description": "Forhåndskonfigurerte AI-atferd for ulike bransjer som forstår spesialisert vokabular spesifikt for din virksomhet."
       },
-      {
-        "title": "Intelligent Routing",
-        "description": "Rut automatisk komplekse forespørsler til menneskelige agenter med kontekst og samtalehistorikk."
+      "multiChannel": {
+        "title": "Flerkanalintegrasjon",
+        "description": "Distribuer din AI-agent på tvers av nettsted, mobilapp, sosiale medier og alle dine kundeengasjementsplattformer."
       },
-      {
+      "semantic": {
+        "title": "Semantisk forståelse",
+        "description": "Vår AI forstår kontekst, sentiment og intensjon utover nøkkelord for virkelig menneskelignende samtaler."
+      },
+      "analytics": {
         "title": "Sanntidsanalyse",
-        "description": "Spor ytelse, kundetilfredshet og identifiser muligheter for forbedring med detaljerte analyser."
+        "description": "Overvåk samtaler, spor tilfredshet og identifiser optimaliseringsmuligheter gjennom vårt intuitive dashbord."
       },
-      {
-        "title": "Enterprise-sikkerhet",
-        "description": "Bransjeledende sikkerhet med kryptering, tilgangskontroller og samsvarsstandarder."
-      },
-      {
-        "title": "Enkel Integrasjon",
-        "description": "Koble til dine eksisterende verktøy og arbeidsflyter med våre kraftige API-er og webhooks."
+      "brand": {
+        "title": "Merketilpasning",
+        "description": "Fullstendig visuell kontroll med tilpassede farger, logoer og samtalestiler som matcher din merkevareidentitet."
       }
-    ]
+    }
+  },
+  "cta": {
+    "title": "Start bygging av din AI-assistent i dag",
+    "subtitle": "Bli med i AI-revolusjonen og transformer hvordan du engasjerer med dine kunder. Ingen teknisk kunnskap kreves."
   }
 }
