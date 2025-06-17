@@ -91,21 +91,15 @@ const Header = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-{/* Logo Section */}
+{/* Logo Section - Round white background logo */}
 <Link to="/" className="flex items-center space-x-3 group">
-  <div className="relative">
-    <div className="w-10 h-10 bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-orange-200 transition-all duration-300 group-hover:scale-105">
-      {/* Add your chosen logo SVG here */}
-<svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-  <path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/>
-  <circle cx="17" cy="6" r="1"/>
-  <circle cx="19" cy="4" r="0.5"/>
-  <circle cx="21" cy="6" r="0.5"/>
-  <path d="M15 7l1-1 1 1-1 1z"/>
-</svg>
-    </div>
-    {/* Removed blur class from this line */}
-    <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl opacity-30 group-hover:opacity-60 transition-all duration-300"></div>
+  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100 group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
+    {/* Your Logo */}
+    <img 
+      src="/assets/customate-logo.svg" 
+      alt="Customate.ai Logo" 
+      className="w-8 h-8 object-contain"
+    />
   </div>
   <span className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors duration-300">
     Customate.ai

@@ -1,51 +1,37 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
-// Layout components
+// Layout Components
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import CookieConsent from './components/ui/CookieConsent'; // New import
 
-// Main page components
+// Pages
 import HomePage from './pages/HomePage';
+import FeaturesPage from './pages/FeaturesPage';
 import PricingPage from './pages/PricingPage';
 import ContactPage from './pages/ContactPage';
-import FeaturesPage from './pages/FeaturesPage';
+import BlogPage from './pages/BlogPage';
+import AboutPage from './pages/AboutPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
-import AboutPage from './pages/AboutPage';
 import CookiesPage from './pages/CookiesPage';
 import TestPage from './pages/TestPage';
+import CheckoutPage from './pages/CheckoutPage';
+import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 
-// Blog components
-import BlogPage from './pages/BlogPage';
-
-// Individual blog posts
+// Blog Posts
 import SavingsBlogPost from './pages/blog/SavingsBlogPost';
 import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
 import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
 
-// Existing pages
-import CheckoutPage from './pages/CheckoutPage';
-import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
-
-// CSS
-import './App.css';
-
-// ScrollToTop component
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return null;
-};
+// Utility Components
+import ScrollToTop from './components/ui/ScrollToTop';
 
 // Redirect component for external links
 const RedirectPage = ({ url }) => {
-  useEffect(() => {
+  React.useEffect(() => {
     window.location.href = url;
   }, [url]);
 
@@ -85,6 +71,10 @@ function App() {
         <ScrollToTop />
         <div className="flex flex-col min-h-screen">
           <Header />
+          
+          {/* Cookie Consent Popup */}
+          <CookieConsent />
+          
           <main className="flex-grow">
             <Routes>
               {/* Main pages */}

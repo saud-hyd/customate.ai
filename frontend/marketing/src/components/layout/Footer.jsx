@@ -26,7 +26,7 @@ const Footer = () => {
       madeIn: "Made in Germany 🇩🇪"
     },
     es: {
-      description: "Chatbots impulsados por IA para empresas. Construye soporte al cliente inteligente con comportamientos específicos de la industria y bases de conocimiento personalizadas.",
+      description: "Automatiza el Soporte al Cliente.",
       product: "Producto",
       company: "Empresa",
       features: "Características",
@@ -42,7 +42,7 @@ const Footer = () => {
       madeIn: "Hecho en Alemania 🇩🇪"
     },
     de: {
-      description: "KI-gestützte Chatbots für Unternehmen. Erstellen Sie intelligenten Kundensupport mit branchenspezifischen Verhaltensweisen und benutzerdefinierten Wissensbasen.",
+      description: "Automatisieren Sie den Kundensupport.",
       product: "Produkt",
       company: "Unternehmen",
       features: "Funktionen",
@@ -58,7 +58,7 @@ const Footer = () => {
       madeIn: "Hergestellt in Deutschland 🇩🇪"
     },
     fr: {
-      description: "Chatbots alimentés par l'IA pour les entreprises. Créez un support client intelligent avec des comportements spécifiques à l'industrie et des bases de connaissances personnalisées.",
+      description: "Automatisez le Support Client.",
       product: "Produit",
       company: "Entreprise",
       features: "Fonctionnalités",
@@ -74,7 +74,7 @@ const Footer = () => {
       madeIn: "Fabriqué en Allemagne 🇩🇪"
     },
     zh: {
-      description: "为企业提供AI驱动的聊天机器人。构建具有行业特定行为和自定义知识库的智能客户支持。",
+      description: "自动化客户支持。",
       product: "产品",
       company: "公司",
       features: "功能",
@@ -91,7 +91,7 @@ const Footer = () => {
     },
     // NEW: Norwegian translations
     no: {
-      description: "AI-drevne chatboter for bedrifter. Bygg intelligent kundestøtte med bransjespesifikk oppførsel og tilpassede kunnskapsbaser.",
+      description: "Automatiser Kundestøtte.",
       product: "Produkt",
       company: "Selskap",
       features: "Funksjoner",
@@ -147,14 +147,21 @@ const Footer = () => {
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-8">
           
-          {/* Company Info */}
-          <div className="lg:col-span-1">
-            <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold text-lg">C</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Customate.ai</h3>
-            </div>
+{/* Company Info */}
+<div className="lg:col-span-1">
+  <div className="flex items-center mb-6">
+    {/* Footer Logo - Round white background */}
+    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100 mr-3">
+      <img 
+        src="/assets/customate-logo.svg" 
+        alt="Customate.ai Logo" 
+        className="w-8 h-8 object-contain"
+      />
+    </div>
+    <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+      Customate.ai
+    </span>
+  </div>
             
             <p className="text-gray-600 text-sm leading-relaxed mb-6">
               {currentLang.description}
@@ -245,21 +252,6 @@ const Footer = () => {
                 </li>
               </ul>
             </div>
-          </div>
-        </div>
-        
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-100 pt-6 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm mb-4 md:mb-0">
-            {currentLang.rights}
-          </p>
-          
-          <div className="flex items-center space-x-6 text-sm text-gray-500">
-            <span className="flex items-center">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              {currentLang.systemStatus}
-            </span>
-            <span>{currentLang.madeIn}</span>
           </div>
         </div>
       </div>
