@@ -231,27 +231,6 @@ const CookiesPage = () => {
                 We encourage you to review this Cookie Policy periodically to stay informed about how we use cookies and tracking technologies.
               </p>
             </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Contact Us</h2>
-              <p className="text-gray-700 mb-4">
-                If you have any questions about this Cookie Policy or our use of cookies, please contact us:
-              </p>
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-gray-700"><strong>Email:</strong> admin@customate.ai</p>
-                    <p className="text-gray-700"><strong>Privacy Questions:</strong> contact@customate.ai</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-700"><strong>Address:</strong></p>
-                    <p className="text-gray-700">August-Bebel-Str. 89 - Haus 7</p>
-                    <p className="text-gray-700">14482 Potsdam, Germany</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
           </div>
         </div>
       </div>

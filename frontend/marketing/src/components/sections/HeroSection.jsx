@@ -514,10 +514,7 @@ const HeroSection = () => {
           {/* Left Column - Text Content */}
           <div className="lg:w-1/2 space-y-8">
             <div className="space-y-6">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-orange-400">
-                <span className="h-2 w-2 rounded-full bg-orange-500 mr-2"></span>
-                <span className="text-sm font-medium uppercase tracking-wider">{t('home:hero.badge')}</span>
-              </div>
+
               
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-none text-white">
                   {t('home:hero.title.part1')} <br/>

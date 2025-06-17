@@ -48,7 +48,7 @@ const CTASection = () => {
               size="lg"
               className="bg-white text-orange-600 hover:bg-yellow-100 focus:ring-orange-600"
             >
-              {t('cta.getStarted', { ns: 'common' })}
+              {t('Get Started', { ns: 'common' })}
             </Button>
             
             <Button
@@ -58,7 +58,7 @@ const CTASection = () => {
               size="lg"
               className="border-white text-white hover:bg-white/10"
             >
-              {t('cta.watchDemo', { ns: 'common' })}
+              {t('Watch Demo', { ns: 'common' })}
             </Button>
           </div>
           <p className="mt-6 text-sm text-orange-100">
