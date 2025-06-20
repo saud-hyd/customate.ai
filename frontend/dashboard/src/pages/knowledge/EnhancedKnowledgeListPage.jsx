@@ -330,29 +330,35 @@ const EnhancedKnowledgeListPage = () => {
             ) : (
               <ul className="space-y-1">
                 {collections.map((collection) => (
-                  <li key={collection.collection_id} className="group">
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => setActiveCollection(collection)}
-                        className={`flex-grow flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                          activeCollection?.collection_id === collection.collection_id
-                            ? 'bg-orange-100 text-orange-700'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        <FolderIcon className="h-5 w-5 mr-3 text-gray-400" />
-                        <span className="truncate flex-grow">{collection.name}</span>
-                        <span className="text-xs text-gray-500">{collection.item_count || 0}</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCollection(collection)}
-                        className="p-1 rounded-full text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Delete collection"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </li>
+                <li key={collection.collection_id} className="group">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setActiveCollection(collection)}
+                      className={`flex items-center px-3 py-2 text-sm font-medium rounded-md flex-1 min-w-0 mr-2 ${
+                        activeCollection?.collection_id === collection.collection_id
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <FolderIcon className="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" />
+                      <div className="flex-1 min-w-0 flex items-center justify-between">
+                        <span className="truncate pr-2" title={collection.name}>
+                          {collection.name}
+                        </span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">
+                          {collection.item_count || 0}
+                        </span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCollection(collection)}
+                      className="p-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                      title="Delete collection"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </li>
                 ))}
               </ul>
             )}

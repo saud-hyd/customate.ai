@@ -191,11 +191,6 @@ const PricingSection = () => {
         </div>
       </div>
 
-      <div className="mt-16 text-center">
-        <p className="text-base text-gray-600">
-          {t('footer.customPlan')} <a href="/contact" className="text-primary-600 font-medium hover:text-primary-500 underline">{t('footer.contactUs')}</a> {t('footer.tailoredSolution')}
-        </p>
-      </div>
     </SectionContainer>
   );
 };

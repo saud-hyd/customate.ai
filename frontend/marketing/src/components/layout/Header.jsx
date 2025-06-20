@@ -82,29 +82,30 @@ const Header = () => {
   );
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/95 shadow-lg border-b border-gray-100' 
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-{/* Logo Section - Round white background logo */}
-<Link to="/" className="flex items-center space-x-3 group">
-  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100 group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
-    {/* Your Logo */}
-    <img 
-      src="/assets/customate-logo.svg" 
-      alt="Customate.ai Logo" 
-      className="w-8 h-8 object-contain"
-    />
-  </div>
-  <span className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors duration-300">
-    Customate.ai
-  </span>
-</Link>
+<header
+  className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    isScrolled 
+      ? 'bg-white/95 shadow-lg border-b border-gray-100' 
+      : 'bg-transparent'
+  }`}
+>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex justify-between items-center h-16">
+      <Link to="/" className="flex items-center space-x-3 group">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+          <img 
+            src="/assets/customate-logo.svg" 
+            alt="Customate.ai Logo" 
+            className="w-8 h-8 object-contain"
+          />
+        </div>
+        {/* Replace text with your SVG */}
+        <img 
+          src="/assets/Logo0520252.svg" 
+          alt="Customate.ai" 
+          className="h-8 object-contain group-hover:scale-105 transition-all duration-300"
+        />
+      </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">

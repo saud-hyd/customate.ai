@@ -141,27 +141,30 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-white border-t border-gray-100">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-8">
-          
-{/* Company Info */}
-<div className="lg:col-span-1">
-  <div className="flex items-center mb-6">
-    {/* Footer Logo - Round white background */}
-    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100 mr-3">
-      <img 
-        src="/assets/customate-logo.svg" 
-        alt="Customate.ai Logo" 
-        className="w-8 h-8 object-contain"
-      />
-    </div>
-    <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-      Customate.ai
-    </span>
-  </div>
+<footer className="bg-white border-t border-gray-100">
+  <div className="max-w-7xl mx-auto px-6 py-12">
+    
+    {/* Main Footer Content */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-8">
+      
+      {/* Company Info */}
+      <div className="lg:col-span-1">
+        <div className="flex items-center mb-6">
+          {/* Footer Logo - No visible background */}
+          <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3">
+            <img 
+              src="/assets/customate-logo.svg" 
+              alt="Customate.ai Logo" 
+              className="w-8 h-8 object-contain"
+            />
+          </div>
+          {/* Replace text with your SVG */}
+          <img 
+            src="/assets/Logo0520252.svg" 
+            alt="Customate.ai" 
+            className="h-8 object-contain"
+          />
+        </div>
             
             <p className="text-gray-600 text-sm leading-relaxed mb-6">
               {currentLang.description}
