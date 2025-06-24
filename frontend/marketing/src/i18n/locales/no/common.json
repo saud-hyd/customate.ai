@@ -5,6 +5,7 @@
     "blog": "Blogg",
     "contact": "Kontakt",
     "login": "Logg inn",
+    "signup": "Registrer deg",
     "getStarted": "Kom i gang",
     "demo": "Demo"
   },
@@ -50,5 +51,13 @@
     "about": "Om oss",
     "contact": "Kontakt",
     "blog": "Blogg"
+  },
+  "cookieConsent": {
+    "title": "Vi bruker informasjonskapsler",
+    "description": "Vi bruker informasjonskapsler for å forbedre din nettleseropplevelse, levere tilpasset innhold og analysere trafikken vår. Ved å klikke på 'Godta alle', samtykker du til vår bruk av informasjonskapsler.",
+    "learnMore": "Lær mer om vår",
+    "cookiePolicy": "Informasjonskapselpolicy",
+    "accept": "Godta alle",
+    "decline": "Avslå"
   }
 }

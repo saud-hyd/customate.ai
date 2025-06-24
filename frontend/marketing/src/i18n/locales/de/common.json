@@ -5,6 +5,7 @@
     "blog": "Blog",
     "contact": "Kontakt",
     "login": "Anmelden",
+    "signup": "Registrieren",
     "getStarted": "Loslegen",
     "demo": "Demo"
   },
@@ -50,5 +51,13 @@
     "about": "Über uns",
     "contact": "Kontakt",
     "blog": "Blog"
+  },
+  "cookieConsent": {
+    "title": "Wir verwenden Cookies",
+    "description": "Wir verwenden Cookies, um Ihre Browsererfahrung zu verbessern, personalisierte Inhalte bereitzustellen und unseren Datenverkehr zu analysieren. Durch Klicken auf 'Alle akzeptieren' stimmen Sie der Verwendung von Cookies zu.",
+    "learnMore": "Erfahren Sie mehr über unsere",
+    "cookiePolicy": "Cookie-Richtlinie",
+    "accept": "Alle akzeptieren",
+    "decline": "Ablehnen"
   }
 }

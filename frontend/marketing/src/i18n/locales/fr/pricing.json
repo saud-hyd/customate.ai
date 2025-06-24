@@ -13,9 +13,7 @@
       "description": "Parfait pour essayer Customate.ai",
       "features": [
         "100 messages par mois",
-        "5 utilisateurs actifs",
         "500 KB de stockage",
-        "3 collections de connaissances",
         "Personnalisation basique du chatbot",
         "Support communautaire"
       ],
@@ -25,49 +23,39 @@
       "name": "Basic",
       "description": "Pour les petites entreprises et startups",
       "features": [
-        "2 000 messages par mois",
-        "25 utilisateurs actifs",
+        "3 000 messages par mois",
         "5 MB de stockage",
-        "10 collections de connaissances",
-        "Image de marque personnalisée",
         "Support par email",
         "Tableau de bord analytique",
         "Accès API"
       ],
       "cta": "Commencer avec Basic"
     },
-    "professional": {
-      "name": "Professional",
+    "standard": {
+      "name": "Standard",
       "description": "Pour les entreprises en croissance avec des besoins avancés",
       "features": [
-        "5 000 messages par mois",
-        "100 utilisateurs actifs",
+        "10 000 messages par mois",
         "25 MB de stockage",
-        "50 collections de connaissances",
         "Personnalisation avancée du chatbot",
         "Support email prioritaire",
         "Analytiques avancées",
-        "Domaine personnalisé",
         "Collaboration d'équipe"
       ],
-      "cta": "Commencer avec Professional"
+      "cta": "Commencer avec Standard"
     },
-    "enterprise": {
-      "name": "Enterprise",
+    "professional": {
+      "name": "Professional",
       "description": "Pour les organisations avec des exigences complexes",
       "features": [
-        "100 000 messages par mois",
-        "500 utilisateurs actifs",
-        "100 MB de stockage",
-        "250 collections de connaissances",
+        "40 000 messages par mois",
+        "35 MB de stockage",
         "Options de déploiement personnalisées",
         "Gestionnaire de compte dédié",
         "Support téléphonique et email",
-        "Garanties SLA",
-        "Fonctionnalités de sécurité avancées",
         "Intégrations personnalisées"
       ],
-      "cta": "Contacter les Ventes"
+      "cta": "Commencer avec Professional"
     }
   },
   "badges": {

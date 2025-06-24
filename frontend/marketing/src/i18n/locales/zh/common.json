@@ -5,6 +5,7 @@
     "blog": "博客",
     "contact": "联系我们",
     "login": "登录",
+    "signup": "注册",
     "getStarted": "开始使用",
     "demo": "演示"
   },
@@ -50,5 +51,13 @@
     "about": "关于我们",
     "contact": "联系我们",
     "blog": "博客"
+  },
+  "cookieConsent": {
+    "title": "我们使用Cookie",
+    "description": "我们使用Cookie来增强您的浏览体验，提供个性化内容，并分析我们的流量。点击“接受所有”即表示您同意我们使用Cookie。",
+    "learnMore": "了解更多关于我们的",
+    "cookiePolicy": "Cookie政策",
+    "accept": "接受所有",
+    "decline": "拒绝"
   }
 }

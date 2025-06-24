@@ -90,45 +90,51 @@ const RegisterPage = () => {
           toast.error(errorDetail);
         } else if (error.response.status === 422) {
           toast.error('Invalid input data. Please check the form and try again.');
-        } else if (error.response.status === 400) {
-          toast.error('A user with this email already exists.');
         } else {
-          toast.error('Registration failed. Please try again.');
+          toast.error(`Registration failed: ${error.response.status}`);
         }
       } else if (error.request) {
         // The request was made but no response was received
-        toast.error('No response from server. Please check your connection.');
+        toast.error('Unable to connect to the server. Please check your internet connection.');
       } else {
-        // Something happened in setting up the request that triggered an Error
-        toast.error('Error setting up the request. Please try again later.');
+        // Something happened in setting up the request
+        toast.error('An unexpected error occurred. Please try again.');
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Google OAuth registration
   const handleGoogleLogin = () => {
     console.log('Initiating Google registration...');
-    loginWithGoogle(true); // true = registration mode
+    loginWithGoogle(true); // true indicates this is for registration
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <div className="mb-6">
-          <img
-            src="/logo.svg"
-            alt="Customate.ai"
-            className="h-8 mx-auto mb-2"
-          />
-          <h1 className="text-2xl font-bold text-center">Create Your Account</h1>
+        {/* Logo Section - Consistent with Header/Footer */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100">
+              <img 
+                src="/assets/customate-logo.svg" 
+                alt="Customate.ai Logo" 
+                className="w-10 h-10 object-contain"
+              />
+            </div>
+            <span className="text-2xl font-bold text-gray-900">
+              Customate.ai
+            </span>
+          </div>
         </div>
+
+        <h2 className="text-3xl font-bold mb-6 text-center">Create Account</h2>
         
-        <form onSubmit={handleRegister} className="space-y-6">
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email *
+              Email Address *
             </label>
             <input
               type="email"
@@ -137,7 +143,7 @@ const RegisterPage = () => {
               value={formData.email}
               onChange={handleChange}
               className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
-              placeholder="you@example.com"
+              placeholder="your@email.com"
               required
             />
           </div>

@@ -71,17 +71,35 @@ const LoginPage = () => {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+          {/* Logo Section - Consistent with Header/Footer */}
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100">
+                <img 
+                  src="/assets/customate-logo.svg" 
+                  alt="Customate.ai Logo" 
+                  className="w-10 h-10 object-contain"
+                />
+              </div>
+              <span className="text-2xl font-bold text-gray-900">
+                Customate.ai
+              </span>
+            </div>
+          </div>
+
           <h2 className="text-2xl font-bold mb-6 text-center">Check Your Email</h2>
           <p className="mb-6 text-center text-gray-600">
             We've sent a magic link to <strong>{email}</strong>. 
             Click the link in the email to sign in.
           </p>
-          <button
-            onClick={() => setIsMagicLinkSent(false)}
-            className="w-full py-2 px-4 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-          >
-            Back to Sign In
-          </button>
+          <div className="text-center">
+            <button
+              onClick={() => setIsMagicLinkSent(false)}
+              className="text-orange-600 hover:text-orange-500 font-medium"
+            >
+              Back to Login
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -90,25 +108,35 @@ const LoginPage = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <div className="mb-6">
-          <img
-            src="/logo.svg"
-            alt="Customate.ai"
-            className="h-8 mx-auto mb-2"
-          />
-          <h1 className="text-2xl font-bold text-center">Welcome Back</h1>
+        {/* Logo Section - Consistent with Header/Footer */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100">
+              <img 
+                src="/assets/customate-logo.svg" 
+                alt="Customate.ai Logo" 
+                className="w-10 h-10 object-contain"
+              />
+            </div>
+            <span className="text-2xl font-bold text-gray-900">
+              Customate.ai
+            </span>
+          </div>
         </div>
+
+        <h2 className="text-3xl font-bold mb-6 text-center">Welcome Back</h2>
         
+        {/* Display success message if any */}
         {message && (
-          <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
-            <p>{message}</p>
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            {message}
           </div>
         )}
         
-        <form onSubmit={handlePasswordLogin} className="space-y-6">
+        <form onSubmit={handlePasswordLogin} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Email Address
             </label>
             <input
               type="email"
@@ -116,26 +144,22 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
-              placeholder="name@example.com"
+              placeholder="your@email.com"
               required
             />
           </div>
           
           <div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <Link to="/forgot-password" className="text-sm text-orange-600 hover:text-orange-500">
-                Forgot password?
-              </Link>
-            </div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-2 border rounded focus:ring-orange-500 focus:border-orange-500"
+              placeholder="••••••••"
               required
             />
           </div>
@@ -145,20 +169,13 @@ const LoginPage = () => {
             className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            {isLoading ? 'Signing In...' : 'Sign In'}
           </button>
-          
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={handleMagicLinkRequest}
-              className="text-orange-600 hover:text-orange-500 text-sm font-medium"
-              disabled={isLoading}
-            >
-              Sign in with magic link instead
-            </button>
-          </div>
         </form>
+        
+        <div className="mt-4 text-center">
+
+        </div>
         
         <div className="mt-6">
           <div className="relative">
@@ -183,6 +200,12 @@ const LoginPage = () => {
           Don't have an account?{' '}
           <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
             Sign up
+          </Link>
+        </p>
+        
+        <p className="mt-2 text-center text-sm text-gray-600">
+          <Link to="/forgot-password" className="text-orange-600 hover:text-orange-500">
+            Forgot your password?
           </Link>
         </p>
       </div>

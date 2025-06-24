@@ -13,11 +13,8 @@
       "description": "Perfect for trying out Customate.ai",
       "features": [
         "100 messages per month",
-        "5 active users",
         "500 KB storage",
-        "3 knowledge collections",
-        "Basic chatbot customization",
-        "Community support"
+        "Basic chatbot customization"
       ],
       "cta": "Start for Free"
     },
@@ -25,49 +22,38 @@
       "name": "Basic",
       "description": "For small businesses and startups",
       "features": [
-        "2,000 messages per month",
-        "25 active users",
+        "3,000 messages per month",
         "5 MB storage",
-        "10 knowledge collections",
-        "Custom branding",
         "Email support",
         "Analytics dashboard",
         "API access"
       ],
       "cta": "Start with Basic"
     },
-    "professional": {
-      "name": "Professional",
+    "standard": {
+      "name": "Standard",
       "description": "For growing businesses with advanced needs",
       "features": [
-        "5,000 messages per month",
-        "100 active users",
+        "10,000 messages per month",
         "25 MB storage",
-        "50 knowledge collections",
         "Advanced chatbot customization",
         "Priority email support",
-        "Advanced analytics",
-        "Custom domain",
-        "Team collaboration"
+        "Advanced analytics"
       ],
-      "cta": "Start with Professional"
+      "cta": "Start with Standard"
     },
-    "enterprise": {
-      "name": "Enterprise",
+    "professional": {
+      "name": "Professional",
       "description": "For organizations with complex requirements",
       "features": [
-        "100,000 messages per month",
-        "500 active users",
-        "100 MB storage",
-        "250 knowledge collections",
+        "40,000 messages per month",
+        "35 MB storage",
         "Custom deployment options",
         "Dedicated account manager",
         "Phone & email support",
-        "SLA guarantees",
-        "Advanced security features",
         "Custom integrations"
       ],
-      "cta": "Contact Sales"
+      "cta": "Start with Professional"
     }
   },
   "badges": {
