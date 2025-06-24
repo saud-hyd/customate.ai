@@ -10,13 +10,18 @@ const Sidebar = () => {
       {/* Clean Logo Header */}
       <div className="px-6 py-5 border-b border-gray-700/50">
         <div className="flex items-center">
-          {/* Logo without background circle */}
+          {/* Small logo icon (previous) */}
           <img 
             src="/assets/customate-logo.svg" 
             alt="Customate.ai Logo" 
             className="w-8 h-8 object-contain"
           />
-          <h1 className="ml-3 text-lg font-bold text-white">Customate.ai</h1>
+          {/* Brand logo text replacement */}
+          <img 
+            src="/assets/Logo0520252.svg" 
+            alt="Customate.ai" 
+            className="ml-3 h-6 object-contain"
+          />
         </div>
       </div>
       
