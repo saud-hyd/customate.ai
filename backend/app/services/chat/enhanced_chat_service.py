@@ -13,6 +13,7 @@ from app.services.chat.context_manager import ContextManager
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
 from app.services.llm.deepseek_service import DeepSeekService
 from app.services.industry.industry_factory import IndustryFactory
+from app.core.config.multilingual_settings import multilingual_settings
 from app.repositories.integration_repository import IntegrationRepository
 from app.services.integration.integration_service import IntegrationService
 from app.core import logger
@@ -611,3 +612,43 @@ class EnhancedChatService:
                 "created_at": datetime.utcnow().isoformat()
             }
         }        
+async def get_knowledge_context(
+    self, 
+    user_message: str, 
+    client_id: str, 
+    collection_id: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Get relevant knowledge context for the user message with multilingual support."""
+    try:
+        # Use enhanced search with multilingual support
+        search_results = await self.search_service.hybrid_search(
+            client_id=client_id,
+            query_text=user_message,
+            limit=5,
+            vector_threshold=0.7,
+            collection_id=collection_id,
+            enable_multilingual=multilingual_settings.MULTILINGUAL_SEARCH_ENABLED  # NEW
+        )
+        
+        context_items = []
+        for result in search_results.get("results", []):
+            context_items.append({
+                "title": result.get("title", ""),
+                "content": result.get("content", ""),
+                "source": result.get("collection_name", "Knowledge Base"),
+                "similarity": result.get("similarity", 0.0),
+                "language": result.get("query_language", "unknown"),  # NEW
+                "is_translated": not result.get("is_original_query", True)  # NEW
+            })
+        
+        # Log multilingual search results if enabled
+        if multilingual_settings.LOG_MULTILINGUAL_OPERATIONS and context_items:
+            translated_results = [item for item in context_items if item["is_translated"]]
+            if translated_results:
+                logger.info(f"Found {len(translated_results)} cross-language matches for query: {user_message}")
+        
+        return context_items
+        
+    except Exception as e:
+        logger.error(f"Error getting knowledge context: {str(e)}")
+        return []            
