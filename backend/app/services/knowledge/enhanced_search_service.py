@@ -1,10 +1,11 @@
-# app/services/knowledge/enhanced_search_service.py
+# app/services/knowledge/enhanced_search_service.py (UPDATED)
 from typing import List, Dict, Any, Optional
 import re
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, func
 
 from app.services.llm.llm_service import LLMService
+from app.services.knowledge.multilingual_service import MultilingualQueryService
 from app.repositories.vector_repository import VectorRepository
 from app.domain.knowledge.entities import KnowledgeItem, KnowledgeCollection
 from app.core.database.session import get_db_session
@@ -13,12 +14,13 @@ from app.core import logger
 class EnhancedSearchService:
     """
     Enhanced service for finding relevant knowledge items through 
-    hybrid search (combining vector and keyword search).
+    hybrid search with multilingual support.
     """
     
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
         self.vector_repo = VectorRepository()
+        self.multilingual_service = MultilingualQueryService()
     
     async def hybrid_search(
         self, 
@@ -28,10 +30,11 @@ class EnhancedSearchService:
         limit: int = 5, 
         vector_threshold: float = 0.7,
         collection_id: Optional[str] = None,
-        hybrid_ratio: float = 0.7  # Balance between vector (higher) and keyword (lower) results
+        hybrid_ratio: float = 0.7,
+        enable_multilingual: bool = True  # NEW: Toggle for multilingual search
     ) -> Dict[str, Any]:
         """
-        Perform hybrid search combining vector similarity and keyword matching.
+        Perform hybrid search with optional multilingual support.
         
         Args:
             client_id: ID of the client
@@ -41,6 +44,7 @@ class EnhancedSearchService:
             vector_threshold: Minimum similarity score for vector search
             collection_id: Optional collection ID to restrict search
             hybrid_ratio: Balance between vector and keyword results (0-1)
+            enable_multilingual: Whether to perform cross-language search
             
         Returns:
             Dictionary with search results and metadata
@@ -53,44 +57,108 @@ class EnhancedSearchService:
         hybrid_ratio = max(0.0, min(1.0, hybrid_ratio))
         
         # Calculate limits for vector and keyword search
-        vector_limit = max(3, int(limit * 1.5))  # Get more vector results for better ranking
-        keyword_limit = max(3, int(limit * 1.5))  # Same for keywords
-        
-        # Generate embeddings for query text
-        query_vector = await self.llm_service.generate_embeddings(query_text)
-        
-        if not query_vector or len(query_vector) == 0:
-            logger.error("Failed to generate embedding for query text")
-            return {"results": [], "metadata": {"error": "Failed to generate embedding"}}
+        vector_limit = max(3, int(limit * 1.5))
+        keyword_limit = max(3, int(limit * 1.5))
         
         # Get database session
         with get_db_session() as db:
-            # 1. Perform vector search
-            vector_results = await self._vector_search(
-                db=db,
-                query_vector=query_vector,
-                client_id=client_id,
-                query_text=query_text,
-                limit=vector_limit,
-                threshold=vector_threshold,
-                collection_id=collection_id,
-                filters=filters
-            )
+            all_results = []
             
-            # 2. Perform keyword search
-            keyword_results = await self._keyword_search(
-                db=db,
-                query_text=query_text,
-                client_id=client_id,
-                limit=keyword_limit,
-                collection_id=collection_id,
-                filters=filters
-            )
+            if enable_multilingual:
+                # MULTILINGUAL SEARCH: Generate queries in multiple languages
+                multilingual_queries = await self.multilingual_service.generate_multilingual_queries(
+                    db, query_text, client_id
+                )
+                
+                logger.info(f"Performing multilingual search with {len(multilingual_queries)} translated queries")
+                
+                # Search with each translated query
+                for query_data in multilingual_queries:
+                    query = query_data["query"]
+                    is_original = query_data["is_original"]
+                    language = query_data["language"]
+                    
+                    # Generate embeddings for this query
+                    query_vector = await self.llm_service.generate_embeddings(query)
+                    
+                    if not query_vector or len(query_vector) == 0:
+                        logger.warning(f"Failed to generate embedding for query in {language}: {query}")
+                        continue
+                    
+                    # 1. Perform vector search
+                    vector_results = await self._vector_search(
+                        db=db,
+                        query_vector=query_vector,
+                        client_id=client_id,
+                        query_text=query,
+                        limit=vector_limit,
+                        threshold=vector_threshold,
+                        collection_id=collection_id,
+                        filters=filters
+                    )
+                    
+                    # 2. Perform keyword search
+                    keyword_results = await self._keyword_search(
+                        db=db,
+                        query_text=query,
+                        client_id=client_id,
+                        limit=keyword_limit,
+                        collection_id=collection_id,
+                        filters=filters
+                    )
+                    
+                    # Add metadata about the query used
+                    for result in vector_results.get("results", []):
+                        result["query_language"] = language
+                        result["is_original_query"] = is_original
+                        result["translated_query"] = query if not is_original else None
+                    
+                    for result in keyword_results.get("results", []):
+                        result["query_language"] = language
+                        result["is_original_query"] = is_original
+                        result["translated_query"] = query if not is_original else None
+                    
+                    # Collect results
+                    all_results.extend(vector_results.get("results", []))
+                    all_results.extend(keyword_results.get("results", []))
+                
+            else:
+                # ORIGINAL SINGLE-LANGUAGE SEARCH
+                query_vector = await self.llm_service.generate_embeddings(query_text)
+                
+                if not query_vector or len(query_vector) == 0:
+                    logger.error("Failed to generate embedding for query text")
+                    return {"results": [], "metadata": {"error": "Failed to generate embedding"}}
+                
+                # 1. Perform vector search
+                vector_results = await self._vector_search(
+                    db=db,
+                    query_vector=query_vector,
+                    client_id=client_id,
+                    query_text=query_text,
+                    limit=vector_limit,
+                    threshold=vector_threshold,
+                    collection_id=collection_id,
+                    filters=filters
+                )
+                
+                # 2. Perform keyword search
+                keyword_results = await self._keyword_search(
+                    db=db,
+                    query_text=query_text,
+                    client_id=client_id,
+                    limit=keyword_limit,
+                    collection_id=collection_id,
+                    filters=filters
+                )
+                
+                all_results.extend(vector_results.get("results", []))
+                all_results.extend(keyword_results.get("results", []))
             
-            # 3. Merge results with hybrid ranking
+            # 3. Merge and deduplicate results
             merged_results = self._merge_search_results(
-                vector_results=vector_results.get("results", []),
-                keyword_results=keyword_results.get("results", []),
+                vector_results=all_results,
+                keyword_results=[],  # Already included in all_results
                 hybrid_ratio=hybrid_ratio,
                 limit=limit
             )
@@ -100,10 +168,10 @@ class EnhancedSearchService:
                 "results": merged_results,
                 "metadata": {
                     "query": query_text,
-                    "vector_results_count": len(vector_results.get("results", [])),
-                    "keyword_results_count": len(keyword_results.get("results", [])),
-                    "hybrid_results_count": len(merged_results),
+                    "total_results_found": len(all_results),
+                    "final_results_count": len(merged_results),
                     "hybrid_ratio": hybrid_ratio,
+                    "multilingual_enabled": enable_multilingual,
                     "filters_applied": filters
                 }
             }
@@ -120,7 +188,6 @@ class EnhancedSearchService:
         filters: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Perform vector-based semantic search."""
-        # Use the vector repo's semantic search
         search_results = self.vector_repo.semantic_search(
             db=db,
             query_vector=query_vector,
@@ -131,18 +198,12 @@ class EnhancedSearchService:
             collection_id=collection_id
         )
         
-        # Apply filters if provided
-        if filters and search_results.get("results"):
-            filtered_results = []
-            for item in search_results["results"]:
-                if self._matches_filters(item, filters):
-                    filtered_results.append(item)
-            
-            search_results["results"] = filtered_results
-            search_results["metadata"]["filtered_count"] = len(filtered_results)
+        # Mark results as vector search
+        for result in search_results.get("results", []):
+            result["search_type"] = "vector"
         
         return search_results
-        
+    
     async def _keyword_search(
         self,
         db: Session,
@@ -153,234 +214,93 @@ class EnhancedSearchService:
         filters: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Perform keyword-based search."""
-        # Extract keywords from query
+        # Extract keywords
         keywords = self._extract_keywords(query_text)
         
         if not keywords:
-            return {"results": [], "metadata": {"error": "No valid keywords extracted"}}
+            return {"results": [], "metadata": {"keywords": []}}
         
-        try:
-            # Build base query to get client's collections
-            collection_query = db.query(KnowledgeCollection).filter(
-                KnowledgeCollection.client_id == client_id
-            )
-            
-            if collection_id:
-                collection_query = collection_query.filter(
-                    KnowledgeCollection.collection_id == collection_id
+        # Build search query
+        query_conditions = []
+        for keyword in keywords:
+            query_conditions.append(
+                or_(
+                    KnowledgeItem.title.ilike(f"%{keyword}%"),
+                    KnowledgeItem.content.ilike(f"%{keyword}%")
                 )
-            
-            # Get collection IDs
-            collections = collection_query.all()
-            collection_ids = [c.collection_id for c in collections]
-            
-            if not collection_ids:
-                return {"results": [], "metadata": {"error": "No collections found"}}
-            
-            # Build search conditions for each keyword
-            search_conditions = []
-            for keyword in keywords:
-                # Avoid single character or very short keywords
-                if len(keyword) <= 2:
-                    continue
-                    
-                keyword_pattern = f"%{keyword}%"
-                condition = or_(
-                    KnowledgeItem.title.ilike(keyword_pattern),
-                    KnowledgeItem.content.ilike(keyword_pattern)
-                )
-                search_conditions.append(condition)
-            
-            # If no valid search conditions, return empty results
-            if not search_conditions:
-                return {"results": [], "metadata": {"error": "No valid search conditions"}}
-            
-            # Build the query
-            query = db.query(KnowledgeItem, KnowledgeCollection).join(
-                KnowledgeCollection,
-                KnowledgeItem.collection_id == KnowledgeCollection.collection_id
-            ).filter(
-                KnowledgeItem.collection_id.in_(collection_ids),
-                or_(*search_conditions)
             )
-            
-            # Execute query and build results
-            items = query.limit(limit).all()
-            
-            results = []
-            for item, collection in items:
-                # Skip items that don't match filters
-                if filters and not self._matches_filters({"item_id": item.item_id}, filters):
-                    continue
-                    
-                # Calculate a basic text relevance score
-                relevance = self._calculate_text_relevance(query_text, item.title, item.content)
-                
-                # Extract metadata for context
-                metadata = {}
-                if hasattr(item, 'item_metadata') and item.item_metadata:
-                    metadata = item.item_metadata
-                
-                # Get document information
-                document_info = {}
-                if item.source_document_id:
-                    document_info = {
-                        "document_id": item.source_document_id,
-                    }
-                
-                results.append({
-                    "item_id": item.item_id,
-                    "title": item.title,
-                    "content": item.content,
-                    "collection_id": item.collection_id,
-                    "collection_name": collection.name,
-                    "document": document_info,
-                    "metadata": metadata,
-                    "relevance": relevance,
-                    "search_type": "keyword"
-                })
-            
-            # Sort by relevance
-            results.sort(key=lambda x: x["relevance"], reverse=True)
-            
-            return {
-                "results": results[:limit],
-                "metadata": {
-                    "total_matches": len(results),
-                    "keywords": keywords
-                }
-            }
-            
-        except Exception as e:
-            logger.exception(f"Error in keyword search: {str(e)}")
-            return {"results": [], "metadata": {"error": str(e)}}
-    
-    def _extract_keywords(self, query_text: str) -> List[str]:
-        """Extract meaningful keywords from query text."""
-        # Remove common stop words
-        stop_words = {
-            'a', 'an', 'the', 'and', 'or', 'but', 'if', 'because', 'as', 'what',
-            'when', 'where', 'how', 'why', 'is', 'are', 'am', 'was', 'were', 'be',
-            'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'can', 'could',
-            'should', 'would', 'may', 'might', 'must', 'will', 'shall', 'in', 'on', 'at',
-            'to', 'from', 'by', 'for', 'with', 'about', 'of', 'that', 'this', 'these', 'those'
+        
+        # Base query
+        query = db.query(KnowledgeItem, KnowledgeCollection).join(
+            KnowledgeCollection, KnowledgeItem.collection_id == KnowledgeCollection.collection_id
+        ).filter(
+            KnowledgeCollection.client_id == client_id
+        )
+        
+        # Add collection filter if specified
+        if collection_id:
+            query = query.filter(KnowledgeItem.collection_id == collection_id)
+        
+        # Add keyword conditions
+        if query_conditions:
+            query = query.filter(or_(*query_conditions))
+        
+        # Execute query
+        results = query.limit(limit).all()
+        
+        # Format results
+        formatted_results = []
+        for item, collection in results:
+            formatted_results.append({
+                "item_id": item.item_id,
+                "title": item.title,
+                "content": item.content,
+                "collection_id": item.collection_id,
+                "collection_name": collection.name,
+                "search_type": "keyword",
+                "similarity": 0.8  # Default score for keyword matches
+            })
+        
+        return {
+            "results": formatted_results,
+            "metadata": {"keywords": keywords}
         }
-        
-        # Convert to lowercase and extract words
-        words = re.findall(r'\b\w+\b', query_text.lower())
-        
-        # Filter out stop words and short words
-        keywords = [word for word in words if word not in stop_words and len(word) > 2]
-        
-        return keywords
-        
-    def _calculate_text_relevance(self, query: str, title: str, content: str) -> float:
-        """
-        Calculate a basic text relevance score based on keyword presence and position.
-        
-        Args:
-            query: Search query
-            title: Item title
-            content: Item content
-            
-        Returns:
-            Relevance score from 0.0 to 1.0
-        """
-        # Extract keywords
-        keywords = self._extract_keywords(query)
-        
-        if not keywords:
-            return 0.0
-            
-        # Convert to lowercase for case-insensitive matching
-        title_lower = title.lower()
-        content_lower = content.lower()
-        
-        # Calculate matches
-        title_matches = sum(1 for kw in keywords if kw in title_lower)
-        content_matches = sum(1 for kw in keywords if kw in content_lower)
-        
-        # Calculate scores with title matches weighted more
-        max_possible_score = len(keywords) * 1.5  # Title matches count 1.5x
-        actual_score = (title_matches * 1.5) + content_matches
-        
-        # Normalize to 0-1 range
-        relevance = min(1.0, actual_score / max_possible_score if max_possible_score > 0 else 0)
-        
-        return relevance
-        
+    
     def _merge_search_results(
-        self, 
+        self,
         vector_results: List[Dict[str, Any]],
-        keyword_results: List[Dict[str, Any]],
-        hybrid_ratio: float = 0.7,
-        limit: int = 5
+        keyword_results: List[Dict[str, Any]], 
+        hybrid_ratio: float,
+        limit: int
     ) -> List[Dict[str, Any]]:
-        """
-        Merge and rank results from vector and keyword search.
+        """Merge vector and keyword results with deduplication."""
+        # Combine all results
+        all_results = vector_results + keyword_results
         
-        Args:
-            vector_results: Results from vector search
-            keyword_results: Results from keyword search
-            hybrid_ratio: Balance between vector and keyword results (0-1)
-            limit: Maximum number of results to return
-            
-        Returns:
-            Merged and ranked list of results
-        """
-        # Create a map of item IDs to prevent duplicates
-        result_map = {}
+        # Remove duplicates based on item_id
+        seen_items = {}
+        for result in all_results:
+            item_id = result.get("item_id")
+            if item_id:
+                if item_id not in seen_items:
+                    seen_items[item_id] = result
+                else:
+                    # Keep the result with higher similarity
+                    if result.get("similarity", 0) > seen_items[item_id].get("similarity", 0):
+                        seen_items[item_id] = result
         
-        # Process vector results
-        for item in vector_results:
-            item_id = item["item_id"]
-            # Convert similarity to hybrid score, weighted by hybrid_ratio
-            hybrid_score = item.get("similarity", 0) * hybrid_ratio
-            item["hybrid_score"] = hybrid_score
-            item["search_type"] = "vector"
-            result_map[item_id] = item
-        
-        # Process keyword results
-        for item in keyword_results:
-            item_id = item["item_id"]
-            if item_id in result_map:
-                # Item already exists from vector search, adjust score
-                existing_item = result_map[item_id]
-                keyword_score = item.get("relevance", 0) * (1 - hybrid_ratio)
-                existing_item["hybrid_score"] += keyword_score
-                existing_item["search_type"] = "hybrid"
-            else:
-                # New item from keyword search
-                hybrid_score = item.get("relevance", 0) * (1 - hybrid_ratio)
-                item["hybrid_score"] = hybrid_score
-                item["search_type"] = "keyword"
-                result_map[item_id] = item
-        
-        # Convert map to list and sort by hybrid score
-        merged_results = list(result_map.values())
-        merged_results.sort(key=lambda x: x.get("hybrid_score", 0), reverse=True)
+        # Sort by similarity score
+        merged_results = list(seen_items.values())
+        merged_results.sort(key=lambda x: x.get("similarity", 0), reverse=True)
         
         return merged_results[:limit]
     
-    def _matches_filters(self, item: Dict[str, Any], filters: Dict[str, Any]) -> bool:
-        """Check if an item matches the provided filters."""
-        for key, value in filters.items():
-            # Special case for metadata filters
-            if key.startswith("metadata."):
-                metadata_key = key.split(".", 1)[1]
-                item_metadata = item.get("metadata", {})
-                
-                if not item_metadata or item_metadata.get(metadata_key) != value:
-                    return False
-            # Collection filter
-            elif key == "collection_id" and item.get("collection_id") != value:
-                return False
-            # Document filter
-            elif key == "document_id":
-                doc_info = item.get("document", {})
-                if not doc_info or doc_info.get("document_id") != value:
-                    return False
+    def _extract_keywords(self, text: str) -> List[str]:
+        """Extract meaningful keywords from text."""
+        stop_words = {'a', 'an', 'the', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 
+                    'to', 'of', 'in', 'for', 'with', 'by', 'at', 'this', 'that'}
         
-        return True
-    
-    
+        words = re.findall(r'\b\w+\b', text.lower())
+        keywords = [word for word in words if word not in stop_words and len(word) > 2]
+        
+        return keywords

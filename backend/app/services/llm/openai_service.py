@@ -11,7 +11,7 @@ from app.core import logger
 class OpenAIService(LLMService):
     """OpenAI LLM service implementation with mock fallback."""
     
-    def __init__(self, model_name="gpt-3.5-turbo"):
+    def __init__(self, model_name="gpt-4.1-mini-2025-04-14"):
         self.api_key = settings.OPENAI_API_KEY
         self.api_base_url = "https://api.openai.com/v1"
         self.model = "gpt-4.1-mini-2025-04-14"  
@@ -104,7 +104,8 @@ class OpenAIService(LLMService):
                         "Content-Type": "application/json",
                     },
                     json={
-                        "model": "text-embedding-ada-002",  # Default embedding model
+                        "model": "text-embedding-3-small",
+                        "dimensions": 512,  # Optional: faster + cheaper
                         "input": text
                     },
                     timeout=30.0,
