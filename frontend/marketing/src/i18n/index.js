@@ -12,8 +12,9 @@ import enIntegrations from './locales/en/integrations.json';
 import enPricing from './locales/en/pricing.json';
 import enContact from './locales/en/contact.json';
 import enDemo from './locales/en/demo.json';
+import enAbout from './locales/en/about.json';
+import enFaq from './locales/en/faq.json'; // NEW: FAQ
 import enUi from './locales/en/ui.json';
-import enFaq from './locales/en/faq.json'; // ADD THIS
 
 import esCommon from './locales/es/common.json';
 import esHome from './locales/es/home.json';
@@ -23,8 +24,9 @@ import esIntegrations from './locales/es/integrations.json';
 import esPricing from './locales/es/pricing.json';
 import esContact from './locales/es/contact.json';
 import esDemo from './locales/es/demo.json';
+import esAbout from './locales/es/about.json';
+import esFaq from './locales/es/faq.json'; // NEW: FAQ
 import esUi from './locales/es/ui.json';
-import esFaq from './locales/es/faq.json'; // ADD THIS
 
 import deCommon from './locales/de/common.json';
 import deHome from './locales/de/home.json';
@@ -34,8 +36,9 @@ import deIntegrations from './locales/de/integrations.json';
 import dePricing from './locales/de/pricing.json';
 import deContact from './locales/de/contact.json';
 import deDemo from './locales/de/demo.json';
+import deAbout from './locales/de/about.json';
+import deFaq from './locales/de/faq.json'; // NEW: FAQ
 import deUi from './locales/de/ui.json';
-import deFaq from './locales/de/faq.json'; // ADD THIS
 
 import frCommon from './locales/fr/common.json';
 import frHome from './locales/fr/home.json';
@@ -45,8 +48,9 @@ import frIntegrations from './locales/fr/integrations.json';
 import frPricing from './locales/fr/pricing.json';
 import frContact from './locales/fr/contact.json';
 import frDemo from './locales/fr/demo.json';
+import frAbout from './locales/fr/about.json';
+import frFaq from './locales/fr/faq.json'; // NEW: FAQ
 import frUi from './locales/fr/ui.json';
-import frFaq from './locales/fr/faq.json'; // ADD THIS
 
 import zhCommon from './locales/zh/common.json';
 import zhHome from './locales/zh/home.json';
@@ -56,8 +60,9 @@ import zhIntegrations from './locales/zh/integrations.json';
 import zhPricing from './locales/zh/pricing.json';
 import zhContact from './locales/zh/contact.json';
 import zhDemo from './locales/zh/demo.json';
+import zhAbout from './locales/zh/about.json';
+import zhFaq from './locales/zh/faq.json'; // NEW: FAQ
 import zhUi from './locales/zh/ui.json';
-import zhFaq from './locales/zh/faq.json'; // ADD THIS
 
 import noCommon from './locales/no/common.json';
 import noHome from './locales/no/home.json';
@@ -67,8 +72,9 @@ import noIntegrations from './locales/no/integrations.json';
 import noPricing from './locales/no/pricing.json';
 import noContact from './locales/no/contact.json';
 import noDemo from './locales/no/demo.json';
+import noAbout from './locales/no/about.json';
+import noFaq from './locales/no/faq.json'; // NEW: FAQ
 import noUi from './locales/no/ui.json';
-import noFaq from './locales/no/faq.json'; // ADD THIS
 
 const resources = {
   en: {
@@ -80,8 +86,9 @@ const resources = {
     pricing: enPricing,
     contact: enContact,
     demo: enDemo,
-    ui: enUi,
-    faq: enFaq // ADD THIS
+    about: enAbout,
+    faq: enFaq, // NEW: FAQ
+    ui: enUi
   },
   es: {
     common: esCommon,
@@ -92,8 +99,9 @@ const resources = {
     pricing: esPricing,
     contact: esContact,
     demo: esDemo,
-    ui: esUi,
-    faq: esFaq // ADD THIS
+    about: esAbout,
+    faq: esFaq, // NEW: FAQ
+    ui: esUi
   },
   de: {
     common: deCommon,
@@ -104,8 +112,9 @@ const resources = {
     pricing: dePricing,
     contact: deContact,
     demo: deDemo,
-    ui: deUi,
-    faq: deFaq // ADD THIS
+    about: deAbout,
+    faq: deFaq, // NEW: FAQ
+    ui: deUi
   },
   fr: {
     common: frCommon,
@@ -116,8 +125,9 @@ const resources = {
     pricing: frPricing,
     contact: frContact,
     demo: frDemo,
-    ui: frUi,
-    faq: frFaq // ADD THIS
+    about: frAbout,
+    faq: frFaq, // NEW: FAQ
+    ui: frUi
   },
   zh: {
     common: zhCommon,
@@ -128,8 +138,9 @@ const resources = {
     pricing: zhPricing,
     contact: zhContact,
     demo: zhDemo,
-    ui: zhUi,
-    faq: zhFaq // ADD THIS
+    about: zhAbout,
+    faq: zhFaq, // NEW: FAQ
+    ui: zhUi
   },
   no: {
     common: noCommon,
@@ -140,8 +151,9 @@ const resources = {
     pricing: noPricing,
     contact: noContact,
     demo: noDemo,
-    ui: noUi,
-    faq: noFaq // ADD THIS
+    about: noAbout,
+    faq: noFaq, // NEW: FAQ
+    ui: noUi
   }
 };
 
@@ -153,8 +165,8 @@ i18n
     fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
     
-    // ADD 'faq' TO THE NAMESPACES LIST
-    ns: ['common', 'home', 'benefits', 'howItWorks', 'integrations', 'pricing', 'contact', 'demo', 'ui', 'faq'],
+    // UPDATED: Include 'faq' in namespaces
+    ns: ['common', 'home', 'benefits', 'howItWorks', 'integrations', 'pricing', 'contact', 'demo', 'about', 'faq', 'ui'],
     defaultNS: 'common',
     
     interpolation: {

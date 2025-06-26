@@ -158,9 +158,7 @@ const ChooseChatbotBlogPost = () => {
                   <h4 className="text-lg font-semibold text-orange-800 mb-3">Performance & Reliability</h4>
                   <ul className="list-disc pl-6 text-orange-700 space-y-2">
                     <li>99.9% uptime guarantee</li>
-                    <li>Fast response times (&lt;2 seconds)</li>
                     <li>Scalability for traffic spikes</li>
-                    <li>Fallback to human agents when needed</li>
                   </ul>
                 </div>
               </div>
@@ -171,7 +169,6 @@ const ChooseChatbotBlogPost = () => {
                   <li><strong>Vendor Lock-in:</strong> Ensure you can export your data and configurations</li>
                   <li><strong>Hidden Costs:</strong> Watch for charges per message, integration fees, or setup costs</li>
                   <li><strong>Limited Customization:</strong> Avoid solutions that can't adapt to your specific needs</li>
-                  <li><strong>Poor Documentation:</strong> Check if the platform provides clear setup and troubleshooting guides</li>
                 </ul>
               </div>
             </section>
@@ -281,7 +278,6 @@ const ChooseChatbotBlogPost = () => {
                   <li>No integration capabilities with your existing tools</li>
                   <li>Poor customer support or documentation</li>
                   <li>Claims that seem too good to be true</li>
-                  <li>No references or case studies available</li>
                 </ul>
               </div>
             </section>
@@ -298,8 +294,6 @@ const ChooseChatbotBlogPost = () => {
                   <h4 className="text-lg font-semibold text-green-800 mb-3">✅ What We Do Well</h4>
                   <ul className="list-disc pl-6 text-green-700 space-y-2">
                     <li>True AI understanding, not just keyword matching</li>
-                    <li>90%+ query resolution without human intervention</li>
-                    <li>Quick setup (1-2 weeks vs. months)</li>
                     <li>Transparent, predictable pricing</li>
                     <li>Enterprise-grade security and compliance</li>
                     <li>Continuous learning and improvement</li>
@@ -318,47 +312,10 @@ const ChooseChatbotBlogPost = () => {
                 </div>
               </div>
 
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-6">
-                <h4 className="text-lg font-semibold text-orange-800 mb-3">Real Customer Example</h4>
-                <p className="text-orange-700 mb-3">
-                  "We evaluated 5 different chatbot solutions over 3 months. Most promised AI but delivered glorified decision trees. Customate was the only one that actually understood our customers' questions and provided accurate answers from day one. We saw a 85% reduction in support tickets within the first month."
-                </p>
-                <div className="text-sm text-orange-600">
-                  — Sarah Chen, Customer Success Manager at TechFlow Solutions
-                </div>
-              </div>
+
             </section>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Getting Started: Your Next Steps</h2>
 
-              <p className="text-gray-700 mb-6">
-                Choosing the right chatbot is a significant decision that will impact your customer experience and operational efficiency. Here's how to move forward:
-              </p>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-gray-700"><strong>Week 1:</strong> Document your current support challenges and requirements</span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-gray-700"><strong>Week 2:</strong> Request demos from 3-4 vendors that meet your criteria</span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-gray-700"><strong>Week 3:</strong> Test the solutions with real scenarios and gather team feedback</span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-gray-700"><strong>Week 4:</strong> Make your decision and begin implementation planning</span>
-                </div>
-              </div>
-
-              <p className="text-gray-700 mb-6">
-                Remember: the best chatbot solution is one that solves your specific problems, integrates well with your existing systems, and provides measurable value to your business and customers.
-              </p>
-            </section>
 
             {/* CTA Section */}
             <div className="bg-gray-50 rounded-lg p-8 text-center">

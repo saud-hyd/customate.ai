@@ -10,7 +10,7 @@ const Footer = () => {
   // All translations in one object - UPDATED WITH NORWEGIAN
   const translations = {
     en: {
-      description: "Automate Customer Support.",
+      description: "Automate Customer Support",
       product: "Product",
       company: "Company",
       features: "Features",
@@ -26,7 +26,7 @@ const Footer = () => {
       madeIn: "Made in Germany 🇩🇪"
     },
     es: {
-      description: "Automatiza el Soporte al Cliente.",
+      description: "“Automatiza la Atención al Cliente",
       product: "Producto",
       company: "Empresa",
       features: "Características",

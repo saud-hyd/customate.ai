@@ -15,8 +15,8 @@
         "100 Nachrichten pro Monat",
         "500 KB Speicher",
         "Grundlegende Chatbot-Anpassung"
-        ],
-      "cta": "Kostenlos Starten"
+      ],
+      "cta": "Kostenlos starten"
     },
     "basic": {
       "name": "Basic",
@@ -28,7 +28,7 @@
         "Analytics-Dashboard",
         "API-Zugang"
       ],
-      "cta": "Mit Basic Starten"
+      "cta": "Mit Basic starten"
     },
     "standard": {
       "name": "Standard",
@@ -38,9 +38,9 @@
         "25 MB Speicher",
         "Erweiterte Chatbot-Anpassung",
         "Prioritäts-E-Mail-Support",
-        "Erweiterte Analytik"
+        "Erweiterte Analysen"
       ],
-      "cta": "Mit Standard Starten"
+      "cta": "Mit Standard starten"
     },
     "professional": {
       "name": "Professional",
@@ -49,19 +49,41 @@
         "40.000 Nachrichten pro Monat",
         "35 MB Speicher",
         "Benutzerdefinierte Bereitstellungsoptionen",
-        "Dedicated Account Manager",
-        "Telefon- & E-Mail-Support",
+        "Dedizierter Account Manager",
+        "Telefon- und E-Mail-Support",
         "Benutzerdefinierte Integrationen"
       ],
-      "cta": "Mit Professional Starten"
+      "cta": "Mit Professional starten"
     }
   },
   "badges": {
     "popular": "Beliebt"
   },
   "footer": {
-    "customPlan": "Suchen Sie einen benutzerdefinierten Plan?",
+    "customPlan": "Suchen Sie einen individuellen Plan?",
     "contactUs": "Kontaktieren Sie uns",
     "tailoredSolution": "für eine maßgeschneiderte Lösung."
+  },
+  "pageHeader": {
+    "title": "Flexible Preise für jedes Unternehmen",
+    "subtitle": "Wählen Sie den perfekten Plan für Ihre Geschäftsanforderungen. Alle Pläne beinhalten Kernfunktionen mit zusätzlichen Fähigkeiten während Sie wachsen."
+  },
+  "enterprise": {
+    "title": "Enterprise-Lösungen",
+    "subtitle": "Benötigen Sie eine maßgeschneiderte Lösung für Ihre Organisation?",
+    "features": {
+      "title": "Enterprise-Features",
+      "items": [
+        "Benutzerdefinierte Bereitstellungsoptionen",
+        "Erweiterte Sicherheit & Compliance",
+        "Entwicklung benutzerdefinierter Integrationen",
+        "Dedizierter Account Manager"
+      ]
+    },
+    "contact": {
+      "title": "Kontaktieren Sie unser Vertriebsteam",
+      "description": "Lassen Sie uns ein maßgeschneidertes Paket erstellen, das auf Ihre spezifischen Bedürfnisse und Geschäftsanforderungen zugeschnitten ist.",
+      "button": "Vertrieb kontaktieren"
+    }
   }
 }

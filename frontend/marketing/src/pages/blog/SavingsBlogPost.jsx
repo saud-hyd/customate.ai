@@ -63,23 +63,6 @@ const SavingsBlogPost = () => {
                 Customer support costs vary widely depending on the business, industry, and location. To establish a baseline, we analyzed the average cost per written or spoken message handled by a human agent in a call or business center.
               </p>
 
-              <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">Regional Cost Breakdown (Per Message)</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-white rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">€0.10-€0.30</div>
-                    <div className="text-sm text-gray-600">Eastern Europe, Asia</div>
-                  </div>
-                  <div className="text-center p-4 bg-white rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-600">€0.30-€0.60</div>
-                    <div className="text-sm text-gray-600">North America, Australia</div>
-                  </div>
-                  <div className="text-center p-4 bg-white rounded-lg">
-                    <div className="text-2xl font-bold text-red-600">€0.60-€1.00</div>
-                    <div className="text-sm text-gray-600">Western Europe, Scandinavia</div>
-                  </div>
-                </div>
-              </div>
 
               <p className="text-gray-700 mb-6">
                 These costs include not just the agent's salary, but also infrastructure, management overhead, training, and benefits. In high-cost regions, a single customer support interaction can cost over €1.00, making traditional support expensive for high-volume businesses.
@@ -111,63 +94,6 @@ const SavingsBlogPost = () => {
               <p className="text-gray-700 mb-6">
                 Unlike rule-based chatbots that often frustrate customers and require human intervention, Customate's AI understands context, handles complex queries, and provides accurate responses that actually solve customer problems.
               </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Real-World Savings Examples</h2>
-              
-              <div className="space-y-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3">Small E-commerce Business (1,000 queries/month)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-gray-600">Traditional Support (Eastern Europe)</div>
-                      <div className="text-xl font-bold text-red-600">€200/month</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Customate AI</div>
-                      <div className="text-xl font-bold text-green-600">€20/month</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-sm text-gray-700">
-                    <strong>Monthly Savings:</strong> €180 (90% reduction)
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3">Medium SaaS Company (5,000 queries/month)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-gray-600">Traditional Support (North America)</div>
-                      <div className="text-xl font-bold text-red-600">€2,250/month</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Customate AI</div>
-                      <div className="text-xl font-bold text-green-600">€100/month</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-sm text-gray-700">
-                    <strong>Monthly Savings:</strong> €2,150 (96% reduction)
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-3">Large Enterprise (20,000 queries/month)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-gray-600">Traditional Support (Western Europe)</div>
-                      <div className="text-xl font-bold text-red-600">€16,000/month</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Customate AI</div>
-                      <div className="text-xl font-bold text-green-600">€400/month</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-sm text-gray-700">
-                    <strong>Monthly Savings:</strong> €15,600 (97.5% reduction)
-                  </div>
-                </div>
-              </div>
             </section>
 
             <section className="mb-8">

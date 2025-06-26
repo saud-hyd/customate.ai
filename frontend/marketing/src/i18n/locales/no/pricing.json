@@ -14,8 +14,7 @@
       "features": [
         "100 meldinger per måned",
         "500 KB lagring",
-        "Grunnleggende chatbot-tilpasning",
-        "Fellesskapsstøtte"
+        "Grunnleggende chatbot-tilpasning"
       ],
       "cta": "Start Gratis"
     },
@@ -39,8 +38,7 @@
         "25 MB lagring",
         "Avansert chatbot-tilpasning",
         "Prioritert e-poststøtte",
-        "Avansert analyse",
-        "Teamsamarbeid"
+        "Avansert analyse"
       ],
       "cta": "Start med Standard"
     },
@@ -65,5 +63,27 @@
     "customPlan": "Leter du etter en tilpasset plan?",
     "contactUs": "Kontakt oss",
     "tailoredSolution": "for en skreddersydd løsning."
+  },
+  "pageHeader": {
+    "title": "Fleksible Priser for Alle Bedrifter",
+    "subtitle": "Velg den perfekte planen for dine forretningsbehov. Alle planer inkluderer kjernefunksjoner med ekstra muligheter etter hvert som du vokser."
+  },
+  "enterprise": {
+    "title": "Enterprise-løsninger",
+    "subtitle": "Trenger du en tilpasset løsning for din organisasjon?",
+    "features": {
+      "title": "Enterprise-funksjoner",
+      "items": [
+        "Tilpassede distribusjonsalternativer",
+        "Avansert sikkerhet og overholdelse",
+        "Utvikling av tilpassede integrasjoner",
+        "Dedikert kontoansvarlig"
+      ]
+    },
+    "contact": {
+      "title": "Kontakt Vårt Salgsteam",
+      "description": "La oss bygge en tilpasset pakke skreddersydd for dine spesifikke behov og forretningskrav.",
+      "button": "Kontakt Salg"
+    }
   }
 }

@@ -2,10 +2,10 @@
   "hero": {
     "badge": "Recién Lanzado",
     "title": {
-      "part1": "Tu Negocio",
-      "part2": "Potenciado por IA"
+      "part1": "Automatiza tus operaciones",
+      "part2": "de atención al cliente"
     },
-    "subtitle": "Customate.ai transforma las interacciones con clientes mediante agentes conversacionales de IA adaptados a las necesidades específicas de tu empresa."
+    "subtitle": "Un chatbot con IA que responde a todas las preguntas de tus clientes. Interactúa, asiste y convierte, directamente desde tu sitio web y en todas tus redes sociales."
   },
   "features": {
     "heading": "Potenciando Conversaciones Empresariales",

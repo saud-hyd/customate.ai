@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "title": "Acerca de Nosotros - Customate.ai",
+    "description": "Conoce Customate.ai - plataforma de chatbots impulsados por IA para empresas."
+  },
+  "hero": {
+    "title": "Acerca de Customate.ai",
+    "subtitle": "Transformando las interacciones con clientes a través de chatbots inteligentes impulsados por IA con comportamientos específicos de la industria y bases de conocimiento personalizadas."
+  },
+  "mission": {
+    "title": "Nuestra Misión",
+    "paragraph1": "En Customate.ai, creemos que cada negocio merece soporte al cliente inteligente, receptivo y personalizado. Nuestra misión es democratizar la tecnología de IA avanzada, haciéndola accesible para empresas de todos los tamaños para crear interacciones significativas con los clientes.",
+    "paragraph2": "No solo estamos construyendo chatbots - estamos creando experiencias conversacionales inteligentes que entienden el contexto, aprenden de las interacciones y mejoran continuamente para servir mejor a tus clientes."
+  },
+  "vision": {
+    "title": "Nuestra Visión",
+    "paragraph1": "Visionamos un futuro donde cada interacción con el cliente sea significativa, eficiente y agradable. Al combinar tecnología de IA de vanguardia con experiencia profunda en la industria, estamos construyendo la base para experiencias de cliente de próxima generación.",
+    "paragraph2": "Nuestro objetivo es convertirnos en la plataforma líder para interacciones inteligentes con clientes, empoderando a empresas en todo el mundo para construir relaciones más fuertes con sus clientes a través de IA."
+  },
+  "team": {
+    "title": "Equipo de Liderazgo",
+    "subtitle": "Conoce las mentes detrás de Customate.ai",
+    "members": [
+      {
+        "name": "José Ignacio Orias Calvo",
+        "position": "Fundador y CEO",
+        "bio": "Apasionado por la IA y la innovación en experiencia del cliente. José tiene más de 10 años de experiencia construyendo soluciones tecnológicas escalables para empresas en todo el mundo."
+      }
+    ]
+  },
+  "company": {
+    "title": "Información de la Empresa",
+    "businessName": "Nombre del Negocio",
+    "businessNameValue": "Customated S&A UG (haftungsbeschränkt)",
+    "address": "Dirección del Negocio",
+    "addressValue": {
+      "street": "Konrad-Wolf-Straße 93-99 - Haus 7",
+      "postal": "14482 Potsdam",
+      "country": "Alemania"
+    },
+    "contact": "Contacto",
+    "email": "Email: admin@customate.ai",
+    "website": "Sitio web: www.customate.ai",
+    "legalRep": "Representante Legal: José Ignacio Orias Calvo"
+  },
+  "values": {
+    "title": "Nuestros Valores",
+    "subtitle": "Los principios que guían todo lo que hacemos",
+    "innovation": {
+      "title": "Innovación",
+      "description": "Constantemente empujando los límites de la tecnología de IA para entregar soluciones de vanguardia."
+    },
+    "security": {
+      "title": "Seguridad",
+      "description": "Protegiendo tus datos y asegurando el cumplimiento del GDPR con medidas de seguridad de nivel empresarial."
+    },
+    "performance": {
+      "title": "Rendimiento",
+      "description": "Entregando soluciones de IA rápidas, confiables y escalables que crecen con tu negocio."
+    },
+    "support": {
+      "title": "Soporte",
+      "description": "Proporcionando servicio al cliente excepcional y soporte a lo largo de tu viaje de IA."
+    }
+  },
+  "cta": {
+    "title": "¿Listo para Transformar tu Experiencia del Cliente?",
+    "subtitle": "Únete a empresas en todo el mundo que confían en Customate.ai para impulsar sus interacciones con clientes.",
+    "primaryButton": "Comienza Hoy",
+    "secondaryButton": "Aprende Más"
+  }
+}

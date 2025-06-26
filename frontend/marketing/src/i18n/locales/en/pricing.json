@@ -63,5 +63,27 @@
     "customPlan": "Looking for a custom plan?",
     "contactUs": "Contact us",
     "tailoredSolution": "for a tailored solution."
+  },
+  "pageHeader": {
+    "title": "Flexible Pricing for Every Business",
+    "subtitle": "Choose the perfect plan for your business needs. All plans include core features with additional capabilities as you scale."
+  },
+  "enterprise": {
+    "title": "Enterprise Solutions",
+    "subtitle": "Need a custom solution for your organization?",
+    "features": {
+      "title": "Enterprise Features",
+      "items": [
+        "Custom deployment options",
+        "Advanced security & compliance",
+        "Custom integration development",
+        "Dedicated account manager"
+      ]
+    },
+    "contact": {
+      "title": "Contact Our Sales Team",
+      "description": "Let us build a custom package tailored to your specific needs and business requirements.",
+      "button": "Contact Sales"
+    }
   }
 }
