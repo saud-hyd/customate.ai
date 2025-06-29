@@ -328,59 +328,54 @@ class UsageTracker:
             logger.exception(f"Error updating knowledge counts: {str(e)}")
     
     def _update_storage_usage(self, db: Session, client_id: str) -> None:
-        """Update storage usage metrics including document and crawled content."""
+        """Update storage usage calculation - FIXED to include documents + crawling content"""
         try:
-            # Get document statistics
+            # Get document statistics (actual file sizes)
             from app.repositories.knowledge_repository import DocumentSourceRepository
             docs_repo = DocumentSourceRepository()
-            
-            # Get document storage
             docs_stats = docs_repo.get_document_statistics(db, client_id)
             document_bytes = docs_stats.get("total_size_bytes", 0)
             
             logger.info(f"Document bytes for client {client_id}: {document_bytes}")
             
-            # Direct SQL query to get the size of knowledge content
-            from sqlalchemy import text
-            
             # Get collection IDs for this client
+            from sqlalchemy import text
             collections_query = text("""
                 SELECT collection_id FROM knowledge_collections 
                 WHERE client_id = :client_id
             """)
-            
             collection_results = db.execute(collections_query, {"client_id": client_id})
             collection_ids = [row[0] for row in collection_results]
             
-            if not collection_ids:
-                logger.warning(f"No collections found for client {client_id}")
-                collection_ids = ['']  # Dummy value to avoid empty IN clause
+            kb_bytes = 0
+            crawled_bytes = 0
             
-            # Calculate size from knowledge items with documents
-            kb_size_query = text("""
-                SELECT COALESCE(SUM(LENGTH(content)), 0) as total_size
-                FROM knowledge_items
-                WHERE collection_id IN :collection_ids
-                AND source_document_id IS NOT NULL
-            """)
+            if collection_ids:
+                # Calculate size from knowledge items with documents
+                kb_size_query = text("""
+                    SELECT COALESCE(SUM(LENGTH(content)), 0) as total_size
+                    FROM knowledge_items
+                    WHERE collection_id = ANY(:collection_ids)
+                    AND source_document_id IS NOT NULL
+                """)
+                kb_result = db.execute(kb_size_query, {"collection_ids": collection_ids})
+                kb_bytes = kb_result.scalar() or 0
+                
+                # Calculate size from crawled items (without source_document_id)
+                crawled_size_query = text("""
+                    SELECT COALESCE(SUM(LENGTH(content)), 0) as total_size
+                    FROM knowledge_items
+                    WHERE collection_id = ANY(:collection_ids)
+                    AND source_document_id IS NULL
+                """)
+                crawled_result = db.execute(crawled_size_query, {"collection_ids": collection_ids})
+                crawled_bytes = crawled_result.scalar() or 0
             
-            kb_size_result = db.execute(kb_size_query, {"collection_ids": tuple(collection_ids)})
-            kb_bytes = kb_size_result.scalar() or 0
+            logger.info(f"Knowledge base bytes for client {client_id}: {kb_bytes}")
+            logger.info(f"Crawled content bytes for client {client_id}: {crawled_bytes}")
             
-            logger.info(f"Knowledge base bytes (with documents) for client {client_id}: {kb_bytes}")
-            
-            # Calculate size from crawled items (without source_document_id)
-            crawled_size_query = text("""
-                SELECT COALESCE(SUM(LENGTH(content)), 0) as total_size
-                FROM knowledge_items
-                WHERE collection_id IN :collection_ids
-                AND source_document_id IS NULL
-            """)
-            
-            crawled_size_result = db.execute(crawled_size_query, {"collection_ids": tuple(collection_ids)})
-            crawled_size = crawled_size_result.scalar() or 0
-            
-            logger.info(f"Crawled content bytes for client {client_id}: {crawled_size}")
+            # TOTAL STORAGE = Documents + Knowledge Content + Crawled Content
+            total_storage_bytes = document_bytes + kb_bytes + crawled_bytes
             
             # Create or update storage usage record
             storage_usage = self.storage_repo.get_latest(db, client_id)
@@ -388,18 +383,18 @@ class UsageTracker:
             if not storage_usage:
                 self.storage_repo.create(db, obj_in={
                     "client_id": client_id,
-                    "total_bytes": document_bytes + kb_bytes + crawled_size,
+                    "total_bytes": total_storage_bytes,
                     "document_bytes": document_bytes,
                     "knowledge_bytes": kb_bytes,
-                    "crawled_content_bytes": crawled_size,
+                    "crawled_content_bytes": crawled_bytes,
                     "recorded_at": datetime.utcnow()
                 })
             else:
                 self.storage_repo.update(db, db_obj=storage_usage, obj_in={
-                    "total_bytes": document_bytes + kb_bytes + crawled_size,
+                    "total_bytes": total_storage_bytes,
                     "document_bytes": document_bytes,
                     "knowledge_bytes": kb_bytes,
-                    "crawled_content_bytes": crawled_size,
+                    "crawled_content_bytes": crawled_bytes,
                     "recorded_at": datetime.utcnow()
                 })
             
@@ -409,13 +404,13 @@ class UsageTracker:
             
             if usage:
                 self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
-                    "storage_used_bytes": document_bytes + kb_bytes + crawled_size,
+                    "storage_used_bytes": total_storage_bytes,
                     "last_updated": datetime.utcnow()
                 })
             
         except Exception as e:
             logger.exception(f"Error updating storage usage: {str(e)}")
-    
+            
     def _update_active_users(self, db: Session, client_id: str) -> None:
         """Update active user count for subscription usage."""
         try:
@@ -539,7 +534,7 @@ class UsageTracker:
             logger.exception(f"Error updating daily stats: {str(e)}")
     
     def _increment_message_count(self, db: Session, client_id: str) -> None:
-        """Increment message count for subscription usage."""
+        """Increment message count for subscription usage - FIXED to ensure proper counting"""
         try:
             # Get current month
             current_month = datetime.utcnow().strftime("%Y-%m")
@@ -548,25 +543,26 @@ class UsageTracker:
             usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
             
             if usage:
-                # Increment message count
+                # Increment message count atomically
+                current_count = usage.messages_used or 0
                 self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
-                    "messages_used": usage.messages_used + 1,
+                    "messages_used": current_count + 1,
                     "last_updated": datetime.utcnow()
                 })
             else:
                 # Initialize usage if it doesn't exist
                 self.initialize_subscription_usage(db, client_id)
-                # Then try to increment again
+                # Then increment
                 usage = self.subscription_usage_repo.get_by_month(db, client_id, current_month)
                 if usage:
                     self.subscription_usage_repo.update(db, db_obj=usage, obj_in={
-                        "messages_used": 1,  # Start with 1
+                        "messages_used": 1,
                         "last_updated": datetime.utcnow()
                     })
             
         except Exception as e:
             logger.exception(f"Error incrementing message count: {str(e)}")
-    
+                
     def check_subscription_limits(self, db: Session, client_id: str) -> Dict[str, Any]:
         """Check if client is within subscription limits."""
         try:

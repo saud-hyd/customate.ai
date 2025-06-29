@@ -566,15 +566,13 @@ async def sync_subscription_usage(
             detail=f"Failed to synchronize subscription usage: {str(e)}"
         )
         
-# Add this to the existing routes.py file
-
 @router.get("/storage", response_model=Dict[str, Any])
 async def get_storage_statistics(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
     """
-    Get detailed storage statistics including breakdown by type.
+    Get comprehensive storage statistics including documents + crawling content.
     """
     try:
         usage_tracker = UsageTracker()
@@ -593,32 +591,23 @@ async def get_storage_statistics(
                 "knowledge_bytes": 0,
                 "crawled_content_bytes": 0,
                 "percentage": 0,
-                "limit_bytes": 0
+                "limit_bytes": 524288  # 500 KB default
             }
         
         # Get subscription to determine limit
         from app.repositories.client_repository import SubscriptionRepository
+        from app.services.subscription.stripe_service import PLAN_LIMITS
+        
         sub_repo = SubscriptionRepository()
         subscription = sub_repo.get_active_subscription(db, current_client.client_id)
         
-        # Default storage limit (50MB for free tier)
-        storage_limit = 50 * 1024 * 1024
-        
-        if subscription:
-            # Use plan-specific limit if available
-            if subscription.storage_limit_bytes:
-                storage_limit = subscription.storage_limit_bytes
-            else:
-                # Default limits based on plan type
-                if subscription.plan_type == "basic":
-                    storage_limit = 500 * 1024 * 1024
-                elif subscription.plan_type == "professional":
-                    storage_limit = 2 * 1024 * 1024 * 1024
-                elif subscription.plan_type == "enterprise":
-                    storage_limit = 10 * 1024 * 1024 * 1024
+        # Get storage limit from plan
+        plan_type = subscription.plan_type if subscription else "free"
+        plan_limits = PLAN_LIMITS.get(plan_type, PLAN_LIMITS["free"])
+        storage_limit_bytes = int(plan_limits["storage_limit_mb"] * 1024 * 1024)
         
         # Calculate percentage
-        percentage = min(100, (storage.total_bytes / storage_limit) * 100) if storage_limit > 0 else 0
+        percentage = min(100, (storage.total_bytes / storage_limit_bytes) * 100) if storage_limit_bytes > 0 else 0
         
         return {
             "total_bytes": storage.total_bytes,
@@ -626,7 +615,9 @@ async def get_storage_statistics(
             "knowledge_bytes": storage.knowledge_bytes,
             "crawled_content_bytes": storage.crawled_content_bytes,
             "percentage": percentage,
-            "limit_bytes": storage_limit
+            "limit_bytes": storage_limit_bytes,
+            "limit_mb": plan_limits["storage_limit_mb"],
+            "used_mb": round(storage.total_bytes / (1024 * 1024), 2)
         }
         
     except Exception as e:
@@ -638,9 +629,9 @@ async def get_storage_statistics(
             "knowledge_bytes": 0,
             "crawled_content_bytes": 0,
             "percentage": 0,
-            "limit_bytes": 0
-        }        
-
+            "limit_bytes": 524288  # 500 KB default
+        }
+        
 @router.get("/dashboard-optimized", response_model=Dict[str, Any])
 async def get_dashboard_overview_optimized(
     days: int = Query(30, description="Number of days to include in report"),

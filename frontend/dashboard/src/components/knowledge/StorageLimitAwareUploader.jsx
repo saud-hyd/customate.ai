@@ -49,23 +49,6 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
     return storageInfo.storage?.percentage >= 100;
   };
 
-  // Calculate if adding this file would exceed limit
-  const checkWouldExceedLimit = (fileSize) => {
-    if (!storageInfo || !storageInfo.storage) return false;
-    
-    const currentBytes = storageInfo.storage.used_bytes;
-    const limitBytes = storageInfo.storage.limit_bytes;
-    const newTotalBytes = currentBytes + fileSize;
-    
-    return newTotalBytes > limitBytes;
-  };
-
-  // Calculate remaining storage
-  const getRemainingStorage = () => {
-    if (!storageInfo || !storageInfo.storage) return 0;
-    return Math.max(0, storageInfo.storage.limit_bytes - storageInfo.storage.used_bytes);
-  };
-
   // Format bytes to human-readable format
   const formatBytes = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -89,6 +72,53 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
     }
   };
 
+  // Storage Status Display Component
+  const StorageStatusDisplay = () => {
+    if (!storageInfo || !storageInfo.storage) return null;
+    
+    const { used_bytes, limit_bytes, percentage } = storageInfo.storage;
+    const usedMB = (used_bytes / (1024 * 1024)).toFixed(2);
+    const limitMB = (limit_bytes / (1024 * 1024)).toFixed(2);
+    const remainingMB = ((limit_bytes - used_bytes) / (1024 * 1024)).toFixed(2);
+    
+    const isNearLimit = percentage >= 80;
+    const isAtLimit = percentage >= 100;
+    
+    return (
+      <div className={`p-4 rounded-lg border mb-4 ${
+        isAtLimit ? 'bg-red-50 border-red-200' : 
+        isNearLimit ? 'bg-yellow-50 border-yellow-200' : 
+        'bg-green-50 border-green-200'
+      }`}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">Storage Usage</span>
+          <span className="text-sm text-gray-600">{usedMB}MB / {limitMB}MB</span>
+        </div>
+        
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+          <div 
+            className={`h-2 rounded-full ${
+              isAtLimit ? 'bg-red-500' : 
+              isNearLimit ? 'bg-yellow-500' : 
+              'bg-green-500'
+            }`}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          ></div>
+        </div>
+        
+        <div className="text-xs text-gray-600">
+          {isAtLimit ? (
+            <span className="text-red-600">⚠️ Storage limit reached. Please delete files or upgrade.</span>
+          ) : isNearLimit ? (
+            <span className="text-yellow-600">⚠️ Approaching storage limit. {remainingMB}MB remaining.</span>
+          ) : (
+            <span className="text-green-600">✅ {remainingMB}MB remaining</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -96,7 +126,7 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
     }
   };
 
-  const validateAndSetFile = (selectedFile) => {
+  const validateAndSetFile = async (selectedFile) => {
     // Check if at capacity first
     if (isAtCapacity()) {
       setError(`You have reached your storage limit. Please upgrade your plan or delete some existing documents.`);
@@ -115,16 +145,32 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
       return;
     }
     
-    // Check if this file would exceed storage limit
-    const wouldExceed = checkWouldExceedLimit(selectedFile.size);
-    setWouldExceedLimit(wouldExceed);
-    
-    if (wouldExceed) {
-      setError(`This file (${formatBytes(selectedFile.size)}) would exceed your remaining storage (${formatBytes(getRemainingStorage())}). Please delete some files or upgrade your plan.`);
-    } else {
-      setError(null);
+    // CRITICAL: Check if this file would exceed storage limit
+    if (storageInfo && storageInfo.storage) {
+      const currentUsageBytes = storageInfo.storage.used_bytes;
+      const limitBytes = storageInfo.storage.limit_bytes;
+      const newTotalBytes = currentUsageBytes + selectedFile.size;
+      
+      if (newTotalBytes > limitBytes) {
+        const currentUsageMB = (currentUsageBytes / (1024 * 1024)).toFixed(2);
+        const limitMB = (limitBytes / (1024 * 1024)).toFixed(2);
+        const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
+        const remainingMB = ((limitBytes - currentUsageBytes) / (1024 * 1024)).toFixed(2);
+        
+        setError(
+          `This file (${fileSizeMB}MB) would exceed your storage limit. ` +
+          `You have ${currentUsageMB}MB used of ${limitMB}MB limit (${remainingMB}MB remaining). ` +
+          `Please delete some files or upgrade your plan.`
+        );
+        setWouldExceedLimit(true);
+        setFile(selectedFile); // Still set file to show it in UI
+        return;
+      }
     }
     
+    // File is valid
+    setError(null);
+    setWouldExceedLimit(false);
     setFile(selectedFile);
   };
 
@@ -172,14 +218,27 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
       return;
     }
 
+    if (!selectedCollection) {
+      setError('Please select a collection');
+      return;
+    }
+
+    // PREVENT upload if it would exceed limit
     if (wouldExceedLimit) {
       setError(`This file would exceed your storage limit. Please delete some files or upgrade your plan.`);
       return;
     }
 
-    if (!selectedCollection) {
-      setError('Please select a collection');
-      return;
+    // Double-check storage limits before uploading
+    if (storageInfo && storageInfo.storage) {
+      const currentUsageBytes = storageInfo.storage.used_bytes;
+      const limitBytes = storageInfo.storage.limit_bytes;
+      const newTotalBytes = currentUsageBytes + file.size;
+      
+      if (newTotalBytes > limitBytes) {
+        setError(`Upload would exceed storage limit. Please delete some files or upgrade your plan.`);
+        return;
+      }
     }
 
     try {
@@ -224,12 +283,34 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
       
     } catch (err) {
       console.error('Error uploading document:', err);
+      
+      // Handle different error types properly
       if (err.response?.status === 402) {
-        // Payment required - subscription limit reached
-        setError(`Storage limit exceeded. ${err.response?.data?.message || 'Please upgrade your plan for more storage.'}`);
+        // Storage limit exceeded
+        const errorData = err.response?.data?.detail || err.response?.data;
+        
+        if (typeof errorData === 'object') {
+          // Backend returned object with detailed info
+          if (errorData.error === 'storage_limit_exceeded') {
+            setError(errorData.message || 'Storage limit exceeded. Please upgrade your plan.');
+          } else {
+            setError('Storage limit exceeded. Please upgrade your plan or delete some documents.');
+          }
+        } else if (typeof errorData === 'string') {
+          setError(errorData);
+        } else {
+          setError('Storage limit exceeded. Please upgrade your plan.');
+        }
+      } else if (err.response?.status === 400) {
+        // Bad request (file type, etc.)
+        const errorMsg = err.response?.data?.detail || 'Invalid file. Please check file type and size.';
+        setError(typeof errorMsg === 'string' ? errorMsg : 'Invalid file. Please check file type and size.');
       } else {
-        setError(err.response?.data?.detail || 'Failed to upload document. Please try again.');
+        // Other errors
+        const errorMsg = err.response?.data?.detail || err.message || 'Failed to upload document. Please try again.';
+        setError(typeof errorMsg === 'string' ? errorMsg : 'Failed to upload document. Please try again.');
       }
+      
       showError('Upload failed');
     } finally {
       setUploading(false);
@@ -309,16 +390,16 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
         <p className="text-gray-700 mb-6">
           To upload more documents, you need to either delete some existing documents or upgrade your subscription plan.
         </p>
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-center space-x-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
-            Cancel
+            Go Back
           </button>
           <a
             href="/dashboard/subscription"
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
+            className="px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700"
           >
             Upgrade Plan
           </a>
@@ -327,215 +408,175 @@ const StorageLimitAwareUploader = ({ collections, onUploadComplete, onCancel }) 
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-          <div className="flex">
-            <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
-            <div>
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Storage usage indicator */}
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="text-sm font-medium text-gray-700">Storage Usage</h3>
-          <span className="text-sm text-gray-500">
-            {formatBytes(storageInfo?.storage?.used_bytes || 0)} of {formatBytes(storageInfo?.storage?.limit_bytes || 0)}
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className={`h-2 rounded-full ${
-              (storageInfo?.storage?.percentage || 0) > 90 ? 'bg-red-500' : 
-              (storageInfo?.storage?.percentage || 0) > 75 ? 'bg-yellow-500' : 
-              'bg-green-500'
-            }`}
-            style={{ width: `${Math.min(storageInfo?.storage?.percentage || 0, 100)}%` }}
-          ></div>
-        </div>
-        <div className="flex justify-between mt-1">
-          <span className="text-xs text-gray-500">
-            {storageInfo?.storage?.percentage > 90 ? (
-              <span className="text-red-600 flex items-center">
-                <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
-                Storage nearly full
-              </span>
-            ) : 'Available space'}
-          </span>
-          <span className="text-xs text-gray-500">
-            {(storageInfo?.storage?.percentage || 0).toFixed(1)}% used
-          </span>
-        </div>
+  // Upload successful
+  if (uploadResult) {
+    return (
+      <div className="text-center py-8">
+        <CheckCircleIcon className="h-16 w-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload Successful!</h3>
+        <p className="text-gray-600 mb-6">
+          Your document "{uploadResult.filename}" has been uploaded and is being processed.
+        </p>
+        <button
+          onClick={() => onUploadComplete(uploadResult)}
+          className="bg-orange-600 text-white px-6 py-2 rounded-md hover:bg-orange-700"
+        >
+          Continue
+        </button>
       </div>
+    );
+  }
 
-      {uploadResult ? (
-        <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded">
-          <div className="flex">
-            <CheckCircleIcon className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" />
-            <div>
-              <p className="text-base font-medium text-green-800">Document uploaded successfully!</p>
-              <p className="text-sm text-green-700 mt-2">
-                "{uploadResult.filename}" has been uploaded and is being processed. It will be available in your knowledge base shortly.
-              </p>
-              <div className="mt-4">
-                <button onClick={onCancel} className="btn btn-outline bg-white">
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* File Drop Zone */}
-          <div
-            className={`border-2 ${isDragging ? 'border-orange-500 bg-orange-50' : 'border-dashed border-gray-300'} 
-                       ${file ? 'border-orange-500 border-solid' : ''} 
-                       ${!uploading && !isAtCapacity() ? 'hover:border-orange-500 hover:bg-gray-50' : ''} 
-                       rounded-lg p-8 text-center transition-colors duration-150 ease-in-out`}
-            onDrop={!uploading && !isAtCapacity() ? handleDrop : undefined}
-            onDragOver={!uploading && !isAtCapacity() ? handleDragOver : undefined}
-            onDragEnter={!uploading && !isAtCapacity() ? handleDragEnter : undefined}
-            onDragLeave={!uploading && !isAtCapacity() ? handleDragLeave : undefined}
-            onClick={!uploading && !file && !isAtCapacity() ? () => fileInputRef.current.click() : undefined}
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      {/* Storage Status Display */}
+      <StorageStatusDisplay />
+
+      {/* Upload Form */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Upload Document</h3>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600"
           >
-            <input
-              ref={fileInputRef}
-              id="fileInput"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".pdf,.docx,.doc,.txt,.csv,.xls,.xlsx,.md"
-              disabled={uploading || isAtCapacity()}
-            />
-            
-            {file ? (
-              <div className="flex flex-col items-center justify-center">
-                <div className="text-4xl mb-3">{getFileIcon()}</div>
-                <div className="text-center">
-                  <p className="text-lg font-medium text-gray-900 break-all max-w-full">{file.name}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {getFileTypeName()} • {(file.size / 1024 / 1024).toFixed(2)} MB
+            <XMarkIcon className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Collection Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Select Collection
+          </label>
+          <select
+            value={selectedCollection}
+            onChange={handleCollectionChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            required
+          >
+            <option value="">Choose a collection...</option>
+            {collections.map((collection) => (
+              <option key={collection.collection_id} value={collection.collection_id}>
+                {collection.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* File Upload Area */}
+        <div
+          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            isDragging
+              ? 'border-orange-500 bg-orange-50'
+              : wouldExceedLimit
+              ? 'border-red-300 bg-red-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileChange}
+            accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.md"
+            className="hidden"
+          />
+
+          {file ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center space-x-3">
+                <span className="text-4xl">{getFileIcon()}</span>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">{file.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {getFileTypeName()} • {formatBytes(file.size)}
                   </p>
-                  {wouldExceedLimit && (
-                    <p className="text-sm text-red-600 mt-1 flex items-center justify-center">
-                      <ExclamationCircleIcon className="h-4 w-4 mr-1" />
-                      This file exceeds your remaining storage
-                    </p>
-                  )}
                 </div>
-                {!uploading && (
-                  <button
-                    type="button"
-                    className="mt-4 flex items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFile(null);
-                      setWouldExceedLimit(false);
-                      setError(null);
-                    }}
-                  >
-                    <XMarkIcon className="h-4 w-4 mr-1" />
-                    Remove file
-                  </button>
-                )}
               </div>
-            ) : (
+              {wouldExceedLimit && (
+                <div className="flex items-center justify-center space-x-2 text-red-600">
+                  <ExclamationTriangleIcon className="h-5 w-5" />
+                  <span className="text-sm">This file would exceed your storage limit</span>
+                </div>
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="text-orange-600 hover:text-orange-700 text-sm font-medium"
+              >
+                Choose different file
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <DocumentArrowUpIcon className="h-12 w-12 text-gray-400 mx-auto" />
               <div>
-                <DocumentArrowUpIcon className="h-12 w-12 text-gray-400 mx-auto" />
-                <p className="mt-4 text-sm font-medium text-gray-900">
-                  {isDragging ? 'Drop your file here' : 'Drag and drop your file here or click to browse'}
-                </p>
-                <p className="mt-2 text-xs text-gray-500">
-                  Supported formats: PDF, DOCX, DOC, TXT, CSV, XLS, XLSX, MD (Max 10MB)
-                </p>
-                <p className="mt-2 text-xs text-gray-500">
-                  Available space: {formatBytes(getRemainingStorage())}
-                </p>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-orange-600 hover:text-orange-700 font-medium"
+                >
+                  Click to upload
+                </button>
+                <span className="text-gray-500"> or drag and drop</span>
               </div>
-            )}
-          </div>
-
-          {/* Collection Selector */}
-          <div>
-            <label htmlFor="collection" className="block text-sm font-medium text-gray-700 mb-1">
-              Select Collection
-            </label>
-            <select
-              id="collection"
-              className="w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-              value={selectedCollection}
-              onChange={handleCollectionChange}
-              disabled={uploading || isAtCapacity()}
-            >
-              <option value="">Select a collection</option>
-              {collections.map((collection) => (
-                <option key={collection.collection_id} value={collection.collection_id}>
-                  {collection.name}
-                </option>
-              ))}
-            </select>
-            {!collections.length && (
-              <p className="mt-1 text-xs text-yellow-600">
-                No collections available. Create a collection first.
-              </p>
-            )}
-          </div>
-
-          {/* Upload Progress */}
-          {uploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm text-gray-700">
-                <span className="font-medium">
-                  {uploadProgress < 100 ? 'Uploading document...' : 'Processing document...'}
-                </span>
-                <span>{Math.round(uploadProgress)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className={`h-2.5 rounded-full ${
-                    uploadProgress < 100 ? 'bg-orange-600' : 'bg-green-600'
-                  }`}
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-xs text-gray-500 italic">
-                {uploadProgress < 100 
-                  ? 'Uploading your document to the server...' 
-                  : 'Processing your document for the knowledge base...'}
+              <p className="text-xs text-gray-500">
+                PDF, DOC, DOCX, TXT, CSV, XLS, XLSX, MD up to 10MB
               </p>
             </div>
           )}
+        </div>
 
-          {/* Actions */}
-          <div className="flex justify-end space-x-3 mt-6">
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={uploading}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={!file || !selectedCollection || uploading || wouldExceedLimit || isAtCapacity()}
-              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                ${(!file || !selectedCollection || uploading || wouldExceedLimit || isAtCapacity()) 
-                  ? 'bg-orange-300 cursor-not-allowed' 
-                  : 'bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500'}`}
-            >
-              {uploading ? 'Uploading...' : 'Upload Document'}
-            </button>
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-center space-x-2">
+              <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
+              <span className="text-sm text-red-700">{error}</span>
+            </div>
           </div>
-        </>
-      )}
+        )}
+
+        {/* Upload Progress */}
+        {uploading && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Uploading...</span>
+              <span className="text-sm text-gray-500">{uploadProgress.toFixed(0)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-orange-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-end space-x-3 mt-6">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            disabled={uploading}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            disabled={!file || !selectedCollection || uploading || wouldExceedLimit}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${
+              !file || !selectedCollection || uploading || wouldExceedLimit
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-orange-600 text-white hover:bg-orange-700'
+            }`}
+          >
+            {uploading ? 'Uploading...' : 'Upload Document'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

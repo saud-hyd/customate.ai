@@ -27,9 +27,9 @@ EXEMPT_PATHS = [
 # Endpoint specific limit types
 ENDPOINT_LIMIT_MAPPING = {
     "/api/chatbot/message": "messages",
-    "/api/chatbot/stream": "messages",
+    "/api/chatbot/stream": "messages", 
     "/api/chatbot/message/stream": "messages",
-    "/api/knowledge/documents/upload": "storage",
+    "/api/knowledge/documents/upload": "storage",  # This should catch the upload
     "/api/knowledge/collection": "collections"
 }
 
@@ -64,107 +64,117 @@ class SubscriptionLimitMiddleware(BaseHTTPMiddleware):
         self.cache_ttl = 300  # 5 minutes
     
     async def dispatch(self, request: Request, call_next):
-        # Skip check for exempt paths
-        if self._should_bypass_check(request.url.path):
-            return await call_next(request)
-        
-        # Skip if no client context
-        if not hasattr(request.state, "client_id"):
+        # Skip if not authenticated
+        if not hasattr(request.state, 'client_id'):
             return await call_next(request)
         
         client_id = request.state.client_id
+        path = request.url.path
         
-        # Check cache first to avoid DB lookup for every request
-        limits_exceeded, limit_info = self._check_limits_cache(client_id, request.url.path)
+        # Skip exempt paths
+        if self._is_exempt_path(path):
+            return await call_next(request)
         
-        if limits_exceeded:
-            # Client has exceeded limits, return error response
-            return self._create_limit_exceeded_response(limit_info)
+        # Check if this endpoint needs quota validation
+        if quota_config := ENDPOINT_LIMIT_MAPPING.get(path):
+            quota_type, amount = quota_config
+            
+            # For file uploads, get actual file size
+            if quota_type == "storage" and path.startswith("/api/knowledge/documents/upload"):
+                # Let the upload endpoint handle storage validation directly
+                # since it needs to read the file content anyway
+                pass
+            else:
+                # Check other quota types
+                limits_exceeded, limit_info = self._check_limits_cache(client_id, path)
+                
+                if limits_exceeded:
+                    return self._create_limit_exceeded_response(limit_info)
         
-        # Check for approaching limits and send notifications if needed
-        await self._check_and_notify_approaching_limits(client_id, limit_info)
-        
-        # Process the request
+        # Process request
         response = await call_next(request)
         
-        # For some endpoints like storage uploads, we need to update usage after the request
-        if self._should_update_usage_after(request.url.path, response.status_code):
-            await self._update_usage_after_request(client_id, request, response)
+        # Increment usage counters for successful requests
+        if response.status_code < 400:
+            # Don't increment storage here - it's handled in the upload endpoint
+            if path.startswith("/api/chatbot/message"):
+                # Increment message count
+                db = SessionLocal()
+                try:
+                    usage_tracker = UsageTracker()
+                    usage_tracker._increment_message_count(db, client_id)
+                except Exception as e:
+                    logger.error(f"Error incrementing message count: {str(e)}")
+                finally:
+                    db.close()
         
-        return response
-    
+        return response    
     def _should_bypass_check(self, path: str) -> bool:
         """Check if path should bypass limit checking."""
         return any(path.startswith(exempt_path) for exempt_path in EXEMPT_PATHS)
     
-# backend/app/core/middleware/subscription_limit_middleware.py
-# Update the _check_limits_cache method to use analytics data
-
     def _check_limits_cache(self, client_id: str, path: str) -> tuple:
         """
-        Check if client has exceeded limits, using analytics data directly.
+        Check if client has exceeded limits BEFORE allowing action.
         
         Returns:
             tuple: (limits_exceeded, limit_info)
         """
         current_time = time.time()
         
-        # Get fresh limits data from analytics
+        # Get fresh limits data
         db = SessionLocal()
         try:
-            # Calculate message usage directly from analytics data
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            current_month_start = f"{current_month}-01"
-            
-            # Import needed components
-            from sqlalchemy import func
-            from app.domain.analytics.entities import ChatMetrics, DailyStats
-            
-            # Get total messages from analytics (ChatMetrics)
-            total_messages = db.query(func.sum(ChatMetrics.total_messages))\
-                .filter(
-                    ChatMetrics.client_id == client_id,
-                    ChatMetrics.date >= current_month_start
-                ).scalar() or 0
-                
-            # Get total active users from daily stats
-            total_users = db.query(func.max(DailyStats.total_users))\
-                .filter(
-                    DailyStats.client_id == client_id,
-                    DailyStats.date >= current_month_start
-                ).scalar() or 0
-                
-            # Get storage usage
-            from app.repositories.knowledge_repository import DocumentSourceRepository
-            docs_repo = DocumentSourceRepository()
-            storage_bytes = 0
-            
-            try:
-                # Get document statistics
-                stats = docs_repo.get_document_statistics(db, client_id)
-                storage_bytes = stats.get("total_size_bytes", 0)
-            except Exception as e:
-                logger.error(f"Error getting storage statistics: {str(e)}")
-            
             # Get subscription info for limits
             from app.repositories.client_repository import SubscriptionRepository
+            from app.services.subscription.stripe_service import PLAN_LIMITS
+            
             sub_repo = SubscriptionRepository()
             subscription = sub_repo.get_active_subscription(db, client_id)
             
-            # Default limits
-            message_limit = 1000
-            user_limit = 10
-            storage_limit = 100 * 1024 * 1024  # 100MB
+            # Default limits (free plan)
+            plan_type = subscription.plan_type if subscription else "free"
+            plan_limits = PLAN_LIMITS.get(plan_type, PLAN_LIMITS["free"])
             
-            if subscription:
-                message_limit = subscription.message_limit or message_limit
-                user_limit = subscription.user_limit or user_limit
-                storage_limit = subscription.storage_limit_bytes or storage_limit
+            message_limit = plan_limits["message_limit"]
+            user_limit = plan_limits["user_limit"]
+            storage_limit_bytes = int(plan_limits["storage_limit_mb"] * 1024 * 1024)
+            
+            # Calculate current usage
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            current_month_start = f"{current_month}-01"
+            
+            # Get messages from subscription usage
+            from app.repositories.analytics_repository import SubscriptionUsageRepository
+            usage_repo = SubscriptionUsageRepository()
+            usage = usage_repo.get_by_month(db, client_id, current_month)
+            total_messages = usage.messages_used if usage else 0
+            
+            # Get active users from chat sessions
+            from app.domain.chat.entities import ChatSession
+            from sqlalchemy import func, distinct
+            total_users = db.query(func.count(distinct(ChatSession.user_id)))\
+                .filter(
+                    ChatSession.client_id == client_id,
+                    ChatSession.created_at >= current_month_start,
+                    ChatSession.user_id.isnot(None)
+                ).scalar() or 0
+            
+            # Get TOTAL storage (documents + knowledge + crawled)
+            # Force update storage calculation first
+            usage_tracker = UsageTracker()
+            usage_tracker._update_storage_usage(db, client_id)
+            
+            # Get updated storage
+            from app.repositories.analytics_repository import StorageUsageRepository
+            storage_repo = StorageUsageRepository()
+            storage_record = storage_repo.get_latest(db, client_id)
+            storage_bytes = storage_record.total_bytes if storage_record else 0
             
             # Calculate percentages
             message_percentage = (total_messages / message_limit * 100) if message_limit > 0 else 0
             user_percentage = (total_users / user_limit * 100) if user_limit > 0 else 0
-            storage_percentage = (storage_bytes / storage_limit * 100) if storage_limit > 0 else 0
+            storage_percentage = (storage_bytes / storage_limit_bytes * 100) if storage_limit_bytes > 0 else 0
             
             # Create limits info
             limits = {
@@ -182,7 +192,7 @@ class SubscriptionLimitMiddleware(BaseHTTPMiddleware):
                 },
                 "storage": {
                     "used": storage_bytes,
-                    "limit": storage_limit,
+                    "limit": storage_limit_bytes,
                     "percentage": storage_percentage,
                     "exceeded": storage_percentage >= 100
                 }
@@ -223,10 +233,14 @@ class SubscriptionLimitMiddleware(BaseHTTPMiddleware):
                     "percentage": limits["storage"]["percentage"]
                 }
             
-            # For specific endpoints, check the relevant limit type
+            # For specific endpoints, check the relevant limit type for PRE-VALIDATION
             limit_type = self._get_limit_type_for_path(path)
             if limit_type and limit_type in limits:
-                if limits[limit_type]["exceeded"]:
+                # For storage uploads, check if upload would exceed limit
+                if limit_type == "storage" and path.startswith("/api/knowledge/documents/upload"):
+                    # This will be checked again in the upload handler with actual file size
+                    pass
+                elif limits[limit_type]["exceeded"]:
                     return True, {
                         "limit_type": limit_type,
                         "used": limits[limit_type]["used"],
@@ -239,7 +253,7 @@ class SubscriptionLimitMiddleware(BaseHTTPMiddleware):
             
         finally:
             db.close()
-                
+                            
     def _get_limit_type_for_path(self, path: str) -> Optional[str]:
         """Get the limit type associated with a specific endpoint path."""
         for endpoint_pattern, limit_type in ENDPOINT_LIMIT_MAPPING.items():
@@ -421,3 +435,16 @@ class SubscriptionLimitMiddleware(BaseHTTPMiddleware):
             logger.error(f"Error updating usage after request for {client_id}: {str(e)}")
         finally:
             db.close()
+async def _get_file_size_from_request(self, request: Request) -> int:
+    """Extract file size from upload request"""
+    try:
+        # For multipart form data (file uploads)
+        if request.headers.get("content-type", "").startswith("multipart/form-data"):
+            # Read the content length from headers
+            content_length = request.headers.get("content-length")
+            if content_length:
+                return int(content_length)
+        return 0
+    except Exception as e:
+        logger.error(f"Error getting file size from request: {str(e)}")
+        return 0                

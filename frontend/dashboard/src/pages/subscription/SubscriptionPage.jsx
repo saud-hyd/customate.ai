@@ -15,19 +15,20 @@ const SubscriptionPage = () => {
   const [processingPlan, setProcessingPlan] = useState(null);
 
   // Plan details
+// Plan details - UPDATED to match backend exactly
   const plans = {
     free: {
       name: 'Free',
       price: '$0',
       description: 'Get started with basic chatbot',
-      messageLimit: 100,  // Updated from 500
+      messageLimit: 100,
       userLimit: 5,
-      storageLimit: '500 KB',  // Updated from 50 MB
+      storageLimit: '500 KB',
       collectionLimit: 3,
       features: [
-        { name: '100 messages per month', included: true },  // Updated
+        { name: '100 messages per month', included: true },
         { name: '5 active users', included: true },
-        { name: '500 KB storage', included: true },  // Updated
+        { name: '500 KB storage', included: true },
         { name: '3 knowledge collections', included: true },
         { name: 'Basic chat functionality', included: true },
         { name: 'Community support', included: true },
@@ -41,14 +42,14 @@ const SubscriptionPage = () => {
       name: 'Basic',
       price: '$29',
       description: 'Essential features for small businesses',
-      messageLimit: 2000,  // Updated from 5000
+      messageLimit: 2000,
       userLimit: 25, 
-      storageLimit: '5 MB',  // Updated from 500 MB
+      storageLimit: '5 MB',
       collectionLimit: 10,
       features: [
-        { name: '2,000 messages per month', included: true },  // Updated
+        { name: '2,000 messages per month', included: true },
         { name: '25 active users', included: true },
-        { name: '5 MB storage', included: true },  // Updated
+        { name: '5 MB storage', included: true },
         { name: '10 knowledge collections', included: true },
         { name: 'Basic chat functionality', included: true },
         { name: 'Knowledge integration', included: true },
@@ -58,7 +59,7 @@ const SubscriptionPage = () => {
         { name: 'External integrations', included: false },
       ]
     },
-    standard: {  // New tier
+    standard: {
       name: 'Standard',
       price: '$69',
       description: 'Advanced features for growing teams',
@@ -79,18 +80,18 @@ const SubscriptionPage = () => {
         { name: 'External integrations', included: true },
       ]
     },
-    professional: {  // Renamed from enterprise
+    professional: {
       name: 'Professional',
       price: '$149',
       description: 'Ultimate solution for businesses',
-      messageLimit: 12000,  // Updated from 100000
-      userLimit: 100,  // Updated from 500
-      storageLimit: '100 MB',  // Updated from 10 GB
-      collectionLimit: 50,  // Updated from 250
+      messageLimit: 12000,
+      userLimit: 100,
+      storageLimit: '100 MB',
+      collectionLimit: 50,
       features: [
-        { name: '12,000 messages per month', included: true },  // Updated
-        { name: '100 active users', included: true },  // Updated
-        { name: '100 MB storage', included: true },  // Updated
+        { name: '12,000 messages per month', included: true },
+        { name: '100 active users', included: true },
+        { name: '100 MB storage', included: true },
         { name: '50 knowledge collections', included: true },
         { name: 'Advanced chat functionality', included: true },
         { name: 'Knowledge integration', included: true },
@@ -101,7 +102,6 @@ const SubscriptionPage = () => {
       ]
     }
   };
-
   useEffect(() => {
     fetchData();
     

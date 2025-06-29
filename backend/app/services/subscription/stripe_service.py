@@ -28,32 +28,33 @@ PLAN_MAPPING = {
 }
 
 # Update PLAN_LIMITS with new limits
+# Update PLAN_LIMITS with consistent values
 PLAN_LIMITS = {
     "free": {
-        "message_limit": 100,  # Updated from 500
+        "message_limit": 100,
         "user_limit": 5,
-        "storage_limit_mb": 0.5,  # 500KB
+        "storage_limit_mb": 0.5,  # 500 KB
         "collections_limit": 3,
         "features": ["basic_chat", "knowledge_integration"]
     },
     "basic": {
-        "message_limit": 2000,  # Updated from 5000
+        "message_limit": 2000,
         "user_limit": 25,
-        "storage_limit_mb": 5,  # 5MB
+        "storage_limit_mb": 5,  # 5 MB
         "collections_limit": 10,
         "features": ["basic_chat", "knowledge_integration", "analytics"]
     },
-    "standard": {  # New tier
+    "standard": {
         "message_limit": 5000,
         "user_limit": 50,
-        "storage_limit_mb": 25,  # 25MB
+        "storage_limit_mb": 25,  # 25 MB
         "collections_limit": 25,
         "features": ["basic_chat", "knowledge_integration", "analytics", "integrations"]
     },
-    "professional": {  # Updated from enterprise
-        "message_limit": 12000,  # Updated from 100000
-        "user_limit": 100,  # Updated from 500
-        "storage_limit_mb": 100,  # 100MB, updated from 10000
+    "professional": {
+        "message_limit": 12000,
+        "user_limit": 100,
+        "storage_limit_mb": 100,  # 100 MB
         "collections_limit": 50,
         "features": ["advanced_chat", "knowledge_integration", "analytics", "integrations", "priority_support"]
     }
