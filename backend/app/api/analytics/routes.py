@@ -25,13 +25,13 @@ from app.api.analytics.schemas import (
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
-@router.get("/dashboard", response_model=DashboardOverviewResponse)
-async def get_dashboard_overview(
-    days: int = Query(30, description="Number of days to include in report"),
+@router.get("/dashboard-optimized", response_model=DashboardOverviewResponse)
+async def get_dashboard_overview_optimized(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
     """
+<<<<<<< Updated upstream
     Get dashboard overview analytics using real data from chat_messages table.
     """
     try:
@@ -42,10 +42,16 @@ async def get_dashboard_overview(
         actual_message_count = usage_tracker.sync_message_counts_from_database(db, current_client.client_id)
         
         # Count actual sessions for this month
+=======
+    Optimized dashboard overview with real today's message counts.
+    """
+    try:
+>>>>>>> Stashed changes
         from app.domain.chat.entities import ChatSession, ChatMessage
         from sqlalchemy import func
         from datetime import datetime, timedelta
         
+<<<<<<< Updated upstream
         current_month = datetime.utcnow().strftime("%Y-%m")
         month_start = f"{current_month}-01"
         today = datetime.utcnow().strftime("%Y-%m-%d")
@@ -58,18 +64,30 @@ async def get_dashboard_overview(
             ).scalar() or 0
             
         # Count sessions today
+=======
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        current_month = datetime.utcnow().strftime("%Y-%m")
+        month_start = f"{current_month}-01"
+        
+        # Count today's sessions
+>>>>>>> Stashed changes
         today_sessions = db.query(func.count(func.distinct(ChatSession.session_id)))\
             .filter(
                 ChatSession.client_id == current_client.client_id,
                 func.date(ChatSession.created_at) == today
             ).scalar() or 0
             
+<<<<<<< Updated upstream
         # ✅ FIX: Count actual messages for TODAY (not hardcoded 0)
+=======
+        # Count today's messages (assistant responses only)
+>>>>>>> Stashed changes
         today_messages = db.query(func.count(ChatMessage.id))\
             .join(ChatSession, ChatMessage.session_id == ChatSession.session_id)\
             .filter(
                 ChatSession.client_id == current_client.client_id,
                 func.date(ChatMessage.created_at) == today,
+<<<<<<< Updated upstream
                 ChatMessage.role == 'assistant'  # Only count bot responses
             ).scalar() or 0
             
@@ -80,21 +98,59 @@ async def get_dashboard_overview(
                 "messages": today_messages,  # ✅ FIXED: Now shows real count instead of 0
                 "searches": 0,
                 "users": today_sessions,  # Approximate as sessions
+=======
+                ChatMessage.role == 'assistant'
+            ).scalar() or 0
+            
+        # Count monthly sessions
+        monthly_sessions = db.query(func.count(func.distinct(ChatSession.session_id)))\
+            .filter(
+                ChatSession.client_id == current_client.client_id,
+                ChatSession.created_at >= month_start
+            ).scalar() or 0
+            
+        # Count monthly messages
+        monthly_messages = db.query(func.count(ChatMessage.id))\
+            .join(ChatSession, ChatMessage.session_id == ChatSession.session_id)\
+            .filter(
+                ChatSession.client_id == current_client.client_id,
+                ChatMessage.created_at >= month_start,
+                ChatMessage.role == 'assistant'
+            ).scalar() or 0
+        
+        return {
+            "today": {
+                "sessions": today_sessions,
+                "messages": today_messages,  # ✅ Real count, not 0
+                "searches": 0,
+                "users": today_sessions,
+>>>>>>> Stashed changes
                 "avg_response_time_ms": 0,
                 "knowledge_usage_ratio": 0
             },
             "changes": {
                 "sessions": 0,
+<<<<<<< Updated upstream
                 "messages": 0,
+=======
+                "messages": 0, 
+>>>>>>> Stashed changes
                 "searches": 0,
                 "users": 0
             },
             "monthly": {
                 "total_sessions": monthly_sessions,
+<<<<<<< Updated upstream
                 "total_messages": actual_message_count,
                 "total_searches": 0,
                 "avg_sessions_per_day": monthly_sessions / 30,
                 "avg_messages_per_day": actual_message_count / 30,
+=======
+                "total_messages": monthly_messages,  # ✅ Real monthly count
+                "total_searches": 0,
+                "avg_sessions_per_day": monthly_sessions / 30,
+                "avg_messages_per_day": monthly_messages / 30,
+>>>>>>> Stashed changes
                 "avg_searches_per_day": 0,
                 "avg_response_time_ms": 0,
                 "avg_knowledge_usage_ratio": 0
@@ -102,8 +158,13 @@ async def get_dashboard_overview(
             "subscription": {
                 "within_limits": True,
                 "limits": {
+<<<<<<< Updated upstream
                     "messages": {"used": actual_message_count, "limit": 100, "exceeded": False, "percentage": (actual_message_count/100)*100},
                     "users": {"active": monthly_sessions, "limit": 10, "exceeded": False, "percentage": (monthly_sessions/10)*100},
+=======
+                    "messages": {"used": monthly_messages, "limit": 100, "exceeded": False, "percentage": min(100, (monthly_messages/100)*100)},
+                    "users": {"active": monthly_sessions, "limit": 10, "exceeded": False, "percentage": min(100, (monthly_sessions/10)*100)},
+>>>>>>> Stashed changes
                     "storage": {"used_bytes": 0, "limit_bytes": 512*1024, "exceeded": False, "percentage": 0}
                 }
             },
@@ -114,8 +175,12 @@ async def get_dashboard_overview(
         }
         
     except Exception as e:
+<<<<<<< Updated upstream
         logger.exception(f"Error getting dashboard overview: {str(e)}")
         # Return default values on error
+=======
+        logger.exception(f"Error getting optimized dashboard overview: {str(e)}")
+>>>>>>> Stashed changes
         return {
             "today": {"sessions": 0, "messages": 0, "searches": 0, "users": 0, "avg_response_time_ms": 0, "knowledge_usage_ratio": 0},
             "changes": {"sessions": 0, "messages": 0, "searches": 0, "users": 0},
@@ -123,7 +188,11 @@ async def get_dashboard_overview(
             "subscription": {"within_limits": True, "limits": {"messages": {"used": 0, "limit": 100, "exceeded": False, "percentage": 0}, "users": {"active": 0, "limit": 10, "exceeded": False, "percentage": 0}, "storage": {"used_bytes": 0, "limit_bytes": 512*1024, "exceeded": False, "percentage": 0}}},
             "time_period": {"start_date": (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d"), "end_date": datetime.utcnow().strftime("%Y-%m-%d")}
         }
+<<<<<<< Updated upstream
                 
+=======
+        
+>>>>>>> Stashed changes
 @router.get("/chat", response_model=ChatPerformanceResponse)
 async def get_chat_performance(
     days: int = Query(30, description="Number of days to include in report"),
