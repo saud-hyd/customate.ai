@@ -300,3 +300,29 @@ class UsageTracker:
                     "storage": {"used_bytes": 0, "limit_bytes": 1024*1024, "percentage": 0, "exceeded": False}
                 }
             }
+            
+    def sync_message_counts_from_database(self, db: Session, client_id: str) -> int:
+        """Sync message counts from actual database messages."""
+        try:
+            from app.domain.chat.entities import ChatSession, ChatMessage
+            from sqlalchemy import func
+            from datetime import datetime
+            
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            month_start = f"{current_month}-01"
+            
+            # Count actual assistant messages
+            actual_count = db.query(func.count(ChatMessage.id))\
+                .join(ChatSession, ChatSession.session_id == ChatMessage.session_id)\
+                .filter(
+                    ChatSession.client_id == client_id,
+                    ChatMessage.role == 'assistant',
+                    ChatMessage.created_at >= month_start
+                )\
+                .scalar() or 0
+            
+            return actual_count
+            
+        except Exception as e:
+            logger.exception(f"Error syncing message counts: {str(e)}")
+            return 0

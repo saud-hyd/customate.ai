@@ -269,7 +269,7 @@ const DashboardPage = () => {
             </p>
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            {formatNumber(dashboardData.monthly?.total_sessions || 0)} this month
+            {formatNumber(subscriptionData.usage?.messages?.used || dashboardData.monthly?.total_messages || 0)} this month
           </p>
         </div>
         

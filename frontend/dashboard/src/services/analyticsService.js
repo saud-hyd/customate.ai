@@ -97,8 +97,8 @@ const analyticsService = {
   getDashboardOverview: async () => {
     const key = 'dashboardOverview';
     return analyticsService.requestManager(key, () => {
-      // Use the optimized endpoint
-      return api.get('/api/analytics/dashboard-optimized').then(response => response.data);
+      // Use the correct endpoint that exists in backend
+      return api.get('/api/analytics/dashboard').then(response => response.data);
     });
   },
 
@@ -144,7 +144,7 @@ const analyticsService = {
   // Fix message counts - clear cache after operation
   fixMessageCounts: async () => {
     try {
-      const response = await api.post('/api/analytics/sync-subscription-usage');
+      const response = await api.post('/api/client/sync-subscription-messages');
       
       // Clear cache to ensure fresh data
       analyticsService.dataCache = {};

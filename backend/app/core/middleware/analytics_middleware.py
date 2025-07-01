@@ -67,7 +67,7 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
                 # Open a new database session
                 db = SessionLocal()
                 
-                # Track the API request
+                # Track the API request ONLY - no message counting
                 self.usage_tracker.track_api_request(
                     db=db,
                     client_id=client_id,
@@ -79,21 +79,8 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
                     user_agent=request.headers.get("user-agent")
                 )
                 
-                # INCREMENT MESSAGE COUNT FOR STREAM ENDPOINTS ONLY
-                stream_endpoints = [
-                    "/api/chatbot/message/stream",
-                    "/api/widget/message/stream"
-                ]
-                
-                if (any(request.url.path.startswith(endpoint) for endpoint in stream_endpoints) and 
-                    response.status_code < 400):
-                    
-                    logger.info(f"Incrementing message count for client {client_id} on {request.url.path}")
-                    success = self.usage_tracker._increment_message_count(db, client_id)
-                    if success:
-                        logger.info(f"✅ Message count incremented for {client_id}")
-                    else:
-                        logger.error(f"❌ Failed to increment message count for {client_id}")
+                # REMOVED: The problematic message count increment
+                # This was causing the timing and transaction issues
                 
                 # Close the session
                 db.close()
