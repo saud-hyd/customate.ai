@@ -1,9 +1,10 @@
 # backend/app/core/middleware/analytics_middleware.py
+
+import time
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 from sqlalchemy.orm import Session
-import time
 
 from app.core.database.session import SessionLocal
 from app.services.analytics.usage_tracker import UsageTracker
@@ -11,13 +12,7 @@ from app.core import logger
 
 class AnalyticsMiddleware(BaseHTTPMiddleware):
     """
-    Middleware that tracks API usage for analytics.
-    
-    This middleware:
-    1. Measures request processing time
-    2. Records API endpoint usage
-    3. Tracks response status codes
-    4. Collects user agent information
+    Fixed middleware that properly tracks messages on all chat endpoints.
     """
     
     def __init__(self, app: ASGIApp):
@@ -32,10 +27,22 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
             "/favicon.ico",
             "/static",
         ]
+        
+        # Chat endpoints that should increment message count
+        self._message_endpoints = [
+            "/api/chatbot/message",
+            "/api/chatbot/message/stream", 
+            "/api/widget/message",
+            "/api/widget/message/stream"
+        ]
     
     def _should_skip_tracking(self, path: str) -> bool:
         """Check if tracking should be skipped for this path."""
         return any(path.startswith(skip_path) for skip_path in self._endpoints_to_skip)
+    
+    def _is_chat_endpoint(self, path: str) -> bool:
+        """Check if this is a chat endpoint that should increment message count."""
+        return any(path.startswith(endpoint) for endpoint in self._message_endpoints)
     
     async def dispatch(self, request: Request, call_next):
         # Skip tracking for certain endpoints
@@ -54,7 +61,6 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
         
         # Only track if we can identify the client
         if hasattr(request.state, "client_id"):
-            # Get client ID from request state (set by ClientContextMiddleware)
             client_id = request.state.client_id
             
             try:
@@ -73,20 +79,29 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
                     user_agent=request.headers.get("user-agent")
                 )
                 
-                # Increment message count for chat endpoints
-                if request.url.path.startswith("/api/chatbot/message") and response.status_code < 400:
-                    logger.info(f"Tracking chat message for client {client_id}")
-                    # Make sure to initialize usage if it doesn't exist
-                    self.usage_tracker.initialize_subscription_usage(db, client_id)
-                    # Increment message usage
-                    self.usage_tracker.subscription_usage_repo.increment_usage(db, client_id, "messages_used")
-                    logger.info(f"Incremented message count for client {client_id}")
+                # INCREMENT MESSAGE COUNT FOR STREAM ENDPOINTS ONLY
+                stream_endpoints = [
+                    "/api/chatbot/message/stream",
+                    "/api/widget/message/stream"
+                ]
+                
+                if (any(request.url.path.startswith(endpoint) for endpoint in stream_endpoints) and 
+                    response.status_code < 400):
+                    
+                    logger.info(f"Incrementing message count for client {client_id} on {request.url.path}")
+                    success = self.usage_tracker._increment_message_count(db, client_id)
+                    if success:
+                        logger.info(f"✅ Message count incremented for {client_id}")
+                    else:
+                        logger.error(f"❌ Failed to increment message count for {client_id}")
                 
                 # Close the session
                 db.close()
                 
             except Exception as e:
-                logger.error(f"Error tracking API usage: {str(e)}")
+                logger.error(f"Error in analytics middleware: {str(e)}")
+                if 'db' in locals():
+                    db.close()
         
         # Add processing time header for debugging
         response.headers["X-Process-Time-Ms"] = str(process_time_ms)

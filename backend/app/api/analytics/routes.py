@@ -262,6 +262,7 @@ async def get_api_usage(
     
     return result
 
+
 @router.get("/subscription/limits", response_model=Dict[str, Any])
 async def check_subscription_limits(
     current_client: Client = Depends(get_current_client),
@@ -269,15 +270,50 @@ async def check_subscription_limits(
 ):
     """
     Check current subscription usage against limits.
-    
-    Returns detailed information about current usage versus
-    subscription plan limits.
+    Returns the CORRECT message count from subscription_usage table.
     """
-    usage_tracker = UsageTracker()
-    result = usage_tracker.check_subscription_limits(db, current_client.client_id)
-    
-    return result
-
+    try:
+        usage_tracker = UsageTracker()
+        
+        # Get message limits (this uses the subscription_usage table)
+        message_limits = usage_tracker.check_message_limits(db, current_client.client_id)
+        
+        # Get overall subscription limits (for storage, users, etc.)
+        overall_limits = usage_tracker.check_subscription_limits(db, current_client.client_id)
+        
+        # Format response to match what frontend expects
+        return {
+            "limits": {
+                "messages": {
+                    "used": message_limits["messages_used"],
+                    "limit": message_limits["message_limit"],
+                    "percentage": message_limits["percentage"],
+                    "exceeded": not message_limits["within_limits"]
+                },
+                "users": {
+                    "used": overall_limits["limits"]["users"]["used"],
+                    "limit": overall_limits["limits"]["users"]["limit"],
+                    "percentage": overall_limits["limits"]["users"]["percentage"],
+                    "exceeded": overall_limits["limits"]["users"]["exceeded"]
+                },
+                "storage": {
+                    "used_bytes": overall_limits["limits"]["storage"]["used_bytes"],
+                    "limit_bytes": overall_limits["limits"]["storage"]["limit_bytes"],
+                    "percentage": overall_limits["limits"]["storage"]["percentage"],
+                    "exceeded": overall_limits["limits"]["storage"]["exceeded"]
+                }
+            },
+            "within_limits": message_limits["within_limits"] and overall_limits["within_limits"],
+            "plan_type": message_limits["plan_type"]
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error checking subscription limits: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error checking limits: {str(e)}"
+        )
+        
 @router.get("/performance", response_model=Dict[str, Any])
 async def get_performance_metrics(
     days: int = Query(30, description="Number of days to include in report"),
@@ -632,103 +668,3 @@ async def get_storage_statistics(
             "limit_bytes": 524288  # 500 KB default
         }
         
-@router.get("/dashboard-optimized", response_model=Dict[str, Any])
-async def get_dashboard_overview_optimized(
-    days: int = Query(30, description="Number of days to include in report"),
-    current_client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db)
-):
-    """
-    Optimized version of dashboard overview analytics.
-    Reduces database queries and response time.
-    """
-    try:
-        # Get all required dates in one go
-        today = datetime.utcnow().date()
-        yesterday = today - timedelta(days=1)
-        thirty_days_ago = today - timedelta(days=30)
-        
-        # Single query to get all daily stats
-        daily_stats = db.query(DailyStats).filter(
-            DailyStats.client_id == current_client.client_id,
-            DailyStats.date >= thirty_days_ago.strftime("%Y-%m-%d")
-        ).all()
-        
-        # Process stats in memory instead of multiple database calls
-        today_stats = next((stats for stats in daily_stats 
-                          if stats.date == today.strftime("%Y-%m-%d")), None)
-        yesterday_stats = next((stats for stats in daily_stats 
-                              if stats.date == yesterday.strftime("%Y-%m-%d")), None)
-        
-        # Calculate aggregates
-        total_sessions = sum(stats.total_sessions for stats in daily_stats) or 0
-        total_messages = sum(stats.total_messages for stats in daily_stats) or 0
-        total_searches = sum(stats.total_searches for stats in daily_stats) or 0
-        
-        # Calculate averages
-        avg_sessions = total_sessions / len(daily_stats) if daily_stats else 0
-        avg_messages = total_messages / len(daily_stats) if daily_stats else 0
-        avg_searches = total_searches / len(daily_stats) if daily_stats else 0
-        
-        # Get subscription information - can't avoid this call
-        usage_tracker = UsageTracker()
-        subscription_status = usage_tracker.check_subscription_limits(db, current_client.client_id)
-        
-        # Build response
-        result = {
-            "today": {
-                "sessions": today_stats.total_sessions if today_stats else 0,
-                "messages": today_stats.total_messages if today_stats else 0,
-                "searches": today_stats.total_searches if today_stats else 0,
-                "users": today_stats.total_users if today_stats else 0,
-                "avg_response_time_ms": today_stats.average_response_time_ms if today_stats else None,
-                "knowledge_usage_ratio": today_stats.knowledge_usage_ratio if today_stats else 0
-            },
-            "changes": {
-                "sessions": calculate_percentage_change(
-                    today_stats.total_sessions if today_stats else 0,
-                    yesterday_stats.total_sessions if yesterday_stats else 0
-                ),
-                "messages": calculate_percentage_change(
-                    today_stats.total_messages if today_stats else 0,
-                    yesterday_stats.total_messages if yesterday_stats else 0
-                ),
-                "searches": calculate_percentage_change(
-                    today_stats.total_searches if today_stats else 0,
-                    yesterday_stats.total_searches if yesterday_stats else 0
-                ),
-                "users": calculate_percentage_change(
-                    today_stats.total_users if today_stats else 0,
-                    yesterday_stats.total_users if yesterday_stats else 0
-                )
-            },
-            "monthly": {
-                "total_sessions": total_sessions,
-                "total_messages": total_messages,
-                "total_searches": total_searches,
-                "avg_sessions_per_day": avg_sessions,
-                "avg_messages_per_day": avg_messages,
-                "avg_searches_per_day": avg_searches
-            },
-            "subscription": subscription_status,
-            "time_period": {
-                "start_date": thirty_days_ago.strftime("%Y-%m-%d"),
-                "end_date": today.strftime("%Y-%m-%d"),
-                "days": days
-            }
-        }
-        
-        return result
-        
-    except Exception as e:
-        logger.exception(f"Error generating optimized dashboard overview: {str(e)}")
-        return {
-            "error": "Failed to generate dashboard overview",
-            "details": str(e)
-        }
-
-def calculate_percentage_change(current, previous):
-    """Calculate percentage change between two values."""
-    if previous == 0:
-        return 0
-    return ((current - previous) / previous) * 100        
