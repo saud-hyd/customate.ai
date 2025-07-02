@@ -2,6 +2,7 @@
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from datetime import datetime
 
 from app.domain.channel.entities import Channel, ChannelConversation, ChannelMessage
 from app.repositories.base_repository import BaseRepository
@@ -37,12 +38,21 @@ class ChannelRepository(BaseRepository[Channel, Dict[str, Any], Dict[str, Any]])
         
         return query.all()
     
-    def get_by_platform_identifier(self, db: Session, platform: str, identifier: str) -> Optional[Channel]:
-        """Get channel by platform and platform identifier."""
-        return db.query(self.model).filter(
-            self.model.platform == platform,
-            self.model.platform_identifier == identifier
+    def get_conversation_by_id(self, db: Session, conversation_id: str) -> Optional[ChannelConversation]:
+        """Get conversation by conversation ID."""
+        return db.query(ChannelConversation).filter(
+            ChannelConversation.conversation_id == conversation_id
         ).first()
+    
+    def get_by_platform_identifier(self, db: Session, platform: str, identifier: str) -> Optional[Channel]:
+        """Get channel by platform and identifier."""
+        return db.query(Channel).filter(
+            Channel.platform == platform,
+            Channel.platform_identifier == identifier,
+            Channel.active == True
+        ).first()
+        
+        
 
 class ChannelConversationRepository(BaseRepository[ChannelConversation, Dict[str, Any], Dict[str, Any]]):
     """Repository for ChannelConversation entity."""
@@ -51,8 +61,22 @@ class ChannelConversationRepository(BaseRepository[ChannelConversation, Dict[str
         super().__init__(ChannelConversation)
     
     def get_by_conversation_id(self, db: Session, conversation_id: str) -> Optional[ChannelConversation]:
-        """Get conversation by conversation_id."""
-        return db.query(self.model).filter(self.model.conversation_id == conversation_id).first()
+        """Get conversation by conversation ID."""
+        return db.query(ChannelConversation).filter(
+            ChannelConversation.conversation_id == conversation_id
+        ).first()
+        
+    def get_by_platform_user(
+        self, 
+        db: Session, 
+        channel_id: str, 
+        platform_user_id: str
+    ) -> Optional[ChannelConversation]:
+        """Get conversation by channel and platform user ID."""
+        return db.query(ChannelConversation).filter(
+            ChannelConversation.channel_id == channel_id,
+            ChannelConversation.platform_user_id == platform_user_id
+        ).first()        
     
     def get_by_channel_id(self, db: Session, channel_id: str, limit: int = 100, skip: int = 0) -> List[ChannelConversation]:
         """Get conversations for a channel with pagination."""

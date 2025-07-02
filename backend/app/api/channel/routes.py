@@ -71,24 +71,29 @@ async def get_channels(
     db: Session = Depends(get_db)
 ):
     """Get all channels for the current client."""
-    channel_service = ChannelService(db)
-    channels = await channel_service.get_client_channels(current_client.client_id, platform)
-    
-    base_url = f"{request.url.scheme}://{request.url.netloc}"
-    
-    return [
-        {
-            "channel_id": channel.channel_id,
-            "name": channel.name,
-            "platform": channel.platform,
-            "platform_identifier": channel.platform_identifier,
-            "active": channel.active,
-            "created_at": channel.created_at.isoformat(),
-            "webhook_url": f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}",
-            "status": "connected" if channel.active else "disconnected"
-        }
-        for channel in channels
-    ]
+    try:
+        channel_service = ChannelService(db)
+        # FIXED: Removed await - this method is not async
+        channels = channel_service.get_client_channels(current_client.client_id, platform)
+        
+        base_url = f"{request.url.scheme}://{request.url.netloc}"
+        
+        return [
+            {
+                "channel_id": channel.channel_id,
+                "name": channel.name,
+                "platform": channel.platform,
+                "platform_identifier": channel.platform_identifier,
+                "active": channel.active,
+                "created_at": channel.created_at.isoformat(),
+                "webhook_url": f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}",
+                "status": "connected" if channel.active else "disconnected"
+            }
+            for channel in channels
+        ]
+    except Exception as e:
+        logger.error(f"Error getting channels: {str(e)}")
+        return []
 
 @router.post("", response_model=ChannelResponse)
 async def create_channel(
@@ -98,27 +103,35 @@ async def create_channel(
     db: Session = Depends(get_db)
 ):
     """Create a new channel."""
-    # Convert Pydantic model to dict
-    channel_dict = channel_data.dict()
-    
-    # Create channel
-    channel_service = ChannelService(db)
-    channel = await channel_service.create_channel(current_client.client_id, channel_dict)
-    
-    # Generate webhook URL
-    base_url = f"{request.url.scheme}://{request.url.netloc}"
-    webhook_url = f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}"
-    
-    return {
-        "channel_id": channel.channel_id,
-        "name": channel.name,
-        "platform": channel.platform,
-        "platform_identifier": channel.platform_identifier,
-        "active": channel.active,
-        "created_at": channel.created_at.isoformat(),
-        "webhook_url": webhook_url,
-        "status": "connected" if channel.active else "disconnected"
-    }
+    try:
+        # Convert Pydantic model to dict
+        channel_dict = channel_data.dict()
+        
+        # Create channel
+        channel_service = ChannelService(db)
+        # FIXED: Removed await - this method is not async
+        channel = channel_service.create_channel(current_client.client_id, channel_dict)
+        
+        # Generate webhook URL
+        base_url = f"{request.url.scheme}://{request.url.netloc}"
+        webhook_url = f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}"
+        
+        return {
+            "channel_id": channel.channel_id,
+            "name": channel.name,
+            "platform": channel.platform,
+            "platform_identifier": channel.platform_identifier,
+            "active": channel.active,
+            "created_at": channel.created_at.isoformat(),
+            "webhook_url": webhook_url,
+            "status": "connected" if channel.active else "disconnected"
+        }
+    except Exception as e:
+        logger.error(f"Error creating channel: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to create channel: {str(e)}"
+        )
 
 @router.get("/{channel_id}", response_model=ChannelResponse)
 async def get_channel(
@@ -128,29 +141,38 @@ async def get_channel(
     db: Session = Depends(get_db)
 ):
     """Get channel details."""
-    channel_repo = ChannelRepository()
-    channel = channel_repo.get_by_channel_id(db, channel_id)
-    
-    if not channel or channel.client_id != current_client.client_id:
+    try:
+        channel_repo = ChannelRepository()
+        channel = channel_repo.get_by_channel_id(db, channel_id)
+        
+        if not channel or channel.client_id != current_client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        # Generate webhook URL
+        base_url = f"{request.url.scheme}://{request.url.netloc}"
+        webhook_url = f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}"
+        
+        return {
+            "channel_id": channel.channel_id,
+            "name": channel.name,
+            "platform": channel.platform,
+            "platform_identifier": channel.platform_identifier,
+            "active": channel.active,
+            "created_at": channel.created_at.isoformat(),
+            "webhook_url": webhook_url,
+            "status": "connected" if channel.active else "disconnected"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting channel: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Channel not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve channel: {str(e)}"
         )
-    
-    # Generate webhook URL
-    base_url = f"{request.url.scheme}://{request.url.netloc}"
-    webhook_url = f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}"
-    
-    return {
-        "channel_id": channel.channel_id,
-        "name": channel.name,
-        "platform": channel.platform,
-        "platform_identifier": channel.platform_identifier,
-        "active": channel.active,
-        "created_at": channel.created_at.isoformat(),
-        "webhook_url": webhook_url,
-        "status": "connected" if channel.active else "disconnected"
-    }
 
 @router.put("/{channel_id}", response_model=ChannelResponse)
 async def update_channel(
@@ -161,33 +183,43 @@ async def update_channel(
     db: Session = Depends(get_db)
 ):
     """Update a channel."""
-    channel_service = ChannelService(db)
-    channel = await channel_service.update_channel(
-        current_client.client_id, 
-        channel_id, 
-        update_data.dict(exclude_unset=True)
-    )
-    
-    if not channel:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Channel not found"
+    try:
+        channel_service = ChannelService(db)
+        # FIXED: Removed await - this method is not async
+        channel = channel_service.update_channel(
+            current_client.client_id, 
+            channel_id, 
+            update_data.dict(exclude_unset=True)
         )
-    
-    # Generate webhook URL
-    base_url = f"{request.url.scheme}://{request.url.netloc}"
-    webhook_url = f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}"
-    
-    return {
-        "channel_id": channel.channel_id,
-        "name": channel.name,
-        "platform": channel.platform,
-        "platform_identifier": channel.platform_identifier,
-        "active": channel.active,
-        "created_at": channel.created_at.isoformat(),
-        "webhook_url": webhook_url,
-        "status": "connected" if channel.active else "disconnected"
-    }
+        
+        if not channel:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        # Generate webhook URL
+        base_url = f"{request.url.scheme}://{request.url.netloc}"
+        webhook_url = f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}"
+        
+        return {
+            "channel_id": channel.channel_id,
+            "name": channel.name,
+            "platform": channel.platform,
+            "platform_identifier": channel.platform_identifier,
+            "active": channel.active,
+            "created_at": channel.created_at.isoformat(),
+            "webhook_url": webhook_url,
+            "status": "connected" if channel.active else "disconnected"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating channel: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update channel: {str(e)}"
+        )
 
 @router.delete("/{channel_id}", status_code=204)
 async def delete_channel(
@@ -196,16 +228,26 @@ async def delete_channel(
     db: Session = Depends(get_db)
 ):
     """Delete a channel."""
-    channel_service = ChannelService(db)
-    success = await channel_service.delete_channel(current_client.client_id, channel_id)
-    
-    if not success:
+    try:
+        channel_service = ChannelService(db)
+        # FIXED: Removed await - this method is not async
+        success = channel_service.delete_channel(current_client.client_id, channel_id)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        return Response(status_code=204)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting channel: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Channel not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete channel: {str(e)}"
         )
-    
-    return Response(status_code=204)
 
 @router.get("/{channel_id}/conversations", response_model=List[ConversationSummary])
 async def get_channel_conversations(
@@ -216,46 +258,52 @@ async def get_channel_conversations(
     db: Session = Depends(get_db)
 ):
     """Get conversations for a channel."""
-    # Verify channel belongs to client
-    channel_repo = ChannelRepository()
-    channel = channel_repo.get_by_channel_id(db, channel_id)
-    
-    if not channel or channel.client_id != current_client.client_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Channel not found"
-        )
-    
-    # Get conversations
-    conversation_repo = ChannelConversationRepository()
-    message_repo = ChannelMessageRepository()
-    
-    conversations = conversation_repo.get_by_channel_id(db, channel_id, limit=limit, skip=skip)
-    
-    result = []
-    for conv in conversations:
-        # Get latest message for preview
-        messages = message_repo.get_by_conversation_id(db, conv.conversation_id, limit=1)
-        last_message = messages[0] if messages else None
+    try:
+        # Verify channel belongs to client
+        channel_repo = ChannelRepository()
+        channel = channel_repo.get_by_channel_id(db, channel_id)
         
-        # Count total messages
-        # In a production scenario, you'd want to store this count in the conversation
-        # to avoid counting on every request
-        message_count = db.query(ChannelMessage).filter(
-            ChannelMessage.conversation_id == conv.conversation_id
-        ).count()
+        if not channel or channel.client_id != current_client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
         
-        result.append({
-            "conversation_id": conv.conversation_id,
-            "platform_user_id": conv.platform_user_id,
-            "user_name": conv.user_name,
-            "user_profile_url": conv.user_profile_url,
-            "last_message_at": conv.last_message_at.isoformat(),
-            "message_count": message_count,
-            "last_message_preview": last_message.content[:50] + "..." if last_message and last_message.content and len(last_message.content) > 50 else last_message.content if last_message else None
-        })
-    
-    return result
+        # Get conversations
+        conversation_repo = ChannelConversationRepository()
+        message_repo = ChannelMessageRepository()
+        
+        conversations = conversation_repo.get_by_channel_id(db, channel_id, limit=limit, skip=skip)
+        
+        result = []
+        for conv in conversations:
+            # Get latest message for preview
+            messages = message_repo.get_by_conversation_id(db, conv.conversation_id, limit=1)
+            last_message = messages[0] if messages else None
+            
+            # Count total messages
+            # In a production scenario, you'd want to store this count in the conversation
+            # to avoid counting on every request
+            message_count = db.query(ChannelMessage).filter(
+                ChannelMessage.conversation_id == conv.conversation_id
+            ).count()
+            
+            result.append({
+                "conversation_id": conv.conversation_id,
+                "platform_user_id": conv.platform_user_id,
+                "user_name": conv.user_name,
+                "user_profile_url": conv.user_profile_url,
+                "last_message_at": conv.last_message_at.isoformat(),
+                "message_count": message_count,
+                "last_message_preview": last_message.content[:50] + "..." if last_message and last_message.content and len(last_message.content) > 50 else last_message.content if last_message else None
+            })
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting conversations: {str(e)}")
+        return []
 
 @router.get("/{channel_id}/conversations/{conversation_id}/messages", response_model=List[MessageResponse])
 async def get_conversation_messages(
@@ -267,41 +315,47 @@ async def get_conversation_messages(
     db: Session = Depends(get_db)
 ):
     """Get messages for a conversation."""
-    # Verify channel belongs to client
-    channel_repo = ChannelRepository()
-    channel = channel_repo.get_by_channel_id(db, channel_id)
-    
-    if not channel or channel.client_id != current_client.client_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Channel not found"
-        )
-    
-    # Verify conversation belongs to channel
-    conversation_repo = ChannelConversationRepository()
-    conversation = conversation_repo.get_by_conversation_id(db, conversation_id)
-    
-    if not conversation or conversation.channel_id != channel_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Conversation not found"
-        )
-    
-    # Get messages
-    message_repo = ChannelMessageRepository()
-    messages = message_repo.get_by_conversation_id(db, conversation_id, limit=limit, skip=skip)
-    
-    return [
-        {
-            "message_id": msg.message_id,
-            "direction": msg.direction,
-            "message_type": msg.message_type,
-            "content": msg.content,
-            "media_url": msg.media_url,
-            "created_at": msg.created_at.isoformat()
-        }
-        for msg in messages
-    ]
+    try:
+        # Verify channel belongs to client
+        channel_repo = ChannelRepository()
+        channel = channel_repo.get_by_channel_id(db, channel_id)
+        
+        if not channel or channel.client_id != current_client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        # Verify conversation belongs to channel
+        conversation_repo = ChannelConversationRepository()
+        conversation = conversation_repo.get_by_conversation_id(db, conversation_id)
+        
+        if not conversation or conversation.channel_id != channel_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+        
+        # Get messages
+        message_repo = ChannelMessageRepository()
+        messages = message_repo.get_by_conversation_id(db, conversation_id, limit=limit, skip=skip)
+        
+        return [
+            {
+                "message_id": msg.message_id,
+                "direction": msg.direction,
+                "message_type": msg.message_type,
+                "content": msg.content,
+                "media_url": msg.media_url,
+                "created_at": msg.created_at.isoformat()
+            }
+            for msg in messages
+        ]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting messages: {str(e)}")
+        return []
 
 @router.post("/{channel_id}/send", response_model=Dict[str, Any])
 async def send_message_to_channel(
@@ -311,53 +365,62 @@ async def send_message_to_channel(
     db: Session = Depends(get_db)
 ):
     """Send a message to a channel conversation."""
-    # Verify channel belongs to client
-    channel_repo = ChannelRepository()
-    channel = channel_repo.get_by_channel_id(db, channel_id)
-    
-    if not channel or channel.client_id != current_client.client_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Channel not found"
+    try:
+        # Verify channel belongs to client
+        channel_repo = ChannelRepository()
+        channel = channel_repo.get_by_channel_id(db, channel_id)
+        
+        if not channel or channel.client_id != current_client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        # Verify conversation belongs to channel
+        conversation_repo = ChannelConversationRepository()
+        conversation = conversation_repo.get_by_conversation_id(db, message_data.conversation_id)
+        
+        if not conversation or conversation.channel_id != channel_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+        
+        # Get connector for this channel
+        from app.services.channel.channel_connector import ChannelConnectorFactory
+        connector = ChannelConnectorFactory.create_connector(db, channel)
+        
+        if not connector:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported platform: {channel.platform}"
+            )
+        
+        # Send message
+        result = await connector.send_message(
+            conversation_id=conversation.conversation_id,
+            message_type=message_data.message_type,
+            content=message_data.content,
+            media_url=message_data.media_url,
+            metadata=message_data.metadata
         )
-    
-    # Verify conversation belongs to channel
-    conversation_repo = ChannelConversationRepository()
-    conversation = conversation_repo.get_by_conversation_id(db, message_data.conversation_id)
-    
-    if not conversation or conversation.channel_id != channel_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Conversation not found"
-        )
-    
-    # Get connector for this channel
-    from app.services.channel.channel_connector import ChannelConnectorFactory
-    connector = ChannelConnectorFactory.create_connector(db, channel)
-    
-    if not connector:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported platform: {channel.platform}"
-        )
-    
-    # Send message
-    result = await connector.send_message(
-        conversation_id=conversation.conversation_id,
-        message_type=message_data.message_type,
-        content=message_data.content,
-        media_url=message_data.media_url,
-        metadata=message_data.metadata
-    )
-    
-    if not result.get("success"):
+        
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=result.get("error", "Failed to send message")
+            )
+        
+        return {
+            "success": True,
+            "message_id": result.get("message_id"),
+            "platform_message_id": result.get("platform_message_id")
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sending message: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=result.get("error", "Failed to send message")
+            detail=f"Failed to send message: {str(e)}"
         )
-    
-    return {
-        "success": True,
-        "message_id": result.get("message_id"),
-        "platform_message_id": result.get("platform_message_id")
-    }

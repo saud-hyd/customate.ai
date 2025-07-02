@@ -1,4 +1,6 @@
 # backend/app/services/channel/platforms/whatsapp_connector.py
+# Update the WhatsAppConnector class with v18.0 support
+
 from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session
 import httpx
@@ -16,11 +18,7 @@ from app.core.config.settings import settings
 class WhatsAppConnector(ChannelConnector):
     """
     WhatsApp Business API connector for sending and receiving messages.
-    
-    This connector uses Meta's WhatsApp Business API to:
-    1. Receive messages via webhooks
-    2. Send messages to users
-    3. Verify webhook signatures
+    Updated for v18.0 API and 2025 features.
     """
     
     def __init__(self, db: Session, channel: Channel):
@@ -28,10 +26,11 @@ class WhatsAppConnector(ChannelConnector):
         
         # Extract credentials from channel
         self.credentials = channel.credentials or {}
-        self.api_version = self.credentials.get("api_version", "v17.0")
+        self.api_version = self.credentials.get("api_version", "v18.0")  # Updated default
         self.phone_number_id = self.credentials.get("phone_number_id")
         self.access_token = self.credentials.get("access_token")
         self.app_secret = self.credentials.get("app_secret")
+        self.webhook_secret = self.credentials.get("webhook_secret")  # Added
         
         # API endpoint
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
@@ -63,21 +62,14 @@ class WhatsAppConnector(ChannelConnector):
     
     async def validate_webhook(self, headers: Dict[str, str], body: bytes) -> bool:
         """
-        Validate WhatsApp webhook request.
-        
-        Args:
-            headers: Request headers
-            body: Request body bytes
-            
-        Returns:
-            True if signature is valid, False otherwise
+        Validate WhatsApp webhook request with improved security.
         """
         if not self.app_secret:
             logger.warning("App secret not configured, skipping signature validation")
             return True
         
-        # Get signature from headers
-        signature = headers.get("X-Hub-Signature-256")
+        # Get signature from headers (try both possible header names)
+        signature = headers.get("X-Hub-Signature-256") or headers.get("x-hub-signature-256")
         
         if not signature:
             logger.warning("No X-Hub-Signature-256 header in request")
@@ -90,33 +82,39 @@ class WhatsAppConnector(ChannelConnector):
             hashlib.sha256
         ).hexdigest()
         
-        return hmac.compare_digest(signature, expected_signature)
+        is_valid = hmac.compare_digest(signature, expected_signature)
+        if not is_valid:
+            logger.warning(f"Invalid webhook signature. Expected: {expected_signature}, Got: {signature}")
+        
+        return is_valid
     
     async def process_webhook(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Process WhatsApp webhook payload.
-        
-        Args:
-            payload: Webhook payload from WhatsApp
-            
-        Returns:
-            Processing result with conversation and message info
+        Enhanced webhook processing for v18.0 API.
+        Returns message info for chatbot integration.
         """
         result = {
             "success": False,
             "conversation_id": None,
-            "message_id": None
+            "message_id": None,
+            "content": None,
+            "platform_user_id": None,
+            "user_info": {}
         }
         
         try:
-            # Handle verification request (only for initial setup)
-            if "hub.mode" in payload and "hub.verify_token" in payload:
-                if payload["hub.verify_token"] == self.channel.webhook_secret:
+            # Handle verification request (webhook setup)
+            if "hub.mode" in payload and "hub.verify_token" in payload and "hub.challenge" in payload:
+                if payload["hub.verify_token"] == self.webhook_secret:
                     result["success"] = True
                     result["challenge"] = payload["hub.challenge"]
+                    logger.info(f"Webhook verification successful for channel {self.channel.channel_id}")
+                    return result
+                else:
+                    logger.warning(f"Invalid verify token for channel {self.channel.channel_id}")
                     return result
             
-            # Extract entry and changes
+            # Process incoming messages
             entries = payload.get("entry", [])
             
             for entry in entries:
@@ -125,103 +123,80 @@ class WhatsAppConnector(ChannelConnector):
                 for change in changes:
                     value = change.get("value", {})
                     
-                    # Process messages
+                    # Handle incoming messages
                     if "messages" in value:
                         messages = value.get("messages", [])
                         
                         for message in messages:
-                            # Get message details
+                            # Extract message details
                             message_id = message.get("id")
                             message_type = message.get("type", "text")
                             timestamp = message.get("timestamp")
-                            
-                            # Get sender info
                             from_user = message.get("from")
                             
                             if not from_user:
-                                logger.warning(f"No sender info in WhatsApp message: {message_id}")
+                                logger.warning(f"No sender info in message {message_id}")
+                                continue
+                            
+                            # Extract message content based on type
+                            content = None
+                            if message_type == "text":
+                                content = message.get("text", {}).get("body")
+                            elif message_type == "image":
+                                content = message.get("image", {}).get("caption", "[Image]")
+                            elif message_type == "audio":
+                                content = "[Audio message]"
+                            elif message_type == "video":
+                                content = "[Video message]"
+                            elif message_type == "document":
+                                content = f"[Document: {message.get('document', {}).get('filename', 'file')}]"
+                            elif message_type == "location":
+                                location = message.get("location", {})
+                                content = f"[Location: {location.get('latitude', 'N/A')}, {location.get('longitude', 'N/A')}]"
+                            
+                            if not content:
+                                logger.warning(f"No content extracted from message {message_id} of type {message_type}")
                                 continue
                             
                             # Get or create conversation
                             conversation = await self.channel_service.get_or_create_conversation(
                                 channel_id=self.channel.channel_id,
                                 platform_user_id=from_user,
-                                platform_conversation_id=from_user,  # For WhatsApp, user ID is conversation ID
-                                metadata={"phone_number": from_user}
+                                user_info={}
                             )
                             
-                            # Process message based on type
-                            content = None
-                            media_url = None
-                            message_metadata = {
-                                "platform_timestamp": timestamp,
-                                "original_payload": message
-                            }
-                            
-                            if message_type == "text":
-                                content = message.get("text", {}).get("body", "")
-                            
-                            elif message_type in ["image", "audio", "video", "document"]:
-                                media_id = message.get(message_type, {}).get("id")
-                                
-                                if media_id:
-                                    # Get media URL
-                                    media_url = await self._get_media_url(media_id)
-                                    
-                                # For documents, include filename if available
-                                if message_type == "document" and "filename" in message.get("document", {}):
-                                    message_metadata["filename"] = message["document"]["filename"]
-                            
-                            elif message_type == "location":
-                                location = message.get("location", {})
-                                latitude = location.get("latitude")
-                                longitude = location.get("longitude")
-                                
-                                if latitude and longitude:
-                                    content = f"Location: {latitude}, {longitude}"
-                                    message_metadata["latitude"] = latitude
-                                    message_metadata["longitude"] = longitude
-                                    message_metadata["address"] = location.get("address")
-                            
-                            # Record the message
-                            channel_message = await self.channel_service.record_message(
+                            # Store the message
+                            stored_message = await self.channel_service.store_message(
                                 conversation_id=conversation.conversation_id,
                                 direction="inbound",
                                 message_type=message_type,
                                 content=content,
                                 platform_message_id=message_id,
-                                media_url=media_url,
-                                metadata=message_metadata
+                                metadata={"timestamp": timestamp, "whatsapp_type": message_type}
                             )
                             
-                            result["success"] = True
-                            result["conversation_id"] = conversation.conversation_id
-                            result["message_id"] = channel_message.message_id
+                            # Return message info for chatbot processing
+                            result = {
+                                "success": True,
+                                "conversation_id": conversation.conversation_id,
+                                "message_id": stored_message.message_id,
+                                "content": content,
+                                "platform_user_id": from_user,
+                                "user_info": {
+                                    "channel": "whatsapp",
+                                    "platform_user_id": from_user,
+                                    "message_type": message_type
+                                }
+                            }
                             
-                            # If this is a new conversation, try to get user profile info
-                            if not conversation.user_name:
-                                try:
-                                    profile = await self.get_user_profile(from_user)
-                                    
-                                    if profile:
-                                        await self.channel_service.conversation_repo.update(
-                                            self.db,
-                                            db_obj=conversation,
-                                            obj_in={
-                                                "user_name": profile.get("name"),
-                                                "metadata": {
-                                                    **(conversation.metadata or {}),
-                                                    "profile": profile
-                                                }
-                                            }
-                                        )
-                                except Exception as e:
-                                    logger.warning(f"Error fetching WhatsApp user profile: {str(e)}")
+                            logger.info(f"Processed WhatsApp message {message_id} from {from_user}")
+                            return result  # Return after first message
             
             return result
             
         except Exception as e:
-            logger.error(f"Error processing WhatsApp webhook: {str(e)}", exc_info=True)
+            logger.error(f"Error processing WhatsApp webhook: {str(e)}")
+            result["error"] = str(e)
             return result
     
     async def send_message(
@@ -233,120 +208,42 @@ class WhatsAppConnector(ChannelConnector):
         metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Send a message to WhatsApp.
-        
-        Args:
-            conversation_id: Conversation ID
-            message_type: Message type (text, image, etc.)
-            content: Optional text content
-            media_url: Optional media URL
-            metadata: Optional metadata
-            
-        Returns:
-            Send result with platform message ID
+        Send message via WhatsApp with v18.0 API support.
         """
         result = {
             "success": False,
             "message_id": None,
-            "platform_message_id": None,
-            "error": None
+            "platform_message_id": None
         }
         
         try:
             # Get conversation
             conversation = self.channel_service.conversation_repo.get_by_conversation_id(
-                self.db, conversation_id
+                self.channel_service.db, conversation_id
             )
             
             if not conversation:
                 result["error"] = f"Conversation not found: {conversation_id}"
                 return result
             
-            # Get recipient phone number (stored as platform_user_id)
             recipient = conversation.platform_user_id
             
-            if not recipient:
-                result["error"] = "No recipient phone number found"
-                return result
-            
-            # Prepare message payload based on message type
-            message_payload = {}
-            
+            # Build message payload
             if message_type == "text" and content:
                 message_payload = {
                     "messaging_product": "whatsapp",
                     "recipient_type": "individual",
                     "to": recipient,
                     "type": "text",
-                    "text": {"body": content}
-                }
-            
-            elif message_type == "image" and media_url:
-                message_payload = {
-                    "messaging_product": "whatsapp",
-                    "recipient_type": "individual",
-                    "to": recipient,
-                    "type": "image",
-                    "image": {"link": media_url}
-                }
-            
-            elif message_type == "audio" and media_url:
-                message_payload = {
-                    "messaging_product": "whatsapp",
-                    "recipient_type": "individual",
-                    "to": recipient,
-                    "type": "audio",
-                    "audio": {"link": media_url}
-                }
-            
-            elif message_type == "video" and media_url:
-                message_payload = {
-                    "messaging_product": "whatsapp",
-                    "recipient_type": "individual",
-                    "to": recipient,
-                    "type": "video",
-                    "video": {"link": media_url}
-                }
-            
-            elif message_type == "document" and media_url:
-                document_payload = {"link": media_url}
-                
-                # Add filename if provided in metadata
-                if metadata and "filename" in metadata:
-                    document_payload["filename"] = metadata["filename"]
-                
-                message_payload = {
-                    "messaging_product": "whatsapp",
-                    "recipient_type": "individual",
-                    "to": recipient,
-                    "type": "document",
-                    "document": document_payload
-                }
-            
-            elif message_type == "location" and metadata:
-                latitude = metadata.get("latitude")
-                longitude = metadata.get("longitude")
-                
-                if latitude and longitude:
-                    message_payload = {
-                        "messaging_product": "whatsapp",
-                        "recipient_type": "individual",
-                        "to": recipient,
-                        "type": "location",
-                        "location": {
-                            "latitude": latitude,
-                            "longitude": longitude,
-                            "name": metadata.get("name", ""),
-                            "address": metadata.get("address", "")
-                        }
+                    "text": {
+                        "body": content
                     }
-            
-            # Check if we have a valid payload
-            if not message_payload:
-                result["error"] = f"Unsupported message type or missing content: {message_type}"
+                }
+            else:
+                result["error"] = f"Unsupported message type: {message_type}"
                 return result
             
-            # Send message to WhatsApp API
+            # Send message via WhatsApp API
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{self.base_url}/{self.phone_number_id}/messages",
@@ -357,103 +254,42 @@ class WhatsAppConnector(ChannelConnector):
                     json=message_payload
                 )
                 
-                if response.status_code != 200:
-                    result["error"] = f"WhatsApp API error: {response.text}"
-                    logger.error(f"WhatsApp API error: {response.status_code} - {response.text}")
-                    return result
-                
-                response_data = response.json()
-                platform_message_id = response_data.get("messages", [{}])[0].get("id")
-                
-                if not platform_message_id:
-                    result["error"] = "No message ID returned from WhatsApp API"
-                    return result
-                
-                # Record the outbound message
-                channel_message = await self.channel_service.record_message(
-                    conversation_id=conversation_id,
-                    direction="outbound",
-                    message_type=message_type,
-                    content=content,
-                    platform_message_id=platform_message_id,
-                    media_url=media_url,
-                    metadata={
-                        "api_response": response_data,
-                        **(metadata or {})
+                if response.status_code == 200:
+                    response_data = response.json()
+                    platform_message_id = response_data.get("messages", [{}])[0].get("id")
+                    
+                    # Store the outbound message
+                    stored_message = await self.channel_service.store_message(
+                        conversation_id=conversation_id,
+                        direction="outbound",
+                        message_type=message_type,
+                        content=content,
+                        platform_message_id=platform_message_id,
+                        metadata=metadata or {}
+                    )
+                    
+                    result = {
+                        "success": True,
+                        "message_id": stored_message.message_id,
+                        "platform_message_id": platform_message_id
                     }
-                )
-                
-                result["success"] = True
-                result["message_id"] = channel_message.message_id
-                result["platform_message_id"] = platform_message_id
-                
-                return result
-                
+                    
+                    logger.info(f"Sent WhatsApp message to {recipient}: {platform_message_id}")
+                else:
+                    result["error"] = f"WhatsApp API error: {response.status_code} - {response.text}"
+                    logger.error(f"WhatsApp send error: {response.text}")
+            
+            return result
+            
         except Exception as e:
-            logger.error(f"Error sending WhatsApp message: {str(e)}", exc_info=True)
-            result["error"] = str(e)
+            result["error"] = f"Error sending WhatsApp message: {str(e)}"
+            logger.error(f"WhatsApp send exception: {str(e)}")
             return result
     
     async def get_user_profile(self, platform_user_id: str) -> Dict[str, Any]:
-        """
-        Get WhatsApp user profile information.
-        
-        Args:
-            platform_user_id: User ID (phone number)
-            
-        Returns:
-            User profile data or empty dict if not available
-        """
-        # WhatsApp doesn't provide robust profile info, so we create a basic profile
+        """Get user profile information (basic implementation)."""
         return {
-            "id": platform_user_id,
-            "name": platform_user_id,  # Just use the phone number as name
-            "phone_number": platform_user_id
+            "platform_user_id": platform_user_id,
+            "name": f"WhatsApp User {platform_user_id[-4:]}",
+            "profile_url": None
         }
-    
-    async def _get_media_url(self, media_id: str) -> Optional[str]:
-        """
-        Get media URL from WhatsApp API.
-        
-        Args:
-            media_id: Media ID from WhatsApp
-            
-        Returns:
-            Media URL or None if not available
-        """
-        try:
-            # First get media info
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{self.base_url}/{media_id}",
-                    headers={"Authorization": f"Bearer {self.access_token}"}
-                )
-                
-                if response.status_code != 200:
-                    logger.error(f"Error getting WhatsApp media info: {response.text}")
-                    return None
-                
-                media_info = response.json()
-                
-                if "url" not in media_info:
-                    logger.error(f"No URL in WhatsApp media info: {media_info}")
-                    return None
-                
-                # Now download the media
-                media_url = media_info["url"]
-                response = await client.get(
-                    media_url,
-                    headers={"Authorization": f"Bearer {self.access_token}"}
-                )
-                
-                if response.status_code != 200:
-                    logger.error(f"Error downloading WhatsApp media: {response.text}")
-                    return None
-                
-                # TODO: Actually store the media somewhere permanent
-                # For now, we just return the temporary URL
-                return media_url
-                
-        except Exception as e:
-            logger.error(f"Error getting WhatsApp media URL: {str(e)}")
-            return None

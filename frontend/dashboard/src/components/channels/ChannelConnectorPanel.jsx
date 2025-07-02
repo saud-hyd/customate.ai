@@ -8,18 +8,49 @@ import LoadingSpinner from '../common/LoadingSpinner';
 const platforms = [
   {
     id: 'whatsapp',
-    name: 'WhatsApp',
+    name: 'WhatsApp Business',
     description: 'Connect with customers through WhatsApp Business API',
     color: 'bg-green-500',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12.001 2C17.524 2 22 6.475 22 11.999C22 17.523 17.524 22 12.001 22C10.051 22 8.235 21.473 6.699 20.546L2 22L3.454 17.301C2.527 15.765 2 13.949 2 11.999C2 6.475 6.477 2 12.001 2ZM8.907 7.698C8.759 7.703 8.615 7.736 8.483 7.794C8.346 7.854 8.195 7.958 8.034 8.105C7.919 8.211 7.752 8.377 7.602 8.581C7.278 9.015 7.105 9.498 7.105 9.982C7.106 10.373 7.207 10.754 7.368 11.115C7.693 11.838 8.289 12.587 9.111 13.307C9.284 13.467 9.457 13.62 9.638 13.763C10.651 14.534 11.832 15.047 13.096 15.256L13.595 15.319C13.737 15.328 13.879 15.319 14.021 15.316C14.292 15.31 14.557 15.263 14.805 15.177C14.937 15.129 15.067 15.075 15.195 15.015C15.195 15.015 15.237 14.99 15.318 14.941C15.437 14.868 15.504 14.821 15.599 14.734C15.671 14.67 15.735 14.597 15.788 14.516C15.866 14.395 15.943 14.173 15.98 13.915C16.008 13.72 16.029 13.611 16.03 13.502C16.031 13.447 16.026 13.392 16.015 13.338C16 13.258 15.935 13.174 15.837 13.085C15.792 13.044 15.742 13.003 15.688 12.964C15.579 12.882 15.461 12.815 15.383 12.769C15.361 12.757 15.3 12.731 15.23 12.703C15.086 12.647 14.939 12.603 14.795 12.559C14.712 12.534 14.633 12.509 14.568 12.484C14.441 12.437 14.373 12.403 14.293 12.389C14.272 12.385 14.251 12.386 14.23 12.39C14.156 12.404 14.068 12.471 14.012 12.551C13.98 12.598 13.929 12.769 13.929 12.769C13.929 12.769 13.808 13.086 13.624 13.225C13.504 13.315 13.357 13.322 13.251 13.297C13.183 13.281 13.115 13.259 13.047 13.233C12.967 13.203 12.887 13.171 12.814 13.141C12.653 13.073 12.503 13.003 12.379 12.935C11.574 12.504 10.89 11.861 10.399 11.05C10.319 10.931 10.253 10.816 10.201 10.704C10.034 10.374 9.965 10.06 9.996 9.781C10.012 9.637 10.083 9.508 10.188 9.401C10.229 9.36 10.272 9.327 10.315 9.295C10.391 9.239 10.451 9.175 10.504 9.105C10.587 8.99 10.611 8.875 10.616 8.797C10.621 8.73 10.613 8.667 10.595 8.608C10.553 8.469 10.35 8.192 10.105 7.937C9.971 7.798 9.84 7.652 9.741 7.552C9.661 7.472 9.59 7.398 9.513 7.334C9.407 7.247 9.298 7.192 9.179 7.167C9.12 7.155 9.061 7.149 9.001 7.149C8.915 7.149 8.827 7.16 8.739 7.181L8.907 7.698Z" />
+        <path d="M12.001 2C17.524 2 22 6.475 22 11.999C22 17.523 17.524 22 12.001 22C10.051 22 8.235 21.473 6.699 20.546L2 22L3.454 17.301C2.527 15.765 2 13.949 2 11.999C2 6.475 6.477 2 12.001 2Z"/>
       </svg>
     ),
     fields: [
-      { name: 'phone_number_id', label: 'Phone Number ID', required: true },
-      { name: 'access_token', label: 'Access Token', required: true, type: 'password' },
-      { name: 'app_secret', label: 'App Secret', required: true, type: 'password' },
+      { 
+        name: 'phone_number_id', 
+        label: 'Phone Number ID', 
+        required: true,
+        helpText: 'Get this from WhatsApp Business Manager → Phone Numbers → [Your Number] → ID'
+      },
+      { 
+        name: 'access_token', 
+        label: 'Permanent Access Token', 
+        required: true, 
+        type: 'password',
+        helpText: 'Generate from Meta Business Settings → System Users → Create Permanent Token'
+      },
+      { 
+        name: 'app_secret', 
+        label: 'App Secret', 
+        required: true, 
+        type: 'password',
+        helpText: 'From Meta Developers → Your App → Settings → Basic → App Secret'
+      },
+      { 
+        name: 'webhook_secret', 
+        label: 'Webhook Verify Token', 
+        required: true, 
+        type: 'password',
+        helpText: 'Create a custom secret (e.g., "mybot_webhook_2025") for webhook verification'
+      },
+      { 
+        name: 'api_version', 
+        label: 'API Version', 
+        required: false,
+        defaultValue: 'v18.0',
+        helpText: 'Use v18.0 or later for 2025 features'
+      }
     ]
   },
   {

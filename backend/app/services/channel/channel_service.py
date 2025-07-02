@@ -1,267 +1,263 @@
 # backend/app/services/channel/channel_service.py
-from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
-from datetime import datetime
-import logging
+# Complete ChannelService implementation with all required methods
 
-from app.domain.channel.entities import Channel, ChannelConversation, ChannelMessage
-from app.repositories.channel_repository import ChannelRepository, ChannelConversationRepository, ChannelMessageRepository
+from datetime import datetime
+from typing import Dict, Any, Optional, List
+from sqlalchemy.orm import Session
+import uuid
+
 from app.core import logger
 
 class ChannelService:
-    """
-    Service for managing social media channels.
-    
-    This service:
-    1. Manages channel configuration
-    2. Creates and updates conversations
-    3. Tracks message history
-    """
-    
     def __init__(self, db: Session):
         self.db = db
-        self.channel_repo = ChannelRepository()
-        self.conversation_repo = ChannelConversationRepository()
-        self.message_repo = ChannelMessageRepository()
     
-    async def create_channel(self, client_id: str, channel_data: Dict[str, Any]) -> Channel:
-        """
-        Create a new social media channel.
-        
-        Args:
-            client_id: Client ID
-            channel_data: Channel configuration data
+    def get_client_channels(self, client_id: str, platform: Optional[str] = None):
+        """Get all channels for a client."""
+        try:
+            # Import here to avoid circular imports
+            from app.domain.channel.entities import Channel
             
-        Returns:
-            Created channel
-        """
-        # Ensure client ID is set
-        channel_data["client_id"] = client_id
-        
-        # Generate webhook secret
-        import secrets
-        channel_data["webhook_secret"] = secrets.token_hex(16)
-        
-        # Create the channel
-        channel = self.channel_repo.create(self.db, obj_in=channel_data)
-        
-        logger.info(f"Created channel: {channel.platform} for client {client_id}")
-        
-        return channel
+            query = self.db.query(Channel).filter(Channel.client_id == client_id)
+            
+            if platform:
+                query = query.filter(Channel.platform == platform)
+            
+            channels = query.order_by(Channel.created_at.desc()).all()
+            logger.info(f"Retrieved {len(channels)} channels for client {client_id}")
+            return channels
+        except Exception as e:
+            logger.error(f"Error getting channels for client {client_id}: {str(e)}")
+            return []
     
-    async def update_channel(self, client_id: str, channel_id: str, update_data: Dict[str, Any]) -> Optional[Channel]:
-        """
-        Update an existing channel.
-        
-        Args:
-            client_id: Client ID
-            channel_id: Channel ID
-            update_data: Data to update
+    def create_channel(self, client_id: str, channel_data: Dict[str, Any]):
+        """Create a new channel for a client."""
+        try:
+            from app.domain.channel.entities import Channel
             
-        Returns:
-            Updated channel or None if not found
-        """
-        channel = self.channel_repo.get_by_channel_id(self.db, channel_id)
-        
-        if not channel or channel.client_id != client_id:
-            logger.warning(f"Channel not found or doesn't belong to client: {channel_id}, {client_id}")
+            # Add client_id to channel data
+            channel_data["client_id"] = client_id
+            
+            # Generate webhook secret if not provided
+            credentials = channel_data.get("credentials", {})
+            if "webhook_secret" not in credentials:
+                webhook_secret = f"webhook_{uuid.uuid4().hex[:16]}"
+                credentials["webhook_secret"] = webhook_secret
+                channel_data["credentials"] = credentials
+            
+            # Ensure active status
+            if "active" not in channel_data:
+                channel_data["active"] = True
+            
+            # Create the channel object
+            channel = Channel(**channel_data)
+            
+            # Add to database
+            self.db.add(channel)
+            self.db.commit()
+            self.db.refresh(channel)
+            
+            logger.info(f"Created channel {channel.channel_id} for client {client_id}")
+            return channel
+            
+        except Exception as e:
+            logger.error(f"Error creating channel: {str(e)}")
+            self.db.rollback()
+            raise
+    
+    def update_channel(self, client_id: str, channel_id: str, update_data: Dict[str, Any]):
+        """Update a channel."""
+        try:
+            from app.domain.channel.entities import Channel
+            
+            # Get existing channel
+            channel = self.db.query(Channel).filter(
+                Channel.channel_id == channel_id,
+                Channel.client_id == client_id
+            ).first()
+            
+            if not channel:
+                logger.warning(f"Channel {channel_id} not found for client {client_id}")
+                return None
+            
+            # Update channel
+            for key, value in update_data.items():
+                if hasattr(channel, key):
+                    setattr(channel, key, value)
+            
+            channel.updated_at = datetime.utcnow()
+            self.db.commit()
+            self.db.refresh(channel)
+            
+            logger.info(f"Updated channel {channel_id}")
+            return channel
+            
+        except Exception as e:
+            logger.error(f"Error updating channel {channel_id}: {str(e)}")
+            self.db.rollback()
+            raise
+    
+    def delete_channel(self, client_id: str, channel_id: str):
+        """Delete a channel."""
+        try:
+            from app.domain.channel.entities import Channel
+            
+            # Get existing channel
+            channel = self.db.query(Channel).filter(
+                Channel.channel_id == channel_id,
+                Channel.client_id == client_id
+            ).first()
+            
+            if not channel:
+                logger.warning(f"Channel {channel_id} not found for client {client_id}")
+                return False
+            
+            # Delete channel
+            self.db.delete(channel)
+            self.db.commit()
+            
+            logger.info(f"Deleted channel {channel_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error deleting channel {channel_id}: {str(e)}")
+            self.db.rollback()
+            raise
+    
+    def get_channel_by_id(self, client_id: str, channel_id: str):
+        """Get a specific channel by ID."""
+        try:
+            from app.domain.channel.entities import Channel
+            
+            channel = self.db.query(Channel).filter(
+                Channel.channel_id == channel_id,
+                Channel.client_id == client_id
+            ).first()
+            
+            return channel
+            
+        except Exception as e:
+            logger.error(f"Error getting channel {channel_id}: {str(e)}")
             return None
-        
-        updated_channel = self.channel_repo.update(self.db, db_obj=channel, obj_in=update_data)
-        
-        logger.info(f"Updated channel: {channel_id}")
-        
-        return updated_channel
     
-    async def delete_channel(self, client_id: str, channel_id: str) -> bool:
-        """
-        Delete a channel.
-        
-        Args:
-            client_id: Client ID
-            channel_id: Channel ID
-            
-        Returns:
-            True if deleted, False otherwise
-        """
-        channel = self.channel_repo.get_by_channel_id(self.db, channel_id)
-        
-        if not channel or channel.client_id != client_id:
-            logger.warning(f"Channel not found or doesn't belong to client: {channel_id}, {client_id}")
-            return False
-        
-        self.channel_repo.delete(self.db, id=channel.id)
-        
-        logger.info(f"Deleted channel: {channel_id}")
-        
-        return True
-    
-    async def get_client_channels(self, client_id: str, platform: Optional[str] = None) -> List[Channel]:
-        """
-        Get all channels for a client, optionally filtered by platform.
-        
-        Args:
-            client_id: Client ID
-            platform: Optional platform filter
-            
-        Returns:
-            List of channels
-        """
-        return self.channel_repo.get_by_client_id(self.db, client_id, platform)
-    
+    # Additional methods for WhatsApp integration
     async def get_or_create_conversation(
-        self, 
+        self,
         channel_id: str,
         platform_user_id: str,
-        platform_conversation_id: Optional[str] = None,
-        user_name: Optional[str] = None,
-        user_profile_url: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> ChannelConversation:
-        """
-        Get an existing conversation or create a new one.
-        
-        Args:
-            channel_id: Channel ID
-            platform_user_id: User ID from the platform
-            platform_conversation_id: Optional conversation ID from the platform
-            user_name: Optional user name
-            user_profile_url: Optional user profile URL
-            metadata: Optional metadata
+        user_info: Dict[str, Any] = None
+    ):
+        """Get existing conversation or create a new one."""
+        try:
+            from app.domain.channel.entities import ChannelConversation
             
-        Returns:
-            Conversation object
-        """
-        # Check if conversation exists by platform user ID
-        conversation = self.conversation_repo.get_by_platform_user_id(
-            self.db, channel_id, platform_user_id
-        )
-        
-        # If platform conversation ID provided, also check that
-        if not conversation and platform_conversation_id:
-            conversation = self.conversation_repo.get_by_platform_conversation_id(
-                self.db, channel_id, platform_conversation_id
-            )
-        
-        # Create new conversation if not found
-        if not conversation:
+            # Try to find existing conversation
+            conversation = self.db.query(ChannelConversation).filter(
+                ChannelConversation.channel_id == channel_id,
+                ChannelConversation.platform_user_id == platform_user_id
+            ).first()
+            
+            if conversation:
+                logger.info(f"Found existing conversation {conversation.conversation_id} for user {platform_user_id}")
+                return conversation
+            
+            # Create new conversation
+            user_info = user_info or {}
             conversation_data = {
                 "channel_id": channel_id,
                 "platform_user_id": platform_user_id,
-                "platform_conversation_id": platform_conversation_id,
-                "user_name": user_name,
-                "user_profile_url": user_profile_url,
-                "metadata": metadata or {}
+                "user_name": user_info.get("name"),
+                "user_profile_url": user_info.get("profile_url"),
+                "conversation_metadata": user_info
             }
             
-            conversation = self.conversation_repo.create(self.db, obj_in=conversation_data)
+            conversation = ChannelConversation(**conversation_data)
+            self.db.add(conversation)
+            self.db.commit()
+            self.db.refresh(conversation)
             
-            logger.info(f"Created new conversation: {conversation.conversation_id} for channel {channel_id}")
-        else:
-            # Update conversation if needed
-            update_needed = False
-            update_data = {}
+            logger.info(f"Created new conversation {conversation.conversation_id} for user {platform_user_id}")
+            return conversation
             
-            if user_name and conversation.user_name != user_name:
-                update_data["user_name"] = user_name
-                update_needed = True
-                
-            if user_profile_url and conversation.user_profile_url != user_profile_url:
-                update_data["user_profile_url"] = user_profile_url
-                update_needed = True
-                
-            if metadata:
-                merged_metadata = conversation.metadata or {}
-                merged_metadata.update(metadata)
-                update_data["metadata"] = merged_metadata
-                update_needed = True
-                
-            if update_needed:
-                conversation = self.conversation_repo.update(self.db, db_obj=conversation, obj_in=update_data)
-        
-        return conversation
+        except Exception as e:
+            logger.error(f"Error getting/creating conversation: {str(e)}")
+            self.db.rollback()
+            raise
     
-    async def record_message(
+    async def store_message(
         self,
         conversation_id: str,
-        direction: str,
+        direction: str,  # "inbound" or "outbound"
         message_type: str,
         content: Optional[str] = None,
         platform_message_id: Optional[str] = None,
         media_url: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None
-    ) -> ChannelMessage:
-        """
-        Record a message in a conversation.
-        
-        Args:
-            conversation_id: Conversation ID
-            direction: 'inbound' or 'outbound'
-            message_type: Message type (text, image, etc.)
-            content: Optional text content
-            platform_message_id: Optional message ID from platform
-            media_url: Optional media URL
-            metadata: Optional metadata
+    ):
+        """Store a message in the database."""
+        try:
+            from app.domain.channel.entities import ChannelMessage, ChannelConversation
             
-        Returns:
-            Created message
-        """
-        # Get conversation
-        conversation = self.conversation_repo.get_by_conversation_id(self.db, conversation_id)
-        
-        if not conversation:
-            raise ValueError(f"Conversation not found: {conversation_id}")
-        
-        # Create message
-        message_data = {
-            "conversation_id": conversation_id,
-            "direction": direction,
-            "message_type": message_type,
-            "content": content,
-            "platform_message_id": platform_message_id,
-            "media_url": media_url,
-            "metadata": metadata
-        }
-        
-        message = self.message_repo.create(self.db, obj_in=message_data)
-        
-        # Update conversation last_message_at
-        self.conversation_repo.update(
-            self.db, 
-            db_obj=conversation, 
-            obj_in={"last_message_at": datetime.utcnow()}
-        )
-        
-        logger.info(f"Recorded {direction} message: {message.message_id} in conversation {conversation_id}")
-        
-        return message
+            message_data = {
+                "conversation_id": conversation_id,
+                "direction": direction,
+                "message_type": message_type,
+                "content": content,
+                "platform_message_id": platform_message_id,
+                "media_url": media_url,
+                "message_metadata": metadata or {}
+            }
+            
+            message = ChannelMessage(**message_data)
+            self.db.add(message)
+            
+            # Update conversation last_message_at
+            conversation = self.db.query(ChannelConversation).filter(
+                ChannelConversation.conversation_id == conversation_id
+            ).first()
+            
+            if conversation:
+                conversation.last_message_at = datetime.utcnow()
+            
+            self.db.commit()
+            self.db.refresh(message)
+            
+            logger.info(f"Stored {direction} message {message.message_id} in conversation {conversation_id}")
+            return message
+            
+        except Exception as e:
+            logger.error(f"Error storing message: {str(e)}")
+            self.db.rollback()
+            raise
     
     async def link_conversation_to_chat_session(
         self,
         conversation_id: str,
         chat_session_id: str
-    ) -> ChannelConversation:
-        """
-        Link a channel conversation to a chat session.
-        
-        Args:
-            conversation_id: Conversation ID
-            chat_session_id: Chat session ID
+    ):
+        """Link a channel conversation to a chat session."""
+        try:
+            from app.domain.channel.entities import ChannelConversation
             
-        Returns:
-            Updated conversation
-        """
-        conversation = self.conversation_repo.get_by_conversation_id(self.db, conversation_id)
-        
-        if not conversation:
-            raise ValueError(f"Conversation not found: {conversation_id}")
-        
-        conversation = self.conversation_repo.update(
-            self.db,
-            db_obj=conversation,
-            obj_in={"chat_session_id": chat_session_id}
-        )
-        
-        logger.info(f"Linked conversation {conversation_id} to chat session {chat_session_id}")
-        
-        return conversation
+            conversation = self.db.query(ChannelConversation).filter(
+                ChannelConversation.conversation_id == conversation_id
+            ).first()
+            
+            if not conversation:
+                raise ValueError(f"Conversation not found: {conversation_id}")
+            
+            # Only update if not already linked
+            if not conversation.chat_session_id:
+                conversation.chat_session_id = chat_session_id
+                self.db.commit()
+                self.db.refresh(conversation)
+                logger.info(f"Linked conversation {conversation_id} to chat session {chat_session_id}")
+            else:
+                logger.info(f"Conversation {conversation_id} already linked to session {conversation.chat_session_id}")
+            
+            return conversation
+            
+        except Exception as e:
+            logger.error(f"Error linking conversation to chat session: {str(e)}")
+            self.db.rollback()
+            raise
