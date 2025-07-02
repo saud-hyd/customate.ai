@@ -135,7 +135,7 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
       // Format credentials based on platform
       const credentials = {};
       selectedPlatform.fields.forEach(field => {
-        credentials[field.name] = formData[field.name];
+        credentials[field.name] = formData[field.name] || field.defaultValue;
       });
       
       // Get the platform identifier field name
@@ -166,16 +166,40 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
         config: {}
       };
       
+      console.log('Submitting channel data:', { ...channelData, credentials: '[HIDDEN]' });
+      
+      // This will now validate credentials on the backend
       const response = await channelService.createChannel(channelData);
+      
+      console.log('Channel created successfully:', response.data);
       setStep(3);
       
       // Call the callback with the new channel
       if (onChannelCreated && response.data) {
         onChannelCreated(response.data);
       }
+      
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to connect channel. Please check your credentials and try again.');
       console.error('Error connecting channel:', err);
+      
+      // Extract meaningful error message
+      let errorMessage = 'Failed to connect channel. Please try again.';
+      
+      if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.response?.status === 400) {
+        errorMessage = 'Invalid credentials provided. Please check your authentication details.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Access forbidden. Please check your token permissions.';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Resource not found. Please verify your IDs and credentials.';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.message?.includes('Network Error')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -239,25 +263,32 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
         </div>
       </div>
       
-      {error && (
-        <div className="mx-6 mt-4 rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <HiOutlineExclamation className="h-5 w-5 text-red-400" />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{error}</p>
+      <form onSubmit={handleSubmit} className="border-t border-gray-200">
+        <div className="px-4 py-5 sm:p-6">
+          
+          {/* Error Display - More Prominent */}
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Connection Failed
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{error}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-      
-      <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
+          )}
+          
+          {/* Channel Name */}
+          <div className="mb-4">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
               Channel Name
             </label>
@@ -270,11 +301,9 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
                 onChange={handleInputChange}
                 required
                 className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                placeholder={`My ${selectedPlatform.name} Channel`}
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500">
-              This is how you'll identify this channel in your dashboard.
-            </p>
           </div>
           
           {/* Platform-specific fields */}
@@ -283,21 +312,47 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
               <div key={field.name}>
                 <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
                   {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
+                {field.helpText && (
+                  <p className="mt-1 text-xs text-gray-500">{field.helpText}</p>
+                )}
                 <div className="mt-1">
                   <input
                     type={field.type || "text"}
                     name={field.name}
                     id={field.name}
-                    value={formData[field.name] || ''}
+                    value={formData[field.name] || field.defaultValue || ''}
                     onChange={handleInputChange}
                     required={field.required}
                     className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder={field.placeholder || `Enter your ${field.label.toLowerCase()}`}
                   />
                 </div>
               </div>
             ))}
           </div>
+          
+          {/* Validation Note for WhatsApp */}
+          {selectedPlatform.id === 'whatsapp' && (
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Credential Validation
+                  </h3>
+                  <div className="mt-2 text-sm text-blue-700">
+                    <p>We'll test your credentials with WhatsApp's API to ensure they're valid before creating the channel.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="pt-5">
             <div className="flex justify-end">
@@ -311,12 +366,15 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
               >
                 {loading ? (
                   <span className="flex items-center">
-                    <LoadingSpinner size="sm" />
-                    <span className="ml-2">Connecting...</span>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Validating Credentials...
                   </span>
                 ) : (
                   'Connect Channel'
@@ -324,11 +382,10 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
               </button>
             </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
-
   const renderStepThree = () => (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <div className="px-4 py-5 sm:px-6 text-center">

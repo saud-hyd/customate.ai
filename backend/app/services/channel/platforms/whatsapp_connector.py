@@ -36,28 +36,72 @@ class WhatsAppConnector(ChannelConnector):
         self.base_url = f"https://graph.facebook.com/{self.api_version}"
     
     async def initialize(self) -> bool:
-        """Initialize the connector and verify credentials."""
-        if not self.phone_number_id or not self.access_token:
-            logger.error(f"WhatsApp credentials missing for channel {self.channel.channel_id}")
+        """Initialize the connector and verify credentials with detailed validation."""
+        
+        # Check if required credentials are present
+        if not self.phone_number_id:
+            logger.error(f"WhatsApp Phone Number ID missing for channel {self.channel.channel_id}")
+            return False
+            
+        if not self.access_token:
+            logger.error(f"WhatsApp Access Token missing for channel {self.channel.channel_id}")
             return False
         
+        # Log what we're trying to validate (without exposing full token)
+        logger.info(f"Validating WhatsApp credentials for channel {self.channel.channel_id}")
+        logger.info(f"  Phone Number ID: {self.phone_number_id}")
+        logger.info(f"  Access Token: {self.access_token[:20]}..." if len(self.access_token) > 20 else "  Access Token: [SHORT]")
+        logger.info(f"  API Version: {self.api_version}")
+        
         try:
-            # Verify access token by making a test API call
-            async with httpx.AsyncClient() as client:
+            # Test 1: Verify access token by getting phone number info
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                logger.info(f"Testing WhatsApp API connection to: {self.base_url}/{self.phone_number_id}")
+                
                 response = await client.get(
                     f"{self.base_url}/{self.phone_number_id}",
                     headers={"Authorization": f"Bearer {self.access_token}"}
                 )
                 
-                if response.status_code != 200:
-                    logger.error(f"WhatsApp API authentication failed: {response.text}")
+                logger.info(f"WhatsApp API response status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    # Success - token and phone number are valid
+                    response_data = response.json()
+                    logger.info(f"✅ WhatsApp API validation successful")
+                    logger.info(f"  Phone number data: {response_data}")
+                    return True
+                    
+                elif response.status_code == 401:
+                    logger.error(f"❌ WhatsApp API authentication failed: Invalid access token")
+                    logger.error(f"Response: {response.text}")
                     return False
-                
-                logger.info(f"WhatsApp API authentication successful for channel {self.channel.channel_id}")
-                return True
-                
+                    
+                elif response.status_code == 404:
+                    logger.error(f"❌ WhatsApp API failed: Phone Number ID not found or not accessible with this token")
+                    logger.error(f"Response: {response.text}")
+                    return False
+                    
+                elif response.status_code == 403:
+                    logger.error(f"❌ WhatsApp API failed: Access forbidden. Check token permissions")
+                    logger.error(f"Response: {response.text}")
+                    return False
+                    
+                else:
+                    logger.error(f"❌ WhatsApp API failed with status {response.status_code}")
+                    logger.error(f"Response: {response.text}")
+                    return False
+                    
+        except httpx.TimeoutException:
+            logger.error(f"❌ WhatsApp API validation timed out after 10 seconds")
+            return False
+            
+        except httpx.ConnectError:
+            logger.error(f"❌ Cannot connect to WhatsApp API. Check internet connection")
+            return False
+            
         except Exception as e:
-            logger.error(f"Error initializing WhatsApp connector: {str(e)}")
+            logger.error(f"❌ Error during WhatsApp API validation: {str(e)}")
             return False
     
     async def validate_webhook(self, headers: Dict[str, str], body: bytes) -> bool:

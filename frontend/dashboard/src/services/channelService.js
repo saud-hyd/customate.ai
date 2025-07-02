@@ -17,6 +17,19 @@ const channelService = {
     return api.get(`/channel/${channelId}`);
   },
 
+  // NEW: Get real statistics for a channel
+  getChannelStats: async (channelId) => {
+    try {
+      console.log(`🔍 Fetching stats for channel: ${channelId}`);
+      const response = await api.get(`/channel/${channelId}/stats`);
+      console.log('📊 Channel stats response:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ Error fetching channel stats:', error);
+      throw error;
+    }
+  },
+
   // Update a channel
   updateChannel: async (channelId, updateData) => {
     return api.put(`/channel/${channelId}`, updateData);

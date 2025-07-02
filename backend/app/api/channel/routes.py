@@ -102,16 +102,71 @@ async def create_channel(
     current_client: Client = Depends(get_current_client),
     db: Session = Depends(get_db)
 ):
-    """Create a new channel."""
+    """Create a new channel with credential validation."""
     try:
         # Convert Pydantic model to dict
         channel_dict = channel_data.dict()
         
-        # Create channel
+        # STEP 1: Create channel in database (temporarily)
         channel_service = ChannelService(db)
-        # FIXED: Removed await - this method is not async
         channel = channel_service.create_channel(current_client.client_id, channel_dict)
         
+        # STEP 2: Test the credentials by initializing connector
+        try:
+            from app.services.channel.channel_connector import ChannelConnectorFactory
+            
+            # Create connector for the new channel
+            connector = ChannelConnectorFactory.create_connector(db, channel)
+            
+            if not connector:
+                # Delete the channel we just created
+                channel_service.delete_channel(current_client.client_id, channel.channel_id)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Unsupported platform: {channel_dict['platform']}"
+                )
+            
+            # CRITICAL: Actually test the credentials
+            logger.info(f"Testing credentials for {channel_dict['platform']} channel {channel.channel_id}")
+            is_valid = await connector.initialize()
+            
+            if not is_valid:
+                # Delete the channel if credentials are invalid
+                channel_service.delete_channel(current_client.client_id, channel.channel_id)
+                
+                # Return specific error based on platform
+                if channel_dict['platform'] == 'whatsapp':
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid WhatsApp credentials. Please check your Access Token, Phone Number ID, and App Secret."
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid {channel_dict['platform']} credentials. Please verify your authentication details."
+                    )
+            
+            logger.info(f"✅ Credentials validated successfully for channel {channel.channel_id}")
+            
+        except HTTPException:
+            # Re-raise HTTP exceptions (these are our validation errors)
+            raise
+        except Exception as e:
+            # Handle any other errors during validation
+            logger.error(f"Error validating channel credentials: {str(e)}")
+            
+            # Clean up - delete the channel
+            try:
+                channel_service.delete_channel(current_client.client_id, channel.channel_id)
+            except:
+                pass
+            
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to validate credentials. Please check your connection and try again."
+            )
+        
+        # STEP 3: If we get here, credentials are valid
         # Generate webhook URL
         base_url = f"{request.url.scheme}://{request.url.netloc}"
         webhook_url = f"{base_url}/api/channel/webhook/{channel.platform}/{channel.platform_identifier}"
@@ -124,12 +179,16 @@ async def create_channel(
             "active": channel.active,
             "created_at": channel.created_at.isoformat(),
             "webhook_url": webhook_url,
-            "status": "connected" if channel.active else "disconnected"
+            "status": "connected"  # Only return "connected" if validation passed
         }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions with their original status codes
+        raise
     except Exception as e:
-        logger.error(f"Error creating channel: {str(e)}")
+        logger.error(f"Error creating channel for client {current_client.client_id}: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create channel: {str(e)}"
         )
 
@@ -356,6 +415,111 @@ async def get_conversation_messages(
     except Exception as e:
         logger.error(f"Error getting messages: {str(e)}")
         return []
+
+@router.get("/{channel_id}/stats")
+async def get_channel_stats(
+    channel_id: str,
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Get real statistics for a channel."""
+    try:
+        # Verify channel belongs to client
+        channel_repo = ChannelRepository()
+        channel = channel_repo.get_by_channel_id(db, channel_id)
+        
+        if not channel or channel.client_id != current_client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        # Get real statistics from database
+        from sqlalchemy import text, func
+        from datetime import datetime, timedelta
+        
+        # Total conversations
+        total_conversations = db.query(func.count(ChannelConversation.id)).filter(
+            ChannelConversation.channel_id == channel_id
+        ).scalar() or 0
+        
+        # Total messages
+        total_messages = db.execute(text("""
+            SELECT COUNT(*) 
+            FROM channel_messages cm
+            JOIN channel_conversations cc ON cm.conversation_id = cc.conversation_id
+            WHERE cc.channel_id = :channel_id
+        """), {"channel_id": channel_id}).scalar() or 0
+        
+        # Active conversations today
+        today = datetime.utcnow().date()
+        active_today = db.query(func.count(ChannelConversation.id)).filter(
+            ChannelConversation.channel_id == channel_id,
+            func.date(ChannelConversation.last_message_at) == today
+        ).scalar() or 0
+        
+        # Response rate calculation (outbound messages / inbound messages)
+        inbound_count = db.execute(text("""
+            SELECT COUNT(*) 
+            FROM channel_messages cm
+            JOIN channel_conversations cc ON cm.conversation_id = cc.conversation_id
+            WHERE cc.channel_id = :channel_id AND cm.direction = 'inbound'
+        """), {"channel_id": channel_id}).scalar() or 0
+        
+        outbound_count = db.execute(text("""
+            SELECT COUNT(*) 
+            FROM channel_messages cm
+            JOIN channel_conversations cc ON cm.conversation_id = cc.conversation_id
+            WHERE cc.channel_id = :channel_id AND cm.direction = 'outbound'
+        """), {"channel_id": channel_id}).scalar() or 0
+        
+        # Calculate response rate
+        if inbound_count > 0:
+            response_rate = min(100, round((outbound_count / inbound_count) * 100))
+        else:
+            response_rate = 0
+        
+        # Average response time (in minutes)
+        avg_response_time = db.execute(text("""
+            SELECT AVG(
+                EXTRACT(EPOCH FROM (
+                    SELECT MIN(outbound.created_at)
+                    FROM channel_messages outbound
+                    JOIN channel_conversations cc2 ON outbound.conversation_id = cc2.conversation_id
+                    WHERE cc2.channel_id = :channel_id 
+                    AND outbound.direction = 'outbound'
+                    AND outbound.created_at > inbound.created_at
+                )) - EXTRACT(EPOCH FROM inbound.created_at)
+            ) / 60 as avg_minutes
+            FROM channel_messages inbound
+            JOIN channel_conversations cc ON inbound.conversation_id = cc.conversation_id
+            WHERE cc.channel_id = :channel_id 
+            AND inbound.direction = 'inbound'
+        """), {"channel_id": channel_id}).scalar()
+        
+        avg_response_minutes = round(avg_response_time) if avg_response_time else 0
+        
+        return {
+            "total_conversations": total_conversations,
+            "total_messages": total_messages,
+            "active_today": active_today,
+            "response_rate": response_rate,
+            "avg_response_time_minutes": avg_response_minutes,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting channel stats: {str(e)}")
+        return {
+            "total_conversations": 0,
+            "total_messages": 0,
+            "active_today": 0,
+            "response_rate": 0,
+            "avg_response_time_minutes": 0,
+            "last_updated": datetime.utcnow().isoformat()
+        }    
 
 @router.post("/{channel_id}/send", response_model=Dict[str, Any])
 async def send_message_to_channel(
