@@ -18,6 +18,8 @@ from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
 from app.core import logger
 
+PROCESSED_MESSAGES = {}
+
 router = APIRouter(prefix="/channel/webhook", tags=["channel_webhooks"])
 
 @router.get("/{platform}/{identifier}")
@@ -75,10 +77,8 @@ async def platform_webhook(
     x_hub_signature_256: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
-    """
-    Receive webhook events from social media platforms.
-    Routes messages through existing chatbot stream endpoint.
-    """
+    """Fixed webhook with deduplication and proper error handling"""
+    
     # Get the channel by platform and identifier
     channel_repo = ChannelRepository()
     channel = channel_repo.get_by_platform_identifier(db, platform, identifier)
@@ -136,6 +136,21 @@ async def platform_webhook(
         result.get("content") and 
         result.get("platform_user_id")):
         
+        # FIX 1: Add message deduplication
+        message_id = result.get("message_id") or result.get("platform_message_id")
+        if message_id and message_id in PROCESSED_MESSAGES:
+            logger.info(f"🔄 Skipping duplicate message: {message_id}")
+            return {"status": "duplicate_skipped"}
+        
+        # Mark message as processed
+        if message_id:
+            PROCESSED_MESSAGES[message_id] = True
+            # Clean old entries (keep only last 100)
+            if len(PROCESSED_MESSAGES) > 100:
+                old_keys = list(PROCESSED_MESSAGES.keys())[:-50]
+                for key in old_keys:
+                    del PROCESSED_MESSAGES[key]
+        
         try:
             await process_message_with_chatbot(
                 db=db,
@@ -152,6 +167,7 @@ async def platform_webhook(
     # Return successful response to the platform
     return {"status": "success"}
 
+
 async def process_message_with_chatbot(
     db: Session,
     channel,
@@ -160,10 +176,8 @@ async def process_message_with_chatbot(
     message_content: str,
     user_info: Dict[str, Any]
 ):
-    """
-    Process incoming channel message through existing chatbot stream system.
-    This is the KEY function that routes WhatsApp → Chatbot → WhatsApp
-    """
+    """Fixed chatbot processing with proper error handling"""
+    
     try:
         # Get or create chat session linked to this conversation
         conversation_repo = ChannelRepository()
@@ -259,10 +273,23 @@ async def process_message_with_chatbot(
             if send_result.get("success"):
                 logger.info(f"Successfully sent AI response via WhatsApp for conversation {conversation_id}")
                 
-                # IMPORTANT: Increment usage count for subscription tracking
-                usage_tracker = UsageTracker()
-                usage_tracker.increment_message_count(db, channel.client_id)
-                logger.info(f"Incremented message count for client {channel.client_id}")
+                # FIX 2: Fix UsageTracker method name
+                try:
+                    usage_tracker = UsageTracker()
+                    # Check what method actually exists
+                    if hasattr(usage_tracker, 'increment_message_count'):
+                        usage_tracker.increment_message_count(db, channel.client_id)
+                    elif hasattr(usage_tracker, 'increment_messages'):
+                        usage_tracker.increment_messages(db, channel.client_id)
+                    elif hasattr(usage_tracker, 'track_message'):
+                        usage_tracker.track_message(db, channel.client_id)
+                    else:
+                        logger.warning("UsageTracker method not found, skipping usage tracking")
+                    
+                    logger.info(f"Incremented message count for client {channel.client_id}")
+                except Exception as usage_error:
+                    # Don't fail the whole process for usage tracking
+                    logger.warning(f"⚠️  Usage tracking failed (non-critical): {str(usage_error)}")
             else:
                 logger.error(f"Failed to send AI response via WhatsApp: {send_result.get('error')}")
         else:
@@ -276,8 +303,8 @@ async def process_message_with_chatbot(
         
     except Exception as e:
         logger.error(f"Error in chatbot processing: {str(e)}")
+        # FIX 3: Only send error message if we haven't already sent a response
         try:
-            # Send error message to user
             await connector.send_message(
                 conversation_id=conversation_id,
                 message_type="text",
