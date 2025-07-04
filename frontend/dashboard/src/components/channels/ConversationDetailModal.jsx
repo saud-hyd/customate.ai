@@ -1,14 +1,13 @@
-// frontend/dashboard/src/components/channels/ConversationDetailModal.jsx
+// Path: frontend/dashboard/src/components/channels/ConversationDetailModal.jsx
+// Usage: Clean production version without debug info
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import { HiOutlineX, HiOutlineUser, HiOutlinePaperAirplane, HiOutlineExclamation } from 'react-icons/hi';
 import channelService from '../../services/channelService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorAlert from '../common/ErrorAlert';
 
-const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) => {
+const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId, onConversationRead }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,12 +19,37 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
   useEffect(() => {
     if (isOpen && conversation) {
       fetchMessages();
+      // Mark conversation as read when opened
+      if (onConversationRead) {
+        onConversationRead(conversation.conversation_id);
+      }
     }
-  }, [isOpen, conversation]);
+  }, [isOpen, conversation, onConversationRead]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen, onClose]);
 
   const fetchMessages = async () => {
     try {
@@ -34,10 +58,12 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
         channelId, 
         conversation.conversation_id
       );
-      // Sort and reverse messages to show oldest first
+      
+      // Sort messages to show oldest first
       const sortedMessages = [...(response.data || [])].sort(
         (a, b) => new Date(a.created_at) - new Date(b.created_at)
       );
+      
       setMessages(sortedMessages);
       setError(null);
     } catch (err) {
@@ -78,245 +104,251 @@ const ConversationDetailModal = ({ isOpen, onClose, conversation, channelId }) =
     }
   };
 
+  // Fixed timezone conversion
   const formatMessageDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
   };
 
   const formatHeaderDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
+    if (!dateString) return '';
     
-    // If today, just show "Today"
-    if (date.toDateString() === now.toDateString()) {
-      return 'Today';
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      
+      if (date.toDateString() === now.toDateString()) {
+        return 'Today';
+      }
+      
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+      }
+      
+      return date.toLocaleDateString(undefined, { 
+        weekday: 'long', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error('Error formatting header date:', error);
+      return '';
     }
-    
-    // If yesterday
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    }
-    
-    // Otherwise show the date
-    return date.toLocaleDateString(undefined, { 
-      weekday: 'long', 
-      month: 'short', 
-      day: 'numeric' 
-    });
   };
-  
-  // Group messages by date
+
   const groupMessagesByDate = () => {
     const groups = {};
     
     messages.forEach(message => {
-      const date = new Date(message.created_at).toDateString();
-      if (!groups[date]) {
-        groups[date] = [];
+      try {
+        const date = new Date(message.created_at);
+        const dateStr = date.toDateString();
+        if (!groups[dateStr]) {
+          groups[dateStr] = [];
+        }
+        groups[dateStr].push(message);
+      } catch (error) {
+        console.error('Error grouping messages:', error);
       }
-      groups[date].push(message);
     });
     
     return Object.entries(groups).map(([date, messages]) => ({
       date,
-      formattedDate: formatHeaderDate(date),
+      formattedDate: formatHeaderDate(messages[0]?.created_at),
       messages
     }));
   };
 
+  // Determine if message is from user (incoming) or bot (outgoing)
+  const isUserMessage = (message) => {
+    return (
+      message.direction === 'incoming' || 
+      message.direction === 'inbound' ||
+      message.role === 'user'
+    );
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 overflow-hidden z-10" onClose={onClose}>
-        <div className="absolute inset-0 overflow-hidden">
-          <Transition.Child
-            as={Fragment}
-            enter="ease-in-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in-out duration-300"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Dialog.Overlay className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-          </Transition.Child>
-          
-          <div className="fixed inset-y-0 right-0 max-w-full flex">
-            <Transition.Child
-              as={Fragment}
-              enter="transform transition ease-in-out duration-300"
-              enterFrom="translate-x-full"
-              enterTo="translate-x-0"
-              leave="transform transition ease-in-out duration-300"
-              leaveFrom="translate-x-0"
-              leaveTo="translate-x-full"
-            >
-              <div className="relative w-screen max-w-md">
-                <div className="h-full flex flex-col bg-white shadow-xl overflow-y-scroll">
-                  <div className="flex-1 overflow-y-auto">
-                    {/* Header */}
-                    <div className="px-4 py-6 bg-orange-700 sm:px-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center">
-                          {conversation.user_profile_url ? (
-                            <img
-                              className="h-10 w-10 rounded-full object-cover border-2 border-white"
-                              src={conversation.user_profile_url}
-                              alt={conversation.user_name || "User"}
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-orange-500 flex items-center justify-center border-2 border-white">
-                              <HiOutlineUser className="h-6 w-6 text-white" />
-                            </div>
-                          )}
-                          <div className="ml-3">
-                            <Dialog.Title className="text-lg font-medium text-white">
-                              {conversation.user_name || conversation.platform_user_id || "Unknown User"}
-                            </Dialog.Title>
-                            <p className="text-sm text-orange-200">
-                              {conversation.platform_user_id}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="ml-3 h-7 flex items-center">
-                          <button
-                            type="button"
-                            className="bg-orange-700 rounded-md text-orange-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
-                            onClick={onClose}
-                          >
-                            <span className="sr-only">Close panel</span>
-                            <HiOutlineX className="h-6 w-6" />
-                          </button>
-                        </div>
-                      </div>
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+        onClick={handleOverlayClick}
+      />
+      
+      {/* Modal */}
+      <div className="fixed inset-y-0 right-0 max-w-full flex">
+        <div className="relative w-screen max-w-md">
+          <div className="h-full flex flex-col bg-white shadow-xl">
+            {/* Header */}
+            <div className="px-4 py-4 bg-green-600 sm:px-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {conversation.user_profile_url ? (
+                    <img
+                      className="h-10 w-10 rounded-full object-cover border-2 border-white"
+                      src={conversation.user_profile_url}
+                      alt={conversation.user_name || "User"}
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-white">
+                      <HiOutlineUser className="h-6 w-6 text-gray-600" />
                     </div>
-                    
-                    {/* Message content */}
-                    <div ref={scrollContainerRef} className="p-4 flex-1 overflow-y-auto bg-gray-100 min-h-[400px]">
-                      {loading ? (
-                        <div className="flex justify-center items-center h-64">
-                          <LoadingSpinner />
-                        </div>
-                      ) : error ? (
-                        <ErrorAlert message={error} />
-                      ) : messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64">
-                          <div className="rounded-full bg-orange-100 p-3">
-                            <HiOutlineExclamation className="h-6 w-6 text-orange-600" />
-                          </div>
-                          <h3 className="mt-2 text-sm font-medium text-gray-900">No messages</h3>
-                          <p className="mt-1 text-sm text-gray-500">
-                            This conversation doesn't have any messages yet.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-8">
-                          {groupMessagesByDate().map((group) => (
-                            <div key={group.date} className="space-y-4">
-                              <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                  <div className="w-full border-t border-gray-300"></div>
-                                </div>
-                                <div className="relative flex justify-center">
-                                  <span className="px-2 bg-gray-100 text-sm text-gray-500">
-                                    {group.formattedDate}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              {group.messages.map((message) => (
-                                <div
-                                  key={message.message_id}
-                                  className={`flex ${
-                                    message.direction === 'outbound' ? 'justify-end' : 'justify-start'
-                                  }`}
-                                >
-                                  {message.direction === 'inbound' && (
-                                    <div className="mr-2 flex-shrink-0 self-end mb-1">
-                                      {conversation.user_profile_url ? (
-                                        <img
-                                          className="h-8 w-8 rounded-full object-cover"
-                                          src={conversation.user_profile_url}
-                                          alt={conversation.user_name || "User"}
-                                        />
-                                      ) : (
-                                        <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
-                                          <HiOutlineUser className="h-5 w-5 text-orange-600" />
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  
-                                  <div
-                                    className={`max-w-[75%] rounded-lg px-4 py-2 shadow-sm ${
-                                      message.direction === 'outbound'
-                                        ? 'bg-orange-600 text-white'
-                                        : 'bg-white text-gray-900'
-                                    }`}
-                                  >
-                                    {message.content}
-                                    <div 
-                                      className={`text-xs mt-1 ${
-                                        message.direction === 'outbound' ? 'text-orange-300' : 'text-gray-500'
-                                      }`}
-                                    >
-                                      {formatMessageDate(message.created_at)}
-                                    </div>
-                                  </div>
-                                  
-                                  {message.direction === 'outbound' && (
-                                    <div className="ml-2 flex-shrink-0 self-end mb-1">
-                                      <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
-                                        <svg className="h-5 w-5 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ))}
-                          <div ref={messagesEndRef} />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Message input */}
-                  <div className="p-4 border-t border-gray-200">
-                    <form onSubmit={handleSendMessage} className="relative">
-                      <div className="flex items-center">
-                        <input
-                          type="text"
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type your message..."
-                          disabled={sending}
-                          className="block w-full py-2 pl-4 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        />
-                        <button
-                          type="submit"
-                          disabled={sending || !newMessage.trim()}
-                          className={`absolute right-2 p-1 rounded-full text-white ${
-                            sending || !newMessage.trim()
-                              ? 'bg-gray-400'
-                              : 'bg-orange-600 hover:bg-orange-700'
-                          }`}
-                        >
-                          <HiOutlinePaperAirplane className="h-5 w-5 transform rotate-90" />
-                        </button>
-                      </div>
-                    </form>
+                  )}
+                  <div className="ml-3">
+                    <h3 className="text-lg font-medium text-white">
+                      {conversation.user_name || conversation.platform_user_id || "Unknown User"}
+                    </h3>
+                    <p className="text-sm text-green-100">
+                      {conversation.platform_user_id}
+                    </p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  className="bg-green-600 rounded-md text-green-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                  onClick={onClose}
+                >
+                  <span className="sr-only">Close</span>
+                  <HiOutlineX className="h-6 w-6" />
+                </button>
               </div>
-            </Transition.Child>
+            </div>
+            
+            {/* Messages Container */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div 
+                ref={scrollContainerRef} 
+                className="flex-1 overflow-y-auto p-4 space-y-4"
+                style={{ 
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f0f0f0' fill-opacity='0.3' fill-rule='evenodd'%3E%3Cpath d='m0 40l40-40h-40v40zm40 0v-40h-40l40 40z'/%3E%3C/g%3E%3C/svg%3E")`,
+                  backgroundColor: '#f0f2f5'
+                }}
+              >
+                {loading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <LoadingSpinner />
+                  </div>
+                ) : error ? (
+                  <ErrorAlert message={error} />
+                ) : messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64">
+                    <div className="rounded-full bg-gray-200 p-4">
+                      <HiOutlineExclamation className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="mt-4 text-sm font-medium text-gray-900">No messages yet</h3>
+                    <p className="mt-2 text-sm text-gray-500 text-center">
+                      This conversation is just getting started.<br />
+                      Send the first message below.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {groupMessagesByDate().map(({ date, formattedDate, messages }) => (
+                      <div key={date}>
+                        {/* Date separator */}
+                        <div className="flex items-center justify-center">
+                          <div className="bg-white/90 backdrop-blur-sm text-gray-700 text-xs px-3 py-1 rounded-lg shadow-sm border">
+                            {formattedDate}
+                          </div>
+                        </div>
+                        
+                        {/* Messages for this date */}
+                        <div className="space-y-2 mt-4">
+                          {messages.map((message, index) => {
+                            const isUser = isUserMessage(message);
+                            
+                            return (
+                              <div
+                                key={message.message_id || index}
+                                className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div
+                                  className={`max-w-xs px-3 py-2 rounded-2xl shadow-sm ${
+                                    isUser
+                                      ? 'bg-green-500 text-white rounded-br-sm'
+                                      : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
+                                  }`}
+                                >
+                                  <div className="text-sm whitespace-pre-wrap break-words">
+                                    {message.content}
+                                  </div>
+                                  <div className={`text-xs mt-1 flex items-center ${
+                                    isUser ? 'text-green-100 justify-end' : 'text-gray-500 justify-start'
+                                  }`}>
+                                    <span>{formatMessageDate(message.created_at)}</span>
+                                    {isUser && (
+                                      <div className="ml-1 flex">
+                                        <svg className="w-3 h-3 fill-current" viewBox="0 0 16 15">
+                                          <path d="M10.91 3.2l-.58-.58a.5.5 0 0 0-.33-.14.5.5 0 0 0-.34.14L5.15 7.15l-1.76-1.76a.5.5 0 0 0-.33-.14.5.5 0 0 0-.34.14l-.58.58a.5.5 0 0 0 0 .67L5.82 10.4a.5.5 0 0 0 .67 0l5.08-5.08a.5.5 0 0 0 0-.67z"/>
+                                        </svg>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Message Input */}
+            <div className="border-t border-gray-200 p-4 bg-gray-50">
+              <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    disabled={sending}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={sending || !newMessage.trim()}
+                  className={`p-2 rounded-full transition-colors ${
+                    sending || !newMessage.trim()
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-green-500 hover:bg-green-600'
+                  }`}
+                >
+                  <HiOutlinePaperAirplane className="h-5 w-5 text-white transform rotate-90" />
+                </button>
+              </form>
+            </div>
           </div>
         </div>
-      </Dialog>
-    </Transition.Root>
+      </div>
+    </div>
   );
 };
 
