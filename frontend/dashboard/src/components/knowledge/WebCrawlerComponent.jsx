@@ -1,53 +1,60 @@
 // frontend/dashboard/src/components/knowledge/WebCrawlerComponent.jsx
 import React, { useState, useEffect } from 'react';
-import knowledgeService from '../../services/knowledgeService';
-import { useToast } from '../../context/ToastContext';
-import {
-  GlobeAltIcon,
-  TrashIcon,
-  PlayIcon,
-  ArrowPathIcon,
-  CheckCircleIcon,
+import { 
+  GlobeAltIcon, 
+  ArrowPathIcon, 
+  CogIcon, 
+  CheckCircleIcon, 
   XCircleIcon,
   ClockIcon,
+  PlusIcon,
+  EyeIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
+import knowledgeService from '../../services/knowledgeService';
+import { useToast } from '../../context/ToastContext';
+import CrawlProgressModal from './CrawlProgressModal';
 
 const WebCrawlerComponent = ({ collections, onJobCreated }) => {
-  const [url, setUrl] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [url, setUrl] = useState('https://');
   const [selectedCollection, setSelectedCollection] = useState('');
-  const [maxPages, setMaxPages] = useState(50);
-  const [maxDepth, setMaxDepth] = useState(3);
+  const [loading, setLoading] = useState(false);
   const [crawlJobs, setCrawlJobs] = useState([]);
   const [refreshingJobs, setRefreshingJobs] = useState(false);
-  const [advancedOptions, setAdvancedOptions] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [jobToDelete, setJobToDelete] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [intelligentMode, setIntelligentMode] = useState(true);
+  const [specificPages, setSpecificPages] = useState(['https://']);
+  const [showProgress, setShowProgress] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState(null);
+  
+  // Manual mode settings (only shown when intelligent mode is off)
+  const [maxPages, setMaxPages] = useState(100);
+  const [maxDepth, setMaxDepth] = useState(3);
   
   const { success, error: showError } = useToast();
-  
+
   useEffect(() => {
     fetchCrawlJobs();
   }, []);
-  
+
   const fetchCrawlJobs = async () => {
     try {
       setRefreshingJobs(true);
       const response = await knowledgeService.getCrawlJobs();
-      setCrawlJobs(response.jobs || response);
+      setCrawlJobs(response.jobs || []);
     } catch (err) {
       console.error('Error fetching crawl jobs:', err);
-      if (showError) showError('Failed to load crawl jobs');
+      showError('Failed to fetch crawl jobs');
     } finally {
       setRefreshingJobs(false);
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!url) {
-      if (showError) showError('Please enter a website URL');
+    if (!url || url === 'https://') {
+      showError('Please enter a website URL');
       return;
     }
     
@@ -57,13 +64,25 @@ const WebCrawlerComponent = ({ collections, onJobCreated }) => {
       const crawlData = {
         url,
         collection_id: selectedCollection || undefined,
-        max_pages: maxPages,
-        max_depth: maxDepth
+        intelligent_mode: intelligentMode,
+        specific_pages: specificPages.filter(page => page.trim() !== '' && page !== 'https://'),
+        // Only include manual settings if not in intelligent mode
+        ...(intelligentMode ? {} : {
+          max_pages: maxPages,
+          max_depth: maxDepth
+        })
       };
       
-      await knowledgeService.createCrawlJob(crawlData);
-      success('Website crawl job started');
-      setUrl('');
+      const response = await knowledgeService.createCrawlJob(crawlData);
+      
+      if (intelligentMode) {
+        success(`Intelligent crawl started! Discovering ${response.estimated_pages || 'multiple'} pages automatically.`);
+      } else {
+        success('Manual crawl job started successfully');
+      }
+      
+      setUrl('https://');
+      setSpecificPages(['https://']);
       
       // Refresh jobs list
       await fetchCrawlJobs();
@@ -73,76 +92,70 @@ const WebCrawlerComponent = ({ collections, onJobCreated }) => {
       
     } catch (err) {
       console.error('Error starting crawl job:', err);
-      if (showError) showError('Failed to start crawl job');
+      showError(err.response?.data?.detail || 'Failed to start crawl job');
     } finally {
       setLoading(false);
     }
   };
-  
+
+  const handleAddSpecificPage = () => {
+    setSpecificPages([...specificPages, 'https://']);
+  };
+
+  const handleRemoveSpecificPage = (index) => {
+    if (specificPages.length > 1) {
+      setSpecificPages(specificPages.filter((_, i) => i !== index));
+    } else {
+      setSpecificPages(['https://']);
+    }
+  };
+
+  const handleSpecificPageChange = (index, value) => {
+    const newPages = [...specificPages];
+    newPages[index] = value;
+    setSpecificPages(newPages);
+  };
 
   const handleDeleteJob = async (jobId) => {
     try {
-      // Use the DELETE endpoint for all jobs
       await knowledgeService.cancelCrawlJob(jobId);
       success('Crawl job deleted successfully');
-      
-      // Refresh the jobs list to reflect the changes
       await fetchCrawlJobs();
     } catch (err) {
       console.error('Error deleting crawl job:', err);
-      if (showError) showError('Failed to delete job');
-      
-      // Refresh to ensure UI is in sync
+      showError('Failed to delete job');
       await fetchCrawlJobs();
     }
   };
-  
-  const handleRetryJob = async (jobId) => {
-    try {
-      await knowledgeService.retryCrawlJob(jobId);
-      success('Crawl job restarted');
-      await fetchCrawlJobs();
-    } catch (err) {
-      console.error('Error retrying crawl job:', err);
-      if (showError) showError('Failed to retry crawl job');
-    }
-  };
-  
+
   const getStatusBadge = (status) => {
     switch(status) {
       case 'completed':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <CheckCircleIcon className="mr-1 h-4 w-4" />
+            <CheckCircleIcon className="w-4 h-4 mr-1" />
             Completed
+          </span>
+        );
+      case 'failed':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <XCircleIcon className="w-4 h-4 mr-1" />
+            Failed
           </span>
         );
       case 'in_progress':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <ArrowPathIcon className="mr-1 h-4 w-4 animate-spin" />
+            <ArrowPathIcon className="w-4 h-4 mr-1 animate-spin" />
             In Progress
           </span>
         );
       case 'pending':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <ClockIcon className="mr-1 h-4 w-4" />
+            <ClockIcon className="w-4 h-4 mr-1" />
             Pending
-          </span>
-        );
-      case 'failed':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <XCircleIcon className="mr-1 h-4 w-4" />
-            Failed
-          </span>
-        );
-      case 'cancelled':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-            <XCircleIcon className="mr-1 h-4 w-4" />
-            Cancelled
           </span>
         );
       default:
@@ -153,25 +166,12 @@ const WebCrawlerComponent = ({ collections, onJobCreated }) => {
         );
     }
   };
-  
-  const getProgressBar = (job) => {
-    if (job.status !== 'in_progress' && job.status !== 'pending') return null;
-    
-    const progress = job.pages_crawled > 0 
-      ? Math.min(100, Math.round((job.pages_crawled / job.max_pages) * 100))
-      : 0;
-    
-    return (
-      <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-        <div 
-          className="bg-blue-600 h-2.5 rounded-full" 
-          style={{ width: `${progress}%` }}
-        ></div>
-      </div>
-    );
+
+  const getProgress = (job) => {
+    if (!job.max_pages || job.max_pages === 0) return 0;
+    return Math.min(100, Math.round((job.pages_crawled / job.max_pages) * 100));
   };
-  
-  // Format domain from URL
+
   const formatDomain = (url) => {
     try {
       const domain = new URL(url).hostname;
@@ -180,24 +180,41 @@ const WebCrawlerComponent = ({ collections, onJobCreated }) => {
       return url;
     }
   };
-  
-  // Format date
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
-  
+
   return (
     <div className="space-y-6">
-      {/* URL Input Form */}
+      {/* Advanced Crawler Form */}
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Crawl Website</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Advanced Web Crawler</h3>
+          <div className="flex items-center space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={intelligentMode}
+                onChange={(e) => setIntelligentMode(e.target.checked)}
+                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                Intelligent Mode
+              </span>
+            </label>
+          </div>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Website URL */}
           <div>
             <label htmlFor="website-url" className="block text-sm font-medium text-gray-700 mb-1">
               Website URL
@@ -216,73 +233,117 @@ const WebCrawlerComponent = ({ collections, onJobCreated }) => {
                 required
               />
             </div>
-            <p className="mt-1 text-sm text-gray-500">
-              Enter the website URL you want to crawl and add to your knowledge base.
-            </p>
           </div>
-          
+
+          {/* Collection Selection */}
           <div>
-            <label htmlFor="collection" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="collection-select" className="block text-sm font-medium text-gray-700 mb-1">
               Knowledge Collection (Optional)
             </label>
             <select
-              id="collection"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md"
+              id="collection-select"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
               value={selectedCollection}
               onChange={(e) => setSelectedCollection(e.target.value)}
             >
               <option value="">Create new collection</option>
-              {collections.map((collection) => (
+              {collections?.map((collection) => (
                 <option key={collection.collection_id} value={collection.collection_id}>
                   {collection.name}
                 </option>
               ))}
             </select>
           </div>
-          
+
+          {/* Specific Pages Section */}
           <div>
-            <button
-              type="button"
-              className="text-sm text-orange-600 hover:text-orange-500 flex items-center"
-              onClick={() => setAdvancedOptions(!advancedOptions)}
-            >
-              {advancedOptions ? 'Hide' : 'Show'} Advanced Options
-            </button>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Specific Pages (Optional)
+              </label>
+              <button
+                type="button"
+                onClick={handleAddSpecificPage}
+                className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-orange-700 bg-orange-100 hover:bg-orange-200"
+              >
+                <PlusIcon className="h-3 w-3 mr-1" />
+                Add Page
+              </button>
+            </div>
+            
+            {specificPages.map((page, index) => (
+              <div key={index} className="flex mb-2">
+                <input
+                  type="url"
+                  placeholder="https://example.com/specific-page"
+                  value={page}
+                  onChange={(e) => handleSpecificPageChange(index, e.target.value)}
+                  className="flex-1 rounded-l-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSpecificPage(index)}
+                  className="px-3 py-2 border border-l-0 border-gray-300 rounded-r-md text-gray-400 hover:text-red-500 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
           </div>
-          
-          {advancedOptions && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="max-pages" className="block text-sm font-medium text-gray-700 mb-1">
-                  Maximum Pages
+
+          {/* Manual Settings - Only for Manual Mode */}
+          {!intelligentMode && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Manual Settings
                 </label>
-                <input
-                  type="number"
-                  id="max-pages"
-                  className="mt-1 focus:ring-orange-500 focus:border-orange-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                  min="1"
-                  max="1000"
-                  value={maxPages}
-                  onChange={(e) => setMaxPages(parseInt(e.target.value))}
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200"
+                >
+                  <CogIcon className="h-3 w-3 mr-1" />
+                  {showAdvanced ? 'Hide' : 'Show'} Settings
+                </button>
               </div>
-              <div>
-                <label htmlFor="max-depth" className="block text-sm font-medium text-gray-700 mb-1">
-                  Maximum Depth
-                </label>
-                <input
-                  type="number"
-                  id="max-depth"
-                  className="mt-1 focus:ring-orange-500 focus:border-orange-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                  min="1"
-                  max="5"
-                  value={maxDepth}
-                  onChange={(e) => setMaxDepth(parseInt(e.target.value))}
-                />
-              </div>
+              
+              {showAdvanced && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="max-pages" className="block text-sm font-medium text-gray-700 mb-1">
+                      Maximum Pages
+                    </label>
+                    <input
+                      type="number"
+                      id="max-pages"
+                      className="mt-1 focus:ring-orange-500 focus:border-orange-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      min="1"
+                      max="1000"
+                      value={maxPages}
+                      onChange={(e) => setMaxPages(parseInt(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="max-depth" className="block text-sm font-medium text-gray-700 mb-1">
+                      Maximum Depth
+                    </label>
+                    <input
+                      type="number"
+                      id="max-depth"
+                      className="mt-1 focus:ring-orange-500 focus:border-orange-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      min="1"
+                      max="5"
+                      value={maxDepth}
+                      onChange={(e) => setMaxDepth(parseInt(e.target.value))}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
+          {/* Submit Button */}
           <div className="pt-3">
             <button
               type="submit"
@@ -292,17 +353,19 @@ const WebCrawlerComponent = ({ collections, onJobCreated }) => {
               {loading ? (
                 <>
                   <ArrowPathIcon className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" />
-                  Starting Crawl...
+                  {intelligentMode ? 'Starting Smart Crawl...' : 'Starting Manual Crawl...'}
                 </>
               ) : (
-                <>Start Crawling</>
+                <>
+                  {intelligentMode ? 'Start Smart Crawl' : 'Start Manual Crawl'}
+                </>
               )}
             </button>
           </div>
         </form>
       </div>
       
-      {/* Crawl Jobs List */}
+      {/* Recent Crawl Jobs */}
       <div className="bg-white shadow-sm rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900">Recent Crawl Jobs</h3>
@@ -316,142 +379,89 @@ const WebCrawlerComponent = ({ collections, onJobCreated }) => {
         </div>
         
         {refreshingJobs && crawlJobs.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="mt-2 text-sm">Loading crawl jobs...</p>
+          <div className="text-center py-8">
+            <ArrowPathIcon className="h-8 w-8 animate-spin text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Loading crawl jobs...</p>
           </div>
         ) : crawlJobs.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">
-            <GlobeAltIcon className="h-12 w-12 mx-auto text-gray-400" />
-            <p className="mt-2 text-sm">No website crawl jobs yet</p>
-            <p className="text-sm">Enter a website URL above to start crawling</p>
+          <div className="text-center py-8">
+            <GlobeAltIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">No crawl jobs yet. Start by adding a website URL above.</p>
           </div>
         ) : (
-          <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Website</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {/* Display only the most recent 5 jobs */}
-                {crawlJobs.slice(0, 5).map((job) => (
-                  <tr key={job.job_id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      <a href={job.base_url} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-900">
-                        {formatDomain(job.base_url)}
-                      </a>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getStatusBadge(job.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="text-xs">
-                        {job.pages_crawled || 0} / {job.max_pages} pages
+          <div className="space-y-4">
+            {crawlJobs.slice(0, 5).map((job) => (
+              <div key={job.job_id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-3">
+                        <h4 className="text-sm font-medium text-gray-900">
+                          {formatDomain(job.base_url)}
+                        </h4>
+                        {getStatusBadge(job.status)}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedJobId(job.job_id);
+                            setShowProgress(true);
+                          }}
+                          className="p-1 rounded-full text-gray-400 hover:text-blue-500"
+                          title="View Progress"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteJob(job.job_id)}
+                          className="p-1 rounded-full text-gray-400 hover:text-red-500"
+                          title="Delete Job"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                      <span>
+                        {job.pages_crawled} / {job.max_pages} pages
                         {job.pages_failed > 0 && (
-                          <span className="ml-2 text-red-500">
+                          <span className="text-red-500 ml-2">
                             ({job.pages_failed} failed)
                           </span>
                         )}
-                      </div>
-                      {getProgressBar(job)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(job.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        {job.status === 'failed' && (
-                          <button
-                            onClick={() => handleRetryJob(job.job_id)}
-                            className="text-orange-600 hover:text-orange-900"
-                            title="Retry job"
-                          >
-                            <PlayIcon className="h-5 w-5" aria-hidden="true" />
-                          </button>
-                        )}
-                        
-                        {/* Show delete/cancel button for all jobs */}
-                        <button
-                          onClick={() => {
-                            setJobToDelete(job);
-                            setDeleteConfirmOpen(true);
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                          title={
-                            job.status === 'pending' || job.status === 'in_progress' 
-                              ? 'Cancel job' 
-                              : 'Delete job'
-                          }
-                        >
-                          <TrashIcon className="h-5 w-5" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </span>
+                      <span>
+                        {job.completed_at ? formatDate(job.completed_at) : formatDate(job.created_at)}
+                      </span>
+                    </div>
+                    
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          job.status === 'completed' ? 'bg-green-500' : 
+                          job.status === 'failed' ? 'bg-red-500' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${getProgress(job)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
-      
-      {/* Delete Confirmation Dialog */}
-      {deleteConfirmOpen && jobToDelete && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setDeleteConfirmOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
-            <div className="sm:flex sm:items-start">
-              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress' 
-                    ? 'Cancel Crawl Job' 
-                    : 'Delete Crawl Job'}
-                </h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">
-                    {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress'
-                      ? `Are you sure you want to cancel the crawl job for ${formatDomain(jobToDelete.base_url)}?`
-                      : `Are you sure you want to remove this crawl job for ${formatDomain(jobToDelete.base_url)}?`}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                onClick={() => {
-                  handleDeleteJob(jobToDelete.job_id);
-                  setDeleteConfirmOpen(false);
-                  setJobToDelete(null);
-                }}
-              >
-                {jobToDelete.status === 'pending' || jobToDelete.status === 'in_progress' 
-                  ? 'Cancel Job' 
-                  : 'Delete Job'}
-              </button>
-              <button
-                type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
-                onClick={() => {
-                  setDeleteConfirmOpen(false);
-                  setJobToDelete(null);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+
+      {/* Crawl Progress Modal */}
+      {showProgress && selectedJobId && (
+        <CrawlProgressModal
+          jobId={selectedJobId}
+          onClose={() => {
+            setShowProgress(false);
+            setSelectedJobId(null);
+          }}
+        />
       )}
     </div>
   );
