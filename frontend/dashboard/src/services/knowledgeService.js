@@ -188,7 +188,7 @@ const knowledgeService = {
   // Get storage statistics
   async getStorageStats() {
     try {
-      const response = await api.get('/api/analytics/storage');
+      const response = await api.get('/api/knowledge/crawl/storage-stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching storage stats:', error);
@@ -357,6 +357,24 @@ const knowledgeService = {
     });
     return response.data;
   },
+
+  async deleteCrawlJob(jobId) {
+    return this.cancelCrawlJob(jobId);
+  },
+
+  async analyzeWebsite(url) {
+    try {
+      console.log('Calling analyze endpoint with URL:', url);
+      const response = await api.post('/api/knowledge/crawl/analyze', { url });
+      console.log('Analyze response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error analyzing website:', error);
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+      throw error;
+    }
+  },  
 
   // Import collection data
   async importCollection(file, collectionId) {

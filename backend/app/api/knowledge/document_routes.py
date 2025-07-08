@@ -496,3 +496,55 @@ async def delete_document(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete document. Please try again."
         )
+        
+@router.delete("/documents/{document_id}")
+async def delete_document(
+    document_id: str,
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Delete a document and all its associated knowledge items."""
+    try:
+        from app.repositories.knowledge_repository import (
+            DocumentSourceRepository, 
+            KnowledgeItemRepository
+        )
+        from app.services.storage.document_service import DocumentService
+        from app.core import logger
+        
+        doc_repo = DocumentSourceRepository()
+        item_repo = KnowledgeItemRepository()
+        
+        # Verify document belongs to client
+        document = doc_repo.get_by_document_id(db, document_id)
+        if not document or document.client_id != current_client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found"
+            )
+        
+        # Delete associated knowledge items
+        items = item_repo.get_by_source_document_id(db, document_id)
+        for item in items:
+            item_repo.delete(db, item.item_id)
+        
+        # Delete file from storage
+        document_service = DocumentService()
+        try:
+            await document_service.delete_file(document.file_path)
+        except Exception as e:
+            logger.warning(f"Failed to delete file from storage: {e}")
+        
+        # Delete document record
+        doc_repo.delete(db, document_id)
+        
+        return {"message": "Document deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting document {document_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete document"
+        )        

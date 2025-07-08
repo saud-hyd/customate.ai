@@ -402,7 +402,7 @@ async def get_crawl_jobs(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get crawl jobs: {str(e)}"
         )
-
+                
 @router.delete("/crawl/{job_id}")
 async def cancel_crawl_job(
     job_id: str,
@@ -533,3 +533,394 @@ async def retry_crawl_job(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retry crawl job: {str(e)}"
         )
+        
+@router.get("/storage-stats")
+async def get_storage_stats(
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Get storage statistics for the current client."""
+    try:
+        from app.repositories.knowledge_repository import (
+            DocumentSourceRepository, 
+            KnowledgeItemRepository
+        )
+        
+        doc_repo = DocumentSourceRepository()
+        item_repo = KnowledgeItemRepository()
+        crawl_repo = WebsiteCrawlJobRepository()
+        
+        # Get counts and sizes
+        documents = doc_repo.get_by_client_id(db, current_client.client_id)
+        total_documents = len(documents)
+        total_file_size = sum(doc.file_size or 0 for doc in documents)
+        
+        items = item_repo.get_by_client_id(db, current_client.client_id)
+        total_items = len(items)
+        
+        crawl_jobs = crawl_repo.get_by_client_id(db, current_client.client_id)
+        total_crawled_pages = sum(job.pages_crawled or 0 for job in crawl_jobs)
+        
+        return {
+            "total_documents": total_documents,
+            "total_file_size": total_file_size,
+            "total_knowledge_items": total_items,
+            "total_crawled_pages": total_crawled_pages,
+            "total_crawl_jobs": len(crawl_jobs)
+        }
+    except Exception as e:
+        logger.exception(f"Error getting storage stats: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch storage statistics"
+        )
+                                
+@router.post("/analyze")
+async def analyze_website(
+    analyze_data: Dict[str, Any] = Body(...),
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Analyze a website and return discoverable pages before crawling."""
+    try:
+        url = analyze_data.get("url")
+        if not url:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="URL is required"
+            )
+        
+        # Normalize URL
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        
+        logger.info(f"Analyzing website: {url}")
+        
+        # Simple discovery approach - just use the URL and basic logic
+        discovered_pages = []
+        
+        try:
+            import aiohttp
+            from bs4 import BeautifulSoup
+            from urllib.parse import urljoin, urlparse
+            
+            timeout = aiohttp.ClientTimeout(total=30)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                headers = {
+                    "User-Agent": "Customate.ai Web Crawler (https://customate.ai)"
+                }
+                
+                try:
+                    async with session.get(url, headers=headers) as response:
+                        if response.status == 200:
+                            html = await response.text()
+                            soup = BeautifulSoup(html, 'html.parser')
+                            
+                            # Add homepage first
+                            page_title = soup.title.string.strip() if soup.title and soup.title.string else url
+                            discovered_pages.append({
+                                "url": url,
+                                "title": page_title,
+                                "priority": "CRITICAL",
+                                "estimated_size": 5000,
+                                "page_type": "homepage",
+                                "selected": True
+                            })
+                            
+                            # Find all links on the homepage
+                            links = soup.find_all('a', href=True)
+                            base_domain = urlparse(url).netloc
+                            seen_urls = {url}
+                            
+                            for link in links:
+                                href = link.get('href')
+                                if not href:
+                                    continue
+                                    
+                                # Convert relative URLs to absolute
+                                full_url = urljoin(url, href)
+                                
+                                # Skip if not same domain
+                                if urlparse(full_url).netloc != base_domain:
+                                    continue
+                                    
+                                # Skip if already seen
+                                if full_url in seen_urls:
+                                    continue
+                                    
+                                # Skip common non-content URLs
+                                if any(skip in full_url.lower() for skip in ['#', 'javascript:', 'mailto:', 'tel:', '.jpg', '.png', '.gif', '.pdf']):
+                                    continue
+                                
+                                seen_urls.add(full_url)
+                                
+                                # Get link text
+                                link_text = link.get_text(strip=True)
+                                page_title = link_text if link_text else full_url.split('/')[-1] or "Page"
+                                
+                                # Determine priority based on URL patterns
+                                priority = "MEDIUM"
+                                page_type = "page"
+                                
+                                url_lower = full_url.lower()
+                                if any(pattern in url_lower for pattern in ['/about', '/contact', '/services']):
+                                    priority = "HIGH"
+                                    page_type = "about"
+                                elif any(pattern in url_lower for pattern in ['/blog', '/news', '/article', '/post']):
+                                    priority = "HIGH"
+                                    page_type = "article"
+                                elif any(pattern in url_lower for pattern in ['/product', '/shop', '/store']):
+                                    priority = "HIGH"
+                                    page_type = "product"
+                                elif any(pattern in url_lower for pattern in ['/docs', '/help', '/support', '/faq']):
+                                    priority = "HIGH"
+                                    page_type = "docs"
+                                
+                                discovered_pages.append({
+                                    "url": full_url,
+                                    "title": page_title[:100],  # Limit title length
+                                    "priority": priority,
+                                    "estimated_size": 5000,
+                                    "page_type": page_type,
+                                    "selected": True
+                                })
+                                
+                                # Limit to prevent too many pages
+                                if len(discovered_pages) >= 25:
+                                    break
+                        else:
+                            logger.warning(f"Failed to fetch homepage, status: {response.status}")
+                            
+                except Exception as fetch_error:
+                    logger.error(f"Error fetching homepage: {fetch_error}")
+                    # Fallback: just add the homepage
+                    discovered_pages = [{
+                        "url": url,
+                        "title": url,
+                        "priority": "CRITICAL",
+                        "estimated_size": 5000,
+                        "page_type": "homepage",
+                        "selected": True
+                    }]
+                    
+        except Exception as discovery_error:
+            logger.error(f"Error in page discovery: {discovery_error}")
+            # Fallback: just add the homepage
+            discovered_pages = [{
+                "url": url,
+                "title": url,
+                "priority": "CRITICAL",
+                "estimated_size": 5000,
+                "page_type": "homepage",
+                "selected": True
+            }]
+        
+        # If we still have no pages, add homepage as fallback
+        if not discovered_pages:
+            discovered_pages = [{
+                "url": url,
+                "title": url,
+                "priority": "CRITICAL",
+                "estimated_size": 5000,
+                "page_type": "homepage",
+                "selected": True
+            }]
+        
+        logger.info(f"Analysis complete. Found {len(discovered_pages)} pages")
+        
+        return {
+            "url": url,
+            "total_pages_found": len(discovered_pages),
+            "estimated_total_size": 5000 * len(discovered_pages),
+            "has_sitemap": False,  # We can enhance this later
+            "recommended_depth": 3,
+            "discovered_pages": discovered_pages,
+            "analysis_summary": {
+                "homepage_accessible": len(discovered_pages) > 0,
+                "sitemap_found": False,
+                "robots_txt_found": False,
+                "estimated_crawl_time": f"{len(discovered_pages) * 3} seconds"
+            }
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error analyzing website: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to analyze website: {str(e)}"
+        )
+        
+@router.post("/crawl/analyze")
+async def analyze_website(
+    analyze_data: Dict[str, Any] = Body(...),
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Analyze a website and return discoverable pages before crawling."""
+    try:
+        url = analyze_data.get("url")
+        if not url:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="URL is required"
+            )
+        
+        # Normalize URL
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        
+        logger.info(f"Analyzing website: {url}")
+        
+        # Simple discovery approach - just use the URL and basic logic
+        discovered_pages = []
+        
+        try:
+            import aiohttp
+            from bs4 import BeautifulSoup
+            from urllib.parse import urljoin, urlparse
+            
+            timeout = aiohttp.ClientTimeout(total=30)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                headers = {
+                    "User-Agent": "Customate.ai Web Crawler (https://customate.ai)"
+                }
+                
+                try:
+                    async with session.get(url, headers=headers) as response:
+                        if response.status == 200:
+                            html = await response.text()
+                            soup = BeautifulSoup(html, 'html.parser')
+                            
+                            # Add homepage first
+                            page_title = soup.title.string.strip() if soup.title and soup.title.string else url
+                            discovered_pages.append({
+                                "url": url,
+                                "title": page_title,
+                                "priority": "CRITICAL",
+                                "estimated_size": 5000,
+                                "page_type": "homepage",
+                                "selected": True
+                            })
+                            
+                            # Find all links on the homepage
+                            links = soup.find_all('a', href=True)
+                            base_domain = urlparse(url).netloc
+                            seen_urls = {url}
+                            
+                            for link in links:
+                                href = link.get('href')
+                                if not href:
+                                    continue
+                                    
+                                # Convert relative URLs to absolute
+                                full_url = urljoin(url, href)
+                                
+                                # Skip if not same domain
+                                if urlparse(full_url).netloc != base_domain:
+                                    continue
+                                    
+                                # Skip if already seen
+                                if full_url in seen_urls:
+                                    continue
+                                    
+                                # Skip common non-content URLs
+                                if any(skip in full_url.lower() for skip in ['#', 'javascript:', 'mailto:', 'tel:', '.jpg', '.png', '.gif', '.pdf']):
+                                    continue
+                                
+                                seen_urls.add(full_url)
+                                
+                                # Get link text
+                                link_text = link.get_text(strip=True)
+                                page_title = link_text if link_text else full_url.split('/')[-1] or "Page"
+                                
+                                # Determine priority based on URL patterns
+                                priority = "MEDIUM"
+                                page_type = "page"
+                                
+                                url_lower = full_url.lower()
+                                if any(pattern in url_lower for pattern in ['/about', '/contact', '/services']):
+                                    priority = "HIGH"
+                                    page_type = "about"
+                                elif any(pattern in url_lower for pattern in ['/blog', '/news', '/article', '/post']):
+                                    priority = "HIGH"
+                                    page_type = "article"
+                                elif any(pattern in url_lower for pattern in ['/product', '/shop', '/store']):
+                                    priority = "HIGH"
+                                    page_type = "product"
+                                elif any(pattern in url_lower for pattern in ['/docs', '/help', '/support', '/faq']):
+                                    priority = "HIGH"
+                                    page_type = "docs"
+                                
+                                discovered_pages.append({
+                                    "url": full_url,
+                                    "title": page_title[:100],  # Limit title length
+                                    "priority": priority,
+                                    "estimated_size": 5000,
+                                    "page_type": page_type,
+                                    "selected": True
+                                })
+                                
+                                # Limit to prevent too many pages
+                                if len(discovered_pages) >= 25:
+                                    break
+                        else:
+                            logger.warning(f"Failed to fetch homepage, status: {response.status}")
+                            
+                except Exception as fetch_error:
+                    logger.error(f"Error fetching homepage: {fetch_error}")
+                    # Fallback: just add the homepage
+                    discovered_pages = [{
+                        "url": url,
+                        "title": url,
+                        "priority": "CRITICAL",
+                        "estimated_size": 5000,
+                        "page_type": "homepage",
+                        "selected": True
+                    }]
+                    
+        except Exception as discovery_error:
+            logger.error(f"Error in page discovery: {discovery_error}")
+            # Fallback: just add the homepage
+            discovered_pages = [{
+                "url": url,
+                "title": url,
+                "priority": "CRITICAL",
+                "estimated_size": 5000,
+                "page_type": "homepage",
+                "selected": True
+            }]
+        
+        # If we still have no pages, add homepage as fallback
+        if not discovered_pages:
+            discovered_pages = [{
+                "url": url,
+                "title": url,
+                "priority": "CRITICAL",
+                "estimated_size": 5000,
+                "page_type": "homepage",
+                "selected": True
+            }]
+        
+        logger.info(f"Analysis complete. Found {len(discovered_pages)} pages")
+        
+        return {
+            "url": url,
+            "total_pages_found": len(discovered_pages),
+            "estimated_total_size": 5000 * len(discovered_pages),
+            "has_sitemap": False,  # We can enhance this later
+            "recommended_depth": 3,
+            "discovered_pages": discovered_pages,
+            "analysis_summary": {
+                "homepage_accessible": len(discovered_pages) > 0,
+                "sitemap_found": False,
+                "robots_txt_found": False,
+                "estimated_crawl_time": f"{len(discovered_pages) * 3} seconds"
+            }
+        }
+        
+    except Exception as e:
+        logger.exception(f"Error analyzing website: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to analyze website: {str(e)}"
+        )        

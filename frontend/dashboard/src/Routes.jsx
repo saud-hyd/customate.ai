@@ -22,13 +22,7 @@ import IntegrationsPage from './pages/integrations/IntegrationsPage';
 import SubscriptionPage from './pages/subscription/SubscriptionPage';
 import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
 import ChannelsPage from './pages/channels/ChannelsPage';
-
-
-// Knowledge management pages
 import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
-import KnowledgeDetailPage from './pages/knowledge/KnowledgeDetailPage';
-import DocumentListPage from './pages/knowledge/DocumentListPage';
-import WebCrawlerPage from './pages/knowledge/WebCrawlerPage';
 
 
 // Protected Route component
@@ -135,9 +129,6 @@ const AppRoutes = () => {
         
         {/* Knowledge management routes */}
         <Route path="knowledge" element={<KnowledgeListPage />} />
-        <Route path="knowledge/documents" element={<DocumentListPage />} />
-        <Route path="knowledge/crawler" element={<WebCrawlerPage />} />
-        <Route path="knowledge/:id" element={<KnowledgeDetailPage />} />
         
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="channels" element={<ChannelsPage />} />

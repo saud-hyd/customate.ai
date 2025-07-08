@@ -167,12 +167,12 @@ class UsageTracker:
         """Update storage usage calculations - keeping existing working implementation."""
         try:
             # Calculate total storage from all sources
-            from app.domain.knowledge.entities import KnowledgeItem, Document
+            from app.domain.knowledge.entities import KnowledgeItem, DocumentSource
             from app.domain.client.entities import CrawledContent
             from sqlalchemy import func
             
             # Get document storage
-            document_bytes = db.query(func.coalesce(func.sum(Document.file_size_bytes), 0))\
+            document_bytes = db.query(func.coalesce(func.sum(DocumentSource.file_size_bytes), 0))\
                 .filter(Document.client_id == client_id)\
                 .scalar() or 0
             

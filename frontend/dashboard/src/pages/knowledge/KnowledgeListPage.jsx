@@ -1,1062 +1,828 @@
 // frontend/dashboard/src/pages/knowledge/KnowledgeListPage.jsx
+// REPLACE ENTIRE FILE CONTENT with this unified implementation
+
 import React, { useState, useEffect } from 'react';
 import knowledgeService from '../../services/knowledgeService';
 import DocumentUploader from '../../components/knowledge/DocumentUploader';
-import WebsiteCrawler from '../../components/knowledge/WebsiteCrawler';
 import { useToast } from '../../context/ToastContext';
-
 import {
-  DocumentIcon,
-  DocumentTextIcon,
-  FolderIcon,
-  ArrowPathIcon,
-  PlusIcon,
   MagnifyingGlassIcon,
-  XMarkIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  AdjustmentsHorizontalIcon,
-  CalendarIcon,
+  PlusIcon,
+  DocumentIcon,
   GlobeAltIcon,
   TrashIcon,
+  XMarkIcon,
+  CheckCircleIcon,
+  ArrowUpTrayIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 const KnowledgeListPage = () => {
-  const [activeTab, setActiveTab] = useState('collections'); // Changed from 'faqs' to 'collections'
-  const [collections, setCollections] = useState([]);
-  const [activeCollection, setActiveCollection] = useState(null);
-  const [items, setItems] = useState([]);
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
-  const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
-  const [newCollection, setNewCollection] = useState({ name: '', description: '', type: 'general' });
-  const [newItem, setNewItem] = useState({ title: '', content: '' });
+  // State management
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedItemIds, setExpandedItemIds] = useState({});
-  const [expandedDocuments, setExpandedDocuments] = useState({});
-  const [sortOption, setSortOption] = useState('newest');
-  const [showFilters, setShowFilters] = useState(false);
-  const [documentToDelete, setDocumentToDelete] = useState(null);
-  const [isDeleteDocumentConfirmOpen, setIsDeleteDocumentConfirmOpen] = useState(false);
-  const [isDeleteCollectionConfirmOpen, setIsDeleteCollectionConfirmOpen] = useState(false);
-  const [collectionToDelete, setCollectionToDelete] = useState(null);
-  const [isDeleteItemConfirmOpen, setIsDeleteItemConfirmOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
+  const [items, setItems] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAddContentModalOpen, setIsAddContentModalOpen] = useState(false);
+  const [contentType, setContentType] = useState(''); // 'file' or 'url'
+  
+  // File upload states
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedCollection, setSelectedCollection] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  // URL crawling states
+  const [url, setUrl] = useState('https://');
+  const [specificPages, setSpecificPages] = useState(['']);
+  const [isCrawling, setIsCrawling] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [crawlingProgress, setCrawlingProgress] = useState('');
+  const [isProcessingBlocked, setIsProcessingBlocked] = useState(false);
+  const [discoveredPages, setDiscoveredPages] = useState([]);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState(null);
   
   const { success, error: showError } = useToast();
 
-  // Fetch collections on component mount
   useEffect(() => {
-    fetchCollections();
+    fetchData();
   }, []);
 
-  // Fetch items when active collection changes
-  useEffect(() => {
-    if (activeCollection) {
-      fetchCollectionItems(activeCollection.collection_id);
-    } else {
-      setItems([]);
-    }
-  }, [activeCollection]);
-
-  // Fetch documents when documents tab is active
-  useEffect(() => {
-    if (activeTab === 'documents') {
-      fetchDocuments();
-    }
-  }, [activeTab]);
-
-  const fetchCollections = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const data = await knowledgeService.getCollections();
-      setCollections(data);
+      const [collectionsData, documentsData] = await Promise.all([
+        knowledgeService.getCollections(),
+        knowledgeService.getDocuments()
+      ]);
       
-      // Set the first collection as active if available
-      if (data.length > 0 && !activeCollection) {
-        setActiveCollection(data[0]);
-      }
-    } catch (err) {
-      console.error('Error fetching collections:', err);
-      setError('Failed to load knowledge collections');
-      if (showError) showError('Failed to load collections');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCollectionItems = async (collectionId) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await knowledgeService.getCollectionItems(collectionId);
-      setItems(data);
-      setExpandedItemIds({});
-      setExpandedDocuments({});
-    } catch (err) {
-      console.error('Error fetching collection items:', err);
-      setError('Failed to load knowledge items');
-      if (showError) showError('Failed to load items');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDocuments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await knowledgeService.getDocuments();
-      setDocuments(data);
-    } catch (err) {
-      console.error('Error fetching documents:', err);
-      setError('Failed to load documents');
-      if (showError) showError('Failed to load documents');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateCollection = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      await knowledgeService.createCollection(newCollection);
-      setIsNewCollectionModalOpen(false);
-      setNewCollection({ name: '', description: '', type: 'general' });
-      await fetchCollections();
-      if (success) success('Collection created successfully');
-    } catch (err) {
-      console.error('Error creating collection:', err);
-      setError('Failed to create collection');
-      if (showError) showError('Failed to create collection');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteCollection = async () => {
-    if (!collectionToDelete) return;
-    
-    try {
-      setLoading(true);
-      await knowledgeService.deleteCollection(collectionToDelete.collection_id);
-      success('Collection deleted successfully');
+      setCollections(collectionsData);
       
-      await fetchCollections();
+      // Combine documents and knowledge items into a unified list
+      const allItems = [];
       
-      // Reset active collection if it was the one deleted
-      if (activeCollection?.collection_id === collectionToDelete.collection_id) {
-        setActiveCollection(null);
+      // Add documents
+      documentsData.forEach(doc => {
+        allItems.push({
+          id: `doc_${doc.document_id}`,
+          type: 'document',
+          name: doc.filename,
+          size: doc.file_size,
+          date: doc.created_at,
+          source: 'file',
+          collection: doc.collection_name || 'Default',
+          status: doc.status || 'processed'
+        });
+      });
+      
+      // Add crawled URLs
+      try {
+        const crawlData = await knowledgeService.getCrawlJobs();
+        if (crawlData.jobs) {
+          crawlData.jobs.forEach(crawl => {
+            allItems.push({
+              id: `url_${crawl.job_id}`,
+              type: 'url',
+              name: crawl.base_url,
+              size: crawl.pages_crawled ? `${crawl.pages_crawled} pages` : 'N/A',
+              date: crawl.created_at,
+              source: 'website',
+              collection: 'Default', // You might want to add collection info to crawl jobs
+              status: crawl.status
+            });
+          });
+        }
+      } catch (e) {
+        console.log('No crawl data available');
       }
       
-    } catch (err) {
-      console.error('Error deleting collection:', err);
-      setError('Failed to delete collection');
-      if (showError) showError('Failed to delete collection');
+      setItems(allItems);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      showError('Failed to load knowledge base data');
     } finally {
       setLoading(false);
-      setIsDeleteCollectionConfirmOpen(false);
-      setCollectionToDelete(null);
     }
   };
 
-  const handleCreateItem = async () => {
-    try {
-      if (!activeCollection) {
-        setError('Please select a collection first');
+  const filteredItems = searchQuery
+    ? items.filter(item =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.collection.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : items;
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['.pdf', '.docx', '.doc', '.txt'];
+      const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+      
+      if (!allowedTypes.includes(fileExt)) {
+        showError('Unsupported file type. Please upload PDF, DOCX, DOC, or TXT files.');
         return;
       }
       
-      setLoading(true);
-      setError(null);
-      await knowledgeService.createKnowledgeItem(activeCollection.collection_id, newItem);
-      setIsNewItemModalOpen(false);
-      setNewItem({ title: '', content: '' });
-      await fetchCollectionItems(activeCollection.collection_id);
-      if (success) success('Knowledge item created successfully');
-    } catch (err) {
-      console.error('Error creating knowledge item:', err);
-      setError('Failed to create knowledge item');
-      if (showError) showError('Failed to create item');
-    } finally {
-      setLoading(false);
+      setSelectedFile(file);
     }
   };
 
-  const handleDeleteItem = async () => {
-    if (!itemToDelete) return;
-    
-    try {
-      setLoading(true);
-      await knowledgeService.deleteKnowledgeItem(itemToDelete.item_id);
-      success('Knowledge item deleted successfully');
+  const handleFileDrop = (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      const allowedTypes = ['.pdf', '.docx', '.doc', '.txt'];
+      const fileExt = '.' + file.name.split('.').pop().toLowerCase();
       
-      // Refresh the items list
-      if (activeCollection) {
-        await fetchCollectionItems(activeCollection.collection_id);
+      if (!allowedTypes.includes(fileExt)) {
+        showError('Unsupported file type. Please upload PDF, DOCX, DOC, or TXT files.');
+        return;
       }
       
-    } catch (err) {
-      console.error('Error deleting knowledge item:', err);
-      setError('Failed to delete knowledge item');
-      if (showError) showError('Failed to delete item');
-    } finally {
-      setLoading(false);
-      setIsDeleteItemConfirmOpen(false);
-      setItemToDelete(null);
+      setSelectedFile(file);
     }
   };
 
-  const handleDeleteDocument = async () => {
-    if (!documentToDelete) return;
-    
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      showError('Please select a file');
+      return;
+    }
+
+    setIsUploading(true);
+    setIsProcessingBlocked(true);
+    setUploadProgress(0);
+
     try {
-      setLoading(true);
-      await knowledgeService.deleteDocument(documentToDelete.document_id);
-      success('Document deleted successfully');
-      await fetchDocuments();
-      setIsDeleteDocumentConfirmOpen(false);
-      setDocumentToDelete(null);
-    } catch (err) {
-      console.error('Error deleting document:', err);
-      setError('Failed to delete document');
-      if (showError) showError('Failed to delete document');
-    } finally {
-      setLoading(false);
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 500);
+
+      const result = await knowledgeService.uploadDocument(selectedFile, selectedCollection || '');
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      setTimeout(() => {
+        success(`Document "${selectedFile.name}" uploaded successfully`);
+        setIsAddContentModalOpen(false);
+        setContentType('');
+        setSelectedFile(null);
+        setSelectedCollection('');
+        setUploadProgress(0);
+        setIsUploading(false);
+        setIsProcessingBlocked(false);
+        fetchData(); // Refresh the list
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      showError('Failed to upload document');
+      setIsUploading(false);
+      setIsProcessingBlocked(false);
+      setUploadProgress(0);
     }
   };
 
-  const handleUploadComplete = async () => {
-    setIsUploadModalOpen(false);
-    await fetchCollections();
-    
-    if (activeTab === 'documents') {
-      await fetchDocuments();
+  const handleAnalyzeWebsite = async () => {
+    if (!url || url === 'https://' || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+      showError('Please enter a valid URL');
+      return;
     }
-    
-    if (activeCollection) {
-      await fetchCollectionItems(activeCollection.collection_id);
-    }
-    
-    if (success) success('Document uploaded successfully');
-  };
 
-  const handleCrawlComplete = async () => {
-    // Refresh collections after successful crawl
-    await fetchCollections();
-  };
-  
-  // Toggle document expansion
-  const toggleDocumentExpansion = (docName) => {
-    setExpandedDocuments(prev => ({
-      ...prev,
-      [docName]: !prev[docName]
-    }));
-  };
-  
-  // Toggle item content expansion
-  const toggleItemExpansion = (itemId) => {
-    setExpandedItemIds(prev => ({
-      ...prev,
-      [itemId]: !prev[itemId]
-    }));
-  };
-  
-  // Apply search filtering and sorting
-  const getFilteredAndSortedItems = () => {
-    // First filter by search query
-    let filtered = searchQuery 
-      ? items.filter(item => 
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      : items;
-    
-    // Then sort according to selected option
-    switch (sortOption) {
-      case 'newest':
-        return filtered.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-      case 'oldest':
-        return filtered.sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
-      case 'a-z':
-        return filtered.sort((a, b) => a.title.localeCompare(b.title));
-      case 'z-a':
-        return filtered.sort((a, b) => b.title.localeCompare(a.title));
-      default:
-        return filtered;
+    setIsAnalyzing(true);
+    setIsProcessingBlocked(true);
+    setCrawlingProgress('Analyzing website structure...');
+
+    try {
+      console.log('Starting website analysis for:', url);
+      const analysis = await knowledgeService.analyzeWebsite(url);
+      console.log('Analysis result:', analysis);
+      
+      // Ensure we have at least the main URL if no pages were discovered
+      let pages = analysis.discovered_pages || [];
+      if (pages.length === 0) {
+        pages = [{
+          url: url,
+          title: url,
+          priority: "CRITICAL",
+          estimated_size: 5000,
+          page_type: "homepage",
+          selected: true
+        }];
+      }
+      
+      setAnalysisResults(analysis);
+      setDiscoveredPages(pages);
+      setAnalysisComplete(true);
+      setIsProcessingBlocked(false);
+      setIsAnalyzing(false);
+      setCrawlingProgress('');
+      
+      success(`Found ${pages.length} pages to crawl!`);
+    } catch (error) {
+      console.error('Analysis error:', error);
+      console.error('Error details:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to analyze website';
+      showError(`Analysis failed: ${errorMessage}`);
+      
+      setIsAnalyzing(false);
+      setIsProcessingBlocked(false);
+      setCrawlingProgress('');
     }
   };
 
-  // Format date for display
+  const handleUrlCrawl = async () => {
+    const selectedPages = (discoveredPages || []).filter(page => page.selected);
+    
+    if (selectedPages.length === 0) {
+      showError('Please select at least one page to crawl');
+      return;
+    }
+
+    setIsCrawling(true);
+    setIsProcessingBlocked(true);
+    setCrawlingProgress('Starting intelligent crawl...');
+
+    try {
+      console.log('Starting crawl with selected pages:', selectedPages.map(p => p.url));
+      
+      const crawlData = {
+        url,
+        intelligent_mode: true,
+        specific_pages: selectedPages.map(page => page.url),
+        max_pages: selectedPages.length
+      };
+
+      console.log('Crawl data:', crawlData);
+
+      // Start crawling with progress updates
+      setCrawlingProgress(`Crawling ${selectedPages.length} selected pages...`);
+      
+      setTimeout(() => setCrawlingProgress('Processing content...'), 2000);
+      setTimeout(() => setCrawlingProgress('Creating knowledge items...'), 4000);
+      setTimeout(() => setCrawlingProgress('Finalizing...'), 6000);
+
+      const result = await knowledgeService.createCrawlJob(crawlData);
+      console.log('Crawl result:', result);
+      
+      setCrawlingProgress('Crawl completed successfully!');
+      
+      setTimeout(() => {
+        success(`Successfully crawled ${selectedPages.length} pages from ${url}`);
+        setIsAddContentModalOpen(false);
+        setContentType('');
+        setUrl('https://');
+        setSpecificPages(['']);
+        setSelectedCollection('');
+        setDiscoveredPages([]);
+        setAnalysisComplete(false);
+        setAnalysisResults(null);
+        setIsCrawling(false);
+        setIsProcessingBlocked(false);
+        setCrawlingProgress('');
+        fetchData(); // Refresh the list
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Crawl error:', error);
+      console.error('Crawl error details:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to crawl website';
+      showError(`Crawl failed: ${errorMessage}`);
+      
+      setIsCrawling(false);
+      setIsProcessingBlocked(false);
+      setCrawlingProgress('');
+    }
+  };
+
+  const togglePageSelection = (index, selected) => {
+    if (!discoveredPages || index < 0 || index >= discoveredPages.length) {
+      return;
+    }
+    const updatedPages = [...discoveredPages];
+    updatedPages[index].selected = selected;
+    setDiscoveredPages(updatedPages);
+  };
+
+  const selectAllPages = () => {
+    const updatedPages = (discoveredPages || []).map(page => ({ ...page, selected: true }));
+    setDiscoveredPages(updatedPages);
+  };
+
+  const deselectAllPages = () => {
+    const updatedPages = (discoveredPages || []).map(page => ({ ...page, selected: false }));
+    setDiscoveredPages(updatedPages);
+  };
+
+  const resetAnalysis = () => {
+    setAnalysisComplete(false);
+    setAnalysisResults(null);
+    setDiscoveredPages([]);
+  };
+
+  const addSpecificPage = () => {
+    setSpecificPages([...specificPages, '']);
+  };
+
+  const removeSpecificPage = (index) => {
+    if (specificPages.length > 1) {
+      setSpecificPages(specificPages.filter((_, i) => i !== index));
+    } else {
+      setSpecificPages(['']);
+    }
+  };
+
+  const updateSpecificPage = (index, value) => {
+    const newPages = [...specificPages];
+    newPages[index] = value;
+    setSpecificPages(newPages);
+  };
+
+  const handleDelete = async (item) => {
+    if (!window.confirm(`Are you sure you want to delete "${item.name}"?`)) {
+      return;
+    }
+
+    try {
+      if (item.type === 'document') {
+        await knowledgeService.deleteDocument(item.id.replace('doc_', ''));
+      } else if (item.type === 'url') {
+        await knowledgeService.cancelCrawlJob(item.id.replace('url_', ''));
+      }
+      
+      success('Item deleted successfully');
+      fetchData(); // Refresh the list
+    } catch (error) {
+      console.error('Delete error:', error);
+      showError('Failed to delete item');
+    }
+  };
+
+  const formatFileSize = (size) => {
+    if (typeof size === 'string') return size;
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
 
-  // Get document section number from title if available
-  const getSectionNumber = (title) => {
-    const match = title.match(/section\s*(\d+)/i);
-    return match ? parseInt(match[1]) : null;
-  };
-
-  // Organize items by document and section
-  const organizeItemsByDocument = () => {
-    const documentGroups = {};
-    
-    const filteredItems = getFilteredAndSortedItems();
-    
-    filteredItems.forEach(item => {
-      const docMatch = item.title.match(/(.*?)\.(pdf|docx?)\s*-\s*section\s*\d+/i);
-      
-      if (docMatch) {
-        const docName = docMatch[1] + '.' + docMatch[2];
-        if (!documentGroups[docName]) {
-          documentGroups[docName] = [];
-        }
-        documentGroups[docName].push(item);
-      } else {
-        // For items not matching the pattern, put in "Other"
-        if (!documentGroups['Other']) {
-          documentGroups['Other'] = [];
-        }
-        documentGroups['Other'].push(item);
-      }
-    });
-    
-    // Sort sections numerically within each document
-    Object.keys(documentGroups).forEach(docName => {
-      documentGroups[docName].sort((a, b) => {
-        const secA = getSectionNumber(a.title) || 0;
-        const secB = getSectionNumber(b.title) || 0;
-        return secA - secB;
-      });
-    });
-    
-    return documentGroups;
-  };
-
-  // Get document section count
-  const getDocumentSectionCount = (docItems) => {
-    return docItems.length;
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <span className="ml-2 text-gray-600">Loading knowledge base...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Knowledge Base</h2>
-        <div className="flex space-x-3">
-          <button
-            type="button"
-            onClick={() => setIsNewCollectionModalOpen(true)}
-            className="btn btn-outline flex items-center"
-          >
-            <FolderIcon className="h-5 w-5 mr-2" />
-            New Collection
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsUploadModalOpen(true)}
-            className="btn btn-outline flex items-center"
-          >
-            <DocumentIcon className="h-5 w-5 mr-2" />
-            Upload Document
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsNewItemModalOpen(true)}
-            disabled={!activeCollection}
-            className="btn btn-primary flex items-center"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            New Item
-          </button>
-        </div>
-      </div>
-      
-      {/* Knowledge Base Tabs - Changed FAQs to Collections */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex -mb-px">
-          <button
-            className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
-              activeTab === 'collections' 
-                ? 'border-orange-500 text-orange-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('collections')}
-          >
-            Collections
-          </button>
-          <button
-            className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
-              activeTab === 'websites' 
-                ? 'border-orange-500 text-orange-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('websites')}
-          >
-            Websites
-          </button>
-          <button
-            className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
-              activeTab === 'documents' 
-                ? 'border-orange-500 text-orange-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('documents')}
-          >
-            Documents
-          </button>
-          <button
-            className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm ${
-              activeTab === 'training' 
-                ? 'border-orange-500 text-orange-600' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('training')}
-          >
-            Training
-          </button>
-        </nav>
-      </div>
-      
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
+      {/* Processing Overlay */}
+      {isProcessingBlocked && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {isUploading ? 'Processing Document...' : isAnalyzing ? 'Analyzing Website...' : 'Crawling Website...'}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {isUploading 
+                  ? 'Please wait while we process your document. Do not navigate away from this page.'
+                  : isAnalyzing 
+                  ? 'Please wait while we analyze the website structure and discover pages. Do not navigate away from this page.'
+                  : crawlingProgress || 'Please wait while we crawl the website. Do not navigate away from this page.'
+                }
+              </p>
+              {isUploading && (
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-orange-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Collections View (previously FAQs) */}
-      {activeTab === 'collections' && (
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Collections sidebar */}
-          <div className="w-full md:w-64 bg-white shadow-sm rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Collections</h2>
+      {/* Header */}
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Knowledge Base</h1>
+        
+        {/* Search and Add Content */}
+        <div className="flex gap-4">
+          <div className="flex-1 relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search documents and websites..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => setIsAddContentModalOpen(true)}
+            className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
+          >
+            <PlusIcon className="h-5 w-5" />
+            Add Content
+          </button>
+        </div>
+      </div>
+
+      {/* Content List */}
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        {filteredItems.length === 0 ? (
+          <div className="text-center py-12">
+            <DocumentIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No content yet</h3>
+            <p className="text-gray-600 mb-4">Get started by adding your first document or website</p>
+            <button
+              onClick={() => setIsAddContentModalOpen(true)}
+              className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
+            >
+              Add Content
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {filteredItems.map((item) => (
+              <div key={item.id} className="p-4 hover:bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="flex-shrink-0">
+                      {item.type === 'document' ? (
+                        <DocumentIcon className="h-8 w-8 text-blue-500" />
+                      ) : (
+                        <GlobeAltIcon className="h-8 w-8 text-green-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {item.name}
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatFileSize(item.size)} • {formatDate(item.date)} • {item.collection}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      item.status === 'processed' || item.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : item.status === 'processing' || item.status === 'in_progress'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {item.status || 'processed'}
+                    </span>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="p-1 text-gray-400 hover:text-red-600 rounded"
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Add Content Modal */}
+      {isAddContentModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
+          <div className="bg-white rounded-lg max-w-lg w-full mx-4 p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-medium text-gray-900">Add Content</h3>
               <button
-                onClick={fetchCollections}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-500"
+                onClick={() => {
+                  setIsAddContentModalOpen(false);
+                  setContentType('');
+                  setSelectedFile(null);
+                  setUrl('https://');
+                  setSpecificPages(['']);
+                  setSelectedCollection('');
+                  setAnalysisComplete(false);
+                  setAnalysisResults(null);
+                  setDiscoveredPages([]);
+                }}
+                className="text-gray-400 hover:text-gray-500"
               >
-                <ArrowPathIcon className="h-5 w-5" />
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            
-            {loading && collections.length === 0 ? (
-              <div className="py-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-                <p className="mt-2 text-sm">Loading collections...</p>
-              </div>
-            ) : collections.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
-                <FolderIcon className="h-12 w-12 mx-auto text-gray-400" />
-                <p className="mt-2 text-sm">No collections yet</p>
-                <button
-                  onClick={() => setIsNewCollectionModalOpen(true)}
-                  className="mt-2 text-sm text-orange-600 hover:text-orange-500"
-                >
-                  Create your first collection
-                </button>
-              </div>
-            ) : (
-              <ul className="space-y-1">
-{collections.map((collection) => (
-  <li key={collection.collection_id} className="group">
-    <div className="flex items-center justify-between">
-      <button
-        onClick={() => setActiveCollection(collection)}
-        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md flex-1 min-w-0 mr-2 ${
-          activeCollection?.collection_id === collection.collection_id
-            ? 'bg-orange-100 text-orange-700'
-            : 'text-gray-700 hover:bg-gray-100'
-        }`}
-      >
-        <FolderIcon className="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" />
-        <div className="flex-1 min-w-0 flex items-center justify-between">
-          <span className="truncate pr-2" title={collection.name}>
-            {collection.name}
-          </span>
-          <span className="text-xs text-gray-500 flex-shrink-0">
-            {collection.item_count || 0}
-          </span>
-        </div>
-      </button>
-      <button
-        onClick={() => {
-          setCollectionToDelete(collection);
-          setIsDeleteCollectionConfirmOpen(true);
-        }}
-        className="p-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-        title="Delete collection"
-      >
-        <TrashIcon className="h-4 w-4" />
-      </button>
-    </div>
-  </li>
-))}              </ul>
-            )}
-          </div>
 
-          {/* Knowledge items */}
-          <div className="flex-1 bg-white shadow-sm rounded-lg p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                {activeCollection ? activeCollection.name : 'Select a Collection'}
-              </h2>
-              
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                {/* Search box */}
-                <div className="relative w-full sm:w-64">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search items..."
-                    className="pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 w-full"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                    >
-                      <XMarkIcon className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                
-                {/* Filter toggle on mobile */}
+            {!contentType ? (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Choose how you want to add content:</p>
                 <button
-                  className="md:hidden flex items-center text-gray-700 px-3 py-2 border border-gray-300 rounded-md"
-                  onClick={() => setShowFilters(!showFilters)}
+                  onClick={() => setContentType('file')}
+                  className="w-full p-4 border border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 text-left"
                 >
-                  <AdjustmentsHorizontalIcon className="h-4 w-4 mr-1" />
-                  {showFilters ? 'Hide Filters' : 'Filters'}
+                  <div className="flex items-center gap-3">
+                    <DocumentIcon className="h-8 w-8 text-blue-500" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">Upload File</h4>
+                      <p className="text-sm text-gray-600">Upload PDF, DOCX, DOC, or TXT files</p>
+                    </div>
+                  </div>
                 </button>
-                
-                {/* Sort options - visible on larger screens */}
-                <div className="hidden md:block">
-                  <select
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value)}
-                    className="py-2 pl-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-sm"
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="a-z">A-Z</option>
-                    <option value="z-a">Z-A</option>
-                  </select>
-                </div>
+                <button
+                  onClick={() => setContentType('url')}
+                  className="w-full p-4 border border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <GlobeAltIcon className="h-8 w-8 text-green-500" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">Add Website</h4>
+                      <p className="text-sm text-gray-600">Crawl and extract content from websites</p>
+                    </div>
+                  </div>
+                </button>
               </div>
-            </div>
-            
-            {/* Mobile filters - only shown when filter button is clicked */}
-            {showFilters && (
-              <div className="md:hidden flex justify-between items-center mb-4 p-3 bg-gray-50 rounded-md">
+            ) : contentType === 'file' ? (
+              <div className="space-y-4">
+                {/* File Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-                  <select
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value)}
-                    className="w-full py-2 pl-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-sm"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select File
+                  </label>
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-6 text-center ${
+                      selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    }`}
+                    onDrop={handleFileDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    onClick={() => document.getElementById('fileInput').click()}
                   >
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="a-z">A-Z</option>
-                    <option value="z-a">Z-A</option>
-                  </select>
+                    <input
+                      id="fileInput"
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                      accept=".pdf,.docx,.doc,.txt"
+                    />
+                    {selectedFile ? (
+                      <div className="flex items-center justify-center gap-3">
+                        <CheckCircleIcon className="h-8 w-8 text-green-500" />
+                        <div>
+                          <p className="font-medium text-gray-900">{selectedFile.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {formatFileSize(selectedFile.size)}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <ArrowUpTrayIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600">
+                          Drop your file here or click to browse
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          PDF, DOCX, DOC, TXT
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {activeCollection && activeCollection.description && (
-              <p className="text-sm text-gray-600 mb-4">
-                {activeCollection.description}
-              </p>
-            )}
-            
-            {loading && activeCollection ? (
-              <div className="py-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-                <p className="mt-2 text-sm">Loading items...</p>
-              </div>
-            ) : !activeCollection ? (
-              <div className="py-8 text-center text-gray-500">
-                <DocumentTextIcon className="h-12 w-12 mx-auto text-gray-400" />
-                <p className="mt-2 text-sm">Select a collection to view items</p>
-              </div>
-            ) : items.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
-                <DocumentTextIcon className="h-12 w-12 mx-auto text-gray-400" />
-                <p className="mt-2 text-sm">
-                  {searchQuery ? 'No items match your search' : 'No items in this collection'}
-                </p>
-                {!searchQuery && (
+
+                {/* Actions */}
+                <div className="flex gap-3 mt-6">
                   <button
-                    onClick={() => setIsNewItemModalOpen(true)}
-                    className="mt-2 text-sm text-orange-600 hover:text-orange-500"
+                    onClick={() => setContentType('')}
+                    className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50"
                   >
-                    Add your first item
+                    Back
                   </button>
-                )}
+                  <button
+                    onClick={handleFileUpload}
+                    disabled={!selectedFile || isUploading}
+                    className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUploading ? 'Uploading...' : 'Upload File'}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
-                {Object.entries(organizeItemsByDocument()).map(([docName, docItems]) => (
-                  <div key={docName} className="border border-gray-200 rounded-lg overflow-hidden">
-                    {/* Document Header - Always visible */}
-                    <div 
-                      className="bg-gray-50 px-4 py-3 font-medium text-sm text-gray-900 cursor-pointer hover:bg-gray-100 flex items-center justify-between"
-                      onClick={() => toggleDocumentExpansion(docName)}
-                    >
-                      <div className="flex items-center">
-                        {expandedDocuments[docName] ? (
-                          <ChevronDownIcon className="h-5 w-5 text-gray-400 mr-2" />
-                        ) : (
-                          <ChevronRightIcon className="h-5 w-5 text-gray-400 mr-2" />
-                        )}
-                        <span>{docName}</span>
-                      </div>
-                      <span className="text-xs text-gray-500">{getDocumentSectionCount(docItems)} sections</span>
+                {!analysisComplete ? (
+                  // Step 1: URL Analysis
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Website URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://example.com"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                      />
                     </div>
-                    
-                    {/* Document Sections - Only visible when document is expanded */}
-                    {expandedDocuments[docName] && (
-                      <ul className="divide-y divide-gray-200">
-                        {docItems.map((item) => (
-                          <li key={item.item_id} className="group">
-                            <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 ml-4">
-                              <div 
-                                className="flex-1 cursor-pointer"
-                                onClick={() => toggleItemExpansion(item.item_id)}
-                              >
-                                <div className="flex items-center">
-                                  {expandedItemIds[item.item_id] ? (
-                                    <ChevronDownIcon className="h-4 w-4 text-gray-400 mr-3" />
-                                  ) : (
-                                    <ChevronRightIcon className="h-4 w-4 text-gray-400 mr-3" />
-                                  )}
-                                  <h3 className="text-sm font-medium text-gray-900">{item.title}</h3>
-                                </div>
-                              </div>
-                              <div className="flex items-center">
-                                <span className="text-xs text-gray-500 flex items-center mr-4">
-                                  <CalendarIcon className="h-3 w-3 mr-1" />
-                                  {formatDate(item.updated_at)}
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-blue-900">Intelligent Website Analysis</h4>
+                          <p className="text-sm text-blue-700 mt-1">
+                            We'll analyze your website to discover all available pages, check sitemaps, and prioritize content automatically. You can then choose which pages to crawl.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setContentType('')}
+                        className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50"
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={handleAnalyzeWebsite}
+                        disabled={!url || url === 'https://' || isAnalyzing}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isAnalyzing ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Analyze Website
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // Step 2: Page Selection and Crawling
+                  <>
+                    {/* Analysis Summary */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                        <h4 className="text-sm font-medium text-green-900">Analysis Complete</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-green-700">Pages Found:</span>
+                          <span className="font-medium text-green-900 ml-1">{analysisResults?.total_pages_found || 0}</span>
+                        </div>
+                        <div>
+                          <span className="text-green-700">Sitemap:</span>
+                          <span className="font-medium text-green-900 ml-1">
+                            {analysisResults?.has_sitemap ? 'Found' : 'Not found'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-green-700">Est. Size:</span>
+                          <span className="font-medium text-green-900 ml-1">
+                            {Math.round((analysisResults?.estimated_total_size || 0) / 1024)} KB
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-green-700">Est. Time:</span>
+                          <span className="font-medium text-green-900 ml-1">
+                            {analysisResults?.analysis_summary?.estimated_crawl_time || '~30 seconds'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Page Selection */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Select Pages to Crawl ({(discoveredPages || []).filter(p => p.selected).length} selected)
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={selectAllPages}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            Select All
+                          </button>
+                          <span className="text-gray-300">|</span>
+                          <button
+                            type="button"
+                            onClick={deselectAllPages}
+                            className="text-xs text-gray-600 hover:text-gray-700"
+                          >
+                            Deselect All
+                          </button>
+                          <span className="text-gray-300">|</span>
+                          <button
+                            type="button"
+                            onClick={resetAnalysis}
+                            className="text-xs text-gray-600 hover:text-gray-700"
+                          >
+                            Reanalyze
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+                        {discoveredPages && discoveredPages.length > 0 ? discoveredPages.map((page, index) => (
+                          <div key={index} className="flex items-center p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                            <input
+                              type="checkbox"
+                              checked={page.selected}
+                              onChange={(e) => togglePageSelection(index, e.target.checked)}
+                              className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                            />
+                            <div className="ml-3 flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {page.title || page.url.split('/').pop() || page.url}
+                                </p>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                  page.priority === 'CRITICAL' ? 'bg-red-100 text-red-800' :
+                                  page.priority === 'HIGH' ? 'bg-orange-100 text-orange-800' :
+                                  page.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {page.priority}
                                 </span>
-                                <button
-                                  onClick={() => {
-                                    setItemToDelete(item);
-                                    setIsDeleteItemConfirmOpen(true);
-                                  }}
-                                  className="invisible group-hover:visible p-1 text-gray-400 hover:text-red-500 rounded"
-                                  title="Delete item"
-                                >
-                                  <TrashIcon className="h-4 w-4" />
-                                </button>
                               </div>
+                              <p className="text-xs text-gray-500 truncate">{page.url}</p>
                             </div>
-                            
-                            {/* Expanded content - Only visible when section is expanded */}
-                            {expandedItemIds[item.item_id] && (
-                              <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 ml-4">
-                                <p className="text-sm text-gray-700 whitespace-pre-line ml-7">{item.content}</p>
-                              </div>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+                          </div>
+                        )) : (
+                          <div className="p-4 text-center text-gray-500">
+                            <p className="text-sm">No pages discovered. Please try a different URL.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={resetAnalysis}
+                        className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50"
+                      >
+                        Back to Analysis
+                      </button>
+                      <button
+                        onClick={handleUrlCrawl}
+                        disabled={(discoveredPages || []).filter(p => p.selected).length === 0 || isCrawling}
+                        className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isCrawling ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Crawling...
+                          </>
+                        ) : (
+                          <>
+                            <GlobeAltIcon className="h-4 w-4" />
+                            Crawl {(discoveredPages || []).filter(p => p.selected).length} Pages
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Websites Tab View */}
-      {activeTab === 'websites' && (
-        <WebsiteCrawler 
-          collections={collections} 
-          onCrawlComplete={handleCrawlComplete} 
-        />
-      )}
-
-      {/* Documents Tab View */}
-      {activeTab === 'documents' && (
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Uploaded Documents</h3>
-            <div className="flex space-x-2">
-              <button
-                onClick={fetchDocuments}
-                className="p-2 rounded-full text-gray-400 hover:text-gray-500"
-                title="Refresh document list"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setIsUploadModalOpen(true)}
-                className="btn btn-primary flex items-center"
-              >
-                <DocumentIcon className="h-5 w-5 mr-1" />
-                Upload New Document
-              </button>
-            </div>
-          </div>
-          
-          {loading ? (
-            <div className="py-8 text-center text-gray-500">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-              <p className="mt-2 text-sm">Loading documents...</p>
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
-              <DocumentIcon className="h-12 w-12 mx-auto text-gray-400" />
-              <p className="mt-2 text-sm">No documents uploaded yet</p>
-              <button
-                onClick={() => setIsUploadModalOpen(true)}
-                className="mt-2 text-sm text-orange-600 hover:text-orange-500"
-              >
-                Upload your first document
-              </button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploaded</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {documents.map((doc) => (
-                    <tr key={doc.document_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <DocumentIcon className="h-5 w-5 text-gray-400 mr-3" />
-                          <span className="font-medium text-gray-900">{doc.filename}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          doc.status === 'processed' ? 'bg-green-100 text-green-800' : 
-                          doc.status === 'failed' ? 'bg-red-100 text-red-800' : 
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {doc.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {Math.round(doc.file_size / 1024)} KB
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(doc.created_at)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => {
-                            setDocumentToDelete(doc);
-                            setIsDeleteDocumentConfirmOpen(true);
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete document"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Training Tab (Placeholder) */}
-      {activeTab === 'training' && (
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Training Management</h3>
-          <p className="text-gray-600">This feature is coming soon.</p>
-        </div>
-      )}
-
-      {/* New Collection Modal */}
-      {isNewCollectionModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsNewCollectionModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Collection</h3>
-            
-            <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <input
-                type="text"
-                id="name"
-                value={newCollection.name}
-                onChange={(e) => setNewCollection({...newCollection, name: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                placeholder="Collection name"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-              <textarea
-                id="description"
-                value={newCollection.description}
-                onChange={(e) => setNewCollection({...newCollection, description: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                rows="3"
-                placeholder="Collection description"
-              ></textarea>
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select
-                id="type"
-                value={newCollection.type}
-                onChange={(e) => setNewCollection({...newCollection, type: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-              >
-                <option value="general">General</option>
-                <option value="faqs">FAQs</option>
-                <option value="policies">Policies</option>
-                <option value="products">Products</option>
-                <option value="procedures">Procedures</option>
-                <option value="website">Website</option>
-                <option value="custom">Custom Collection</option>
-              </select>
-            </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setIsNewCollectionModalOpen(false)}
-                className="btn btn-outline px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateCollection}
-                disabled={!newCollection.name}
-                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
-              >
-                Create Collection
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Item Modal */}
-      {isNewItemModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsNewItemModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Add Knowledge Item</h3>
-            
-            <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-              <input
-                type="text"
-                id="title"
-                value={newItem.title}
-                onChange={(e) => setNewItem({...newItem, title: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                placeholder="Item title"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-              <textarea
-                id="content"
-                value={newItem.content}
-                onChange={(e) => setNewItem({...newItem, content: e.target.value})}
-                className="input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                rows="8"
-                placeholder="Item content"
-              ></textarea>
-            </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setIsNewItemModalOpen(false)}
-                className="btn btn-outline px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateItem}
-                disabled={!newItem.title || !newItem.content}
-                className="btn btn-primary px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
-              >
-                Add Item
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Document Upload Modal */}
-      {isUploadModalOpen && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsUploadModalOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Document</h3>
-            
-            <DocumentUploader 
-              collections={collections} 
-              onUploadComplete={handleUploadComplete}
-              onCancel={() => setIsUploadModalOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Document Delete Confirmation Modal */}
-      {isDeleteDocumentConfirmOpen && documentToDelete && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteDocumentConfirmOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
-            <div className="sm:flex sm:items-start">
-              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Delete Document
-                </h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">
-                    Are you sure you want to delete the document "{documentToDelete.filename}"? 
-                    This will permanently remove the document and all knowledge items created from it.
-                    This action cannot be undone.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                onClick={handleDeleteDocument}
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
-                onClick={() => setIsDeleteDocumentConfirmOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Collection Delete Confirmation Modal */}
-      {isDeleteCollectionConfirmOpen && collectionToDelete && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteCollectionConfirmOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
-            <div className="sm:flex sm:items-start">
-              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Delete Collection
-                </h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">
-                    Are you sure you want to delete the collection "{collectionToDelete.name}"? 
-                    This will permanently remove all items in this collection.
-                    This action cannot be undone.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                onClick={handleDeleteCollection}
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
-                onClick={() => setIsDeleteCollectionConfirmOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Item Delete Confirmation Modal */}
-      {isDeleteItemConfirmOpen && itemToDelete && (
-        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDeleteItemConfirmOpen(false)}></div>
-          <div className="relative bg-white rounded-lg max-w-md w-full p-6">
-            <div className="sm:flex sm:items-start">
-              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Delete Knowledge Item
-                </h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">
-                    Are you sure you want to delete the item "{itemToDelete.title}"? 
-                    This action cannot be undone.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                onClick={handleDeleteItem}
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
-                onClick={() => setIsDeleteItemConfirmOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
       )}
