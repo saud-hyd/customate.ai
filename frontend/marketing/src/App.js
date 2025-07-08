@@ -9,6 +9,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 // Layout components
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import CookieConsent from './components/ui/CookieConsent'; // ADD THIS LINE
 import './landingpage.css';
 
 // Pages
@@ -69,6 +70,10 @@ function App() {
           <ScrollToTop />
           <div className="flex flex-col min-h-screen">
             <Header />
+            
+            {/* Cookie Consent Popup - ADD THIS LINE */}
+            <CookieConsent />
+            
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<HomePage />} />

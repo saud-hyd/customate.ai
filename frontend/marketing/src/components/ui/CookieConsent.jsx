@@ -1,9 +1,10 @@
+// Replace your entire CookieConsent component with this:
+// frontend/marketing/src/components/ui/CookieConsent.jsx
+
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 const CookieConsent = () => {
-  const { t } = useTranslation('common');
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -42,16 +43,16 @@ const CookieConsent = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <h3 className="text-lg font-semibold text-gray-900">
-                {t('cookieConsent.title')}
+                We Use Cookies
               </h3>
             </div>
             <p className="text-gray-600 mb-2">
-              {t('cookieConsent.description')}
+              We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking 'Accept All', you consent to our use of cookies.
             </p>
             <p className="text-sm text-gray-500">
-              {t('cookieConsent.learnMore')}{' '}
+              Learn more about our{' '}
               <Link to="/cookies" className="text-orange-600 hover:text-orange-700 underline">
-                {t('cookieConsent.cookiePolicy')}
+                Cookie Policy
               </Link>
             </p>
           </div>
@@ -62,13 +63,13 @@ const CookieConsent = () => {
               onClick={handleDecline}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
             >
-              {t('cookieConsent.decline')}
+              Decline
             </button>
             <button
               onClick={handleAccept}
               className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
             >
-              {t('cookieConsent.accept')}
+              Accept All
             </button>
           </div>
         </div>

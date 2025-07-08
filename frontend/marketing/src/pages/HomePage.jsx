@@ -1,6 +1,6 @@
+// Replace your HomePage.jsx with this:
+
 import React from 'react';
-import Header from '../components/layout/Header';
-import Footer from '../components/layout/Footer';
 import HeroSection from '../components/sections/HeroSection';
 import FeaturesSection from '../components/sections/FeaturesSection';
 import IntegrationsSection from '../components/sections/IntegrationsSection';
@@ -15,14 +15,11 @@ const HomePage = () => {
   
   return (
     <>
-      <Header />
-      <main>
-        <HeroSection />
-        <HowItWorksSection />
-        <FeaturesSection />
-        <IntegrationsSection />
-        <CTASection />
-      </main>
+      <HeroSection />
+      <HowItWorksSection />
+      <FeaturesSection />
+      <IntegrationsSection />
+      <CTASection />
     </>
   );
 };

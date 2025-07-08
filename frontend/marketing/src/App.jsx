@@ -1,11 +1,16 @@
+// Replace your App.jsx with this:
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
+// CRITICAL: Import i18n setup
+import './i18n'; // This initializes i18n
+import { LanguageProvider } from './contexts/LanguageContext';
+
 // Layout Components
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
-import CookieConsent from './components/ui/CookieConsent'; // New import
+import CookieConsent from './components/ui/CookieConsent';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -67,51 +72,65 @@ const NotFoundPage = () => {
 function App() {
   return (
     <HelmetProvider>
-      <Router>
-        <ScrollToTop />
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          
-          {/* Cookie Consent Popup */}
-          <CookieConsent />
-          
-          <main className="flex-grow">
-            <Routes>
-              {/* Main pages */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              
-              {/* Blog pages */}
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
-              <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
-              <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
-              
-              {/* Other pages */}
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/cookies" element={<CookiesPage />} />
-              <Route path="/test" element={<TestPage />} />
-              
-              {/* Checkout pages */}
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-              
-              {/* External redirects */}
-              <Route path="/app" element={<RedirectPage url="https://app.customate.ai" />} />
-              <Route path="/login" element={<RedirectPage url="https://app.customate.ai/login" />} />
-              <Route path="/signup" element={<RedirectPage url="https://app.customate.ai/signup" />} />
-              
-              {/* 404 page */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
+      <LanguageProvider>
+        <Router>
+          <ScrollToTop />
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            
+            {/* Cookie Consent Popup */}
+            <CookieConsent />
+            
+            <main className="flex-grow">
+              <Routes>
+                {/* Main pages */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                
+                {/* Blog pages */}
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
+                <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
+                <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
+                
+                {/* Legal pages */}
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/cookies" element={<CookiesPage />} />
+                
+                {/* Checkout pages */}
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+                
+                {/* Test page */}
+                <Route path="/test" element={<TestPage />} />
+                
+                {/* External redirects */}
+                <Route 
+                  path="/login" 
+                  element={<RedirectPage url="https://app.customate.ai/login" />}
+                />
+                <Route 
+                  path="/register" 
+                  element={<RedirectPage url="https://app.customate.ai/register" />}
+                />
+                <Route 
+                  path="/dashboard" 
+                  element={<RedirectPage url="https://app.customate.ai/dashboard" />}
+                />
+                
+                {/* 404 page */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </main>
+            
+            <Footer />
+          </div>
+        </Router>
+      </LanguageProvider>
     </HelmetProvider>
   );
 }

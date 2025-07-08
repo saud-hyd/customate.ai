@@ -448,3 +448,75 @@ async def fix_message_counts(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fix message counts: {str(e)}"
         )        
+        
+# QUICK FIX: Add this simple working endpoint to backend/app/api/client/routes.py
+
+@router.get("/storage")
+async def get_client_storage(
+    current_client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Simple working storage endpoint with subscription limits."""
+    try:
+        # Import inside function to avoid startup errors
+        from app.services.analytics.usage_tracker import UsageTracker
+        from app.repositories.analytics_repository import StorageUsageRepository
+        from app.services.subscription.stripe_service import PLAN_LIMITS
+        from app.repositories.client_repository import SubscriptionRepository
+        
+        # Use UsageTracker to get real storage data
+        usage_tracker = UsageTracker()
+        usage_tracker._update_storage_usage(db, current_client.client_id)
+        
+        # Get storage data
+        storage_repo = StorageUsageRepository()
+        storage = storage_repo.get_latest(db, current_client.client_id)
+        
+        # Get subscription limits
+        try:
+            sub_repo = SubscriptionRepository()
+            subscription = sub_repo.get_active_subscription(db, current_client.client_id)
+            plan_type = subscription.plan_type if subscription else "free"
+            plan_limits = PLAN_LIMITS.get(plan_type, PLAN_LIMITS["free"])
+            storage_limit_mb = plan_limits["storage_limit_mb"]
+            storage_limit_bytes = int(storage_limit_mb * 1024 * 1024)
+        except:
+            storage_limit_mb = 0.5  # Free plan default
+            storage_limit_bytes = 524288
+        
+        if storage:
+            percentage = min(100, (storage.total_bytes / storage_limit_bytes) * 100) if storage_limit_bytes > 0 else 0
+            return {
+                "total_bytes": storage.total_bytes,
+                "document_bytes": storage.document_bytes,
+                "knowledge_bytes": storage.knowledge_bytes,
+                "crawled_content_bytes": storage.crawled_content_bytes,
+                "percentage": round(percentage, 2),
+                "limit_bytes": storage_limit_bytes,
+                "limit_mb": storage_limit_mb,
+                "used_mb": round(storage.total_bytes / (1024 * 1024), 2)
+            }
+        else:
+            return {
+                "total_bytes": 0,
+                "document_bytes": 0,
+                "knowledge_bytes": 0,
+                "crawled_content_bytes": 0,
+                "percentage": 0,
+                "limit_bytes": storage_limit_bytes,
+                "limit_mb": storage_limit_mb,
+                "used_mb": 0
+            }
+            
+    except Exception as e:
+        logger.exception(f"Storage error: {e}")
+        return {
+            "total_bytes": 0,
+            "document_bytes": 0,
+            "knowledge_bytes": 0,
+            "crawled_content_bytes": 0,
+            "percentage": 0,
+            "limit_bytes": 524288,
+            "limit_mb": 0.5,
+            "used_mb": 0
+        }        

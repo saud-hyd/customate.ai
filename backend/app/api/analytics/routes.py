@@ -645,6 +645,8 @@ async def sync_subscription_usage(
             detail=f"Failed to synchronize subscription usage: {str(e)}"
         )
         
+# REPLACE the incomplete storage function in backend/app/api/analytics/routes.py with this:
+
 @router.get("/storage", response_model=Dict[str, Any])
 async def get_storage_statistics(
     current_client: Client = Depends(get_current_client),
