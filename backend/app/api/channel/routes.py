@@ -222,7 +222,9 @@ async def get_channel(
             "active": channel.active,
             "created_at": channel.created_at.isoformat(),
             "webhook_url": webhook_url,
-            "status": "connected" if channel.active else "disconnected"
+            "status": "connected" if channel.active else "disconnected",
+            "credentials": channel.credentials  
+
         }
     except HTTPException:
         raise
