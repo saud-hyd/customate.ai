@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import subscriptionService from '../../services/subscriptionService';
-import analyticsService from '../../services/analyticsService';
-import { formatNumber } from '../../utils/formatters';
 import api from '../../services/api';
 
 const SubscriptionPage = () => {
@@ -11,115 +9,29 @@ const SubscriptionPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [subscription, setSubscription] = useState(null);
-  const [usageData, setUsageData] = useState(null);
   const [processingPlan, setProcessingPlan] = useState(null);
+  const [billingCycle, setBillingCycle] = useState('annually'); // Default to annually
 
-  // Plan details
-// Plan details - UPDATED to match backend exactly
-  const plans = {
-    free: {
-      name: 'Free',
-      price: '$0',
-      description: 'Get started with basic chatbot',
-      messageLimit: 100,
-      userLimit: 5,
-      storageLimit: '500 KB',
-      collectionLimit: 3,
-      features: [
-        { name: '100 messages per month', included: true },
-        { name: '5 active users', included: true },
-        { name: '500 KB storage', included: true },
-        { name: '3 knowledge collections', included: true },
-        { name: 'Basic chat functionality', included: true },
-        { name: 'Community support', included: true },
-        { name: 'Knowledge integration', included: false },
-        { name: 'Analytics dashboard', included: false },
-        { name: 'Custom domain', included: false },
-        { name: 'External integrations', included: false },
-      ]
-    },
-    basic: {
-      name: 'Basic',
-      price: '$29',
-      description: 'Essential features for small businesses',
-      messageLimit: 2000,
-      userLimit: 25, 
-      storageLimit: '5 MB',
-      collectionLimit: 10,
-      features: [
-        { name: '2,000 messages per month', included: true },
-        { name: '25 active users', included: true },
-        { name: '5 MB storage', included: true },
-        { name: '10 knowledge collections', included: true },
-        { name: 'Basic chat functionality', included: true },
-        { name: 'Knowledge integration', included: true },
-        { name: 'Analytics dashboard', included: true },
-        { name: 'Email support', included: true },
-        { name: 'Custom domain', included: false },
-        { name: 'External integrations', included: false },
-      ]
-    },
-    standard: {
-      name: 'Standard',
-      price: '$69',
-      description: 'Advanced features for growing teams',
-      messageLimit: 5000,
-      userLimit: 50,
-      storageLimit: '25 MB',
-      collectionLimit: 25,
-      features: [
-        { name: '5,000 messages per month', included: true },
-        { name: '50 active users', included: true },
-        { name: '25 MB storage', included: true },
-        { name: '25 knowledge collections', included: true },
-        { name: 'Basic chat functionality', included: true },
-        { name: 'Knowledge integration', included: true },
-        { name: 'Analytics dashboard', included: true },
-        { name: 'Email support', included: true },
-        { name: 'Custom domain', included: true },
-        { name: 'External integrations', included: true },
-      ]
-    },
-    professional: {
-      name: 'Professional',
-      price: '$149',
-      description: 'Ultimate solution for businesses',
-      messageLimit: 12000,
-      userLimit: 100,
-      storageLimit: '100 MB',
-      collectionLimit: 50,
-      features: [
-        { name: '12,000 messages per month', included: true },
-        { name: '100 active users', included: true },
-        { name: '100 MB storage', included: true },
-        { name: '50 knowledge collections', included: true },
-        { name: 'Advanced chat functionality', included: true },
-        { name: 'Knowledge integration', included: true },
-        { name: 'Advanced analytics', included: true },
-        { name: 'Custom domain', included: true },
-        { name: 'External integrations', included: true },
-        { name: 'Priority support', included: true },
-      ]
-    }
-  };
+  // Get dynamic plan details from service
+  const plans = subscriptionService.getPlans();
+
   useEffect(() => {
     fetchData();
-    
-    // Check for success or cancel parameters in URL (for Stripe redirects)
+    handleUrlParams();
+  }, []);
+
+  const handleUrlParams = () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
-      setSuccess('Your subscription has been updated successfully!');
-      // Clear the URL parameters
+      setSuccess('Payment successful! Your subscription has been updated.');
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.get('cancelled') === 'true') {
       setError('Payment was cancelled. Your subscription remains unchanged.');
-      // Clear the URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  };
 
-// Update the fetchData function:
-const fetchData = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       
@@ -127,415 +39,217 @@ const fetchData = async () => {
       const subData = await subscriptionService.getCurrentSubscription();
       setSubscription(subData);
       
-      // Use the logic provided to fetch subscription usage data
-      try {
-        // Fetch subscription usage (convert to months)
-        const months = 6; // Default to 6 months of history
-        const subscriptionData = await analyticsService.getSubscriptionUsage(months);
-        
-        // Also get current subscription limits
-        const subscriptionLimitsData = await analyticsService.getSubscriptionLimits();
-        
-        // Process the data to match expected format
-        if (subscriptionLimitsData && subscriptionLimitsData.limits) {
-          // Transform the data into the expected format
-          const current = {
-            messages: {
-              used: subscriptionLimitsData.limits.messages.used,
-              limit: subscriptionLimitsData.limits.messages.limit,
-              percentage: subscriptionLimitsData.limits.messages.percentage * 100
-            },
-            users: {
-              used: subscriptionLimitsData.limits.users.active,
-              limit: subscriptionLimitsData.limits.users.limit,
-              percentage: subscriptionLimitsData.limits.users.percentage * 100
-            },
-            storage: {
-              used_bytes: subscriptionLimitsData.limits.storage.used_bytes,
-              limit_bytes: subscriptionLimitsData.limits.storage.limit_bytes,
-              percentage: subscriptionLimitsData.limits.storage.percentage * 100,
-              used_mb: subscriptionLimitsData.limits.storage.used_bytes / (1024 * 1024),
-              limit_mb: subscriptionLimitsData.limits.storage.limit_bytes / (1024 * 1024)
-            }
-          };
-          
-          // Merge with subscription data
-          subscriptionData.current = current;
-          setUsageData(current);
-        } else if (subscriptionData && subscriptionData.current) {
-          // If we have data directly from subscription usage
-          setUsageData(subscriptionData.current);
-        } else {
-          console.warn('No subscription data available from API');
-          
-          // Set default values based on plan
-          const currentPlan = subData?.plan_type || 'free';
-          const planLimits = plans[currentPlan];
-          
-          setUsageData({
-            messages: {
-              used: 0,
-              limit: planLimits.messageLimit,
-              percentage: 0
-            },
-            storage: {
-              used_bytes: 0,
-              limit_bytes: parseInt(planLimits.storageLimit) * 1024 * 1024, // Convert MB to bytes
-              percentage: 0
-            }
-          });
-        }
-        
-      } catch (err) {
-        console.error('Error fetching subscription data:', err);
-        
-        // Set default fallback data
-        const currentPlan = subData?.plan_type || 'free';
-        const planLimits = plans[currentPlan];
-        
-        setUsageData({
-          messages: {
-            used: 0,
-            limit: planLimits.messageLimit,
-            percentage: 0
-          },
-          storage: {
-            used_bytes: 0,
-            limit_bytes: parseInt(planLimits.storageLimit) * 1024 * 1024, // Convert MB to bytes
-            percentage: 0
-          }
-        });
-      }
-      
-      // Force a sync if we don't have usage data
-      if (!usageData || (!usageData.messages?.used && !usageData.storage?.used_bytes)) {
-        try {
-          await analyticsService.syncSubscriptionUsage();
-          // Could potentially refetch data here, but we'll leave it for the manual refresh
-        } catch (syncErr) {
-          console.warn('Error syncing subscription usage:', syncErr);
-        }
-      }
-      
     } catch (err) {
-      console.error('Error fetching data:', err);
-      setError('Failed to load subscription information');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Also update the refreshUsageData function to use the same logic:
-  const refreshUsageData = async () => {
-    try {
-      setLoading(true);
-      
-      // First try to sync the subscription data
-      await analyticsService.syncSubscriptionUsage();
-      
-      // Then fetch the updated data using the same logic
-      const months = 6;
-      const subscriptionData = await analyticsService.getSubscriptionUsage(months);
-      const subscriptionLimitsData = await analyticsService.getSubscriptionLimits();
-      
-      if (subscriptionLimitsData && subscriptionLimitsData.limits) {
-        const current = {
-          messages: {
-            used: subscriptionLimitsData.limits.messages.used,
-            limit: subscriptionLimitsData.limits.messages.limit,
-            percentage: subscriptionLimitsData.limits.messages.percentage * 100
-          },
-          users: {
-            used: subscriptionLimitsData.limits.users.active,
-            limit: subscriptionLimitsData.limits.users.limit,
-            percentage: subscriptionLimitsData.limits.users.percentage * 100
-          },
-          storage: {
-            used_bytes: subscriptionLimitsData.limits.storage.used_bytes,
-            limit_bytes: subscriptionLimitsData.limits.storage.limit_bytes,
-            percentage: subscriptionLimitsData.limits.storage.percentage * 100,
-            used_mb: subscriptionLimitsData.limits.storage.used_bytes / (1024 * 1024),
-            limit_mb: subscriptionLimitsData.limits.storage.limit_bytes / (1024 * 1024)
-          }
-        };
-        
-        subscriptionData.current = current;
-        setUsageData(current);
-        setSuccess("Usage data refreshed successfully");
-      } else if (subscriptionData && subscriptionData.current) {
-        setUsageData(subscriptionData.current);
-        setSuccess("Usage data refreshed successfully");
-      } else {
-        throw new Error("No usage data returned");
-      }
-    } catch (err) {
-      console.error('Error refreshing usage data:', err);
-      setError('Failed to refresh usage data');
+      console.error('Error fetching subscription data:', err);
+      setError('Failed to load subscription data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpgrade = async (planType) => {
-    if (planType === subscription?.plan_type) {
-      return; // Already on this plan
+  const handlePlanChange = async (planType) => {
+    const currentPlan = subscription?.plan_type || 'free';
+    
+    if (planType === currentPlan) {
+      return;
     }
     
     try {
-      setProcessingPlan(planType); // Set only the specific plan as processing
+      setProcessingPlan(planType);
+      setError(null);
       
-      // Store target plan for reference
-      localStorage.setItem('targetPlan', planType);
-      
-      // Call the service to change plan
-      await subscriptionService.changePlan(planType);
-      
-      // For free plan downgrades, we'll reach this point
       if (planType === 'free') {
-        // Refresh data
-        await fetchData();
-        
-        // Show success message
-        setSuccess(`Successfully changed to ${plans[planType].name} plan.`);
+        // Direct downgrade to free
+        await subscriptionService.changePlan(planType);
+        setSuccess('Successfully downgraded to Free plan');
+        fetchData();
+      } else {
+        // Redirect to Stripe checkout for paid plans
+        await subscriptionService.changePlan(planType, billingCycle);
       }
-      // For paid plans, redirect happens in the service
-      
     } catch (err) {
       console.error('Error changing plan:', err);
-      setError(`Failed to change plan: ${err.message || 'An error occurred'}`);
+      setError(`Failed to change plan: ${err.message}`);
     } finally {
-      setProcessingPlan(null); // Reset processing state regardless of outcome
+      setProcessingPlan(null);
     }
   };
 
-  if (loading && !subscription) {
+  const handleManageBilling = async () => {
+    try {
+      const response = await api.post('/api/client/subscription/billing-portal', {
+        return_url: window.location.href
+      });
+      
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (err) {
+      console.error('Error accessing billing portal:', err);
+      setError('Failed to access billing portal. Please try again.');
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-600"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
       </div>
     );
   }
 
   const currentPlan = subscription?.plan_type || 'free';
-  
-  // Default values if no usage data is available
-  const defaultLimits = {
-    messages: {
-      used: 0,
-      limit: plans[currentPlan].messageLimit,
-      percentage: 0
-    },
-    storage: {
-      used_bytes: 0,
-      limit_bytes: 0.5 * 1024 * 1024, 
-      percentage: 0
-    }
-  };
-  
-  // Get usage data with fallbacks
-  const messagesUsed = usageData?.messages?.used || 0;
-  const messagesLimit = usageData?.messages?.limit || plans[currentPlan].messageLimit;
-  const messagePercentage = Math.min(((messagesUsed || 0) / (messagesLimit || 1)) * 100, 100) || 0;
-  
-  const storageUsed = usageData?.storage?.used_bytes || 0;
-  const storageLimit = usageData?.storage?.limit_bytes || 50 * 1024 * 1024; // Default to 50MB
-  const storagePercentage = Math.min(((storageUsed || 0) / (storageLimit || 1)) * 100, 100) || 0;
-  
-  const formatBytes = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-  
+  const isCurrentPlanFree = currentPlan === 'free';
+
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="bg-white shadow-sm p-6 rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-900">Subscription Management</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your subscription plan, billing details, and usage limits.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      {/* Alert messages */}
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
+
+        {/* Status Messages */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex">
               <XMarkIcon className="h-5 w-5 text-red-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {success && (
-        <div className="bg-green-50 border-l-4 border-green-500 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm text-green-700">{success}</p>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Current Plan */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-lg font-medium text-gray-900">Current Plan</h2>
-        </div>
-        
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-primary-600">{plans[currentPlan]?.name || 'Free'} Plan</h3>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
-                {subscription?.status || 'active'}
-              </span>
-              <p className="mt-2 text-sm text-gray-500">
-                {plans[currentPlan]?.description || 'Free plan with basic features'}
-              </p>
-              
-              {/* Show next billing date for paid plans */}
-              {currentPlan !== 'free' && subscription?.expires_at && (
-                <p className="mt-2 text-sm text-gray-500">
-                  Next billing date: {new Date(subscription.expires_at).toLocaleDateString()}
-                </p>
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex">
+              <CheckIcon className="h-5 w-5 text-green-400" />
+              <div className="ml-3">
+                <p className="text-sm text-green-800">{success}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* Improved Billing Cycle Toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-gray-100 rounded-full p-1 inline-flex">
+            <button
+              onClick={() => setBillingCycle('annually')}
+              className={`relative px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                billingCycle === 'annually'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Annual
+              {billingCycle === 'annually' && (
+                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  -20%
+                </span>
               )}
-            </div>
-            
-            {/* Usage metrics */}
-            <div className="mt-6 md:mt-0 grid grid-cols-1 sm:grid-cols-2 gap-4 md:w-1/2">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700">Messages</h4>
-                <div className="mt-1 flex justify-between">
-                  <span className="text-lg font-semibold text-gray-900">
-                    {formatNumber(messagesUsed)}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    of {formatNumber(messagesLimit)}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                  <div 
-                    className={`${messagePercentage > 90 ? 'bg-red-500' : 'bg-orange-600'} h-2 rounded-full`}
-                    style={{ width: `${messagePercentage}%` }}
-                  ></div>
-                </div>
-                <div className="mt-1 text-xs text-gray-500 flex justify-end">
-                  {messagePercentage.toFixed(1)}% used
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700">Storage</h4>
-                <div className="mt-1 flex justify-between">
-                  <span className="text-lg font-semibold text-gray-900">
-                    {formatBytes(storageUsed)}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    of {plans[currentPlan].storageLimit}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                  <div 
-                    className={`${storagePercentage > 90 ? 'bg-red-500' : 'bg-orange-600'} h-2 rounded-full`}
-                    style={{ width: `${storagePercentage}%` }}
-                  ></div>
-                </div>
-                <div className="mt-1 text-xs text-gray-500 flex justify-end">
-                  {storagePercentage.toFixed(1)}% used
-                </div>
-              </div>
-              
-              {/* Refresh button for usage data */}
-              <div className="sm:col-span-2 flex justify-end">
-                <button
-                  onClick={refreshUsageData}
-                  className="text-sm text-orange-600 hover:text-orange-800"
-                  disabled={loading}
-                >
-                  {loading ? 'Refreshing...' : 'Refresh usage data'}
-                </button>
-              </div>
-            </div>
+            </button>
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
+                billingCycle === 'monthly'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Monthly
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Available Plans */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-lg font-medium text-gray-900">Available Plans</h2>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {Object.entries(plans).map(([planType, plan]) => (
-              <div 
-                key={planType} 
-                className={`border rounded-lg overflow-hidden flex flex-col h-full ${
-                  planType === currentPlan 
-                    ? 'border-orange-500 ring-1 ring-orange-500' 
-                    : 'border-gray-200'
-                }`}
+        {/* Plan Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Object.entries(plans).map(([planKey, plan]) => {
+            const isCurrentPlan = planKey === currentPlan;
+            const isProcessing = processingPlan === planKey;
+            
+            return (
+              <div
+                key={planKey}
+                className={`card-orange relative h-full flex flex-col ${
+                  isCurrentPlan ? 'ring-2 ring-orange-500' : ''
+                } ${plan.highlighted ? 'ring-2 ring-orange-400 transform scale-105' : ''}`}
               >
-                <div className={`px-6 py-4 border-b ${
-                  planType === currentPlan 
-                    ? 'bg-orange-50 border-orange-100' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-                  <p className="text-2xl font-bold mt-1">
-                    {plan.price}
-                    <span className="text-sm font-normal text-gray-500">/month</span>
-                  </p>
-                  <p className="mt-2 text-sm text-gray-600">{plan.description}</p>
-                </div>
-                
-                <div className="px-6 py-4 flex-grow">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        {feature.included ? (
-                          <CheckIcon className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <XMarkIcon className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                        )}
-                        <span className={`ml-3 text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400'}`}>
-                          {feature.name}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="px-6 pb-4 mt-auto">
-                  {planType === currentPlan ? (
-                    <span className="inline-block w-full py-2 px-4 border border-transparent font-medium rounded-md text-center bg-gray-100 text-gray-500">
+                {isCurrentPlan && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-orange text-white px-3 py-1 rounded-full text-xs font-medium">
                       Current Plan
                     </span>
-                  ) : (
-                    <button
-                      onClick={() => handleUpgrade(planType)}
-                      disabled={processingPlan !== null}
-                      className={`w-full py-2 px-4 border border-transparent rounded-md font-medium text-center text-white ${
-                        planType === 'free' 
-                          ? 'bg-gray-600 hover:bg-gray-700' 
-                          : 'bg-orange-600 hover:bg-orange-700'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      {processingPlan === planType ? 'Processing...' : planType === 'free' ? 'Downgrade' : 'Upgrade'}
-                    </button>
-                  )}
+                  </div>
+                )}
+
+                {plan.highlighted && !isCurrentPlan && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                      Popular
+                    </span>
+                  </div>
+                )}
+
+                <div className="text-center flex-grow">
+                  <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1 mb-4">{plan.description}</p>
+                  
+                  <div className="mb-6">
+                    <span className="text-3xl font-bold text-gradient-orange">
+                      {plan.price[billingCycle]}
+                    </span>
+                    {planKey !== 'free' && (
+                      <span className="text-sm text-gray-500">
+                        /month
+                      </span>
+                    )}
+                    {planKey !== 'free' && billingCycle === 'annually' && (
+                      <p className="text-xs text-green-600 mt-1">Billed annually</p>
+                    )}
+                  </div>
+
+                  <div className="text-left space-y-3 mb-6">
+                    {plan.features.map((feature, index) => (
+                      <div key={index} className="flex items-center">
+                        <CheckIcon className="h-4 w-4 text-orange-500 mr-3 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* All Upgrade buttons with same shiny effect */}
+                <div className="mt-auto">
+                  <button
+                    onClick={() => handlePlanChange(planKey)}
+                    disabled={isCurrentPlan || isProcessing}
+                    className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isCurrentPlan
+                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                        : 'btn-orange shadow-orange hover:shadow-orange-lg transform hover:scale-105'
+                    } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isProcessing ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600 mr-2"></div>
+                        Processing...
+                      </div>
+                    ) : isCurrentPlan ? (
+                      'Current Plan'
+                    ) : (
+                      plan.cta
+                    )}
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
+
+        {/* Additional Information */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+          Need a custom plan? <a href="https://www.customate.ai/contact" className="text-orange-600 hover:text-orange-500 font-medium">Contact our sales team</a> for enterprise solutions.          </p>
         </div>
       </div>
     </div>

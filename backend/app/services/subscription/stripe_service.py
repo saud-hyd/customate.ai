@@ -22,19 +22,19 @@ stripe.api_version = "2023-10-16"
 PLAN_MAPPING = {
     "free": {
         "monthly": settings.STRIPE_FREE_PLAN_ID,
-        "annual": settings.STRIPE_FREE_PLAN_ID
+        "annually": settings.STRIPE_FREE_PLAN_ID
     },
     "basic": {
         "monthly": settings.STRIPE_BASIC_MONTHLY_PLAN_ID,
-        "annual": settings.STRIPE_BASIC_ANNUAL_PLAN_ID
+        "annually": settings.STRIPE_BASIC_ANNUAL_PLAN_ID
     },
     "standard": {
         "monthly": settings.STRIPE_STANDARD_MONTHLY_PLAN_ID,
-        "annual": settings.STRIPE_STANDARD_ANNUAL_PLAN_ID
+        "annually": settings.STRIPE_STANDARD_ANNUAL_PLAN_ID
     },
     "professional": {
         "monthly": settings.STRIPE_PROFESSIONAL_MONTHLY_PLAN_ID,
-        "annual": settings.STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID
+        "annually": settings.STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID
     }
 }
 

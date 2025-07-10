@@ -236,7 +236,9 @@ async def get_subscription_usage(
         
         # Get usage data (existing logic)
         reporting_service = ReportingService()
-        result = reporting_service.get_subscription_usage_report(db, current_client.client_id, months=months)
+        
+        # FIXED: Add "await" before the function call
+        result = await reporting_service.get_subscription_usage_report(db, current_client.client_id, months=months)
         
         return result
         
@@ -252,7 +254,7 @@ async def get_subscription_usage(
             },
             "historical": [],
             "subscription": {"plan_type": "basic", "status": "active"}
-        }        
+        }
 @router.get("/api-usage", response_model=ApiUsageResponse)
 async def get_api_usage(
     days: int = Query(30, description="Number of days to include in report"),

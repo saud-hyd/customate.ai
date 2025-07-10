@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     
     # Professional Plan Price IDs
     STRIPE_PROFESSIONAL_MONTHLY_PLAN_ID: str = Field(default=os.getenv("STRIPE_PROFESSIONAL_MONTHLY_PLAN_ID", "price_1RjJP7HYm0UQygR1296EgDEv"))  
-    STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID: str = Field(default=os.getenv("STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID", "price_1RjJP7HYm0UQygR1296EgDEv"))
+    STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID: str = Field(default=os.getenv("STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID", "price_1RjJQlHYm0UQygR1yDT6jXPS"))
         
     @computed_field
     def DATABASE_URL(self) -> str:
