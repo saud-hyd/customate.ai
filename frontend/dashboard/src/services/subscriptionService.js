@@ -20,10 +20,11 @@ const subscriptionService = {
 
   /**
    * Change the current subscription plan
-   * @param {string} planType - The plan type to change to (free, basic, professional, enterprise)
+   * @param {string} planType - The plan type to change to (free, basic, standard, professional)
+   * @param {string} billingCycle - The billing cycle (monthly, annual)
    * @returns {Promise<Object>} Updated subscription data
    */
-  changePlan: async (planType) => {
+  changePlan: async (planType, billingCycle = 'monthly') => {
     try {
       // For free plan downgrades, directly change
       if (planType === 'free') {
@@ -36,6 +37,7 @@ const subscriptionService = {
       // For paid plans, create a checkout session and redirect
       const response = await api.post('/api/client/subscription/checkout-session', {
         plan_type: planType,
+        billing_cycle: billingCycle, // ADD this parameter
         success_url: `${window.location.origin}/subscription?success=true`,
         cancel_url: `${window.location.origin}/subscription?cancelled=true`
       });
@@ -51,6 +53,21 @@ const subscriptionService = {
       throw error;
     }
   },
+
+  /**
+   * Upgrade to a specific plan with billing cycle (used by plan intent)
+   * @param {string} planType - The plan type
+   * @param {string} billingCycle - The billing cycle
+   * @returns {Promise<Object>} Checkout session data
+   */
+  upgradeWithIntent: async (planType, billingCycle = 'monthly') => {
+    try {
+      return await subscriptionService.changePlan(planType, billingCycle);
+    } catch (error) {
+      console.error('Error upgrading with intent:', error);
+      throw error;
+    }
+  },  
 
   /**
    * Get subscription limits and usage

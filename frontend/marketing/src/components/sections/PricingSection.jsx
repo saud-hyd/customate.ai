@@ -151,6 +151,7 @@ const PricingSection = () => {
                 </div>
                 <div className="mt-8">
                   {plan.name === t('plans.free.name') ? (
+                    // Free Plan - Direct to registration
                     <Button
                       variant={plan.highlighted ? 'primary' : 'outline'}
                       size="lg"
@@ -161,7 +162,8 @@ const PricingSection = () => {
                     >
                       {plan.cta}
                     </Button>
-                  ) : plan.name === t('plans.enterprise.name') ? (
+                  ) : plan.name === t('plans.professional.name') ? (
+                    // Professional Plan - Contact sales
                     <Button
                       variant={plan.highlighted ? 'primary' : 'outline'}
                       size="lg"
@@ -173,12 +175,13 @@ const PricingSection = () => {
                       {plan.cta}
                     </Button>
                   ) : (
+                    // ✅ NEW - FIXED: Basic & Standard plans go to registration with plan intent
                     <Button
                       variant={plan.highlighted ? 'primary' : 'outline'}
                       size="lg"
                       fullWidth
-                      as={Link}
-                      to={`/checkout?plan=${plan.name.toLowerCase()}&billing=${isAnnual ? 'annual' : 'monthly'}`}
+                      as="a"
+                      href={`https://app.customate.ai/register?plan=${plan.name.toLowerCase()}&billing=${isAnnual ? 'annual' : 'monthly'}&intent=upgrade`}
                       className={`${plan.highlighted ? 'shadow-lg shadow-primary-200' : ''}`}
                     >
                       {plan.cta}

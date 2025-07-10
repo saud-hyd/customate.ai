@@ -30,10 +30,10 @@ class SubscriptionCancelRequest(BaseModel):
     cancel_immediately: bool = Field(False, description="Whether to cancel immediately or at period end")
 
 class CheckoutSessionRequest(BaseModel):
-    """Request schema for creating checkout session."""
-    plan_type: str = Field(..., description="Plan type to subscribe to")
+    plan_type: str = Field(..., description="Plan type (basic, standard, professional)")
+    billing_cycle: str = Field(default="monthly", description="Billing cycle (monthly, annual)")
     success_url: str = Field(..., description="URL to redirect on success")
-    cancel_url: str = Field(..., description="URL to redirect on cancellation")
+    cancel_url: str = Field(..., description="URL to redirect on cancel")
 
 class BillingPortalRequest(BaseModel):
     """Request schema for creating billing portal session."""
@@ -228,13 +228,27 @@ async def create_checkout_session(
     """
     Create a Stripe Checkout session for subscription.
     """
-    checkout_session = await stripe_service.create_checkout_session(
-        client=current_client,
-        plan_type=checkout_request.plan_type,
-        success_url=checkout_request.success_url,
-        cancel_url=checkout_request.cancel_url
-    )
-    return checkout_session
+    try:
+        checkout_session = await stripe_service.create_checkout_session(
+            client=current_client,
+            plan_type=checkout_request.plan_type,
+            billing_cycle=checkout_request.billing_cycle,  # Pass billing cycle
+            success_url=checkout_request.success_url,
+            cancel_url=checkout_request.cancel_url
+        )
+        return checkout_session
+    except ValueError as e:
+        logger.error(f"Invalid checkout request: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error creating checkout session: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create checkout session: {str(e)}"
+        )
 
 @router.post("/billing-portal", response_model=Dict[str, Any])
 async def create_billing_portal_session(

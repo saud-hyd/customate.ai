@@ -17,45 +17,46 @@ logger = logging.getLogger(__name__)
 
 # Initialize Stripe with API key
 stripe.api_key = settings.STRIPE_SECRET_KEY
-stripe.api_version = "2023-10-16"  # Use latest stable API version
+stripe.api_version = "2023-10-16"  
 
-# Update PLAN_MAPPING to include standard tier and remove enterprise
 PLAN_MAPPING = {
-    "free": settings.STRIPE_FREE_PLAN_ID,
-    "basic": settings.STRIPE_BASIC_PLAN_ID,
-    "standard": settings.STRIPE_STANDARD_PLAN_ID,  # New tier
-    "professional": settings.STRIPE_PRO_PLAN_ID    # Renamed from enterprise
+    "free": {
+        "monthly": settings.STRIPE_FREE_PLAN_ID,
+        "annual": settings.STRIPE_FREE_PLAN_ID
+    },
+    "basic": {
+        "monthly": settings.STRIPE_BASIC_MONTHLY_PLAN_ID,
+        "annual": settings.STRIPE_BASIC_ANNUAL_PLAN_ID
+    },
+    "standard": {
+        "monthly": settings.STRIPE_STANDARD_MONTHLY_PLAN_ID,
+        "annual": settings.STRIPE_STANDARD_ANNUAL_PLAN_ID
+    },
+    "professional": {
+        "monthly": settings.STRIPE_PROFESSIONAL_MONTHLY_PLAN_ID,
+        "annual": settings.STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID
+    }
 }
 
-# Update PLAN_LIMITS with new limits
-# Update PLAN_LIMITS with consistent values
 PLAN_LIMITS = {
     "free": {
         "message_limit": 100,
-        "user_limit": 5,
         "storage_limit_mb": 0.5,  # 500 KB
-        "collections_limit": 3,
         "features": ["basic_chat", "knowledge_integration"]
     },
     "basic": {
-        "message_limit": 2000,
-        "user_limit": 25,
+        "message_limit": 3000,  
         "storage_limit_mb": 5,  # 5 MB
-        "collections_limit": 10,
         "features": ["basic_chat", "knowledge_integration", "analytics"]
     },
     "standard": {
-        "message_limit": 5000,
-        "user_limit": 50,
+        "message_limit": 10000,  
         "storage_limit_mb": 25,  # 25 MB
-        "collections_limit": 25,
         "features": ["basic_chat", "knowledge_integration", "analytics", "integrations"]
     },
     "professional": {
-        "message_limit": 12000,
-        "user_limit": 100,
-        "storage_limit_mb": 100,  # 100 MB
-        "collections_limit": 50,
+        "message_limit": 40000,  
+        "storage_limit_mb": 35,  
         "features": ["advanced_chat", "knowledge_integration", "analytics", "integrations", "priority_support"]
     }
 }
@@ -750,48 +751,49 @@ class StripeService:
     async def create_checkout_session(
         self, 
         client: Client, 
-        plan_type: str,
-        success_url: str,
-        cancel_url: str
+        plan_type: str, 
+        billing_cycle: str = "monthly",  # Add billing_cycle parameter
+        success_url: str = None, 
+        cancel_url: str = None
     ) -> Dict[str, Any]:
         """
-        Create a Checkout session for subscription signup.
+        Create a Stripe Checkout session for subscription.
         
         Args:
             client: Client entity
-            plan_type: Subscription plan type
-            success_url: URL to redirect to on success
-            cancel_url: URL to redirect to on cancellation
-            
-        Returns:
-            Checkout session details
+            plan_type: Plan type (basic, standard, professional)
+            billing_cycle: Billing cycle (monthly, annual)
+            success_url: URL to redirect on success
+            cancel_url: URL to redirect on cancel
         """
-        if plan_type not in PLAN_MAPPING:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid plan type: {plan_type}"
-            )
-        
         try:
-            # Check if client has a Stripe customer ID
+            # Ensure customer exists
             stripe_customer_id = await self._ensure_customer_id(client)
             
-            # Create the checkout session
+            # Get the correct price ID based on plan and billing cycle
+            if plan_type not in PLAN_MAPPING:
+                raise ValueError(f"Invalid plan type: {plan_type}")
+            
+            if billing_cycle not in PLAN_MAPPING[plan_type]:
+                raise ValueError(f"Invalid billing cycle: {billing_cycle}")
+                
+            price_id = PLAN_MAPPING[plan_type][billing_cycle]
+            
+            # Create checkout session
             checkout_session = stripe.checkout.Session.create(
                 customer=stripe_customer_id,
-                payment_method_types=["card"],
-                line_items=[
-                    {
-                        "price": PLAN_MAPPING[plan_type],
-                        "quantity": 1
-                    }
-                ],
-                mode="subscription",
-                success_url=success_url,
-                cancel_url=cancel_url,
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': price_id,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=success_url or f"{settings.FRONTEND_URL}/subscription?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=cancel_url or f"{settings.FRONTEND_URL}/subscription?cancelled=true",
                 metadata={
                     "client_id": client.client_id,
-                    "plan_type": plan_type
+                    "plan_type": plan_type,
+                    "billing_cycle": billing_cycle
                 }
             )
             
@@ -801,12 +803,18 @@ class StripeService:
             }
             
         except stripe.error.StripeError as e:
-            logger.error(f"Stripe error creating checkout session for {client.client_id}: {str(e)}")
+            logger.error(f"Stripe error creating checkout session: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to create checkout session: {str(e)}"
             )
-    
+        except Exception as e:
+            logger.error(f"Error creating checkout session: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create checkout session: {str(e)}"
+            )
+            
     async def create_billing_portal_session(
         self,
         client: Client,

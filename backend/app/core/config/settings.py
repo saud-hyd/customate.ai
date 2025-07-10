@@ -53,16 +53,25 @@ class Settings(BaseSettings):
     STORAGE_BUCKET: Optional[str] = Field(default=None)
     
     # Stripe settings
-    STRIPE_SECRET_KEY: str = Field(default=os.getenv("STRIPE_SECRET_KEY", "sk_test_51R4HBQQciWYLUmgx57rZmbTpklUQMnyzOhmy9PiVXxj3fUKiAhEgYDs7gVKXK6ovlfkXcoBKO2yjmX4pbou5ffPd00AJ4uK6bB"))
-    STRIPE_PUBLIC_KEY: str = Field(default=os.getenv("STRIPE_PUBLIC_KEY", "pk_test_51R4HBQQciWYLUmgx4ylKdFH0c4aVp7UPKBzhMC8pObqerP7smGwaf670fUfEkHk0spJOsUzKePESYJn9sebsHyLf00E2djbYOj"))
+    STRIPE_SECRET_KEY: str = Field(default=os.getenv("STRIPE_SECRET_KEY", "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"))
+    STRIPE_PUBLIC_KEY: str = Field(default=os.getenv("STRIPE_PUBLIC_KEY", "pk_live_51R4HBGHYm0UQygR1mnxGDebLpegOTsH01YAG5xLIJ9DwxzR08HyZJhIgbyUgVYu840QP3qTgtPp2bHLSsP5iwFOr00KkqxJAoV"))
     STRIPE_WEBHOOK_SECRET: str = Field(default=os.getenv("STRIPE_WEBHOOK_SECRET", "whsec_sample"))
     
     # Stripe product/price IDs
     STRIPE_FREE_PLAN_ID: str = Field(default=os.getenv("STRIPE_FREE_PLAN_ID", "price_free"))
-    STRIPE_BASIC_PLAN_ID: str = Field(default=os.getenv("STRIPE_BASIC_PLAN_ID", "price_1R4HZQQciWYLUmgx9pJSP6aw"))
-    STRIPE_STANDARD_PLAN_ID: str = Field(default=os.getenv("STRIPE_STANDARD_PLAN_ID", "price_standard"))
-    STRIPE_PRO_PLAN_ID: str = Field(default=os.getenv("STRIPE_PRO_PLAN_ID", "price_1R4HfYQciWYLUmgxm1CAituQ"))
     
+    # Basic Plan Price IDs
+    STRIPE_BASIC_MONTHLY_PLAN_ID: str = Field(default=os.getenv("STRIPE_BASIC_MONTHLY_PLAN_ID", "price_1RjJE7HYm0UQygR1NOLEapaB"))  
+    STRIPE_BASIC_ANNUAL_PLAN_ID: str = Field(default=os.getenv("STRIPE_BASIC_ANNUAL_PLAN_ID", "price_1RjJE7HYm0UQygR1hEMx23Xi"))    
+    
+    # Standard Plan Price IDs  
+    STRIPE_STANDARD_MONTHLY_PLAN_ID: str = Field(default=os.getenv("STRIPE_STANDARD_MONTHLY_PLAN_ID", "price_1RjJGTHYm0UQygR1A0VvnPWi"))  
+    STRIPE_STANDARD_ANNUAL_PLAN_ID: str = Field(default=os.getenv("STRIPE_STANDARD_ANNUAL_PLAN_ID", "price_1RjJNrHYm0UQygR1XXFwIOPN"))    
+    
+    # Professional Plan Price IDs
+    STRIPE_PROFESSIONAL_MONTHLY_PLAN_ID: str = Field(default=os.getenv("STRIPE_PROFESSIONAL_MONTHLY_PLAN_ID", "price_1RjJP7HYm0UQygR1296EgDEv"))  
+    STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID: str = Field(default=os.getenv("STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID", "price_1RjJP7HYm0UQygR1296EgDEv"))
+        
     @computed_field
     def DATABASE_URL(self) -> str:
         """Construct database URL with appropriate SSL settings."""

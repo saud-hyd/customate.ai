@@ -28,7 +28,7 @@
         "Analytics dashboard",
         "API access"
       ],
-      "cta": "Start with Basic"
+      "cta": "Start Free Trial"
     },
     "standard": {
       "name": "Standard",
@@ -40,7 +40,7 @@
         "Priority email support",
         "Advanced analytics"
       ],
-      "cta": "Start with Standard"
+      "cta": "Start Free Trial"
     },
     "professional": {
       "name": "Professional",
@@ -53,7 +53,7 @@
         "Phone & email support",
         "Custom integrations"
       ],
-      "cta": "Start with Professional"
+      "cta": "Start for Free"
     }
   },
   "badges": {

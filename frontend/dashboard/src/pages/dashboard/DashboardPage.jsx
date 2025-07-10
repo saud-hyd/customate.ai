@@ -6,6 +6,7 @@ import clientService from '../../services/clientService';
 import { formatNumber, formatPercentage, formatBytes } from '../../utils/formatters';
 import { ArrowUpIcon, ArrowDownIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 import { ExclamationTriangleIcon, CreditCardIcon, DocumentTextIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import PlanIntentBanner from '../../components/common/PlanIntentBanner';
 
 const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -147,6 +148,8 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Plan Intent Banner */}
+      <PlanIntentBanner />
       {/* Page header with refresh button */}
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
         <div className="flex justify-between items-center">
