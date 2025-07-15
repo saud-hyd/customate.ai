@@ -1,4 +1,6 @@
 // Path: frontend/dashboard/src/Routes.jsx
+// Usage: Fixed routing configuration that allows unauthenticated access to email verification
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
@@ -12,6 +14,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 import VerifyMagicLinkPage from './pages/auth/VerifyMagicLinkPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import EmailVerificationPage from './pages/auth/EmailVerificationPage';  // Import moved up
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ChatPage from './pages/chat/ChatPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
@@ -24,7 +27,6 @@ import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
 import ChannelsPage from './pages/channels/ChannelsPage';
 import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
 
-
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -32,36 +34,36 @@ const ProtectedRoute = ({ children }) => {
   // Show loading state when checking authentication
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
       </div>
     );
   }
   
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
   
   return children;
 };
 
-// Guest Route component (for routes that should only be accessible to guests, like login)
+// Guest Route component - only accessible when NOT authenticated
 const GuestRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   
   // Show loading state when checking authentication
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
       </div>
     );
   }
   
   // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/dashboard" replace />;
   }
   
   return children;
@@ -70,7 +72,7 @@ const GuestRoute = ({ children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Auth routes */}
+      {/* PUBLIC AUTHENTICATION ROUTES - No authentication required */}
       <Route 
         path="/login" 
         element={
@@ -87,9 +89,8 @@ const AppRoutes = () => {
           </GuestRoute>
         } 
       />
-      {/* Add new route for magic link verification */}
       <Route 
-        path="/auth/verify" 
+        path="/verify-magic-link" 
         element={
           <GuestRoute>
             <VerifyMagicLinkPage />
@@ -113,7 +114,13 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Dashboard routes */}
+      {/* EMAIL VERIFICATION - CRITICAL: Must be accessible without authentication */}
+      <Route path="/verify-email" element={<EmailVerificationPage />} />
+      
+      {/* OAuth callback - May need to handle both authenticated and unauthenticated states */}
+      <Route path="/auth/callback" element={<OAuthCallbackPage />} />
+      
+      {/* PROTECTED DASHBOARD ROUTES - Authentication required */}
       <Route 
         path="/" 
         element={
@@ -122,7 +129,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="conversations" element={<ConversationsPage />} />
         <Route path="chat" element={<ChatPage />} />
@@ -141,6 +147,7 @@ const AppRoutes = () => {
         <Route index element={<Navigate to="/dashboard" replace />} />
       </Route>
       
+      {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

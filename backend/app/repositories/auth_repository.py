@@ -1,5 +1,8 @@
+# Path: backend/app/repositories/auth_repository.py
+# Usage: Repository for magic link tokens and verification tokens with fixed database queries
+
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
 import logging
 from sqlalchemy.orm import Session
 from app.domain.auth.entities import MagicLinkToken
@@ -83,3 +86,33 @@ class MagicLinkTokenRepository:
             return True
         
         return False
+    
+    def get_token_data(self, db: Session, token: str) -> Optional[Dict[str, Any]]:
+        """Get token data from database."""
+        try:
+            # FIXED: Use MagicLinkToken instead of self.model
+            token_record = db.query(MagicLinkToken).filter(
+                MagicLinkToken.token == token,
+                MagicLinkToken.used == False,
+                MagicLinkToken.expires_at > datetime.utcnow()
+            ).first()
+            
+            if token_record:
+                return {
+                    "email": token_record.email,
+                    "token": token_record.token,
+                    "created_at": token_record.created_at,
+                    "expires_at": token_record.expires_at
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting token data: {str(e)}")
+            return None
+        
+    def delete_tokens_for_email(self, db: Session, email: str) -> None:
+        """Delete all tokens for a specific email."""
+        try:
+            db.query(MagicLinkToken).filter(MagicLinkToken.email == email).delete()
+            db.flush()
+        except Exception as e:
+            logger.error(f"Error deleting tokens for email {email}: {str(e)}")        

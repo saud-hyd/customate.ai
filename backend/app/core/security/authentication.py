@@ -108,6 +108,34 @@ def verify_magic_link_token(token: str) -> Dict[str, Any]:
     """
     return verify_token(token)
 
+def create_verification_token(email: str, client_id: str) -> str:
+    """Create a shorter verification token using just a random string with email hash."""
+    import hashlib
+    
+    # Create a short random token
+    random_token = secrets.token_urlsafe(32)  # Much shorter than JWT
+    
+    # Create a simple verification string: random_token + email_hash
+    email_hash = hashlib.sha256(email.encode()).hexdigest()[:16]
+    verification_token = f"{random_token}.{email_hash}"
+    
+    return verification_token
+
+def verify_verification_token(token: str, email: str) -> bool:
+    """Verify the verification token matches the email."""
+    import hashlib
+    
+    try:
+        if '.' not in token:
+            return False
+            
+        random_part, email_hash = token.split('.', 1)
+        expected_hash = hashlib.sha256(email.encode()).hexdigest()[:16]
+        
+        return email_hash == expected_hash
+    except Exception:
+        return False
+
 def decode_state_data(state: str) -> Dict[str, Any]:
     """
     Decode and verify state data from OAuth flow.

@@ -1,214 +1,238 @@
 // Path: frontend/dashboard/src/services/authService.js
-// This service handles all authentication API calls
+// Usage: Authentication service with OAuth callback support and improved error handling
 
 import api from './api';
-import { API_URL, API_BASE_URL } from '../utils/environment';
 
 const authService = {
-// Path: frontend/dashboard/src/services/authService.js
-
-// Update the login method 
+  // Login with email and password
   async login(email, password) {
     try {
       console.log('Attempting login for:', email);
       
-      // Ensure proper formatting of credentials
       const formData = new URLSearchParams();
-      formData.append('username', email);
+      formData.append('username', email.trim());
       formData.append('password', password);
       
-      // Use the configured API URL
       const response = await api.post('/api/auth/token', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-
+      
+      // Store authentication data
       if (response.data.access_token) {
-        // Store JWT token for user authentication
         localStorage.setItem('token', response.data.access_token);
-        
-        // If API key is included, store it separately for widget use
-        if (response.data.api_key) {
-          localStorage.setItem('apiKey', response.data.api_key);
-          console.log('Stored API key for widget use');
-        }
-        
-        if (response.data.client_id) {
-          localStorage.setItem('clientId', response.data.client_id);
-        }
-        
-        console.log('Login successful with password');
+        localStorage.setItem('clientId', response.data.client_id);
+        localStorage.setItem('apiKey', response.data.api_key);
       }
       
+      console.log('Login successful');
       return response.data;
     } catch (error) {
-      console.error('Login error details:', error.response?.data || error.message);
+      console.error('Login error:', error.response?.data || error.message);
       throw error;
     }
-  },  
-  // Request magic link
-  async requestMagicLink(email, isRegistration = false) {
+  },
+
+  // Register with email and password
+// Register with email and password
+  async register({ email, password, name, industry, website }) {
     try {
-      console.log('Requesting magic link for:', email, 'isRegistration:', isRegistration);
+      console.log('Attempting registration for:', email);
       
       const formData = new URLSearchParams();
-      formData.append('email', email);
-      formData.append('is_registration', isRegistration);
+      formData.append('email', email.trim());
+      formData.append('password', password);
+      formData.append('name', name.trim());
+      formData.append('industry', industry || 'other');
+      formData.append('website', website || '');
       
-      const response = await api.post('/auth/magic-link/request', formData, {
+      const response = await api.post('/api/auth/register', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
       
-      console.log('Magic link requested successfully');
-      return response.data;
+      console.log('Registration successful, verification email sent');
+      return {
+        message: 'Registration successful! Please check your email for verification.',
+        email: email,
+        verification_required: true
+      };
     } catch (error) {
-      console.error('Error requesting magic link:', error.response?.data || error.message);
+      console.error('Registration error:', error.response?.data || error.message);
+      
+      // Extract user-friendly error message before throwing
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        const message = Array.isArray(detail) ? detail[0]?.msg || 'Registration failed' : detail;
+        
+        // Create a clean error with proper message
+        const cleanError = new Error(message);
+        cleanError.response = { ...error.response, data: { ...error.response.data, detail: message } };
+        throw cleanError;
+      }
+      
       throw error;
     }
   },
-  
-  // Verify magic link token
-  async verifyMagicLink(token) {
+
+  // Email verification
+  async verifyEmail(token) {
     try {
-      console.log('Verifying magic link token');
-      const response = await api.get(`/auth/magic-link/verify?token=${token}`);
-      console.log('Magic link verification response:', response.data);
+      console.log('Verifying email with token...');
       
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
-        localStorage.setItem('clientId', response.data.client_id);
-        console.log('Stored auth data from magic link');
-      }
+      const response = await api.get(`/api/auth/verify-email?token=${token}`);
       
+      console.log('Email verification response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error verifying magic link:', error.response?.data || error.message);
+      console.error('Email verification error:', error.response?.data || error.message);
       throw error;
     }
   },
-  
-  // Initiate Google OAuth flow
-  async initiateGoogleAuth(isRegistration = false) {
-    console.log('Initiating Google auth, isRegistration:', isRegistration);
-    // This will redirect the browser to Google's OAuth page
-    const redirectUri = `${window.location.origin}/auth/callback`;
-    // Use absolute URL with API_URL
-    window.location.href = `${API_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(redirectUri)}&is_registration=${isRegistration}`;
-    return true;
-  },
-  
-  // Handle OAuth callback
-  async handleOAuthCallback(params) {
+
+  // Google OAuth registration/login (FIXED VERSION)
+  async googleAuth(idToken, industry, website, isRegistration = false) {
     try {
-      console.log('Handling OAuth callback');
-      const response = await api.get(`/auth/oauth/callback?${new URLSearchParams(params).toString()}`);
+      console.log('Attempting Google OAuth', isRegistration ? '(registration)' : '(login)');
       
+      // Use the register endpoint for BOTH login and registration
+      // The backend already handles existing users and logs them in
+      const endpoint = '/api/auth/google/register';
+      const payload = {
+        idToken: idToken,
+        industry: industry || 'other',
+        website: website || ''
+      };
+      
+      const response = await api.post(endpoint, payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Store authentication data
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
         localStorage.setItem('clientId', response.data.client_id);
-        console.log('OAuth login successful');
+        localStorage.setItem('apiKey', response.data.api_key);
       }
       
+      console.log('Google authentication successful');
+      return response.data;
+    } catch (error) {
+      console.error('Google auth error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // FIXED: Add OAuth callback handler
+  async handleOAuthCallback(code, state) {
+    try {
+      console.log('Handling OAuth callback with code and state');
+      
+      const payload = {
+        code: code,
+        state: state || ''
+      };
+      
+      const response = await api.get('/api/auth/oauth/callback', {
+        params: payload
+      });
+      
+      // Store authentication data
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('clientId', response.data.client_id);
+        localStorage.setItem('apiKey', response.data.api_key);
+      }
+      
+      console.log('OAuth callback processed successfully');
       return response.data;
     } catch (error) {
       console.error('OAuth callback error:', error.response?.data || error.message);
       throw error;
     }
   },
-  
-  // Register with email and password
-  async register(userData) {
+
+  // Get current client information
+  async getCurrentClient() {
     try {
-      console.log('Registering user with unified method:', userData.email);
-      // Format data for API
-      const formData = new URLSearchParams();
-      formData.append('email', userData.email);
-      formData.append('password', userData.password);
-      
-      // Optional fields - only include if they have values
-      if (userData.name) formData.append('name', userData.name);
-      if (userData.industry) formData.append('industry', userData.industry);
-      if (userData.website) formData.append('website', userData.website);
-      
-      // Use the correct path - fix URL to match backend
-      const response = await api.post('/auth/register', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-      
-      // Store auth tokens if they're in the response
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
-        localStorage.setItem('clientId', response.data.client_id);
-        console.log('Registration successful, stored auth data');
-      }
-      
+      // Use /api/client instead of /api/auth/me
+      const response = await api.get('/api/client');
       return response.data;
     } catch (error) {
-      console.error('Registration error:', error.response?.data || error.message);
+      console.error('Get current client error:', error.response?.data || error.message);
       throw error;
     }
   },
 
-  async verifyPasswordReset(token, newPassword) {
+  // Password reset request
+  async requestPasswordReset(email) {
     try {
-      console.log('Verifying password reset token and setting new password');
-      const formData = new URLSearchParams();
-      formData.append('token', token);
-      formData.append('new_password', newPassword);
+      console.log('Requesting password reset for:', email);
       
-      const response = await api.post('/auth/password-reset/verify', formData, {
+      const formData = new URLSearchParams();
+      formData.append('email', email.trim());
+      
+      const response = await api.post('/api/auth/password-reset/request', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
       
+      console.log('Password reset email sent');
+      return response.data;
+    } catch (error) {
+      console.error('Password reset request error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Reset password with token
+  async resetPassword(token, newPassword) {
+    try {
+      console.log('Resetting password with token...');
+      
+      const formData = new URLSearchParams();
+      formData.append('token', token);
+      formData.append('new_password', newPassword);
+      
+      const response = await api.post('/api/auth/password-reset/verify', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      
+      // Auto-login after password reset
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('apiKey', response.data.api_key);
         localStorage.setItem('clientId', response.data.client_id);
-        console.log('Password reset successful, stored auth data');
+        localStorage.setItem('apiKey', response.data.api_key);
       }
       
+      console.log('Password reset successful');
       return response.data;
     } catch (error) {
-      console.error('Error verifying password reset:', error.response?.data || error.message);
+      console.error('Password reset error:', error.response?.data || error.message);
       throw error;
     }
   },
-  
-  // Get current logged-in client information
-  async getCurrentClient() {
-    try {
-      console.log('Getting current client info');
-      const response = await api.get('/client');
-      console.log('Current client info retrieved');
-      return response.data;
-    } catch (error) {
-      console.error('Error getting client info:', error.response?.data || error.message);
-      // If API call fails, we're not logged in
-      throw error;
-    }
+
+  // Check if user is authenticated
+  isAuthenticated() {
+    const token = localStorage.getItem('token');
+    const apiKey = localStorage.getItem('apiKey');
+    return !!(token || apiKey);
   },
-  
+
   // Logout
   logout() {
-    console.log('Logging out');
+    console.log('Logging out...');
     localStorage.removeItem('token');
     localStorage.removeItem('apiKey');
     localStorage.removeItem('clientId');
-  },
-  
-  // Check if authenticated
-  isAuthenticated() {
-    return !!localStorage.getItem('token') || !!localStorage.getItem('apiKey');
   }
 };
 
