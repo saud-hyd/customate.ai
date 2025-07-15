@@ -102,27 +102,11 @@ const subscriptionService = {
    */
   changePlan: async (planType, billingCycle = 'monthly') => {
     try {
-      // For free plan downgrades, directly change
-      if (planType === 'free') {
-        const response = await api.post('/api/client/subscription/change', { 
-          plan_type: planType 
-        });
-        return response.data;
-      }
-      
-      // For paid plans, create a checkout session and redirect
-      const response = await api.post('/api/client/subscription/checkout-session', {
-        plan_type: planType,
-        billing_cycle: billingCycle,
-        success_url: `${window.location.origin}/subscription?success=true`,
-        cancel_url: `${window.location.origin}/subscription?cancelled=true`
+      // ALWAYS use /change endpoint for subscription modifications
+      // Backend will handle whether to create new or modify existing subscription
+      const response = await api.post('/api/client/subscription/change', { 
+        plan_type: planType 
       });
-      
-      // Redirect to checkout URL if available
-      if (response.data && response.data.checkout_url) {
-        window.location.href = response.data.checkout_url;
-      }
-      
       return response.data;
     } catch (error) {
       console.error('Error changing subscription plan:', error);

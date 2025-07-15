@@ -190,7 +190,7 @@ class StripeService:
                 "customer": stripe_customer_id,
                 "items": [
                     {
-                        "price": PLAN_MAPPING[plan_type]
+                        "price": PLAN_MAPPING[plan_type]["monthly"],  # Default to monthly plan
                     }
                 ],
                 "metadata": {
@@ -343,6 +343,7 @@ class StripeService:
                     "plan_type": "free",
                     "status": "active",
                     "message_limit": plan_limits["message_limit"],
+                    "storage_limit_bytes": plan_limits["storage_limit_bytes"],
                     "user_limit": plan_limits["user_limit"],
                     "expires_at": None,  # Free plan doesn't expire
                     "payment_id": None  # Clear Stripe subscription ID
@@ -373,7 +374,7 @@ class StripeService:
                     proration_behavior=proration_behavior,
                     items=[{
                         "id": stripe_subscription["items"]["data"][0].id,
-                        "price": PLAN_MAPPING[new_plan_type]
+                        "price": PLAN_MAPPING[new_plan_type]["monthly"]  # Default to monthly plan
                     }],
                     metadata={
                         "client_id": client.client_id,
@@ -393,6 +394,7 @@ class StripeService:
                 updated_sub = self.subscription_repo.update(db, db_obj=active_sub, obj_in={
                     "plan_type": new_plan_type,
                     "message_limit": plan_limits["message_limit"],
+                    "storage_limit_bytes": plan_limits["storage_limit_bytes"],
                     "user_limit": plan_limits["user_limit"],
                     "expires_at": expires_at
                 })
@@ -1055,6 +1057,7 @@ class StripeService:
                 "plan_type": plan_type,
                 "status": "active",
                 "message_limit": plan_limits["message_limit"],
+                "storage_limit_bytes": plan_limits["storage_limit_bytes"],
                 "user_limit": plan_limits["user_limit"],
                 "payment_id": subscription_data["id"],
                 "expires_at": expires_at
@@ -1114,6 +1117,7 @@ class StripeService:
             "plan_type": plan_type,
             "status": status,
             "message_limit": plan_limits["message_limit"],
+            "storage_limit_bytes": plan_limits["storage_limit_bytes"],
             "user_limit": plan_limits["user_limit"],
             "expires_at": expires_at
         })
