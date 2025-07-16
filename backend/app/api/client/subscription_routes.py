@@ -116,7 +116,7 @@ async def change_subscription_plan(
         checkout_session = await stripe_service.create_checkout_session(
             client=current_client,
             plan_type=plan_type,
-            billing_cycle="monthly",  # Default to monthly
+            billing_cycle=plan_data.billing_cycle,  # Pass billing cycle
             success_url=f"{settings.FRONTEND_URL}/subscription?session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{settings.FRONTEND_URL}/subscription?cancelled=true"
         )
@@ -127,7 +127,8 @@ async def change_subscription_plan(
             "checkout_url": checkout_session["checkout_url"],
             "session_id": checkout_session["session_id"],
             "current_plan": current_plan,
-            "target_plan": plan_type
+            "target_plan": plan_type,
+            "billing_cycle": plan_data.billing_cycle
         }
         
     except HTTPException:
