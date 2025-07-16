@@ -58,14 +58,18 @@ const SubscriptionPage = () => {
       setProcessingPlan(planType);
       setError(null);
       
-      if (planType === 'free') {
-        // Direct downgrade to free
-        await subscriptionService.changePlan(planType);
-        setSuccess('Successfully downgraded to Free plan');
+      // ✅ FIX: Handle both direct changes and checkout redirects
+      const result = await subscriptionService.changePlan(planType, billingCycle);
+      
+      // If it's a checkout redirect, the page will have already redirected
+      // This code only runs for direct plan changes (like downgrades to free)
+      if (result.action !== 'redirect_to_checkout') {
+        if (planType === 'free') {
+          setSuccess('Successfully downgraded to Free plan');
+        } else {
+          setSuccess('Subscription updated successfully');
+        }
         fetchData();
-      } else {
-        // Redirect to Stripe checkout for paid plans
-        await subscriptionService.changePlan(planType, billingCycle);
       }
     } catch (err) {
       console.error('Error changing plan:', err);

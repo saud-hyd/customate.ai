@@ -102,32 +102,26 @@ const subscriptionService = {
    */
   changePlan: async (planType, billingCycle = 'monthly') => {
     try {
-      // ALWAYS use /change endpoint for subscription modifications
-      // Backend will handle whether to create new or modify existing subscription
+      // Call the change endpoint
       const response = await api.post('/api/client/subscription/change', { 
-        plan_type: planType 
+        plan_type: planType,
+        billing_cycle: billingCycle
       });
+      
+      // ✅ FIX: Handle checkout redirect for upgrades
+      if (response.data.action === 'redirect_to_checkout') {
+        // Redirect to Stripe Checkout for payment
+        window.location.href = response.data.checkout_url;
+        return response.data; // This won't execute due to redirect
+      }
+      
+      // For other plan changes (downgrades, same tier), return normal response
       return response.data;
     } catch (error) {
       console.error('Error changing subscription plan:', error);
       throw error;
     }
   },
-
-  /**
-   * Upgrade to a specific plan with billing cycle (used by plan intent)
-   * @param {string} planType - The plan type
-   * @param {string} billingCycle - The billing cycle
-   * @returns {Promise<Object>} Checkout session data
-   */
-  upgradeWithIntent: async (planType, billingCycle = 'monthly') => {
-    try {
-      return await subscriptionService.changePlan(planType, billingCycle);
-    } catch (error) {
-      console.error('Error upgrading with intent:', error);
-      throw error;
-    }
-  },  
 
   /**
    * Get subscription limits and usage

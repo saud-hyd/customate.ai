@@ -754,48 +754,41 @@ class StripeService:
         self, 
         client: Client, 
         plan_type: str, 
-        billing_cycle: str = "monthly",  # Add billing_cycle parameter
+        billing_cycle: str = "monthly",
         success_url: str = None, 
         cancel_url: str = None
     ) -> Dict[str, Any]:
         """
-        Create a Stripe Checkout session for subscription.
-        
-        Args:
-            client: Client entity
-            plan_type: Plan type (basic, standard, professional)
-            billing_cycle: Billing cycle (monthly, annual)
-            success_url: URL to redirect on success
-            cancel_url: URL to redirect on cancel
+        Create checkout session - handle currency conflicts by using fresh customers.
         """
         try:
-            # Ensure customer exists
-            stripe_customer_id = await self._ensure_customer_id(client)
-            
-            # Get the correct price ID based on plan and billing cycle
-            if plan_type not in PLAN_MAPPING:
-                raise ValueError(f"Invalid plan type: {plan_type}")
-            
-            if billing_cycle not in PLAN_MAPPING[plan_type]:
-                raise ValueError(f"Invalid billing cycle: {billing_cycle}")
-                
             price_id = PLAN_MAPPING[plan_type][billing_cycle]
             
-            # Create checkout session
+            # ✅ WORKING SOLUTION: Always create fresh checkout without customer conflicts
             checkout_session = stripe.checkout.Session.create(
-                customer=stripe_customer_id,
+                # Don't specify customer - let Stripe handle customer creation
+                customer_email=client.email,  # Pre-fill email
                 payment_method_types=['card'],
                 line_items=[{
                     'price': price_id,
                     'quantity': 1,
                 }],
                 mode='subscription',
+                
+                # Essential features
+                automatic_tax={'enabled': True},
+                tax_id_collection={'enabled': True},
+                billing_address_collection='required',
+                
                 success_url=success_url or f"{settings.FRONTEND_URL}/subscription?session_id={{CHECKOUT_SESSION_ID}}",
                 cancel_url=cancel_url or f"{settings.FRONTEND_URL}/subscription?cancelled=true",
+                
+                # Critical: Pass client info in metadata
                 metadata={
                     "client_id": client.client_id,
                     "plan_type": plan_type,
-                    "billing_cycle": billing_cycle
+                    "billing_cycle": billing_cycle,
+                    "original_email": client.email
                 }
             )
             
@@ -816,6 +809,92 @@ class StripeService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to create checkout session: {str(e)}"
             )
+            
+    async def handle_checkout_completed(self, session_data: Dict[str, Any], db) -> Dict[str, Any]:
+        """
+        Handle successful checkout and consolidate customer accounts.
+        """
+        try:
+            metadata = session_data.get("metadata", {})
+            client_id = metadata.get("client_id")
+            original_email = metadata.get("original_email")
+            
+            if not client_id:
+                logger.warning("No client_id in checkout session metadata")
+                return {}
+            
+            # Get the new subscription created by checkout
+            new_customer_id = session_data.get("customer")
+            new_subscription_id = session_data.get("subscription")
+            
+            if not new_customer_id or not new_subscription_id:
+                logger.error("Missing customer or subscription from checkout session")
+                return {}
+            
+            # ✅ Cancel old subscriptions from any previous customers
+            await self._cancel_old_subscriptions_for_client(client_id, original_email)
+            
+            # Update our database with new subscription info
+            subscription_repo = SubscriptionRepository()
+            
+            # Check if we already have a subscription record for this client
+            existing_sub = subscription_repo.get_active_subscription(db, client_id)
+            
+            if existing_sub:
+                # Update existing record
+                subscription_repo.update(db, db_obj=existing_sub, obj_in={
+                    "payment_id": new_subscription_id,
+                    "plan_type": metadata.get("plan_type"),
+                    "status": "active",
+                    "stripe_data": {
+                        "subscription_id": new_subscription_id,
+                        "customer_id": new_customer_id
+                    }
+                })
+            else:
+                # Create new subscription record
+                plan_limits = PLAN_LIMITS[metadata.get("plan_type", "basic")]
+                subscription_repo.create(db, obj_in={
+                    "client_id": client_id,
+                    "plan_type": metadata.get("plan_type"),
+                    "status": "active",
+                    "payment_id": new_subscription_id,
+                    "message_limit": plan_limits["message_limit"],
+                    "storage_limit_bytes": plan_limits["storage_limit_bytes"],
+                    "starts_at": datetime.utcnow(),
+                    "stripe_data": {
+                        "subscription_id": new_subscription_id,
+                        "customer_id": new_customer_id
+                    }
+                })
+            
+            logger.info(f"Successfully consolidated subscription for client {client_id}")
+            return {"status": "success", "client_id": client_id}
+            
+        except Exception as e:
+            logger.error(f"Error handling checkout completion: {str(e)}")
+            return {"status": "error", "error": str(e)}
+
+    async def _cancel_old_subscriptions_for_client(self, client_id: str, email: str):
+        """Cancel any existing subscriptions for this client."""
+        try:
+            # Find customers by email
+            customers = stripe.Customer.list(email=email, limit=10)
+            
+            for customer in customers.data:
+                # Get active subscriptions for this customer
+                subscriptions = stripe.Subscription.list(
+                    customer=customer.id,
+                    status='active'
+                )
+                
+                for subscription in subscriptions.data:
+                    # Cancel with proration
+                    stripe.Subscription.delete(subscription.id, prorate=True)
+                    logger.info(f"Cancelled old subscription {subscription.id} for client {client_id}")
+                    
+        except Exception as e:
+            logger.error(f"Error cancelling old subscriptions for {client_id}: {str(e)}")            
             
     async def create_billing_portal_session(
         self,

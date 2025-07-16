@@ -6,6 +6,7 @@ import stripe
 import logging
 
 from app.core.database.dependencies import get_db
+from app.core.config import settings
 from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client, Subscription
 from app.services.subscription.stripe_service import StripeService
@@ -24,6 +25,7 @@ router = APIRouter(prefix="/client/subscription", tags=["subscription"])
 class SubscriptionChangeRequest(BaseModel):
     """Request schema for changing subscription plan."""
     plan_type: str = Field(..., description="New plan type (free, basic, professional, enterprise)")
+    billing_cycle: str = Field(default="monthly", description="Billing cycle (monthly, annual)")
 
 class SubscriptionCancelRequest(BaseModel):
     """Request schema for cancelling subscription."""
@@ -71,19 +73,18 @@ async def change_subscription_plan(
     db: Session = Depends(get_db)
 ):
     """
-    Change subscription plan.
+    Change subscription plan - Always use Stripe Checkout for paid plans.
     """
     plan_type = plan_data.plan_type
     
     # Validate plan type
-    if plan_type not in ["free", "basic", "professional", "enterprise"]:
+    if plan_type not in ["free", "basic", "standard", "professional"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid plan type: {plan_type}"
         )
     
     try:
-        # Initialize services
         stripe_service = StripeService()
         notification_service = NotificationService()
         
@@ -95,20 +96,41 @@ async def change_subscription_plan(
             logger.warning(f"Error fetching current subscription, assuming free tier: {str(e)}")
             current_plan = "free"
         
-        # Update subscription
-        result = await stripe_service.update_subscription(db, current_client, plan_type)
+        # ✅ SIMPLE FIX: Handle downgrades to free directly
+        if plan_type == "free":
+            # Direct downgrade to free (no payment needed)
+            result = await stripe_service.update_subscription(db, current_client, plan_type)
+            
+            # Send notification about plan change
+            await notification_service.send_subscription_updated_notification(
+                db=db,
+                client_id=current_client.client_id,
+                new_plan=plan_type,
+                previous_plan=current_plan
+            )
+            
+            return result
         
-        # Send notification about plan change
-        await notification_service.send_subscription_updated_notification(
-            db=db,
-            client_id=current_client.client_id,
-            new_plan=plan_type,
-            previous_plan=current_plan
+        # ✅ SIMPLE FIX: For ALL paid plans, use Stripe Checkout
+        # This handles currency, taxes, and payment collection automatically
+        checkout_session = await stripe_service.create_checkout_session(
+            client=current_client,
+            plan_type=plan_type,
+            billing_cycle="monthly",  # Default to monthly
+            success_url=f"{settings.FRONTEND_URL}/subscription?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.FRONTEND_URL}/subscription?cancelled=true"
         )
         
-        return result
+        # Return checkout URL for redirect
+        return {
+            "action": "redirect_to_checkout",
+            "checkout_url": checkout_session["checkout_url"],
+            "session_id": checkout_session["session_id"],
+            "current_plan": current_plan,
+            "target_plan": plan_type
+        }
+        
     except HTTPException:
-        # Re-raise HTTP exceptions
         raise
     except Exception as e:
         logger.exception(f"Error changing subscription plan: {str(e)}")
@@ -269,45 +291,30 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     """
     Handle Stripe webhook events.
     """
-    # Get Stripe webhook signature
-    signature = request.headers.get("stripe-signature")
-    if not signature:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing stripe-signature header"
-        )
-    
-    # Get the raw body
-    body = await request.body()
-    
     try:
-        # Verify the event with Stripe
+        payload = await request.body()
+        sig_header = request.headers.get('stripe-signature')
+        
         event = stripe.Webhook.construct_event(
-            payload=body,
-            sig_header=signature,
-            secret=StripeService.WEBHOOK_SECRET
+            payload, sig_header, stripe_service.WEBHOOK_SECRET
         )
         
-        # Process the verified event
-        event_data = event.get("data", {})
-        event_type = event.get("type", "")
+        # ✅ Handle successful checkout
+        if event['type'] == 'checkout.session.completed':
+            await stripe_service.handle_checkout_completed(event['data']['object'], db)
         
-        logger.info(f"Received Stripe webhook: {event_type}")
+        # Handle subscription events
+        elif event['type'] in ['invoice.payment_succeeded', 'customer.subscription.updated']:
+            await stripe_service.handle_webhook_event(event['data']['object'], db)
         
-        # Process the event with the Stripe service
-        result = await stripe_service.handle_webhook_event(event, db)
+        return {"status": "success"}
         
-        return {"status": "success", "event_type": event_type}
-        
+    except ValueError as e:
+        logger.error(f"Invalid payload: {e}")
+        raise HTTPException(status_code=400, detail="Invalid payload")
     except stripe.error.SignatureVerificationError as e:
-        logger.error(f"Stripe webhook signature verification failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid signature"
-        )
+        logger.error(f"Invalid signature: {e}")
+        raise HTTPException(status_code=400, detail="Invalid signature")
     except Exception as e:
-        logger.error(f"Error processing Stripe webhook: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error processing webhook: {str(e)}"
-        )
+        logger.error(f"Webhook error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Webhook error")
