@@ -167,25 +167,25 @@ class UsageTracker:
         """Update storage usage calculations - keeping existing working implementation."""
         try:
             # Calculate total storage from all sources
-            from app.domain.knowledge.entities import KnowledgeItem, DocumentSource
+            from app.domain.knowledge.entities import KnowledgeItem, DocumentSource, KnowledgeCollection
             from app.domain.client.entities import CrawledContent
-            from app.domain.knowledge.entities import Document
             from sqlalchemy import func
             
-            # Get document storage
+            # Get document storage - FIXED: correct field name and entity
             document_bytes = db.query(func.coalesce(func.sum(DocumentSource.file_size), 0))\
                 .filter(DocumentSource.client_id == client_id)\
                 .scalar() or 0
             
-            # Get knowledge base storage (embedding size estimation)
+            # Get knowledge base storage - FIXED: proper join through collection
             kb_items = db.query(func.count(KnowledgeItem.id))\
-                .filter(KnowledgeItem.client_id == client_id)\
+                .join(KnowledgeCollection, KnowledgeItem.collection_id == KnowledgeCollection.collection_id)\
+                .filter(KnowledgeCollection.client_id == client_id)\
                 .scalar() or 0
             
             # Estimate embedding storage (1536 dimensions * 4 bytes per float)
             kb_bytes = kb_items * 1536 * 4
             
-            # Get crawled content storage
+            # Get crawled content storage - this should be correct already
             crawled_bytes = db.query(func.coalesce(func.sum(func.length(CrawledContent.content)), 0))\
                 .filter(CrawledContent.client_id == client_id)\
                 .scalar() or 0

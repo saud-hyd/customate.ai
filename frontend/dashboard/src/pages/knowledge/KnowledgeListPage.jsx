@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import knowledgeService from '../../services/knowledgeService';
+import subscriptionService from '../../services/subscriptionService';
 import { useToast } from '../../context/ToastContext';
 import {
   MagnifyingGlassIcon,
@@ -120,53 +121,10 @@ const KnowledgeListPage = () => {
       setStorageLoading(true);
       setStorageError(null);
       
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      // ✅ Use the service method instead of direct fetch
+      const data = await subscriptionService.getStorageBreakdown();
       
-      if (!token) {
-        console.warn('No auth token found for storage request');
-        setStorageError('Authentication required');
-        return;
-      }
-      
-      // FIXED: Use correct endpoint - remove the wrong /api/client/storage call
-      console.log('📊 Fetching storage from: /api/analytics/storage');
-      
-      const response = await fetch('/api/analytics/storage', {  // ✅ Correct endpoint
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log('Storage response status:', response.status);
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          setStorageError('Unauthorized - please login again');
-          return;
-        }
-        if (response.status === 404) {
-          setStorageError('Storage endpoint not found');
-          return;
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      
-      console.log('✅ Real storage data with UsageTracker:', data);
-      console.log(`📊 Storage: ${data.used_mb}MB / ${data.limit_mb}MB (${data.percentage.toFixed(1)}%)`);
-      console.log(`📁 Documents: ${(data.document_bytes / (1024*1024)).toFixed(2)}MB`);
-      console.log(`🌐 Crawled: ${(data.crawled_content_bytes / (1024*1024)).toFixed(2)}MB`);
-      console.log(`🧠 Knowledge: ${(data.knowledge_bytes / (1024*1024)).toFixed(2)}MB`);
-      console.log(`📋 Plan: ${data.limit_mb}MB limit`);
-      
+      console.log('✅ Storage data from service:', data);
       setStorageData(data);
       
     } catch (error) {
