@@ -169,11 +169,12 @@ class UsageTracker:
             # Calculate total storage from all sources
             from app.domain.knowledge.entities import KnowledgeItem, DocumentSource
             from app.domain.client.entities import CrawledContent
+            from app.domain.knowledge.entities import Document
             from sqlalchemy import func
             
             # Get document storage
-            document_bytes = db.query(func.coalesce(func.sum(DocumentSource.file_size_bytes), 0))\
-                .filter(Document.client_id == client_id)\
+            document_bytes = db.query(func.coalesce(func.sum(DocumentSource.file_size), 0))\
+                .filter(DocumentSource.client_id == client_id)\
                 .scalar() or 0
             
             # Get knowledge base storage (embedding size estimation)

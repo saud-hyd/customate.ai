@@ -329,7 +329,7 @@ const DashboardPage = () => {
             <div className="flex justify-between">
               <h3 className="text-sm font-medium text-gray-500">Storage</h3>
               <span className="text-sm text-gray-500">
-                {formatBytes(storageStats.total_bytes || 0)} / {formatBytes(storageStats.limit_bytes || 0)}
+                {formatBytes(subscriptionData.limits?.storage?.used || 0)} / {formatBytes(subscriptionData.limits?.storage?.limit || 0)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">

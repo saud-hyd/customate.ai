@@ -19,7 +19,31 @@ const StorageUsageDisplay = ({ onRefresh, showRefreshButton = true, compact = fa
   const fetchStorageInfo = async () => {
     try {
       setLoading(true);
-      const data = await subscriptionService.getSubscriptionLimits();
+      // Try subscription limits first (for dashboard), then storage analytics (for knowledge base)
+      let data;
+      try {
+        const subscriptionData = await subscriptionService.getSubscriptionLimits();
+        // Check if we have storage data in limits
+        if (subscriptionData.limits && subscriptionData.limits.storage) {
+          data = {
+            total_bytes: subscriptionData.limits.storage.used,
+            used_bytes: subscriptionData.limits.storage.used,
+            limit_bytes: subscriptionData.limits.storage.limit,
+            percentage: subscriptionData.limits.storage.percentage,
+            // If available, include breakdown
+            document_bytes: subscriptionData.limits.storage.document_bytes || 0,
+            knowledge_bytes: subscriptionData.limits.storage.knowledge_bytes || 0,
+            crawled_content_bytes: subscriptionData.limits.storage.crawled_content_bytes || 0
+          };
+        } else {
+          // Fallback to direct storage endpoint
+          data = await subscriptionService.getStorageBreakdown();
+        }
+      } catch (err) {
+        // Fallback to storage analytics endpoint
+        data = await subscriptionService.getStorageBreakdown();
+      }
+      
       setStorageInfo(data);
       if (onRefresh) onRefresh(data);
     } catch (err) {
@@ -61,7 +85,7 @@ const StorageUsageDisplay = ({ onRefresh, showRefreshButton = true, compact = fa
   }
 
   // If we don't have storage info
-  if (!storageInfo || !storageInfo.storage) {
+  if (!storageInfo) {
     return (
       <div className={`text-sm text-gray-500 ${className}`}>
         Storage information not available
@@ -74,10 +98,13 @@ const StorageUsageDisplay = ({ onRefresh, showRefreshButton = true, compact = fa
     );
   }
 
-  const { used_bytes, limit_bytes, percentage } = storageInfo.storage;
+  // FIXED: Handle both data structures (from different endpoints)
+  const used_bytes = storageInfo.total_bytes || storageInfo.used_bytes || 0;
+  const limit_bytes = storageInfo.limit_bytes || 0;
+  const percentage = storageInfo.percentage || 0;
+  
   const isAtLimit = percentage >= 100;
   const isNearLimit = percentage >= 90 && percentage < 100;
-  const isWithinLimit = percentage < 90;
 
   // For compact display, return a simplified version
   if (compact) {

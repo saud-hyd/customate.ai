@@ -333,15 +333,15 @@ class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[s
         plan_type = obj_in.get("plan_type", "free")
         if "storage_limit_bytes" not in obj_in:
             if plan_type == "free":
-                obj_in["storage_limit_bytes"] = 52428800  # 50 MB
+                obj_in["storage_limit_bytes"] = 524288
             elif plan_type == "basic":
-                obj_in["storage_limit_bytes"] = 524288000  # 500 MB
+                obj_in["storage_limit_bytes"] = 5242880  
             elif plan_type == "professional":
-                obj_in["storage_limit_bytes"] = 2147483648  # 2 GB
+                obj_in["storage_limit_bytes"] = 26214400
             elif plan_type == "enterprise":
-                obj_in["storage_limit_bytes"] = 10737418240  # 10 GB
+                obj_in["storage_limit_bytes"] = 36700160
             else:
-                obj_in["storage_limit_bytes"] = 52428800  # Default 50 MB
+                obj_in["storage_limit_bytes"] = 524288  
         
         # Create the new subscription
         db_obj = self.model(**obj_in)

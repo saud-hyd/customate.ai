@@ -138,6 +138,20 @@ const subscriptionService = {
   },
 
   /**
+   * Get detailed storage breakdown (ADD THIS NEW METHOD)
+   * @returns {Promise<Object>} Storage breakdown data with document/knowledge/crawled details
+   */
+  getStorageBreakdown: async () => {
+    try {
+      const response = await api.get('/api/analytics/storage');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching storage breakdown:', error);
+      throw error;
+    }
+  },  
+
+  /**
    * Get payment methods
    * @returns {Promise<Array>} List of payment methods
    */

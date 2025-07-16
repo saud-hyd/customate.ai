@@ -647,8 +647,6 @@ async def sync_subscription_usage(
             detail=f"Failed to synchronize subscription usage: {str(e)}"
         )
         
-# REPLACE the incomplete storage function in backend/app/api/analytics/routes.py with this:
-
 @router.get("/storage", response_model=Dict[str, Any])
 async def get_storage_statistics(
     current_client: Client = Depends(get_current_client),
@@ -674,7 +672,9 @@ async def get_storage_statistics(
                 "knowledge_bytes": 0,
                 "crawled_content_bytes": 0,
                 "percentage": 0,
-                "limit_bytes": 524288  # 500 KB default
+                "limit_bytes": 524288,  # 500 KB default
+                "limit_mb": 0.5,
+                "used_mb": 0
             }
         
         # Get subscription to determine limit

@@ -128,9 +128,10 @@ const KnowledgeListPage = () => {
         return;
       }
       
-      console.log('📊 Fetching storage from: /api/client/storage');
+      // FIXED: Use correct endpoint - remove the wrong /api/client/storage call
+      console.log('📊 Fetching storage from: /api/analytics/storage');
       
-      const response = await fetch('/api/client/storage', {
+      const response = await fetch('/api/analytics/storage', {  // ✅ Correct endpoint
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
