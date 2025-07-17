@@ -6,7 +6,6 @@ import clientService from '../../services/clientService';
 import { formatNumber, formatPercentage, formatBytes } from '../../utils/formatters';
 import { ArrowUpIcon, ArrowDownIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 import { ExclamationTriangleIcon, CreditCardIcon, DocumentTextIcon, BookOpenIcon } from '@heroicons/react/24/outline';
-import PlanIntentBanner from '../../components/common/PlanIntentBanner';
 
 const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -148,8 +147,6 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Plan Intent Banner */}
-      <PlanIntentBanner />
       {/* Page header with refresh button */}
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
         <div className="flex justify-between items-center">
@@ -329,7 +326,7 @@ const DashboardPage = () => {
             <div className="flex justify-between">
               <h3 className="text-sm font-medium text-gray-500">Storage</h3>
               <span className="text-sm text-gray-500">
-                {formatBytes(subscriptionData.limits?.storage?.used || 0)} / {formatBytes(subscriptionData.limits?.storage?.limit || 0)}
+                {formatBytes(storageStats.total_bytes || 0)} / {formatBytes(storageStats.limit_bytes || 0)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">

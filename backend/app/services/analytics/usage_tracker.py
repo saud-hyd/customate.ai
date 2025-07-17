@@ -163,35 +163,54 @@ class UsageTracker:
         except Exception as e:
             logger.exception(f"Error tracking API request: {str(e)}")
 
+    # File: backend/app/services/analytics/usage_tracker.py
+    # Replace the entire _update_storage_usage method (lines ~200-260)
+
+    # File: backend/app/services/analytics/usage_tracker.py
+    # Replace the entire _update_storage_usage method (lines ~200-260)
+
     def _update_storage_usage(self, db: Session, client_id: str) -> None:
-        """Update storage usage calculations - keeping existing working implementation."""
+        """Update storage usage calculations with ALL BUGS FIXED."""
         try:
-            # Calculate total storage from all sources
+            # Import all required entities with CORRECT paths
             from app.domain.knowledge.entities import KnowledgeItem, DocumentSource, KnowledgeCollection
-            from app.domain.client.entities import CrawledContent
+            from app.domain.knowledge.crawl_entities import CrawledPage
             from sqlalchemy import func
             
-            # Get document storage - FIXED: correct field name and entity
+            # ✅ FIXED: Get document storage using correct column name and entity
             document_bytes = db.query(func.coalesce(func.sum(DocumentSource.file_size), 0))\
                 .filter(DocumentSource.client_id == client_id)\
                 .scalar() or 0
             
-            # Get knowledge base storage - FIXED: proper join through collection
-            kb_items = db.query(func.count(KnowledgeItem.id))\
+            # ✅ FIXED: Get knowledge base storage with proper join
+            kb_items_count = db.query(func.count(KnowledgeItem.id))\
+                .join(KnowledgeCollection, KnowledgeItem.collection_id == KnowledgeCollection.collection_id)\
+                .filter(KnowledgeCollection.client_id == client_id)\
+                .scalar() or 0
+            
+            # ✅ FIXED: Get actual content size from knowledge items (includes both documents and crawled content)
+            kb_content_bytes = db.query(func.coalesce(func.sum(func.length(KnowledgeItem.content)), 0))\
                 .join(KnowledgeCollection, KnowledgeItem.collection_id == KnowledgeCollection.collection_id)\
                 .filter(KnowledgeCollection.client_id == client_id)\
                 .scalar() or 0
             
             # Estimate embedding storage (1536 dimensions * 4 bytes per float)
-            kb_bytes = kb_items * 1536 * 4
+            kb_embedding_bytes = kb_items_count * 1536 * 4
             
-            # Get crawled content storage - this should be correct already
-            crawled_bytes = db.query(func.coalesce(func.sum(func.length(CrawledContent.content)), 0))\
-                .filter(CrawledContent.client_id == client_id)\
+            # ✅ FIXED: Get crawled content size (items without source documents)
+            crawled_content_bytes = db.query(func.coalesce(func.sum(func.length(KnowledgeItem.content)), 0))\
+                .join(KnowledgeCollection, KnowledgeItem.collection_id == KnowledgeCollection.collection_id)\
+                .filter(
+                    KnowledgeCollection.client_id == client_id,
+                    KnowledgeItem.source_document_id.is_(None)  # Only crawled content (no source document)
+                )\
                 .scalar() or 0
             
-            # Calculate total
-            total_storage_bytes = document_bytes + kb_bytes + crawled_bytes
+            # Calculate total (document files + knowledge content + embeddings)
+            total_storage_bytes = document_bytes + kb_content_bytes + kb_embedding_bytes
+            
+            # Add logging to debug the calculation
+            logger.info(f"Storage calculation for client {client_id}: documents={document_bytes}, kb_content={kb_content_bytes}, kb_embeddings={kb_embedding_bytes}, crawled={crawled_content_bytes}, total={total_storage_bytes}")
             
             # Update or create storage usage record
             storage_usage = self.storage_repo.get_latest(db, client_id)
@@ -201,16 +220,16 @@ class UsageTracker:
                     "client_id": client_id,
                     "total_bytes": total_storage_bytes,
                     "document_bytes": document_bytes,
-                    "knowledge_bytes": kb_bytes,
-                    "crawled_content_bytes": crawled_bytes,
+                    "knowledge_bytes": kb_content_bytes + kb_embedding_bytes,
+                    "crawled_content_bytes": crawled_content_bytes,
                     "recorded_at": datetime.utcnow()
                 })
             else:
                 self.storage_repo.update(db, db_obj=storage_usage, obj_in={
                     "total_bytes": total_storage_bytes,
                     "document_bytes": document_bytes,
-                    "knowledge_bytes": kb_bytes,
-                    "crawled_content_bytes": crawled_bytes,
+                    "knowledge_bytes": kb_content_bytes + kb_embedding_bytes,
+                    "crawled_content_bytes": crawled_content_bytes,
                     "recorded_at": datetime.utcnow()
                 })
             
@@ -225,7 +244,8 @@ class UsageTracker:
                 })
             
         except Exception as e:
-            logger.exception(f"Error updating storage usage: {str(e)}")
+            logger.exception(f"Error updating storage usage for client {client_id}: {str(e)}")
+            # Don't re-raise to avoid breaking the upload flow
 
     def check_subscription_limits(self, db: Session, client_id: str) -> Dict[str, Any]:
         """Check if client is within subscription limits for all resources."""
