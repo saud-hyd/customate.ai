@@ -1,357 +1,408 @@
 // frontend/dashboard/src/components/integrations/AddIntegrationModal.jsx
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+import integrationService from '../../services/integrationService';
 
-const AddIntegrationModal = ({ isOpen, onClose, selectedProvider, availableProviders, onSubmit }) => {
-  const [provider, setProvider] = useState('');
-  const [name, setName] = useState('');
-  const [apiEndpoint, setApiEndpoint] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
-  const [portalId, setPortalId] = useState('');
-  const [clientId, setClientId] = useState('');
-  const [clientSecret, setClientSecret] = useState('');
+const AddIntegrationModal = ({ provider, onSubmit, onClose }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    provider: provider.id
+  });
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Provider-specific required fields
-  const providerFields = {
-    zendesk: ['api_endpoint', 'api_key'],
-    shopify: ['api_endpoint', 'api_key', 'api_secret'],
-    salesforce: ['api_endpoint', 'api_key', 'client_id', 'client_secret'],
-    slack: ['api_key'],
-    hubspot: ['api_key', 'portal_id']
+  const [loading, setLoading] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionTestResult, setConnectionTestResult] = useState(null);
+
+  // Initialize form data with provider-specific fields
+  useEffect(() => {
+    const initialData = {
+      name: `${provider.name} Integration`,
+      provider: provider.id
+    };
+
+    // Initialize all required fields
+    if (provider.fields) {
+      provider.fields.forEach(field => {
+        initialData[field.name] = '';
+      });
+    }
+
+    setFormData(initialData);
+  }, [provider]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+
+    // Clear connection test result when credentials change
+    if (['store_domain', 'access_token', 'api_key', 'api_secret', 'email', 'client_id', 'client_secret'].includes(name)) {
+      setConnectionTestResult(null);
+    }
   };
-  
-  // When the modal opens with a selected provider, set that provider
-  useEffect(() => {
-    if (selectedProvider) {
-      setProvider(selectedProvider.id);
-      setName(selectedProvider.name || `${selectedProvider.name} Integration`);
-    }
-  }, [selectedProvider, isOpen]);
-  
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setTimeout(() => {
-        setProvider('');
-        setName('');
-        setApiEndpoint('');
-        setApiKey('');
-        setApiSecret('');
-        setPortalId('');
-        setClientId('');
-        setClientSecret('');
-        setErrors({});
-        setIsSubmitting(false);
-      }, 300);
-    }
-  }, [isOpen]);
-  
+
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!provider) {
-      newErrors.provider = 'Provider is required';
+
+    // Validate name
+    if (!formData.name.trim()) {
+      newErrors.name = 'Integration name is required';
     }
-    
-    if (!name) {
-      newErrors.name = 'Name is required';
+
+    // Validate provider-specific fields
+    if (provider.fields) {
+      provider.fields.forEach(field => {
+        if (field.required && !formData[field.name]?.trim()) {
+          newErrors[field.name] = `${field.label} is required`;
+        }
+
+        // Additional validation based on field type
+        if (formData[field.name] && field.type === 'email') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(formData[field.name])) {
+            newErrors[field.name] = 'Please enter a valid email address';
+          }
+        }
+
+        // Shopify-specific validation
+        if (provider.id === 'shopify') {
+          if (field.name === 'store_domain' && formData[field.name]) {
+            const domain = formData[field.name].trim();
+            if (!domain.includes('.myshopify.com') && !domain.includes('.')) {
+              // Auto-append .myshopify.com if just store name is provided
+              setFormData(prev => ({
+                ...prev,
+                store_domain: `${domain}.myshopify.com`
+              }));
+            }
+          }
+
+          if (field.name === 'access_token' && formData[field.name]) {
+            const token = formData[field.name].trim();
+            if (!token.startsWith('shpat_')) {
+              newErrors[field.name] = 'Admin API tokens should start with "shpat_"';
+            }
+          }
+        }
+      });
     }
-    
-    // Find the selected provider object and check required fields
-    const providerRequiredFields = providerFields[provider] || [];
-    
-    if (providerRequiredFields.includes('api_endpoint') && !apiEndpoint) {
-      newErrors.apiEndpoint = 'API Endpoint is required';
-    }
-    
-    if (providerRequiredFields.includes('api_key') && !apiKey) {
-      newErrors.apiKey = 'API Key is required';
-    }
-    
-    if (providerRequiredFields.includes('api_secret') && !apiSecret) {
-      newErrors.apiSecret = 'API Secret is required';
-    }
-    
-    if (providerRequiredFields.includes('portal_id') && !portalId) {
-      newErrors.portalId = 'Portal ID is required';
-    } else if (provider === 'hubspot' && portalId && !/^\d+$/.test(portalId)) {
-      newErrors.portalId = 'Portal ID should be a number';
-    }
-    
-    if (providerRequiredFields.includes('client_id') && !clientId) {
-      newErrors.clientId = 'Client ID is required';
-    }
-    
-    if (providerRequiredFields.includes('client_secret') && !clientSecret) {
-      newErrors.clientSecret = 'Client Secret is required';
-    }
-    
-    // Provider-specific validations
-    if (provider === 'zendesk' && apiEndpoint && !apiEndpoint.includes('zendesk.com')) {
-      newErrors.apiEndpoint = 'Please enter a valid Zendesk domain (e.g., yourdomain.zendesk.com)';
-    }
-    
-    if (provider === 'shopify' && apiEndpoint && !apiEndpoint.includes('myshopify.com')) {
-      newErrors.apiEndpoint = 'Please enter a valid Shopify store URL (e.g., your-store.myshopify.com)';
-    }
-    
-    return newErrors;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    const formErrors = validateForm();
-    
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+
+  const handleTestConnection = async () => {
+    if (!validateForm()) {
+      toast.error('Please fix the errors below before testing connection');
       return;
     }
-    
-    setIsSubmitting(true);
-    
-    // Create integration data
-    const formData = {
-      provider,
-      name,
-      api_endpoint: apiEndpoint,
-      api_key: apiKey,
-      api_secret: apiSecret,
-      portal_id: portalId,
-      client_id: clientId,
-      client_secret: clientSecret
-    };
-    
-    onSubmit(formData);
+
+    setTestingConnection(true);
+    setConnectionTestResult(null);
+
+    try {
+      const testData = {
+        provider: provider.id,
+        credentials: {},
+        config: {}
+      };
+
+      // Map form data to credentials based on provider
+      if (provider.id === 'shopify') {
+        testData.credentials = {
+          store_domain: formData.store_domain,
+          access_token: formData.access_token
+        };
+        testData.config = {
+          endpoint_url: formData.store_domain
+        };
+      } else if (provider.id === 'zendesk') {
+        testData.credentials = {
+          subdomain: formData.subdomain,
+          api_key: formData.api_key,
+          email: formData.email
+        };
+        testData.config = {
+          endpoint_url: formData.subdomain
+        };
+      } else if (provider.id === 'salesforce') {
+        testData.credentials = {
+          instance_url: formData.instance_url,
+          client_id: formData.client_id,
+          client_secret: formData.client_secret
+        };
+        testData.config = {
+          endpoint_url: formData.instance_url
+        };
+      }
+
+      const result = await integrationService.testConnection(testData);
+
+      if (result.success) {
+        setConnectionTestResult({
+          success: true,
+          message: result.message,
+          details: result.details
+        });
+        toast.success('Connection test successful!');
+      } else {
+        setConnectionTestResult({
+          success: false,
+          message: result.message,
+          status_code: result.status_code
+        });
+        toast.error(`Connection test failed: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Connection test error:', error);
+      const errorMessage = integrationService.formatError(error, 'Connection test failed');
+      setConnectionTestResult({
+        success: false,
+        message: errorMessage
+      });
+      toast.error(errorMessage);
+    } finally {
+      setTestingConnection(false);
+    }
   };
-  
-  if (!isOpen) return null;
-  
-  // Find the selected provider object
-  const selectedProviderObj = availableProviders.find(p => p.id === provider);
-  
-  // Get the list of required fields for the selected provider
-  const requiredFields = selectedProviderObj ? providerFields[selectedProviderObj.id] || [] : [];
-  
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error('Please fix the errors below');
+      return;
+    }
+
+    // Require successful connection test before allowing creation
+    if (!connectionTestResult || !connectionTestResult.success) {
+      toast.error('Please test the connection successfully before adding the integration');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await onSubmit(formData);
+      if (!result.success) {
+        // Error already handled in parent component
+        return;
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderField = (field) => {
+    const fieldError = errors[field.name];
+    const fieldValue = formData[field.name] || '';
+
+    return (
+      <div key={field.name}>
+        <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </label>
         
-        {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form onSubmit={handleSubmit}>
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                  {selectedProvider ? `Connect to ${selectedProvider.name}` : 'Add Integration'}
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Connect to an external service to enhance your chatbot with additional data.
-                </p>
+        <input
+          type={field.type || 'text'}
+          id={field.name}
+          name={field.name}
+          value={fieldValue}
+          onChange={handleInputChange}
+          placeholder={field.placeholder}
+          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${
+            fieldError ? 'border-red-300' : ''
+          }`}
+          required={field.required}
+        />
+        
+        {field.help && (
+          <p className="mt-1 text-xs text-gray-500">{field.help}</p>
+        )}
+        
+        {fieldError && (
+          <p className="mt-1 text-sm text-red-600">{fieldError}</p>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">
+                Connect to {provider.name}
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {provider.description}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <span className="sr-only">Close</span>
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Setup Instructions */}
+          {provider.setup_instructions && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-md">
+              <h4 className="text-sm font-medium text-blue-800 mb-2">Setup Instructions:</h4>
+              <ol className="text-sm text-blue-700 space-y-1">
+                {provider.setup_instructions.map((instruction, index) => (
+                  <li key={index} className="flex">
+                    <span className="mr-2">{index + 1}.</span>
+                    <span>{instruction}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Integration Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Integration Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${
+                  errors.name ? 'border-red-300' : ''
+                }`}
+                required
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
+            </div>
+
+            {/* Provider-specific Fields */}
+            {provider.fields && provider.fields.map(renderField)}
+
+            {/* Connection Test Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Connection Test</h4>
+                  <p className="text-xs text-gray-500">Test your credentials before adding the integration</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={testingConnection}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+                >
+                  {testingConnection ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Testing...
+                    </>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </button>
               </div>
-              
-              <div className="mt-6 space-y-4">
-                {/* Provider Select - Only show if not pre-selected */}
-                {!selectedProvider ? (
-                  <div>
-                    <label htmlFor="provider" className="block text-sm font-medium text-gray-700">
-                      Provider
-                    </label>
-                    <select
-                      id="provider"
-                      value={provider}
-                      onChange={(e) => setProvider(e.target.value)}
-                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md ${errors.provider ? 'border-red-300' : ''}`}
-                    >
-                      <option value="">Select a provider</option>
-                      {availableProviders.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.provider && (
-                      <p className="mt-1 text-sm text-red-600">{errors.provider}</p>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Provider</label>
-                    <div className="mt-1 flex items-center">
-                      <input type="hidden" name="provider" value={provider} />
-                      <div className="bg-gray-100 rounded-md px-3 py-2 text-gray-700">
-                        {selectedProvider.name}
-                      </div>
+
+              {/* Connection Test Result */}
+              {connectionTestResult && (
+                <div className={`mt-3 p-3 rounded-md ${
+                  connectionTestResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                } border`}>
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      {connectionTestResult.success ? (
+                        <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <p className={`text-sm font-medium ${
+                        connectionTestResult.success ? 'text-green-800' : 'text-red-800'
+                      }`}>
+                        {connectionTestResult.success ? 'Connection Successful!' : 'Connection Failed'}
+                      </p>
+                      <p className={`text-sm ${
+                        connectionTestResult.success ? 'text-green-700' : 'text-red-700'
+                      }`}>
+                        {connectionTestResult.message}
+                      </p>
+                      {connectionTestResult.details && (
+                        <div className="mt-2 text-xs text-green-600">
+                          <p>Store: {connectionTestResult.details.shop_name}</p>
+                          {connectionTestResult.details.shop_email && (
+                            <p>Email: {connectionTestResult.details.shop_email}</p>
+                          )}
+                          {connectionTestResult.details.plan_name && (
+                            <p>Plan: {connectionTestResult.details.plan_name}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-                
-                {/* Name Input */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Integration Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.name ? 'border-red-300' : ''}`}
-                  />
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-                  )}
                 </div>
-                
-                {/* Conditional Fields based on Provider */}
-                {selectedProviderObj && (
-                  <>
-                    {/* API Endpoint Field */}
-                    {requiredFields.includes('api_endpoint') && (
-                      <div>
-                        <label htmlFor="apiEndpoint" className="block text-sm font-medium text-gray-700">
-                          API Endpoint {requiredFields.includes('api_endpoint') && '*'}
-                        </label>
-                        <input
-                          type="text"
-                          id="apiEndpoint"
-                          value={apiEndpoint}
-                          onChange={(e) => setApiEndpoint(e.target.value)}
-                          placeholder={selectedProviderObj.id === 'zendesk' 
-                            ? "https://yourdomain.zendesk.com" 
-                            : selectedProviderObj.id === 'shopify'
-                              ? "https://your-store.myshopify.com"
-                              : ""}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.apiEndpoint ? 'border-red-300' : ''}`}
-                        />
-                        {errors.apiEndpoint && (
-                          <p className="mt-1 text-sm text-red-600">{errors.apiEndpoint}</p>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* API Key Field */}
-                    {requiredFields.includes('api_key') && (
-                      <div>
-                        <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">
-                          API Key {requiredFields.includes('api_key') && '*'}
-                        </label>
-                        <input
-                          type="text"
-                          id="apiKey"
-                          value={apiKey}
-                          onChange={(e) => setApiKey(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.apiKey ? 'border-red-300' : ''}`}
-                        />
-                        {errors.apiKey && (
-                          <p className="mt-1 text-sm text-red-600">{errors.apiKey}</p>
-                        )}
-                        {selectedProviderObj.id === 'hubspot' && (
-                          <p className="mt-1 text-xs text-gray-500">Find in HubSpot → Settings → Private Apps</p>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* API Secret Field */}
-                    {requiredFields.includes('api_secret') && (
-                      <div>
-                        <label htmlFor="apiSecret" className="block text-sm font-medium text-gray-700">
-                          API Secret {requiredFields.includes('api_secret') && '*'}
-                        </label>
-                        <input
-                          type="password"
-                          id="apiSecret"
-                          value={apiSecret}
-                          onChange={(e) => setApiSecret(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.apiSecret ? 'border-red-300' : ''}`}
-                        />
-                        {errors.apiSecret && (
-                          <p className="mt-1 text-sm text-red-600">{errors.apiSecret}</p>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* HubSpot Portal ID Field */}
-                    {requiredFields.includes('portal_id') && (
-                      <div>
-                        <label htmlFor="portalId" className="block text-sm font-medium text-gray-700">
-                          Portal ID {requiredFields.includes('portal_id') && '*'}
-                        </label>
-                        <input
-                          type="text"
-                          id="portalId"
-                          value={portalId}
-                          onChange={(e) => setPortalId(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.portalId ? 'border-red-300' : ''}`}
-                        />
-                        {errors.portalId && (
-                          <p className="mt-1 text-sm text-red-600">{errors.portalId}</p>
-                        )}
-                        <p className="mt-1 text-xs text-gray-500">Find in your HubSpot URL: app.hubspot.com/reports/{'{portal_id}'}</p>
-                      </div>
-                    )}
-                    
-                    {/* Client ID Field */}
-                    {requiredFields.includes('client_id') && (
-                      <div>
-                        <label htmlFor="clientId" className="block text-sm font-medium text-gray-700">
-                          Client ID {requiredFields.includes('client_id') && '*'}
-                        </label>
-                        <input
-                          type="text"
-                          id="clientId"
-                          value={clientId}
-                          onChange={(e) => setClientId(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.clientId ? 'border-red-300' : ''}`}
-                        />
-                        {errors.clientId && (
-                          <p className="mt-1 text-sm text-red-600">{errors.clientId}</p>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Client Secret Field */}
-                    {requiredFields.includes('client_secret') && (
-                      <div>
-                        <label htmlFor="clientSecret" className="block text-sm font-medium text-gray-700">
-                          Client Secret {requiredFields.includes('client_secret') && '*'}
-                        </label>
-                        <input
-                          type="password"
-                          id="clientSecret"
-                          value={clientSecret}
-                          onChange={(e) => setClientSecret(e.target.value)}
-                          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.clientSecret ? 'border-red-300' : ''}`}
-                        />
-                        {errors.clientSecret && (
-                          <p className="mt-1 text-sm text-red-600">{errors.clientSecret}</p>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+              )}
             </div>
-            
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                {isSubmitting ? 'Connecting...' : 'Connect'}
-              </button>
+
+            {/* Form Actions */}
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
               >
                 Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !connectionTestResult?.success}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Adding...
+                  </>
+                ) : (
+                  'Add Integration'
+                )}
               </button>
             </div>
           </form>
