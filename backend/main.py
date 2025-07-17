@@ -22,6 +22,7 @@ from app.api.client import routes as client_routes
 from app.api.knowledge import routes as knowledge_routes
 from app.api.knowledge import document_routes
 from app.api.chatbot import enhanced_routes as chatbot_routes
+from app.api.chatbot import session_routes
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
 from app.api.knowledge import collection_routes
@@ -172,6 +173,7 @@ app.include_router(client_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
 app.include_router(document_routes.router, prefix="/api/knowledge/knowledge/documents")
 app.include_router(chatbot_routes.router, prefix="/api")
+app.include_router(session_routes.router, prefix="/api")
 app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
