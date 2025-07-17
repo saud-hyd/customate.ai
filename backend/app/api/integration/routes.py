@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
-from app.core.database.session import get_db
+from app.core.database.dependencies import get_db  # FIXED: Use correct import
 from app.api.auth.dependencies import get_current_client
 from app.services.integration.integration_service import IntegrationService
+from app.domain.client.entities import Client  # FIXED: Import Client type
 from app.core import logger
-
+import time
 
 router = APIRouter()
 
@@ -59,7 +60,7 @@ async def get_available_integrations(
 
 @router.get("/integrations")
 async def get_client_integrations(
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> List[Dict[str, Any]]:
     """
@@ -70,9 +71,9 @@ async def get_client_integrations(
     """
     try:
         service = IntegrationService()
-        integrations = service.get_client_integrations(db, client_id)
+        integrations = service.get_client_integrations(db, client.client_id)  # FIXED: Extract client_id
         
-        logger.info(f"Retrieved {len(integrations)} integrations for client {client_id}")
+        logger.info(f"Retrieved {len(integrations)} integrations for client {client.client_id}")
         return integrations
         
     except Exception as e:
@@ -85,7 +86,7 @@ async def get_client_integrations(
 @router.post("/integrations/test")
 async def test_integration_connection(
     request: IntegrationTestRequest,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -101,13 +102,13 @@ async def test_integration_connection(
         service = IntegrationService()
         result = service.test_integration_connection(
             db=db,
-            client_id=client_id,
+            client_id=client.client_id,  # FIXED: Extract client_id
             provider=request.provider,
             credentials=request.credentials,
             config=request.config
         )
         
-        logger.info(f"Integration test for {request.provider} - Client {client_id}: {result['success']}")
+        logger.info(f"Integration test for {request.provider} - Client {client.client_id}: {result['success']}")
         return result
         
     except Exception as e:
@@ -120,7 +121,7 @@ async def test_integration_connection(
 @router.post("/integrations")
 async def create_integration(
     request: IntegrationCreateRequest,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -130,31 +131,26 @@ async def create_integration(
         request: Integration creation request
         
     Returns:
-        Created integration details or error information
+        Created integration details
     """
     try:
         service = IntegrationService()
         result = service.create_integration(
             db=db,
-            client_id=client_id,
+            client_id=client.client_id,  # FIXED: Extract client_id
             provider=request.provider,
             name=request.name,
             credentials=request.credentials,
             config=request.config
         )
         
-        if result["success"]:
-            logger.info(f"Integration created successfully for client {client_id}: {request.provider}")
-            return result
+        if result.get("success"):
+            logger.info(f"Integration created successfully for client {client.client_id}: {request.provider}")
         else:
-            # Return the error from the service
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result["message"]
-            )
+            logger.warning(f"Integration creation failed for client {client.client_id}: {result.get('message')}")
         
-    except HTTPException:
-        raise
+        return result
+        
     except Exception as e:
         logger.exception(f"Error creating integration: {str(e)}")
         raise HTTPException(
@@ -165,11 +161,11 @@ async def create_integration(
 @router.get("/integrations/{integration_id}")
 async def get_integration(
     integration_id: str,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Get details of a specific integration.
+    Get a specific integration by ID.
     
     Args:
         integration_id: Integration ID
@@ -178,22 +174,27 @@ async def get_integration(
         Integration details
     """
     try:
-        service = IntegrationService()
-        integrations = service.get_client_integrations(db, client_id)
+        from app.repositories.integration_repository import IntegrationRepository
         
-        # Find the specific integration
-        integration = next(
-            (i for i in integrations if i["integration_id"] == integration_id), 
-            None
-        )
+        repo = IntegrationRepository()
+        integration = repo.get_by_integration_id(db, integration_id)
         
-        if not integration:
+        if not integration or integration.client_id != client.client_id:  # FIXED: Extract client_id
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found"
             )
         
-        return integration
+        return {
+            "integration_id": integration.integration_id,
+            "provider": integration.provider,
+            "name": integration.name,
+            "status": integration.status,
+            "status_message": integration.status_message,
+            "is_active": integration.is_active,
+            "created_at": integration.created_at.isoformat(),
+            "last_sync": integration.last_sync.isoformat() if integration.last_sync else None
+        }
         
     except HTTPException:
         raise
@@ -201,14 +202,14 @@ async def get_integration(
         logger.exception(f"Error getting integration: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve integration"
+            detail=f"Failed to retrieve integration: {str(e)}"
         )
 
 @router.put("/integrations/{integration_id}")
 async def update_integration(
     integration_id: str,
     request: IntegrationUpdateRequest,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -224,29 +225,23 @@ async def update_integration(
     try:
         service = IntegrationService()
         
-        # Prepare update data
-        update_data = {}
-        if request.name is not None:
-            update_data["name"] = request.name
-        if request.credentials is not None:
-            update_data["credentials"] = request.credentials
-        if request.config is not None:
-            update_data["config"] = request.config
+        # Verify ownership
+        from app.repositories.integration_repository import IntegrationRepository
+        repo = IntegrationRepository()
+        integration = repo.get_by_integration_id(db, integration_id)
         
-        result = service.update_integration(
-            db=db,
-            integration_id=integration_id,
-            update_data=update_data
-        )
-        
-        if result["success"]:
-            logger.info(f"Integration updated successfully: {integration_id}")
-            return result
-        else:
+        if not integration or integration.client_id != client.client_id:  # FIXED: Extract client_id
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result["message"]
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Integration not found"
             )
+        
+        # Update integration
+        update_data = request.dict(exclude_unset=True)
+        result = service.update_integration(db, integration_id, update_data)
+        
+        logger.info(f"Integration updated: {integration_id} for client {client.client_id}")
+        return result
         
     except HTTPException:
         raise
@@ -260,7 +255,7 @@ async def update_integration(
 @router.delete("/integrations/{integration_id}")
 async def delete_integration(
     integration_id: str,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -274,16 +269,23 @@ async def delete_integration(
     """
     try:
         service = IntegrationService()
+        
+        # Verify ownership
+        from app.repositories.integration_repository import IntegrationRepository
+        repo = IntegrationRepository()
+        integration = repo.get_by_integration_id(db, integration_id)
+        
+        if not integration or integration.client_id != client.client_id:  # FIXED: Extract client_id
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Integration not found"
+            )
+        
+        # Delete integration
         result = service.delete_integration(db, integration_id)
         
-        if result["success"]:
-            logger.info(f"Integration deleted successfully: {integration_id}")
-            return result
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result["message"]
-            )
+        logger.info(f"Integration deleted: {integration_id} for client {client.client_id}")
+        return result
         
     except HTTPException:
         raise
@@ -297,7 +299,7 @@ async def delete_integration(
 @router.post("/integrations/{integration_id}/test")
 async def test_existing_integration(
     integration_id: str,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -313,7 +315,7 @@ async def test_existing_integration(
         service = IntegrationService()
         
         # Get the integration first
-        integrations = service.get_client_integrations(db, client_id)
+        integrations = service.get_client_integrations(db, client.client_id)  # FIXED: Extract client_id
         integration = next(
             (i for i in integrations if i["integration_id"] == integration_id), 
             None
@@ -341,7 +343,7 @@ async def test_existing_integration(
         
         result = service.test_integration_connection(
             db=db,
-            client_id=client_id,
+            client_id=client.client_id,  # FIXED: Extract client_id
             provider=integration_entity.provider,
             credentials=credentials,
             config=integration_entity.config
@@ -363,7 +365,7 @@ async def test_existing_integration(
 async def sync_integration(
     integration_id: str,
     request: IntegrationSyncRequest = None,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -406,7 +408,7 @@ async def get_integration_data(
     resource_type: str,
     query: Optional[str] = None,
     limit: Optional[int] = 50,
-    client_id: str = Depends(get_current_client),
+    client: Client = Depends(get_current_client),  # FIXED: Use Client object
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -427,7 +429,7 @@ async def get_integration_data(
         repo = IntegrationRepository()
         integration = repo.get_by_integration_id(db, integration_id)
         
-        if not integration or integration.client_id != client_id:
+        if not integration or integration.client_id != client.client_id:  # FIXED: Extract client_id
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Integration not found"
@@ -459,6 +461,3 @@ async def get_integration_data(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve data: {str(e)}"
         )
-
-# Import time for sync_id generation
-import time
