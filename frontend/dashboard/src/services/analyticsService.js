@@ -64,6 +64,16 @@ const analyticsService = {
       throw error;
     }
   },
+
+  // Get API usage with improved request management - ADD THIS METHOD
+  getApiUsage: async (days = 30) => {
+    const key = analyticsService.getCacheKey('apiUsage', { days });
+    return analyticsService.requestManager(key, () => {
+      return api.get('/api/analytics/api-usage', {
+        params: { days }
+      }).then(response => response.data);
+    });
+  },
   
   // Manual refresh function
   refreshAllData: async (showToast = true) => {

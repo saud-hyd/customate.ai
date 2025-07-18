@@ -30,10 +30,16 @@ const ConversationsPage = () => {
       setLoading(true);
       setError(null);
       const data = await chatService.getConversations();
-      setConversations(data);
-      
-      // Calculate total pages
-      setTotalPages(Math.ceil(data.length / itemsPerPage));
+
+      // Sort conversations by created_at in descending order (newest first)
+      const sortedData = data.sort((a, b) => {
+        const dateA = new Date(a.created_at || '1970-01-01T00:00:00Z');
+        const dateB = new Date(b.created_at || '1970-01-01T00:00:00Z');
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      setConversations(sortedData);
+      setTotalPages(Math.ceil(sortedData.length / itemsPerPage));
     } catch (err) {
       console.error('Error fetching conversations:', err);
       setError('Failed to load conversation history. Please try again later.');

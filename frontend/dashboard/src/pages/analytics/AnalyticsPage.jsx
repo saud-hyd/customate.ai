@@ -59,37 +59,56 @@ const AnalyticsPage = () => {
       
       switch (activeTab) {
         case 'overview':
-          const overviewData = await analyticsService.getDashboardOverview();
+          // Fetch all data needed for overview page
+          const [dashboardData, overviewSubscriptionLimits, storageData] = await Promise.all([
+            analyticsService.getDashboardOverview(),
+            analyticsService.getSubscriptionLimits(), 
+            analyticsService.getStorageStatistics()
+          ]);
+          
           setAnalyticsData(prev => ({
             ...prev,
-            overview: overviewData
+            overview: {
+              ...dashboardData,
+              limits: overviewSubscriptionLimits.limits,
+              storage: storageData
+            }
           }));
           break;
           
         case 'engagement':
-          const chatData = await analyticsService.getChatPerformance(days);
+          const chatData2 = await analyticsService.getChatPerformance(days);
           setAnalyticsData(prev => ({
             ...prev,
-            chat: chatData
+            chat: chatData2
           }));
           break;
           
         case 'knowledge':
-          const knowledgeData = await analyticsService.getKnowledgeUsage(days);
+          const knowledgeData2 = await analyticsService.getKnowledgeUsage(days);
           setAnalyticsData(prev => ({
             ...prev,
-            knowledge: knowledgeData
+            knowledge: knowledgeData2
           }));
           break;
           
         case 'subscription':
-          const subscriptionData = await analyticsService.getSubscriptionUsage();
+          const [subscriptionUsage, subscriptionTabLimits, storageStats] = await Promise.all([
+            analyticsService.getSubscriptionUsage(6),
+            analyticsService.getSubscriptionLimits(),
+            analyticsService.getStorageStatistics()
+          ]);
+          
           setAnalyticsData(prev => ({
             ...prev,
-            subscription: subscriptionData
+            subscription: {
+              ...subscriptionUsage,
+              limits: subscriptionTabLimits,
+              storage: storageStats
+            }
           }));
           break;
-          
+
         case 'api':
           const apiData = await analyticsService.getApiUsage(days);
           setAnalyticsData(prev => ({
@@ -102,16 +121,19 @@ const AnalyticsPage = () => {
       setLastRefresh(new Date());
     } catch (err) {
       console.error(`Error fetching ${activeTab} data:`, err);
-      setError(`Failed to load ${activeTab} data. Please try again later.`);
+      setError(`Backend error: ${err.message || 'Unknown error'}`);
+      // NO FALLBACK DATA - just show the error
     } finally {
       setLoading(false);
     }
-  }, [activeTab, dateRange, loading]);
+  }, [activeTab, dateRange]);
 
-  // Fetch data when tab changes
+  // Add this useEffect after the fetchTabData function:
   useEffect(() => {
-    fetchTabData();
-  }, [activeTab, fetchTabData]);
+    if (dateRange.start && dateRange.end) {
+      fetchTabData();
+    }
+  }, [fetchTabData]);
 
   // Manually refresh all data
   const refreshAllData = async () => {
@@ -232,29 +254,7 @@ const AnalyticsPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="bg-white shadow-sm rounded-lg p-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Monitor your chatbot performance and usage metrics
-            </p>
-            {lastRefresh && (
-              <p className="mt-2 text-xs text-gray-500">
-                Last updated: {lastRefresh.toLocaleTimeString()}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={refreshAllData}
-            className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm"
-            disabled={loading}
-          >
-            {loading ? 'Refreshing...' : 'Refresh Data'}
-          </button>
-        </div>
-      </div>
+
 
       {/* Tabs navigation */}
       <div className="bg-white shadow-sm rounded-lg">
