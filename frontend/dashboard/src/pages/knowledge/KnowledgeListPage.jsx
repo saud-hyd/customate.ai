@@ -82,7 +82,6 @@ const KnowledgeListPage = () => {
           date: doc.created_at,
           source: 'file',
           collection: doc.collection_name || 'Default',
-          status: doc.status || 'processed'
         });
       });
       
@@ -375,24 +374,7 @@ const KnowledgeListPage = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      'processed': { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon, text: 'Processed' },
-      'processing': { color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon, text: 'Processing' },
-      'failed': { color: 'bg-red-100 text-red-800', icon: ExclamationTriangleIcon, text: 'Failed' },
-      'pending': { color: 'bg-gray-100 text-gray-800', icon: ClockIcon, text: 'Pending' }
-    };
 
-    const config = statusConfig[status] || statusConfig['pending'];
-    const Icon = config.icon;
-
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
-        <Icon className="w-3 h-3 mr-1" />
-        {config.text}
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -586,9 +568,6 @@ const KnowledgeListPage = () => {
                     Size
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date Added
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -627,9 +606,6 @@ const KnowledgeListPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatFileSize(item.size)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(item.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(item.date)}

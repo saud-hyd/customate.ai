@@ -70,8 +70,13 @@ class VectorRepository:
         # Calculate similarity for each embedding
         for embedding, item, collection in query:
             try:
-                # Parse stored vector from JSON string
-                item_vector = json.loads(embedding.vector)
+                # Vector is already a list/array - no parsing needed
+                item_vector = embedding.vector
+                
+                # Validate vector format
+                if not isinstance(item_vector, list) or len(item_vector) != len(query_vector):
+                    logger.warning(f"Skipping embedding {embedding.embedding_id}: invalid vector format")
+                    continue
                 
                 # Calculate similarity
                 similarity = self.cosine_similarity(query_vector, item_vector)
@@ -192,7 +197,7 @@ class VectorRepository:
         db: Session,
         embeddings: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Batch update embeddings in the database."""
+        """Batch update embeddings in the database with array format."""
         success_count = 0
         error_count = 0
         
@@ -205,20 +210,26 @@ class VectorRepository:
                     error_count += 1
                     continue
                 
+                # Ensure vector is a list and has 512 dimensions
+                if not isinstance(vector, list) or len(vector) != 512:
+                    logger.error(f"Invalid vector format for item {item_id}: expected 512-dim list, got {type(vector)} with {len(vector) if isinstance(vector, list) else 'unknown'} dimensions")
+                    error_count += 1
+                    continue
+                
                 # Check if embedding exists
                 existing = db.query(VectorEmbedding).filter(
                     VectorEmbedding.item_id == item_id
                 ).first()
                 
                 if existing:
-                    # Update existing
-                    existing.vector = json.dumps(vector)
+                    # Update existing - direct array assignment
+                    existing.vector = vector
                     db.add(existing)
                 else:
-                    # Create new
+                    # Create new - direct array assignment
                     new_embedding = VectorEmbedding(
                         item_id=item_id,
-                        vector=json.dumps(vector)
+                        vector=vector
                     )
                     db.add(new_embedding)
                 

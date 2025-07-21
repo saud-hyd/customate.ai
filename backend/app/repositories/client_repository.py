@@ -273,12 +273,9 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
                 # Ensure custom_settings has required fields with OpenAI defaults
                 custom = client_settings.custom_settings or {}
                 
-                # Update to OpenAI as primary provider
-                if "llm_provider" not in custom or custom["llm_provider"] == "deepseek":
-                    custom["llm_provider"] = "openai"
-                    
-                if "llm_model" not in custom or custom["llm_model"] == "deepseek-chat":
-                    custom["llm_model"] = "gpt-4.1-mini-2025-04-14"
+                # Force migrate all clients to OpenAI
+                custom["llm_provider"] = "openai"
+                custom["llm_model"] = "gpt-4.1-mini-2025-04-14"
                     
                 if "reset_on_page_refresh" not in custom:
                     custom["reset_on_page_refresh"] = True
@@ -293,7 +290,6 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
                 print(f"Error syncing settings for client {client_settings.client_id}: {e}")
         
         db.commit()
-        logger.info(f"Updated {updated_count} clients to use OpenAI as default")
         return updated_count
 
 class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[str, Any]]):
