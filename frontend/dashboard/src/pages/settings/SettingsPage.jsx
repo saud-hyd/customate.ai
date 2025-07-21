@@ -57,13 +57,6 @@ const SettingsPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your account settings, billing, team members, and get support.
-        </p>
-      </div>
 
       {/* Settings tabs */}
       <div className="bg-white shadow-sm rounded-lg">

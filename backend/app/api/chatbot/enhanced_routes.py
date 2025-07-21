@@ -23,11 +23,12 @@ from app.core.config.settings import settings
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
 def get_openai_service() -> OpenAIService:
-    """Get OpenAI service with GPT-4.1-mini-2025-04-14 model."""
+    """Get optimized OpenAI service with GPT-4.1-mini model."""
     if not settings.OPENAI_API_KEY:
+        logger.error("OpenAI API key not configured")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="OpenAI API key not configured. Please contact administrator."
+            detail="AI service not available. Please contact administrator."
         )
     
     return OpenAIService(model_name="gpt-4.1-mini-2025-04-14")

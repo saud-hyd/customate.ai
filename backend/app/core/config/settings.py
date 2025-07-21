@@ -67,6 +67,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = Field(default=None)
     CLAUDE_API_KEY: Optional[str] = Field(default=None)
     
+    DEFAULT_LLM_PROVIDER: str = Field(default="openai")
+    DEFAULT_LLM_MODEL: str = Field(default="gpt-4.1-mini-2025-04-14")
+    DEFAULT_EMBEDDING_MODEL: str = Field(default="text-embedding-3-small")
+    
     # Storage settings
     STORAGE_PROVIDER: str = Field(default="local")
     STORAGE_BUCKET: Optional[str] = Field(default=None)

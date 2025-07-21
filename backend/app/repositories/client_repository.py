@@ -167,7 +167,7 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
         return db.query(ClientSettings).filter(ClientSettings.client_id == client_id).first()
     
     def create_default_settings(self, db: Session, client_id: str) -> ClientSettings:
-        """Create default settings for a client."""
+        """Create default settings for a client with OpenAI configuration."""
         default_settings = {
             "client_id": client_id,
             "primary_color": "#ea580c",
@@ -183,6 +183,7 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
                 "session_timeout": 30
             }
         }
+        logger.info(f"Creating default OpenAI settings for client: {client_id}")
         return self.create(db, obj_in=default_settings)
     
     def get_or_create_settings(self, db: Session, client_id: str) -> ClientSettings:
@@ -263,20 +264,21 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
         }
     
     def sync_settings_to_all_clients(self, db: Session) -> int:
-        """Sync settings format across all clients (maintenance function)."""
+        """Sync settings format across all clients to use OpenAI as default."""
         clients = db.query(ClientSettings).all()
         updated_count = 0
         
         for client_settings in clients:
             try:
-                # Ensure custom_settings has required fields
+                # Ensure custom_settings has required fields with OpenAI defaults
                 custom = client_settings.custom_settings or {}
                 
-                if "llm_provider" not in custom:
-                    custom["llm_provider"] = "deepseek"
+                # Update to OpenAI as primary provider
+                if "llm_provider" not in custom or custom["llm_provider"] == "deepseek":
+                    custom["llm_provider"] = "openai"
                     
-                if "llm_model" not in custom:
-                    custom["llm_model"] = "deepseek-chat"
+                if "llm_model" not in custom or custom["llm_model"] == "deepseek-chat":
+                    custom["llm_model"] = "gpt-4.1-mini-2025-04-14"
                     
                 if "reset_on_page_refresh" not in custom:
                     custom["reset_on_page_refresh"] = True
@@ -291,6 +293,7 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
                 print(f"Error syncing settings for client {client_settings.client_id}: {e}")
         
         db.commit()
+        logger.info(f"Updated {updated_count} clients to use OpenAI as default")
         return updated_count
 
 class SubscriptionRepository(BaseRepository[Subscription, Dict[str, Any], Dict[str, Any]]):

@@ -493,5 +493,7 @@ def _get_default_settings():
         "llm_provider": "openai",
         "llm_model": "gpt-4.1-mini-2025-04-14",
         "reset_on_page_refresh": True,
-        "session_timeout": 30
+        "session_timeout": 30,
+        "context_window": 1000000,  # 1M tokens
+        "embedding_model": "text-embedding-3-small"
     }

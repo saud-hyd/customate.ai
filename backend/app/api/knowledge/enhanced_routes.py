@@ -8,6 +8,9 @@ from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
 from app.services.llm.deepseek_service import DeepSeekService
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/enhanced", tags=["enhanced_knowledge"])
 
@@ -42,10 +45,19 @@ async def hybrid_search(
     hybrid_ratio = query_data.get("hybrid_ratio", 0.7)
     filters = query_data.get("filters", {})
     
-    # Initialize services
-    llm_service = DeepSeekService()
-    search_service = EnhancedSearchService(llm_service)
-    
+    # Initialize OpenAI services
+    from app.services.llm.llm_factory import LLMFactory
+
+    try:
+        llm_service = LLMFactory.create_llm_service(db, current_client.client_id)
+        search_service = EnhancedSearchService(llm_service)
+        logger.info(f"Initialized OpenAI services for client: {current_client.client_id}")
+    except Exception as e:
+        logger.error(f"Failed to initialize OpenAI services: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="AI service initialization failed. Please try again later."
+        )    
     # Perform hybrid search
     search_results = await search_service.hybrid_search(
         client_id=current_client.client_id,
@@ -76,9 +88,19 @@ async def simple_search(
     - limit (optional): Maximum number of results (default: 5)
     - hybrid_ratio (optional): Balance between vector and keyword results (default: 0.7)
     """
-    # Initialize services
-    llm_service = DeepSeekService()
-    search_service = EnhancedSearchService(llm_service)
+    # Initialize OpenAI services
+    from app.services.llm.llm_factory import LLMFactory
+
+    try:
+        llm_service = LLMFactory.create_llm_service(db, current_client.client_id)
+        search_service = EnhancedSearchService(llm_service)
+        logger.info(f"Initialized OpenAI services for client: {current_client.client_id}")
+    except Exception as e:
+        logger.error(f"Failed to initialize OpenAI services: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="AI service initialization failed. Please try again later."
+        )
     
     # Perform hybrid search
     search_results = await search_service.hybrid_search(

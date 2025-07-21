@@ -86,15 +86,9 @@ class OpenAIService(LLMService):
     
     async def generate_embeddings(self, text: str) -> List[float]:
         """
-        Generate embeddings for text using OpenAI's embeddings API.
-        
-        Args:
-            text: The text to generate embeddings for
-            
-        Returns:
-            Vector embeddings as a list of floats
+        Generate embeddings using OpenAI's text-embedding-3-small model.
+        FIXED: Use 384 dimensions to match existing database vectors.
         """
-        # Make API request to embeddings endpoint
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -105,8 +99,8 @@ class OpenAIService(LLMService):
                     },
                     json={
                         "model": "text-embedding-3-small",
-                        "dimensions": 512,  # Optional: faster + cheaper
-                        "input": text
+                        "dimensions": 384,  # ← CRITICAL FIX: Match existing database dimensions
+                        "input": text[:8000]  # Truncate to avoid token limits
                     },
                     timeout=30.0,
                 )
@@ -114,21 +108,25 @@ class OpenAIService(LLMService):
                 if response.status_code == 200:
                     result = response.json()
                     embeddings = result["data"][0]["embedding"]
+                    logger.info(f"Generated embeddings with {len(embeddings)} dimensions (matched to database)")
                     return embeddings
                 else:
                     logger.error(f"OpenAI embeddings API error: {response.status_code} - {response.text}")
+                    raise Exception(f"Embedding API failed with status {response.status_code}")
+                    
         except Exception as e:
-            logger.warning(f"Error calling OpenAI embedding API: {str(e)}, using mock service")
-            
-        # Fallback to mock service
-        mock_service = self._get_mock_service()
-        return await mock_service.generate_embeddings(text)
-    
+            logger.error(f"Error calling OpenAI embedding API: {str(e)}")
+            # Fallback to mock service if configured
+            if hasattr(self, '_mock_service') or os.environ.get("MOCK_EMBEDDINGS", "").lower() == "true":
+                mock_service = self._get_mock_service()
+                return await mock_service.generate_embeddings(text)
+            raise e
+
     def _get_mock_service(self):
-        """Lazy-load the mock service."""
-        if self._mock_service is None:
+        """Lazy-load the mock service with matching dimensions."""
+        if not hasattr(self, '_mock_service') or self._mock_service is None:
             from app.services.llm.mock_embedding_service import MockEmbeddingService
-            self._mock_service = MockEmbeddingService()
+            self._mock_service = MockEmbeddingService(dimensions=384)  # ← Match database dimensions
         return self._mock_service
     
     def _build_system_prompt(
@@ -256,4 +254,49 @@ class OpenAIService(LLMService):
             logger.error("OpenAI API key not configured. LLM service will not function.")
             raise ValueError("OpenAI API key is required but not configured")
         
-        logger.info(f"OpenAI service initialized with model: {self.model}")                
+        logger.info(f"OpenAI service initialized with model: {self.model}")
+        
+    async def generate_embeddings(self, text: str) -> List[float]:
+        """
+        Generate embeddings using OpenAI's text-embedding-3-small model.
+        Optimized for cost and performance.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.api_base_url}/embeddings",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "text-embedding-3-small",
+                        "dimensions": 512,  # Optimal balance of performance and cost
+                        "input": text[:8000]  # Truncate to avoid token limits
+                    },
+                    timeout=30.0,
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    embeddings = result["data"][0]["embedding"]
+                    logger.info(f"Generated embeddings with {len(embeddings)} dimensions")
+                    return embeddings
+                else:
+                    logger.error(f"OpenAI embeddings API error: {response.status_code} - {response.text}")
+                    raise Exception(f"Embedding API failed with status {response.status_code}")
+                    
+        except Exception as e:
+            logger.error(f"Error calling OpenAI embedding API: {str(e)}")
+            # Fallback to mock service if configured
+            if hasattr(self, '_mock_service') or os.environ.get("MOCK_EMBEDDINGS", "").lower() == "true":
+                mock_service = self._get_mock_service()
+                return await mock_service.generate_embeddings(text)
+            raise e
+
+    def _get_mock_service(self):
+        """Lazy-load the mock service for development."""
+        if not hasattr(self, '_mock_service') or self._mock_service is None:
+            from app.services.llm.mock_embedding_service import MockEmbeddingService
+            self._mock_service = MockEmbeddingService()
+        return self._mock_service                        
