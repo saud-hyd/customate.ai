@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
 
-from app.utils.business_context import BusinessContextPrompt
 from app.core import logger
 
 class LLMService(ABC):

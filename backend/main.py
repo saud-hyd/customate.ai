@@ -21,7 +21,6 @@ from app.api.auth import routes as auth_routes
 from app.api.client import routes as client_routes
 from app.api.knowledge import routes as knowledge_routes
 from app.api.knowledge import document_routes
-from app.api.chatbot import routes as chatbot_routes
 from app.api.chatbot import session_routes
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
@@ -172,7 +171,6 @@ app.include_router(auth_routes.router, prefix="/api")
 app.include_router(client_routes.router, prefix="/api")
 app.include_router(knowledge_routes.router, prefix="/api/knowledge")
 app.include_router(document_routes.router, prefix="/api/knowledge/knowledge/documents")
-app.include_router(chatbot_routes.router, prefix="/api")
 app.include_router(session_routes.router, prefix="/api")
 app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")
@@ -212,91 +210,7 @@ app.include_router(webhook_router, prefix="/api")
 
 logger.info("✅ All routes registered successfully")
 
-# Enhanced debugging endpoints
-@app.get("/debug/routes")
-async def debug_routes():
-    """Debug endpoint to check all loaded routes."""
-    routes_info = []
-    for route in app.routes:
-        if hasattr(route, 'path') and hasattr(route, 'methods'):
-            routes_info.append({
-                "path": route.path,
-                "methods": list(route.methods) if route.methods else [],
-                "name": getattr(route, 'name', 'unknown')
-            })
-    
-    return {
-        "total_routes": len(routes_info),
-        "all_routes": routes_info
-    }
 
-@app.get("/debug/widget-routes")
-async def debug_widget_routes():
-    """Debug endpoint to check widget routes specifically."""
-    widget_routes = []
-    for route in app.routes:
-        if hasattr(route, 'path') and '/widget' in route.path:
-            widget_routes.append({
-                "path": route.path,
-                "methods": list(route.methods) if hasattr(route, 'methods') and route.methods else [],
-                "name": getattr(route, 'name', 'unknown')
-            })
-    
-    expected_routes = [
-        "/api/widget/settings",
-        "/api/widget/test", 
-        "/api/widget/app/",
-        "/api/widget/health",
-        "/api/widget/embed",
-        "/api/widget/status"
-    ]
-    
-    return {
-        "widget_routes_available": WIDGET_ROUTES_AVAILABLE,
-        "total_widget_routes": len(widget_routes),
-        "found_widget_routes": widget_routes,
-        "expected_routes": expected_routes,
-        "missing_routes": [route for route in expected_routes if not any(route in wr['path'] for wr in widget_routes)]
-    }
-
-@app.get("/debug/widget-status")
-async def debug_widget_status():
-    """Comprehensive widget system status."""
-    return {
-        "widget_routes_available": WIDGET_ROUTES_AVAILABLE,
-        "widget_service_available": WIDGET_SERVICE_AVAILABLE,
-        "backend_url": BACKEND_URL,
-        "environment": "production" if IS_PRODUCTION else "development",
-        "cors_origins_count": len(get_allowed_origins()),
-        "widget_endpoints": {
-            "settings": f"{BACKEND_URL}/api/widget/settings",
-            "app": f"{BACKEND_URL}/api/widget/app/",
-            "test": f"{BACKEND_URL}/api/widget/test",
-            "health": f"{BACKEND_URL}/api/widget/health",
-            "embed": f"{BACKEND_URL}/api/widget/embed"
-        }
-    }
-
-# Enhanced widget health check endpoint (fallback if widget routes not available)
-if not WIDGET_ROUTES_AVAILABLE:
-    @app.get("/api/widget/settings")
-    async def fallback_widget_settings():
-        """Fallback widget settings endpoint."""
-        logger.warning("⚠️ Using fallback widget settings - widget routes not available")
-        return {
-            "primary_color": "#ea580c",
-            "chatbot_name": "AI Assistant",
-            "greeting_message": "Hello! How can I help you today?",
-            "widget_position": "bottom-right",
-            "show_typing_indicator": True,
-            "enable_suggestions": True,
-            "llm_provider": "deepseek",
-            "llm_model": "deepseek-chat",
-            "reset_on_page_refresh": True,
-            "session_timeout": 30,
-            "_fallback": True,
-            "_warning": "Widget routes not properly loaded"
-        }
 
 # Request logging middleware with enhanced widget request tracking
 @app.middleware("http")
@@ -363,36 +277,7 @@ async def root():
         }
     }
 
-# Enhanced health check endpoint with detailed component status
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "timestamp": int(time.time()),
-        "environment": "production" if IS_PRODUCTION else "development",
-        "backend_url": BACKEND_URL,
-        "components": {
-            "api": "up",
-            "database": "up",
-            "widget_routes": "up" if WIDGET_ROUTES_AVAILABLE else "down",
-            "widget_service": "up" if WIDGET_SERVICE_AVAILABLE else "limited",
-            "streaming": "available" if WIDGET_SERVICE_AVAILABLE else "unavailable",
-            "cors": "configured"
-        },
-        "widget_info": {
-            "routes_available": WIDGET_ROUTES_AVAILABLE,
-            "service_available": WIDGET_SERVICE_AVAILABLE,
-            "settings_endpoint": f"{BACKEND_URL}/api/widget/settings",
-            "app_endpoint": f"{BACKEND_URL}/api/widget/app/",
-            "test_endpoint": f"{BACKEND_URL}/api/widget/test",
-            "embed_endpoint": f"{BACKEND_URL}/api/widget/embed"
-        },
-        "debug_endpoints": {
-            "all_routes": f"{BACKEND_URL}/debug/routes",
-            "widget_routes": f"{BACKEND_URL}/debug/widget-routes", 
-            "widget_status": f"{BACKEND_URL}/debug/widget-status"
-        }
-    }
+
 
 # CORS preflight handler for widget embedding
 @app.options("/api/widget/{path:path}")

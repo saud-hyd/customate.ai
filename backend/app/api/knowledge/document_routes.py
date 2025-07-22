@@ -13,7 +13,7 @@ from app.repositories.knowledge_repository import DocumentSourceRepository
 from app.services.storage.document_service import DocumentService
 from app.services.storage.document_processor import DocumentProcessor
 from app.services.knowledge.embedding_service import EmbeddingService
-from app.services.llm.deepseek_service import DeepSeekService
+from app.services.llm.llm_service import LLMService
 from app.core import logger
 from app.repositories.knowledge_repository import KnowledgeItemRepository, KnowledgeCollectionRepository, KnowledgeItem
 from app.core.database.session import SessionLocal
@@ -191,7 +191,7 @@ async def upload_document(
                         
                         # Initialize services within the task scope
                         doc_service = DocumentService()
-                        llm_service = DeepSeekService()
+                        llm_service = LLMService()  
                         embedding_service = EmbeddingService(llm_service)
                         document_processor = DocumentProcessor(doc_service, embedding_service)
                         

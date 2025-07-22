@@ -7,7 +7,6 @@ from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
-from app.services.llm.deepseek_service import DeepSeekService
 import logging
 
 logger = logging.getLogger(__name__)

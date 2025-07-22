@@ -134,27 +134,30 @@ class OpenAIService(LLMService):
         knowledge_context: Optional[List[Dict[str, Any]]],
         industry_context: Optional[Dict[str, Any]]
     ) -> str:
-        """Simplified system prompt that lets OpenAI handle conversations naturally."""
-        base_prompt = """You are a helpful AI assistant for customer support.
+        base_prompt = """You are a helpful customer support representative for this company.
 
-    You can handle both casual greetings and business questions naturally. 
-    Be conversational, professional, and helpful.
+    IMPORTANT GUIDELINES:
+    - For greetings (hello, hi): Respond warmly and ask how you can help with our services
+    - For business questions: Use the company information provided to give detailed, helpful answers  
+    - For general/off-topic questions: Be polite but redirect to business topics
 
-    Format your responses with proper Markdown when helpful:
-    - Use **bold text** for important information
-    - Create lists with bullet points when appropriate  
-    - Use proper line breaks for readability
-    """
+    CONVERSATION STYLE:
+    - Be friendly and conversational
+    - Don't be robotic or mention being an AI
+    - If someone asks general questions (like trivia, weather, etc.), say something like:
+    "That's a great question! While I can't help with that, I'd love to tell you about our services. What would you like to know about what we offer?"
+
+    FOCUS: Always guide conversations toward our business, products, and services."""
         
-        # Add knowledge context if provided
         if knowledge_context:
-            knowledge_text = "\n\nRelevant information from knowledge base:\n" + "\n".join([
+            knowledge_text = "\n\nHere's information about our company that you can use to answer questions:\n" + "\n".join([
                 f"- {item['title']}: {item['content']}" 
                 for item in knowledge_context
             ])
             base_prompt += knowledge_text
+            base_prompt += "\n\nUse this information to answer business-related questions. For anything else, politely redirect to our services."
         
-        return base_prompt    
+        return base_prompt
     
     def _format_messages(
         self, 

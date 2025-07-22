@@ -12,8 +12,8 @@ from app.core.database.dependencies import get_db
 from app.domain.client.entities import Client
 from app.services.chat.enhanced_chat_service import EnhancedChatService
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
-from app.services.llm.deepseek_service import DeepSeekService
 from app.services.chat.context_manager import ContextManager
+from app.services.llm.llm_service import LLMService
 from app.services.analytics.usage_tracker import UsageTracker
 from app.core import logger
 from app.services.llm.llm_factory import LLMFactory
@@ -97,7 +97,7 @@ async def get_chat_history(
 ):
     """Get chat history for a specific session."""
     # Initialize services
-    llm_service = DeepSeekService()
+    llm_service = LLMService()
     search_service = EnhancedSearchService(llm_service)
     context_manager = ContextManager()
     
@@ -169,7 +169,7 @@ async def send_message_stream(
         fallback_message = str(e)
         
         # Use DeepSeek as fallback
-        llm_service = DeepSeekService()
+        llm_service = LLMService()  
     
     # Initialize the rest of the services
     search_service = EnhancedSearchService(llm_service)

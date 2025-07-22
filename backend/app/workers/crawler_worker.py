@@ -8,9 +8,9 @@ from app.core.database.session import SessionLocal
 from app.repositories.crawl_repository import WebsiteCrawlJobRepository, CrawledPageRepository
 from app.services.knowledge.web_crawler_service import WebCrawlerService
 from app.services.knowledge.embedding_service import EmbeddingService
-from app.services.llm.deepseek_service import DeepSeekService
 from app.services.analytics.usage_tracker import UsageTracker  # Import UsageTracker
-
+from app.services.llm.llm_service import LLMService
+  
 logger = logging.getLogger(__name__)
 
 class CrawlerWorker:
@@ -98,7 +98,7 @@ class CrawlerWorker:
             db = SessionLocal()
             
             # Initialize services
-            llm_service = DeepSeekService()
+            llm_service = LLMService()  
             embedding_service = EmbeddingService(llm_service)
             crawler_service = WebCrawlerService(db, embedding_service)
             

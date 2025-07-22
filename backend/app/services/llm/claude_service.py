@@ -18,30 +18,23 @@ class ClaudeService(LLMService):
         self.client = anthropic.Anthropic(api_key=self.api_key)
         logger.info(f"Initialized Claude service with model: {model}")
     
-    def _build_system_prompt(self, industry_context: Optional[Dict[str, Any]] = None) -> str:
-        """Build system prompt with optional industry context."""
-        base_prompt = "You are a helpful, accurate, and friendly AI assistant."
+    def _build_system_prompt(
+        self, 
+        knowledge_context: Optional[List[Dict[str, Any]]],
+        industry_context: Optional[Dict[str, Any]]
+    ) -> str:
+        base_prompt = """You're a helpful team member at this company having a conversation with a customer.
+
+    Be natural, conversational, and friendly - like you're chatting in person. When you know the answer, share it naturally. When you don't know something or it's not related to your company, just casually redirect the conversation like any person would.
+
+    Don't sound scripted or mention being an "assistant" or "AI" - just be helpful and human."""
         
-        if industry_context and isinstance(industry_context, dict):
-            intent = industry_context.get("intent", "")
-            industry = industry_context.get("industry", "")
-            
-            # Add industry-specific instructions
-            if industry == "e-commerce":
-                base_prompt += " You specialize in e-commerce customer support, helping with orders, products, and shipping inquiries."
-            elif industry == "saas":
-                base_prompt += " You specialize in software support, helping users understand features and troubleshoot issues."
-            elif industry == "healthcare":
-                base_prompt += " You provide general healthcare information while emphasizing that you're not a replacement for professional medical advice."
-                
-            # Add intent-specific instructions
-            if intent == "product_inquiry":
-                base_prompt += " Focus on providing detailed, accurate product information."
-            elif intent == "troubleshooting":
-                base_prompt += " Provide clear, step-by-step instructions for solving problems."
-        
-        # Add knowledge base instructions
-        base_prompt += " Base your responses on the knowledge context provided. If the knowledge context doesn't contain relevant information, acknowledge the limitations."
+        if knowledge_context:
+            knowledge_text = "\n\nInformation you have about your company:\n" + "\n".join([
+                f"- {item['title']}: {item['content']}" 
+                for item in knowledge_context
+            ])
+            base_prompt += knowledge_text
         
         return base_prompt
     
