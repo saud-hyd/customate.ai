@@ -156,7 +156,7 @@ class StreamingResponseGenerator:
                 
             else:
                 # Relevant knowledge found - use RAG with LLM
-                conversation_history = self.context_manager.format_history(context)
+                conversation_history = self.context_manager.format_history(context, self.db, actual_session_id)
                 
                 # Check if LLM service supports streaming
                 if hasattr(self.llm_service, 'generate_response_stream'):
@@ -350,7 +350,7 @@ class StreamingResponseGenerator:
                 
             else:
                 # Relevant knowledge found - use RAG with LLM
-                conversation_history = self.context_manager.format_history(context)
+                conversation_history = self.context_manager.format_history(context, self.db, actual_session_id)
                 
                 response = await self.llm_service.generate_response(
                     user_message=user_message,

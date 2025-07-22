@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.repositories.chat_repository import ChatSessionRepository, ChatMessageRepository
 from app.services.chat.context_manager import ContextManager
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
-from app.services.llm.deepseek_service import DeepSeekService
+from app.services.llm.llm_service import LLMService
 from app.core.config.multilingual_settings import multilingual_settings
 from app.repositories.integration_repository import IntegrationRepository
 from app.services.integration.integration_service import IntegrationService
@@ -34,7 +34,7 @@ class EnhancedChatService:
         self,
         db: Session,
         search_service: EnhancedSearchService,
-        llm_service: DeepSeekService,
+        llm_service: LLMService,
         context_manager: ContextManager
     ):
         self.db = db
@@ -60,151 +60,34 @@ class EnhancedChatService:
     async def process_message(
         self,
         client_id: str,
-        user_message: str,
+        user_message: str, 
         session_id: Optional[str] = None,
         user_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Process a user message and generate a response with RAG and integration support.
-        
-        Args:
-            client_id: Client ID
-            user_message: User message text
-            session_id: Optional session ID for continuing conversations
-            user_info: Optional user information
-            
-        Returns:
-            Response data including the assistant's message
+        SIMPLIFIED: Non-streaming version using same logic.
         """
-        start_time = time.time()
+        # Collect streaming response
+        full_response = ""
+        response_data = {}
         
-        # Get or create session
-        session = self._get_or_create_session(client_id, session_id, user_info)
-        session_id = session.session_id
+        async for chunk in self.process_message_stream(
+            client_id=client_id,
+            user_message=user_message,
+            session_id=session_id,
+            user_info=user_info
+        ):
+            if chunk.get("type") == "info":
+                response_data.update(chunk)
+            elif chunk.get("type") == "chunk":
+                full_response += chunk.get("content", "")
+            elif chunk.get("type") == "done":
+                final_message = chunk.get("message", {})
+                full_response = final_message.get("content", full_response)
+                response_data["message"] = final_message
+                break
         
-        # Add user message to database
-        user_message_db = self.message_repo.create(self.db, obj_in={
-            "session_id": session_id,
-            "role": "user",
-            "content": user_message,
-            "created_at": datetime.utcnow()
-        })
-        
-        # Get conversation context
-        context = self.context_manager.get_context(self.db, session_id)
-        
-        # Search for relevant knowledge with hybrid search
-        search_results = await self.search_service.hybrid_search(
-            client_id, 
-            user_message,
-            limit=5
-        )
-
-        # Get the actual results list from the search_results dictionary
-        results_list = search_results.get("results", [])
-        
-        # Check relevance and determine response strategy
-        max_relevance_score = 0.0
-        knowledge_used = False
-        knowledge_context = []
-        
-        if results_list:
-            # Get maximum relevance score
-            max_relevance_score = max([
-                result.get("hybrid_score", result.get("similarity", 0)) 
-                for result in results_list
-            ])
-            
-            # Only use knowledge if it meets relevance threshold
-            if max_relevance_score >= self.relevance_threshold:
-                knowledge_used = True
-                
-                # Prepare knowledge context for LLM
-                for result in results_list:
-                    score = result.get("hybrid_score", result.get("similarity", 0))
-                    if score >= self.relevance_threshold:
-                        knowledge_context.append({
-                            "title": result["title"],
-                            "content": result["content"],
-                            "source": result.get("collection_name", "Knowledge Base"),
-                            "relevance": "high" if score > 0.8 else "medium"
-                        })
-        
-        # Check for external integration data if knowledge is relevant
-        integration_data = None
-        integration_used = False
-        
-        if knowledge_used and self._should_use_integration(user_message):
-            integration_data = await self._fetch_integration_data(client_id, user_message)
-            integration_used = integration_data is not None
-        
-        # Generate response based on available context
-        if not knowledge_used:
-            # No relevant knowledge found - use business-focused fallback
-            final_response = self._get_fallback_response()
-            
-        else:
-            # Use RAG with LLM
-            conversation_history = []
-            if "history" in context and context["history"]:
-                conversation_history = context["history"][-8:]  # Last 8 messages for context
-            
-            # Generate response using LLM with all required parameters
-            llm_response = await self.llm_service.generate_response(
-                user_message=user_message,
-                conversation_history=conversation_history,
-                knowledge_context=knowledge_context,
-                industry_context={
-                    "instructions": "You are a helpful business assistant. Use the provided knowledge base to answer questions accurately and professionally. Stay focused on the business context.",
-                    "integration_data": integration_data if integration_used else None
-                }
-            )
-            
-            final_response = llm_response.get("content", "I'm sorry, I couldn't generate a response at this time.")
-        
-        # Add assistant message to database
-        assistant_message = self.message_repo.create(self.db, obj_in={
-            "session_id": session_id,
-            "role": "assistant",
-            "content": final_response,
-            "message_metadata": {
-                "knowledge_used": knowledge_used,
-                "integration_used": integration_used,
-                "max_relevance_score": max_relevance_score,
-                "knowledge_items_found": len(knowledge_context),
-                "response_time_ms": int((time.time() - start_time) * 1000)
-            },
-            "created_at": datetime.utcnow()
-        })
-        
-        # Update conversation context
-        self.context_manager.update_context(
-            self.db, 
-            session_id, 
-            user_message, 
-            final_response,
-            {
-                "knowledge_used": knowledge_used, 
-                "integration_used": integration_used,
-                "max_relevance_score": max_relevance_score
-            }
-        )
-        
-        # Format response
-        return {
-            "message": {
-                "content": final_response,
-                "role": "assistant",
-                "id": assistant_message.message_id,
-                "created_at": assistant_message.created_at.isoformat()
-            },
-            "user_message_id": user_message_db.message_id,
-            "session_id": session_id,
-            "knowledge_used": knowledge_used,
-            "integration_used": integration_used,
-            "relevance_score": max_relevance_score,
-            "knowledge_items_found": len(knowledge_context)
-        }
+        return response_data
     
     async def process_message_stream(
         self,
@@ -214,175 +97,134 @@ class EnhancedChatService:
         user_info: Optional[Dict[str, Any]] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        Process a user message and generate a streaming response with RAG protection.
+        SIMPLIFIED: Process message with GPT-4 native context handling.
         
-        Args:
-            client_id: Client ID
-            user_message: User message text
-            session_id: Optional session ID for continuing conversations
-            user_info: Optional user information
-            
-        Yields:
-            Response chunks as they are generated
+        Key simplifications:
+        - Removed artificial follow-up detection
+        - Removed complex knowledge context enhancement  
+        - Let GPT-4 handle context naturally with full conversation history
         """
         start_time = time.time()
+        message_id = str(uuid.uuid4())
         
-        # Get or create session
+        # Get or create session (unchanged)
         session = self._get_or_create_session(client_id, session_id, user_info)
         session_id = session.session_id
         
-        # Add user message to database
+        # Save user message (unchanged)
         user_message_db = self.message_repo.create(self.db, obj_in={
             "session_id": session_id,
-            "role": "user",
+            "role": "user", 
             "content": user_message,
+            "message_metadata": user_info,
             "created_at": datetime.utcnow()
         })
         
-        # Get conversation context
+        # SIMPLIFIED: Get full conversation history (no artificial limits)
         context = self.context_manager.get_context(self.db, session_id)
+        conversation_history = self.context_manager.format_history(context, self.db, session_id)
         
-        # Search for relevant knowledge
-        search_results = await self.search_service.hybrid_search(
-            client_id, 
-            user_message,
-            limit=5
-        )
-
-        results_list = search_results.get("results", [])
-        
-        # Check relevance
-        max_relevance_score = 0.0
-        knowledge_used = False
+        # SIMPLIFIED: Basic knowledge search (no complex enhancement)
         knowledge_context = []
+        knowledge_used = False
+        max_relevance_score = 0.0
         
-        if results_list:
-            max_relevance_score = max([
-                result.get("hybrid_score", result.get("similarity", 0)) 
-                for result in results_list
-            ])
+        try:
+            search_results = await self.search_service.hybrid_search(
+                client_id=client_id,
+                query_text=user_message,
+                limit=5,  # Simple limit
+                hybrid_ratio=0.7
+            )
             
-            if max_relevance_score >= self.relevance_threshold:
+            if search_results.get("results"):
                 knowledge_used = True
-                for result in results_list:
-                    score = result.get("hybrid_score", result.get("similarity", 0))
-                    if score >= self.relevance_threshold:
-                        knowledge_context.append({
-                            "title": result["title"],
-                            "content": result["content"],
-                            "source": result.get("collection_name", "Knowledge Base"),
-                            "relevance": "high" if score > 0.8 else "medium"
-                        })
+                knowledge_context = [
+                    {
+                        "title": item["title"],
+                        "content": item["content"], 
+                        "source": item.get("collection_name", "Knowledge Base")
+                    }
+                    for item in search_results["results"]
+                ]
+                max_relevance_score = max([item.get("hybrid_score", 0) for item in search_results["results"]], default=0)
+                
+        except Exception as e:
+            logger.error(f"Knowledge search error: {str(e)}")
+            # Continue without knowledge if search fails
         
-        # Check for integration data
-        integration_used = False
-        integration_data = None
-        if knowledge_used and self._should_use_integration(user_message):
-            integration_data = await self._fetch_integration_data(client_id, user_message)
-            integration_used = integration_data is not None
-        
-        # First yield is the info about the response
+        # Send initial info
         yield {
             "type": "info",
             "session_id": session_id,
-            "user_message_id": user_message_db.message_id,
             "knowledge_used": knowledge_used,
-            "integration_used": integration_used,
-            "relevance_score": max_relevance_score
+            "integration_used": False,
+            "message_id": message_id
         }
         
-        # Generate message ID for the streaming response
-        message_id = str(uuid.uuid4())
+        # SIMPLIFIED: Generate response with full conversation history
+        full_response = ""
         
-        if not knowledge_used:
-            # No relevant knowledge - use fallback response
-            final_response = self._get_fallback_response()
-            
-            # Simulate streaming for fallback
-            words = final_response.split()
-            current_chunk = ""
-            
-            for i, word in enumerate(words):
-                current_chunk += word + " "
-                
-                if i % 3 == 2 or i == len(words) - 1:
-                    yield {
-                        "type": "chunk",
-                        "content": current_chunk,
-                        "message_id": message_id
-                    }
-                    current_chunk = ""
-                    
-        else:
-            # Use RAG with streaming LLM
-            conversation_history = []
-            if "history" in context and context["history"]:
-                conversation_history = context["history"][-8:]
-            
-            # Generate response using LLM with streaming
-            full_response = ""
+        try:
             async for content_chunk in self.llm_service.generate_response_stream(
                 user_message=user_message,
-                conversation_history=conversation_history,
-                knowledge_context=knowledge_context,
+                conversation_history=conversation_history,  # Full history, not truncated
+                knowledge_context=knowledge_context if knowledge_used else None,
                 industry_context={
-                    "instructions": "You are a helpful business assistant. Use the provided knowledge base to answer questions accurately and professionally. Stay focused on the business context.",
-                    "integration_data": integration_data if integration_used else None
+                    "instructions": "You are a helpful business assistant. Use the provided knowledge base to answer questions accurately and professionally."
                 }
             ):
                 full_response += content_chunk
-                
-                # Yield each chunk
                 yield {
                     "type": "chunk",
                     "content": content_chunk,
                     "message_id": message_id
                 }
-            
-            final_response = full_response
+                
+        except Exception as e:
+            logger.error(f"LLM generation error: {str(e)}")
+            error_response = "I apologize, but I'm having trouble generating a response right now. Please try again."
+            yield {
+                "type": "chunk", 
+                "content": error_response,
+                "message_id": message_id
+            }
+            full_response = error_response
         
-        # Yield completion
-        yield {
-            "type": "complete",
-            "content": final_response,
-            "message_id": message_id
-        }
-        
-        # Add assistant message to database
+        # Save assistant message
         assistant_message = self.message_repo.create(self.db, obj_in={
             "session_id": session_id,
             "role": "assistant",
-            "content": final_response,
+            "content": full_response,
             "message_id": message_id,
             "message_metadata": {
                 "knowledge_used": knowledge_used,
-                "integration_used": integration_used,
                 "max_relevance_score": max_relevance_score,
                 "knowledge_items_found": len(knowledge_context),
-                "response_time_ms": int((time.time() - start_time) * 1000)
+                "response_time_ms": int((time.time() - start_time) * 1000),
+                "simplified_context": True  # Flag to track simplified processing
             },
             "created_at": datetime.utcnow()
         })
         
-        # Update conversation context
+        # SIMPLIFIED: Context update (automatic via message storage)
         self.context_manager.update_context(
             self.db, 
             session_id, 
             user_message, 
-            final_response,
+            full_response,
             {
-                "knowledge_used": knowledge_used, 
-                "integration_used": integration_used,
+                "knowledge_used": knowledge_used,
                 "max_relevance_score": max_relevance_score
             }
         )
         
-        # Yield final message with complete message info
+        # Final response
         yield {
             "type": "done",
             "message": {
-                "content": final_response,
-                "role": "assistant",
+                "content": full_response,
+                "role": "assistant", 
                 "id": message_id,
                 "created_at": datetime.utcnow().isoformat()
             }
@@ -424,47 +266,6 @@ class EnhancedChatService:
             }
             for message in messages
         ]
-    
-    async def get_knowledge_context(
-        self, 
-        user_message: str, 
-        client_id: str, 
-        collection_id: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
-        """Get relevant knowledge context for the user message with multilingual support."""
-        try:
-            # Use enhanced search with multilingual support
-            search_results = await self.search_service.hybrid_search(
-                client_id=client_id,
-                query_text=user_message,
-                limit=5,
-                vector_threshold=0.7,
-                collection_id=collection_id,
-                enable_multilingual=multilingual_settings.MULTILINGUAL_SEARCH_ENABLED
-            )
-            
-            context_items = []
-            for result in search_results.get("results", []):
-                context_items.append({
-                    "title": result.get("title", ""),
-                    "content": result.get("content", ""),
-                    "source": result.get("collection_name", "Knowledge Base"),
-                    "similarity": result.get("similarity", 0.0),
-                    "language": result.get("query_language", "unknown"),
-                    "is_translated": not result.get("is_original_query", True)
-                })
-            
-            # Log multilingual search results if enabled
-            if multilingual_settings.LOG_MULTILINGUAL_OPERATIONS and context_items:
-                translated_results = [item for item in context_items if item["is_translated"]]
-                if translated_results:
-                    logger.info(f"Found {len(translated_results)} cross-language matches for query: {user_message}")
-            
-            return context_items
-            
-        except Exception as e:
-            logger.error(f"Error getting knowledge context: {str(e)}")
-            return []
     
     def _get_fallback_response(self) -> str:
         """Get a business-focused fallback response for off-topic queries."""

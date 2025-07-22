@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 
 from app.domain.chat.entities import ConversationContext
+from app.repositories.chat_repository import ChatMessageRepository
 from app.repositories.chat_repository import ConversationContextRepository
 from app.core import logger
 
@@ -16,9 +17,11 @@ class ContextManager:
     - Providing formatted history for LLM
     """
     
-    def __init__(self, max_history_length: int = 4):
+    def __init__(self, max_history_length: int = 40):
         self.max_history_length = max_history_length
         self.context_repo = ConversationContextRepository()
+        self.message_repo = ChatMessageRepository()  
+
     
     def initialize_context(self, db: Session, session_id: str) -> Dict[str, Any]:
         """
@@ -98,13 +101,14 @@ class ContextManager:
         # Add messages to history
         if "history" not in context:
             context["history"] = []
-        
+
+        # Only keep last 4 messages in context (others come from database)
         context["history"].append({"role": "user", "content": user_message})
         context["history"].append({"role": "assistant", "content": assistant_message})
-        
-        # Trim history if needed
-        if len(context["history"]) > self.max_history_length * 2:  # *2 because each exchange has 2 messages
-            context["history"] = context["history"][-self.max_history_length * 2:]
+
+        # Trim context history to last 4 messages only
+        if len(context["history"]) > 8:  # 4 exchanges = 8 messages
+            context["history"] = context["history"][-8:]
         
         # Apply additional context updates
         if context_updates:
@@ -116,17 +120,39 @@ class ContextManager:
         
         return context
     
-    def format_history(self, context: Dict[str, Any]) -> List[Dict[str, str]]:
+    def format_history(self, context: Dict[str, Any], db: Session, session_id: str) -> List[Dict[str, str]]:
         """
-        Format conversation history for the LLM.
+        Format conversation history for the LLM by pulling from database.
         
         Args:
-            context: Conversation context
+            context: Conversation context (kept for compatibility)
+            db: Database session
+            session_id: Chat session ID
             
         Returns:
             Formatted history as a list of role/content dictionaries
         """
-        if "history" not in context:
-            return []
-        
-        return context["history"]
+        try:
+            # Get recent messages directly from database
+            messages = self.message_repo.get_by_session_id(
+                db, 
+                session_id, 
+                limit=self.max_history_length
+            )
+            
+            # Convert to LLM format (most recent first, so reverse for chronological order)
+            formatted_messages = []
+            for msg in reversed(messages):
+                formatted_messages.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+            
+            return formatted_messages
+            
+        except Exception as e:
+            logger.error(f"Error retrieving message history: {str(e)}")
+            # Fallback to context-based history if database fails
+            if "history" not in context:
+                return []
+            return context["history"]
