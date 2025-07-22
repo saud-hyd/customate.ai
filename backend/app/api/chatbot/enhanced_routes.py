@@ -13,7 +13,6 @@ from app.domain.client.entities import Client
 from app.services.chat.enhanced_chat_service import EnhancedChatService
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
 from app.services.llm.openai_service import OpenAIService
-from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
 from app.core import logger
@@ -33,158 +32,7 @@ def get_openai_service() -> OpenAIService:
     
     return OpenAIService(model_name="gpt-4.1-mini-2025-04-14")
 
-@router.post("/message", response_model=Dict[str, Any])
-async def send_message(
-    message_data: Dict[str, Any],
-    request: Request,
-    current_client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db)
-):
-    """Send a message to the chatbot and get a response using enhanced knowledge integration with OpenAI."""
-    start_time = time.time()
     
-    if "message" not in message_data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Message field is required"
-        )
-    
-    # Extract data from request
-    user_message = message_data["message"]
-    session_id = message_data.get("session_id")
-    
-    # Collect user info for analytics
-    user_info = {
-        "user_id": message_data.get("user_id"),
-        "ip_address": request.client.host if request.client else None,
-        "user_agent": request.headers.get("user-agent"),
-        "referrer": request.headers.get("referer"),
-    }
-    
-    # Get OpenAI service for knowledge lookup
-    try:
-        llm_service_search = get_openai_service()
-        search_service_initial = EnhancedSearchService(llm_service_search)
-        
-        # Perform knowledge search to find relevant content
-        search_results = await search_service_initial.hybrid_search(
-            client_id=current_client.client_id,
-            query_text=user_message,
-            limit=5  # Get more results for better knowledge coverage
-        )
-    except Exception as e:
-        logger.error(f"Error initializing OpenAI service for knowledge search: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="OpenAI service unavailable. Please try again later."
-        )
-    
-    results = search_results.get("results", [])
-    logger.info(f"Found {len(results)} knowledge items for query: '{user_message[:50]}...' (client: {current_client.client_id}) using OpenAI")
-    
-    # Log the top result scores for debugging
-    if results:
-        score_str = ", ".join([f"{r.get('hybrid_score', r.get('similarity', 0)):.2f}" for r in results[:3]])
-        logger.info(f"Top result scores: {score_str}")
-    
-    # Get OpenAI service for main processing
-    try:
-        llm_service = get_openai_service()
-        logger.info("Using OpenAI GPT-4.1-mini-2025-04-14 for chat processing")
-    except Exception as e:
-        logger.error(f"Error initializing OpenAI service: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="OpenAI service unavailable. Please try again later."
-        )
-    
-    # Initialize other services
-    search_service = EnhancedSearchService(llm_service)
-    industry_factory = IndustryFactory()
-    context_manager = ContextManager()
-    
-    # Create enhanced chat service
-    chat_service = EnhancedChatService(
-        db=db,
-        search_service=search_service,
-        llm_service=llm_service,
-        industry_factory=industry_factory,
-        context_manager=context_manager,
-    )
-    
-    # Monkey patch the hybrid_search method to return our pre-fetched results
-    original_hybrid_search = search_service.hybrid_search
-    
-    async def custom_hybrid_search(*args, **kwargs):
-        # Use our already fetched results
-        return {
-            "results": results,
-            "metadata": search_results.get("metadata", {})
-        }
-    
-    # Apply the patch to use our knowledge base results
-    search_service.hybrid_search = custom_hybrid_search
-    
-    # Enhance the LLM's system prompt to focus on KB information
-    original_build_prompt = llm_service._build_system_prompt if hasattr(llm_service, '_build_system_prompt') else None
-    
-    if original_build_prompt:
-        def kb_focused_prompt(*args, **kwargs):
-            # Get the original prompt
-            original = original_build_prompt(*args, **kwargs)
-            
-            # Add instructions to focus on knowledge base information
-            kb_instructions = (
-                "IMPORTANT: You are powered by OpenAI GPT-4.1-mini-2025-04-14. "
-                "Base your response primarily on the provided knowledge base information. "
-                "If the knowledge base doesn't contain sufficient information to answer the question, "
-                "acknowledge this limitation and ask the user to provide more details. "
-                "Ensure your responses are grounded in the provided knowledge context."
-            )
-            
-            # Append to the original prompt
-            enhanced_prompt = original + "\n\n" + kb_instructions
-            return enhanced_prompt
-            
-        # Apply the patch
-        llm_service._build_system_prompt = kb_focused_prompt
-    
-    try:
-        # Process message with enhanced knowledge integration
-        response = await chat_service.process_message(
-            client_id=current_client.client_id,
-            session_id=session_id,
-            user_message=user_message,
-            user_info=user_info
-        )
-        
-        # Add model information to response
-        response["model_info"] = {
-            "provider": "openai",
-            "model": "gpt-4.1-mini-2025-04-14",
-            "timestamp": time.time()
-        }
-        
-        # Track usage stats using track_chat_message
-        usage_tracker = UsageTracker()
-        
-        # Track the assistant's message (is_user_message=False)
-        usage_tracker.track_chat_message(
-            db=db,
-            client_id=current_client.client_id,
-            session_id=response["session_id"],
-            message_content=response["message"]["content"],
-            is_user_message=False,
-            response_time_ms=int((time.time() - start_time) * 1000),
-            knowledge_used=response.get("knowledge_used", False)
-        )
-        
-        return response
-    finally:
-        # Restore original methods
-        search_service.hybrid_search = original_hybrid_search
-        if original_build_prompt:
-            llm_service._build_system_prompt = original_build_prompt
 
 @router.get("/history/{session_id}", response_model=List[Dict[str, Any]])
 async def get_chat_history(
@@ -207,7 +55,6 @@ async def get_chat_history(
     
     # Initialize services
     search_service = EnhancedSearchService(llm_service)
-    industry_factory = IndustryFactory()
     context_manager = ContextManager()
     
     # Create enhanced chat service
@@ -215,7 +62,6 @@ async def get_chat_history(
         db=db,
         search_service=search_service,
         llm_service=llm_service,
-        industry_factory=industry_factory,
         context_manager=context_manager,
     )
     
@@ -263,117 +109,28 @@ async def send_message_stream(
             detail="OpenAI API key not configured. Please contact administrator."
         )
     
-    # Get OpenAI service for knowledge lookup
-    try:
-        llm_service_search = get_openai_service()
-        search_service_initial = EnhancedSearchService(llm_service_search)
-        
-        # Perform knowledge search to find relevant content
-        search_results = await search_service_initial.hybrid_search(
-            client_id=current_client.client_id,
-            query_text=user_message,
-            limit=5  # Get more results for better knowledge coverage
-        )
-    except Exception as e:
-        logger.error(f"Error in OpenAI knowledge search: {str(e)}")
-        # Return error in streaming format
-        async def error_stream():
-            error_message = {
-                "type": "error",
-                "error": f"OpenAI service unavailable: {str(e)}"
-            }
-            yield f"data: {json.dumps(error_message)}\n\n"
-        
-        return StreamingResponse(
-            error_stream(),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            }
-        )
-    
-    results = search_results.get("results", [])
-    logger.info(f"Stream: Found {len(results)} knowledge items for query: '{user_message[:50]}...' (client: {current_client.client_id}) using OpenAI")
-    
-    # Log the top result scores for debugging
-    if results:
-        score_str = ", ".join([f"{r.get('hybrid_score', r.get('similarity', 0)):.2f}" for r in results[:3]])
-        logger.info(f"Stream: Top result scores: {score_str}")
-    
-    # Get OpenAI service for main processing
+    # Initialize OpenAI service
     try:
         llm_service = get_openai_service()
-        logger.info("Stream: Using OpenAI GPT-4.1-mini-2025-04-14 for streaming chat")
+        logger.info("Using OpenAI GPT-4.1-mini-2025-04-14 for streaming chat")
     except Exception as e:
-        logger.error(f"Error initializing OpenAI service for streaming: {str(e)}")
-        # Return error in streaming format
-        async def error_stream():
-            error_message = {
-                "type": "error",
-                "error": f"OpenAI service initialization failed: {str(e)}"
-            }
-            yield f"data: {json.dumps(error_message)}\n\n"
-        
-        return StreamingResponse(
-            error_stream(),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            }
+        logger.error(f"Error initializing OpenAI service: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OpenAI service unavailable. Please try again later."
         )
     
-    # Initialize the rest of the services
+    # Initialize simplified services
     search_service = EnhancedSearchService(llm_service)
-    industry_factory = IndustryFactory()
     context_manager = ContextManager()
     
-    # Create enhanced chat service
+    # Create simplified chat service
     chat_service = EnhancedChatService(
         db=db,
         search_service=search_service,
         llm_service=llm_service,
-        industry_factory=industry_factory,
         context_manager=context_manager,
     )
-    
-    # Monkey patch the hybrid_search method to return our pre-fetched results
-    original_hybrid_search = search_service.hybrid_search
-    
-    async def custom_hybrid_search(*args, **kwargs):
-        # Use our already fetched results
-        return {
-            "results": results,
-            "metadata": search_results.get("metadata", {})
-        }
-    
-    # Apply the patch to use our knowledge base results
-    search_service.hybrid_search = custom_hybrid_search
-    
-    # Enhance the LLM's system prompt to focus on KB information
-    original_build_prompt = llm_service._build_system_prompt if hasattr(llm_service, '_build_system_prompt') else None
-    
-    if original_build_prompt:
-        def kb_focused_prompt(*args, **kwargs):
-            # Get the original prompt
-            original = original_build_prompt(*args, **kwargs)
-            
-            # Add instructions to focus on knowledge base information
-            kb_instructions = (
-                "IMPORTANT: You are powered by OpenAI GPT-4.1-mini-2025-04-14. "
-                "Base your response primarily on the provided knowledge base information. "
-                "If the knowledge base doesn't contain sufficient information to answer the question, "
-                "acknowledge this limitation and ask the user to provide more details. "
-                "Ensure your responses are grounded in the provided knowledge context."
-            )
-            
-            # Append to the original prompt
-            enhanced_prompt = original + "\n\n" + kb_instructions
-            return enhanced_prompt
-            
-        # Apply the patch
-        llm_service._build_system_prompt = kb_focused_prompt
     
     async def stream_response():
         """Generate the streaming response using OpenAI."""
@@ -448,11 +205,6 @@ async def send_message_stream(
                 "model_name": "gpt-4.1-mini-2025-04-14"
             }
             yield f"data: {json.dumps(error_message)}\n\n"
-        finally:
-            # Restore original methods
-            search_service.hybrid_search = original_hybrid_search
-            if original_build_prompt:
-                llm_service._build_system_prompt = original_build_prompt
     
     # Return a streaming response with text/event-stream content type
     return StreamingResponse(

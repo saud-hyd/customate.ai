@@ -134,29 +134,27 @@ class OpenAIService(LLMService):
         knowledge_context: Optional[List[Dict[str, Any]]],
         industry_context: Optional[Dict[str, Any]]
     ) -> str:
-        """Build the system prompt with context information and formatting instructions."""
+        """Simplified system prompt that lets OpenAI handle conversations naturally."""
         base_prompt = """You are a helpful AI assistant for customer support.
-        
-    Format your responses with proper Markdown:
-    - Use **bold text** for important information, headings, or key points
-    - Create proper lists with bullet points when listing items or steps
+
+    You can handle both casual greetings and business questions naturally. 
+    Be conversational, professional, and helpful.
+
+    Format your responses with proper Markdown when helpful:
+    - Use **bold text** for important information
+    - Create lists with bullet points when appropriate  
     - Use proper line breaks for readability
-    - When presenting structured information like product features or pricing details, use clear formatting with headings and lists
-    - For numerical lists, use proper numbered formatting
     """
-        
-        # Enhance prompt with business focus and off-topic handling
-        enhanced_prompt = self.enhance_system_prompt(base_prompt, industry_context)
         
         # Add knowledge context if provided
         if knowledge_context:
-            knowledge_text = "\n\nRelevant information:\n" + "\n".join([
+            knowledge_text = "\n\nRelevant information from knowledge base:\n" + "\n".join([
                 f"- {item['title']}: {item['content']}" 
                 for item in knowledge_context
             ])
-            enhanced_prompt += knowledge_text
+            base_prompt += knowledge_text
         
-        return enhanced_prompt    
+        return base_prompt    
     
     def _format_messages(
         self, 

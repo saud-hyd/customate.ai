@@ -1,9 +1,7 @@
 # backend/app/services/chat/enhanced_chat_service.py
-from typing import Dict, Any, List, Optional, Tuple, AsyncGenerator
+from typing import Dict, Any, List, Optional, AsyncGenerator
 import time
 import uuid
-import json
-import logging
 from datetime import datetime
 
 from sqlalchemy.orm import Session
@@ -12,22 +10,17 @@ from app.repositories.chat_repository import ChatSessionRepository, ChatMessageR
 from app.services.chat.context_manager import ContextManager
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
 from app.services.llm.llm_service import LLMService
-from app.core.config.multilingual_settings import multilingual_settings
-from app.repositories.integration_repository import IntegrationRepository
-from app.services.integration.integration_service import IntegrationService
 from app.core import logger
 
 class EnhancedChatService:
     """
-    Universal chat service with RAG, external integrations, and off-topic protection.
+    Simplified chat service focused on OpenAI + RAG.
     
     This service provides:
-    - RAG-based knowledge retrieval with relevance filtering
-    - External integration data retrieval (Shopify, Salesforce, Zendesk)
-    - Streaming and regular chat responses
-    - Business-focused off-topic protection
-    - Session and context management
-    - Multilingual support
+    - RAG-based knowledge retrieval 
+    - OpenAI streaming and regular chat responses
+    - Natural conversation handling
+    - Session management
     """
     
     def __init__(
@@ -35,27 +28,16 @@ class EnhancedChatService:
         db: Session,
         search_service: EnhancedSearchService,
         llm_service: LLMService,
-        context_manager: ContextManager
+        context_manager: Optional[ContextManager] = None
     ):
+        """Simplified initialization - core services only."""
         self.db = db
         self.search_service = search_service
         self.llm_service = llm_service
-        self.context_manager = context_manager
+        self.context_manager = context_manager or ContextManager()
         self.session_repo = ChatSessionRepository()
         self.message_repo = ChatMessageRepository()
-        self.integration_repo = IntegrationRepository()
-        self.integration_service = IntegrationService()
         
-        # RAG relevance threshold - adjust based on your needs
-        self.relevance_threshold = 0.4
-        
-        # Business-focused fallback responses for off-topic queries
-        self.fallback_responses = [
-            "I can only help with questions related to our products and services. Is there something specific about our business I can assist you with?",
-            "I don't have information about that topic. I'm here to help with questions about our company, products, or services. What would you like to know?",
-            "That's outside my area of expertise. I specialize in helping with our business-related inquiries. How can I assist you with our products or services?",
-            "I focus on providing information about our company and offerings. Is there something business-related I can help you with instead?"
-        ]
     
     async def process_message(
         self,
@@ -65,9 +47,8 @@ class EnhancedChatService:
         user_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        SIMPLIFIED: Non-streaming version using same logic.
+        Non-streaming version - collects streaming response into single result.
         """
-        # Collect streaming response
         full_response = ""
         response_data = {}
         
@@ -97,21 +78,16 @@ class EnhancedChatService:
         user_info: Optional[Dict[str, Any]] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        SIMPLIFIED: Process message with GPT-4 native context handling.
-        
-        Key simplifications:
-        - Removed artificial follow-up detection
-        - Removed complex knowledge context enhancement  
-        - Let GPT-4 handle context naturally with full conversation history
+        Simplified streaming response - let OpenAI handle context naturally.
         """
         start_time = time.time()
         message_id = str(uuid.uuid4())
         
-        # Get or create session (unchanged)
+        # Get or create session
         session = self._get_or_create_session(client_id, session_id, user_info)
         session_id = session.session_id
         
-        # Save user message (unchanged)
+        # Save user message
         user_message_db = self.message_repo.create(self.db, obj_in={
             "session_id": session_id,
             "role": "user", 
@@ -120,21 +96,19 @@ class EnhancedChatService:
             "created_at": datetime.utcnow()
         })
         
-        # SIMPLIFIED: Get full conversation history (no artificial limits)
+        # Get conversation history
         context = self.context_manager.get_context(self.db, session_id)
         conversation_history = self.context_manager.format_history(context, self.db, session_id)
         
-        # SIMPLIFIED: Basic knowledge search (no complex enhancement)
+        # Simple knowledge search
         knowledge_context = []
         knowledge_used = False
-        max_relevance_score = 0.0
         
         try:
             search_results = await self.search_service.hybrid_search(
                 client_id=client_id,
                 query_text=user_message,
-                limit=5,  # Simple limit
-                hybrid_ratio=0.7
+                limit=5                
             )
             
             if search_results.get("results"):
@@ -147,11 +121,9 @@ class EnhancedChatService:
                     }
                     for item in search_results["results"]
                 ]
-                max_relevance_score = max([item.get("hybrid_score", 0) for item in search_results["results"]], default=0)
                 
         except Exception as e:
             logger.error(f"Knowledge search error: {str(e)}")
-            # Continue without knowledge if search fails
         
         # Send initial info
         yield {
@@ -162,17 +134,15 @@ class EnhancedChatService:
             "message_id": message_id
         }
         
-        # SIMPLIFIED: Generate response with full conversation history
+        # Generate response with OpenAI
         full_response = ""
         
         try:
             async for content_chunk in self.llm_service.generate_response_stream(
                 user_message=user_message,
-                conversation_history=conversation_history,  # Full history, not truncated
+                conversation_history=conversation_history,
                 knowledge_context=knowledge_context if knowledge_used else None,
-                industry_context={
-                    "instructions": "You are a helpful business assistant. Use the provided knowledge base to answer questions accurately and professionally."
-                }
+                industry_context=None  # Let OpenAI handle context naturally
             ):
                 full_response += content_chunk
                 yield {
@@ -183,51 +153,47 @@ class EnhancedChatService:
                 
         except Exception as e:
             logger.error(f"LLM generation error: {str(e)}")
-            error_response = "I apologize, but I'm having trouble generating a response right now. Please try again."
+            # Simple error response
+            error_response = "I apologize, but I'm having trouble processing your request right now. Could you please try rephrasing your question?"
+            full_response = error_response
             yield {
                 "type": "chunk", 
                 "content": error_response,
                 "message_id": message_id
             }
-            full_response = error_response
-        
+                    
         # Save assistant message
-        assistant_message = self.message_repo.create(self.db, obj_in={
+        assistant_msg = self.message_repo.create(self.db, obj_in={
             "session_id": session_id,
             "role": "assistant",
             "content": full_response,
             "message_id": message_id,
             "message_metadata": {
                 "knowledge_used": knowledge_used,
-                "max_relevance_score": max_relevance_score,
-                "knowledge_items_found": len(knowledge_context),
                 "response_time_ms": int((time.time() - start_time) * 1000),
-                "simplified_context": True  # Flag to track simplified processing
             },
             "created_at": datetime.utcnow()
         })
         
-        # SIMPLIFIED: Context update (automatic via message storage)
+        # Update context
         self.context_manager.update_context(
             self.db, 
             session_id, 
             user_message, 
             full_response,
-            {
-                "knowledge_used": knowledge_used,
-                "max_relevance_score": max_relevance_score
-            }
         )
         
-        # Final response
+        # Send completion
         yield {
             "type": "done",
             "message": {
+                "id": assistant_msg.message_id,
                 "content": full_response,
-                "role": "assistant", 
-                "id": message_id,
-                "created_at": datetime.utcnow().isoformat()
-            }
+                "role": "assistant",
+                "created_at": assistant_msg.created_at.isoformat()
+            },
+            "session_id": session_id,
+            "knowledge_used": knowledge_used
         }
     
     def get_chat_history(
@@ -236,17 +202,7 @@ class EnhancedChatService:
         session_id: str,
         limit: int = 50
     ) -> List[Dict[str, Any]]:
-        """
-        Get chat history for a session.
-        
-        Args:
-            client_id: Client ID
-            session_id: Session ID
-            limit: Maximum number of messages to return
-            
-        Returns:
-            List of messages
-        """
+        """Get chat history for a session."""
         # Get session
         session = self.session_repo.get_by_session_id(self.db, session_id)
         if not session or session.client_id != client_id:
@@ -267,11 +223,6 @@ class EnhancedChatService:
             for message in messages
         ]
     
-    def _get_fallback_response(self) -> str:
-        """Get a business-focused fallback response for off-topic queries."""
-        import random
-        return random.choice(self.fallback_responses)
-    
     def _get_or_create_session(
         self,
         client_id: str,
@@ -280,7 +231,6 @@ class EnhancedChatService:
     ):
         """Get existing session or create a new one."""
         if session_id:
-            # Continue existing session
             session = self.session_repo.get_by_session_id(self.db, session_id)
             if session and session.client_id == client_id:
                 return session
@@ -297,92 +247,3 @@ class EnhancedChatService:
         }
         
         return self.session_repo.create(self.db, obj_in=session_data)
-    
-    def _should_use_integration(self, user_message: str) -> bool:
-        """Determine if external integration data should be used."""
-        # Check for integration-relevant keywords
-        integration_keywords = [
-            "order", "ticket", "product", "customer", "account", "subscription",
-            "issue", "purchase", "billing", "contact", "inventory", "status"
-        ]
-        
-        message_lower = user_message.lower()
-        return any(keyword in message_lower for keyword in integration_keywords)
-    
-    async def _fetch_integration_data(
-        self, 
-        client_id: str, 
-        user_message: str
-    ) -> Optional[List[Dict[str, Any]]]:
-        """
-        Fetch relevant data from integrated external services.
-        
-        Args:
-            client_id: Client ID
-            user_message: Original user message
-            
-        Returns:
-            List of data items or None if no relevant data found
-        """
-        try:
-            # Get active integrations for the client
-            integrations = self.integration_repo.get_active_by_client_id(self.db, client_id)
-            
-            if not integrations:
-                return None
-            
-            # Simple keyword-based integration selection
-            message_lower = user_message.lower()
-            
-            # Determine integration priority based on message content
-            if any(word in message_lower for word in ["ticket", "issue", "support", "problem"]):
-                target_provider = "zendesk"
-                resource_type = "tickets"
-            elif any(word in message_lower for word in ["product", "item", "inventory", "stock"]):
-                target_provider = "shopify"
-                resource_type = "products"
-            elif any(word in message_lower for word in ["order", "purchase", "shipping", "delivery"]):
-                target_provider = "shopify"
-                resource_type = "orders"
-            elif any(word in message_lower for word in ["contact", "customer", "account", "lead"]):
-                target_provider = "salesforce"
-                resource_type = "contacts"
-            else:
-                # Default to first available integration
-                if integrations:
-                    first_integration = integrations[0]
-                    target_provider = first_integration.provider
-                    # Default resource types by provider
-                    resource_type = {
-                        "shopify": "products",
-                        "zendesk": "tickets", 
-                        "salesforce": "contacts"
-                    }.get(target_provider, "products")
-                else:
-                    return None
-            
-            # Find matching integration
-            target_integration = None
-            for integration in integrations:
-                if integration.provider == target_provider:
-                    target_integration = integration
-                    break
-            
-            if not target_integration:
-                return None
-            
-            # Extract query from user message (simple keyword extraction)
-            query_words = [word for word in user_message.split() if len(word) > 3]
-            query = " ".join(query_words[:3]) if query_words else user_message
-            
-            # Get data from integration
-            return self.integration_service.get_data(
-                target_integration,
-                resource_type,
-                query=query,
-                filters=None
-            )
-            
-        except Exception as e:
-            logger.error(f"Error fetching integration data: {str(e)}")
-            return None

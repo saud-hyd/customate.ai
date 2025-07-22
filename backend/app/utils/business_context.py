@@ -3,32 +3,29 @@ from typing import Dict, Any, Optional, List
 
 class BusinessContextPrompt:
     """
-    Utility for enhancing LLM prompts with business focus and off-topic handling.
+    Simplified utility for enhancing LLM prompts - lets OpenAI handle context naturally.
     """
     
     @staticmethod
     def enhance_system_prompt(base_prompt: str, client_industry: str = "business") -> str:
         """
-        Add business focus and off-topic handling to a system prompt.
+        Add minimal context enhancement - let OpenAI decide how to handle conversations.
         
         Args:
             base_prompt: Original system prompt
-            client_industry: The client's industry
+            client_industry: The client's industry (mostly ignored now)
             
         Returns:
-            Enhanced system prompt
+            Minimally enhanced system prompt
         """
-        business_focus = f"""
-You are a specialized AI assistant focused on providing information about the {client_industry} industry.
-Your answers should be relevant to the company's business, products, or services.
+        # Simple, flexible enhancement that doesn't restrict conversation
+        flexible_context = """
+You are a helpful AI assistant. You can handle both casual conversation and business inquiries naturally.
 
-IMPORTANT INSTRUCTION: If asked questions unrelated to the company's business, like personal opinions, 
-jokes, creative tasks, general knowledge unrelated to this business, or any other off-topic queries, 
-politely redirect the conversation with:
-"I'm specialized in answering questions about our company and its offerings. Is there something specific 
-about our products or services I can help with?"
+When you have relevant knowledge from the knowledge base, use it to provide accurate information.
+If you don't have specific information to answer a question, be honest about it and offer to help in other ways.
 
-Always stay focused on providing helpful, accurate information within the business domain.
+Be conversational and helpful while staying professional.
 """
         
-        return f"{business_focus}\n\n{base_prompt}"
+        return f"{flexible_context}\n\n{base_prompt}"
