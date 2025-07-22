@@ -13,7 +13,6 @@ from app.domain.client.entities import Client
 from app.services.chat.enhanced_chat_service import EnhancedChatService
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
 from app.services.llm.deepseek_service import DeepSeekService
-from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
 from app.core import logger
@@ -59,7 +58,6 @@ async def send_message(
     
     # Initialize other services
     search_service = EnhancedSearchService(llm_service)
-    industry_factory = IndustryFactory()
     context_manager = ContextManager()
     
     # Create enhanced chat service
@@ -67,7 +65,6 @@ async def send_message(
         db=db,
         search_service=search_service,
         llm_service=llm_service,
-        industry_factory=industry_factory,
         context_manager=context_manager,
     )
     
@@ -102,7 +99,6 @@ async def get_chat_history(
     # Initialize services
     llm_service = DeepSeekService()
     search_service = EnhancedSearchService(llm_service)
-    industry_factory = IndustryFactory()
     context_manager = ContextManager()
     
     # Create enhanced chat service
@@ -110,7 +106,6 @@ async def get_chat_history(
         db=db,
         search_service=search_service,
         llm_service=llm_service,
-        industry_factory=industry_factory,
         context_manager=context_manager,
     )
     
@@ -178,7 +173,6 @@ async def send_message_stream(
     
     # Initialize the rest of the services
     search_service = EnhancedSearchService(llm_service)
-    industry_factory = IndustryFactory()
     context_manager = ContextManager()
     
     # Create enhanced chat service
@@ -186,7 +180,6 @@ async def send_message_stream(
         db=db,
         search_service=search_service,
         llm_service=llm_service,
-        industry_factory=industry_factory,
         context_manager=context_manager,
     )
     

@@ -8,12 +8,9 @@ import traceback
 
 from app.core.database.dependencies import get_db
 from app.domain.client.entities import Client
-# Add this import - using the flexible auth dependency
 from app.api.auth.dependencies import get_client_with_any_auth
 from app.services.chat.chat_service import ChatService
 from app.services.knowledge.similarity_service import SimilarityService
-from app.services.llm.deepseek_service import DeepSeekService
-from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
 from app.services.llm.llm_factory import LLMFactory
@@ -61,7 +58,6 @@ async def send_message(
     
     # Initialize other services
     similarity_service = SimilarityService(llm_service)
-    industry_factory = IndustryFactory()
     context_manager = ContextManager()
     
     # Create chat service
@@ -69,7 +65,6 @@ async def send_message(
         db=db,
         similarity_service=similarity_service,
         llm_service=llm_service,
-        industry_factory=industry_factory,
         context_manager=context_manager,
     )
     
@@ -130,14 +125,12 @@ async def get_chat_history(
     
     # Initialize other services
     similarity_service = SimilarityService(llm_service)
-    industry_factory = IndustryFactory()
     context_manager = ContextManager()
     
     chat_service = ChatService(
         db=db,
         similarity_service=similarity_service,
         llm_service=llm_service,
-        industry_factory=industry_factory,
         context_manager=context_manager,
     )
     

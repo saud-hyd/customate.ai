@@ -5,7 +5,6 @@ from app.domain.chat.entities import ChatSession, ChatMessage, ConversationConte
 from app.repositories.chat_repository import ChatSessionRepository, ChatMessageRepository
 from app.services.knowledge.similarity_service import SimilarityService
 from app.services.llm.llm_service import LLMService
-from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.core import logger
 
@@ -24,13 +23,11 @@ class ChatService:
         db: Session,
         similarity_service: SimilarityService,
         llm_service: LLMService,
-        industry_factory: IndustryFactory,
         context_manager: ContextManager,
     ):
         self.db = db
         self.similarity_service = similarity_service
-        self.llm_service = llm_service
-        self.industry_factory = industry_factory
+        self.llm_service = LLMService
         self.context_manager = context_manager
         self.session_repo = ChatSessionRepository()
         self.message_repo = ChatMessageRepository()

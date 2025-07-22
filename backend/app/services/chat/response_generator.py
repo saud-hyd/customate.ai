@@ -9,17 +9,17 @@ import logging
 
 from app.services.llm.llm_service import LLMService
 from app.services.knowledge.similarity_service import SimilarityService
-from app.services.industry.industry_factory import IndustryFactory
 from app.repositories.chat_repository import ChatSessionRepository, ChatMessageRepository
 from app.services.chat.context_manager import ContextManager
 from app.core import logger
 
 class StreamingResponseGenerator:
     """
-    Enhanced response generator with streaming support for widget integration.
+    RAG-focused response generator with streaming support and off-topic protection.
     
     This service provides both regular and streaming response generation,
-    integrating with knowledge base, LLM services, and industry-specific processing.
+    integrating with knowledge base and LLM services. It ensures responses
+    stay focused on business/company topics using RAG relevance checks.
     """
     
     def __init__(
@@ -27,16 +27,25 @@ class StreamingResponseGenerator:
         db: Session,
         llm_service: LLMService,
         similarity_service: Optional[SimilarityService] = None,
-        industry_factory: Optional[IndustryFactory] = None,
         context_manager: Optional[ContextManager] = None
     ):
         self.db = db
         self.llm_service = llm_service
         self.similarity_service = similarity_service
-        self.industry_factory = industry_factory or self._create_default_industry_factory()
         self.context_manager = context_manager or self._create_default_context_manager()
         self.session_repo = ChatSessionRepository()
         self.message_repo = ChatMessageRepository()
+        
+        # Relevance threshold for knowledge base hits
+        self.relevance_threshold = 0.3  # Adjust based on your needs
+        
+        # Business-focused fallback responses
+        self.fallback_responses = [
+            "I can only help with questions related to our products and services. Is there something specific about our business I can assist you with?",
+            "I don't have information about that topic. I'm here to help with questions about our company, products, or services. What would you like to know?",
+            "That's outside my area of expertise. I specialize in helping with our business-related inquiries. How can I assist you with our products or services?",
+            "I focus on providing information about our company and offerings. Is there something business-related I can help you with instead?"
+        ]
     
     async def generate_streaming_response(
         self,
@@ -46,7 +55,7 @@ class StreamingResponseGenerator:
         user_info: Optional[Dict[str, Any]] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        Generate a streaming response for the widget.
+        Generate a streaming response with RAG and off-topic protection.
         
         Args:
             client_id: Client ID
@@ -79,15 +88,10 @@ class StreamingResponseGenerator:
             # Get conversation context
             context = self.context_manager.get_context(self.db, actual_session_id)
             
-            # Get industry-specific processing
-            industry_service = self.industry_factory.get_industry_service(client_id)
-            
-            # Extract intent and entities
-            intent, entities = self._extract_intent_entities(industry_service, user_message)
-            
-            # Search for relevant knowledge if similarity service is available
+            # Search for relevant knowledge
             knowledge_context = []
             knowledge_used = False
+            max_relevance_score = 0.0
             
             if self.similarity_service:
                 try:
@@ -96,79 +100,45 @@ class StreamingResponseGenerator:
                         search_results = await self.similarity_service.hybrid_search(
                             client_id=client_id,
                             query_text=user_message,
-                            limit=3
+                            limit=5
                         )
                         knowledge_results = search_results.get("results", [])
                     elif hasattr(self.similarity_service, 'search'):
                         knowledge_results = await self.similarity_service.search(
                             client_id=client_id,
                             query=user_message,
-                            limit=3
+                            limit=5
                         )
                     else:
                         knowledge_results = []
                     
                     if knowledge_results:
-                        knowledge_used = True
-                        knowledge_context = [
-                            {
-                                "title": item.get("title", ""),
-                                "content": item.get("content", ""),
-                                "source": item.get("collection_name", "Knowledge Base"),
-                                "relevance": "high" if item.get("score", 0) > 0.8 else "medium"
-                            }
-                            for item in knowledge_results[:3]
-                        ]
+                        # Check relevance scores
+                        max_relevance_score = max([item.get("score", 0) for item in knowledge_results])
+                        
+                        if max_relevance_score >= self.relevance_threshold:
+                            knowledge_used = True
+                            knowledge_context = [
+                                {
+                                    "title": item.get("title", ""),
+                                    "content": item.get("content", ""),
+                                    "source": item.get("collection_name", "Knowledge Base"),
+                                    "relevance": "high" if item.get("score", 0) > 0.7 else "medium"
+                                }
+                                for item in knowledge_results[:3]
+                                if item.get("score", 0) >= self.relevance_threshold
+                            ]
+                        
                 except Exception as e:
                     logger.warning(f"Knowledge search failed: {str(e)}")
             
-            # Format conversation history
-            conversation_history = self.context_manager.format_history(context)
-            
-            # Check if LLM service supports streaming
-            if hasattr(self.llm_service, 'generate_response_stream'):
-                # Use streaming LLM
-                full_response = ""
+            # Determine response strategy
+            if not knowledge_used:
+                # No relevant knowledge found - use business-focused fallback
+                final_response = self._get_fallback_response()
                 
-                async for chunk in self.llm_service.generate_response_stream(
-                    user_message=user_message,
-                    conversation_history=conversation_history,
-                    knowledge_context=knowledge_context if knowledge_used else None,
-                    industry_context={
-                        "instructions": industry_service.get_prompting_strategy().get("system_prompt", ""),
-                        "intent": intent,
-                        "industry": industry_service.__class__.__name__
-                    }
-                ):
-                    full_response += chunk
-                    yield {
-                        "type": "chunk",
-                        "content": chunk,
-                        "message_id": message_id
-                    }
-                    
-                    # Small delay to prevent overwhelming the client
-                    await asyncio.sleep(0.01)
-            
-            else:
-                # Fallback to regular LLM with simulated streaming
-                logger.info("Using non-streaming LLM with simulated streaming")
-                
-                response = await self.llm_service.generate_response(
-                    user_message=user_message,
-                    conversation_history=conversation_history,
-                    knowledge_context=knowledge_context if knowledge_used else None,
-                    industry_context={
-                        "instructions": industry_service.get_prompting_strategy().get("system_prompt", ""),
-                        "intent": intent,
-                        "industry": industry_service.__class__.__name__
-                    }
-                )
-                
-                full_response = response.get("content", "I'm sorry, I couldn't generate a response.")
-                
-                # Simulate streaming by sending response in chunks
-                words = full_response.split()
+                # Simulate streaming for fallback response
+                words = final_response.split()
                 current_chunk = ""
                 
                 for i, word in enumerate(words):
@@ -182,13 +152,64 @@ class StreamingResponseGenerator:
                             "message_id": message_id
                         }
                         current_chunk = ""
-                        await asyncio.sleep(0.05)  # Simulate typing delay
-            
-            # Apply industry-specific post-processing
-            if hasattr(industry_service, 'process_response'):
-                final_response = industry_service.process_response(full_response, user_message, intent)
+                        await asyncio.sleep(0.05)
+                
             else:
-                final_response = full_response
+                # Relevant knowledge found - use RAG with LLM
+                conversation_history = self.context_manager.format_history(context)
+                
+                # Check if LLM service supports streaming
+                if hasattr(self.llm_service, 'generate_response_stream'):
+                    # Use streaming LLM
+                    full_response = ""
+                    
+                    async for chunk in self.llm_service.generate_response_stream(
+                        user_message=user_message,
+                        conversation_history=conversation_history,
+                        knowledge_context=knowledge_context,
+                        industry_context={
+                            "instructions": "You are a helpful business assistant. Use the provided knowledge base to answer questions accurately and professionally. Stay focused on the business context."
+                        }
+                    ):
+                        full_response += chunk
+                        yield {
+                            "type": "chunk",
+                            "content": chunk,
+                            "message_id": message_id
+                        }
+                        await asyncio.sleep(0.01)
+                    
+                    final_response = full_response
+                
+                else:
+                    # Fallback to regular LLM with simulated streaming
+                    response = await self.llm_service.generate_response(
+                        user_message=user_message,
+                        conversation_history=conversation_history,
+                        knowledge_context=knowledge_context,
+                        industry_context={
+                            "instructions": "You are a helpful business assistant. Use the provided knowledge base to answer questions accurately and professionally. Stay focused on the business context."
+                        }
+                    )
+                    
+                    final_response = response.get("content", "I'm sorry, I couldn't generate a response.")
+                    
+                    # Simulate streaming by sending response in chunks
+                    words = final_response.split()
+                    current_chunk = ""
+                    
+                    for i, word in enumerate(words):
+                        current_chunk += word + " "
+                        
+                        # Send chunk every 3 words or at the end
+                        if i % 3 == 2 or i == len(words) - 1:
+                            yield {
+                                "type": "chunk",
+                                "content": current_chunk,
+                                "message_id": message_id
+                            }
+                            current_chunk = ""
+                            await asyncio.sleep(0.05)
             
             # Save assistant message
             assistant_msg = self._save_message(
@@ -197,8 +218,8 @@ class StreamingResponseGenerator:
                 final_response,
                 {
                     "knowledge_used": knowledge_used,
-                    "intent": intent,
-                    "entities": entities,
+                    "max_relevance_score": max_relevance_score,
+                    "knowledge_items_found": len(knowledge_context),
                     "response_time_ms": int((time.time() - start_time) * 1000)
                 }
             )
@@ -211,8 +232,7 @@ class StreamingResponseGenerator:
                 final_response,
                 {
                     "knowledge_used": knowledge_used,
-                    "intent": intent,
-                    "entities": entities
+                    "max_relevance_score": max_relevance_score
                 }
             )
             
@@ -223,8 +243,7 @@ class StreamingResponseGenerator:
                 "message_id": message_id,
                 "session_id": actual_session_id,
                 "knowledge_used": knowledge_used,
-                "intent": intent,
-                "entities": entities
+                "relevance_score": max_relevance_score
             }
             
             # Send final done signal
@@ -257,7 +276,7 @@ class StreamingResponseGenerator:
         user_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Generate a regular (non-streaming) response.
+        Generate a regular (non-streaming) response with RAG and off-topic protection.
         
         Args:
             client_id: Client ID
@@ -281,15 +300,10 @@ class StreamingResponseGenerator:
             # Get conversation context
             context = self.context_manager.get_context(self.db, actual_session_id)
             
-            # Get industry-specific processing
-            industry_service = self.industry_factory.get_industry_service(client_id)
-            
-            # Extract intent and entities
-            intent, entities = self._extract_intent_entities(industry_service, user_message)
-            
             # Search for relevant knowledge
             knowledge_context = []
             knowledge_used = False
+            max_relevance_score = 0.0
             
             if self.similarity_service:
                 try:
@@ -297,54 +311,57 @@ class StreamingResponseGenerator:
                         search_results = await self.similarity_service.hybrid_search(
                             client_id=client_id,
                             query_text=user_message,
-                            limit=3
+                            limit=5
                         )
                         knowledge_results = search_results.get("results", [])
                     elif hasattr(self.similarity_service, 'search'):
                         knowledge_results = await self.similarity_service.search(
                             client_id=client_id,
                             query=user_message,
-                            limit=3
+                            limit=5
                         )
                     else:
                         knowledge_results = []
                     
                     if knowledge_results:
-                        knowledge_used = True
-                        knowledge_context = [
-                            {
-                                "title": item.get("title", ""),
-                                "content": item.get("content", ""),
-                                "source": item.get("collection_name", "Knowledge Base"),
-                                "relevance": "high" if item.get("score", 0) > 0.8 else "medium"
-                            }
-                            for item in knowledge_results[:3]
-                        ]
+                        # Check relevance scores
+                        max_relevance_score = max([item.get("score", 0) for item in knowledge_results])
+                        
+                        if max_relevance_score >= self.relevance_threshold:
+                            knowledge_used = True
+                            knowledge_context = [
+                                {
+                                    "title": item.get("title", ""),
+                                    "content": item.get("content", ""),
+                                    "source": item.get("collection_name", "Knowledge Base"),
+                                    "relevance": "high" if item.get("score", 0) > 0.7 else "medium"
+                                }
+                                for item in knowledge_results[:3]
+                                if item.get("score", 0) >= self.relevance_threshold
+                            ]
+                        
                 except Exception as e:
                     logger.warning(f"Knowledge search failed: {str(e)}")
             
-            # Format conversation history
-            conversation_history = self.context_manager.format_history(context)
-            
-            # Generate response using LLM
-            response = await self.llm_service.generate_response(
-                user_message=user_message,
-                conversation_history=conversation_history,
-                knowledge_context=knowledge_context if knowledge_used else None,
-                industry_context={
-                    "instructions": industry_service.get_prompting_strategy().get("system_prompt", ""),
-                    "intent": intent,
-                    "industry": industry_service.__class__.__name__
-                }
-            )
-            
-            content = response.get("content", "I'm sorry, I couldn't generate a response.")
-            
-            # Apply industry-specific post-processing
-            if hasattr(industry_service, 'process_response'):
-                final_response = industry_service.process_response(content, user_message, intent)
+            # Determine response strategy
+            if not knowledge_used:
+                # No relevant knowledge found - use business-focused fallback
+                final_response = self._get_fallback_response()
+                
             else:
-                final_response = content
+                # Relevant knowledge found - use RAG with LLM
+                conversation_history = self.context_manager.format_history(context)
+                
+                response = await self.llm_service.generate_response(
+                    user_message=user_message,
+                    conversation_history=conversation_history,
+                    knowledge_context=knowledge_context,
+                    industry_context={
+                        "instructions": "You are a helpful business assistant. Use the provided knowledge base to answer questions accurately and professionally. Stay focused on the business context."
+                    }
+                )
+                
+                final_response = response.get("content", "I'm sorry, I couldn't generate a response.")
             
             # Save assistant message
             assistant_msg = self._save_message(
@@ -353,8 +370,8 @@ class StreamingResponseGenerator:
                 final_response,
                 {
                     "knowledge_used": knowledge_used,
-                    "intent": intent,
-                    "entities": entities,
+                    "max_relevance_score": max_relevance_score,
+                    "knowledge_items_found": len(knowledge_context),
                     "response_time_ms": int((time.time() - start_time) * 1000)
                 }
             )
@@ -367,8 +384,7 @@ class StreamingResponseGenerator:
                 final_response,
                 {
                     "knowledge_used": knowledge_used,
-                    "intent": intent,
-                    "entities": entities
+                    "max_relevance_score": max_relevance_score
                 }
             )
             
@@ -381,8 +397,8 @@ class StreamingResponseGenerator:
                 },
                 "session_id": actual_session_id,
                 "knowledge_used": knowledge_used,
-                "intent": intent,
-                "entities": entities
+                "relevance_score": max_relevance_score,
+                "knowledge_items_found": len(knowledge_context)
             }
             
         except Exception as e:
@@ -398,6 +414,11 @@ class StreamingResponseGenerator:
                 "knowledge_used": False,
                 "error": str(e)
             }
+    
+    def _get_fallback_response(self) -> str:
+        """Get a business-focused fallback response for off-topic queries."""
+        import random
+        return random.choice(self.fallback_responses)
     
     async def _get_or_create_session(
         self,
@@ -441,38 +462,6 @@ class StreamingResponseGenerator:
         }
         
         return self.message_repo.create(self.db, obj_in=message_data)
-    
-    def _extract_intent_entities(self, industry_service, user_message):
-        """Extract intent and entities from user message."""
-        try:
-            if hasattr(industry_service, 'extract_intent_entities'):
-                return industry_service.extract_intent_entities(user_message)
-            else:
-                # Default extraction
-                return "general_inquiry", []
-        except Exception as e:
-            logger.warning(f"Intent/entity extraction failed: {str(e)}")
-            return "general_inquiry", []
-    
-    def _create_default_industry_factory(self):
-        """Create a default industry factory if none provided."""
-        class DefaultIndustryFactory:
-            def get_industry_service(self, client_id):
-                class DefaultIndustryService:
-                    def extract_intent_entities(self, message):
-                        return "general_inquiry", []
-                    
-                    def process_response(self, response, message, intent):
-                        return response
-                    
-                    def get_prompting_strategy(self):
-                        return {
-                            "system_prompt": "You are a helpful AI assistant for customer support."
-                        }
-                
-                return DefaultIndustryService()
-        
-        return DefaultIndustryFactory()
     
     def _create_default_context_manager(self):
         """Create a default context manager if none provided."""

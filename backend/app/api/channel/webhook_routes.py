@@ -1,6 +1,4 @@
 # backend/app/api/channel/webhook_routes.py
-# Update the platform_webhook function to integrate with chatbot stream
-
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, Header
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
@@ -13,7 +11,6 @@ from app.services.channel.channel_connector import ChannelConnectorFactory
 from app.services.chat.enhanced_chat_service import EnhancedChatService
 from app.services.knowledge.enhanced_search_service import EnhancedSearchService
 from app.services.llm.llm_factory import LLMFactory
-from app.services.industry.industry_factory import IndustryFactory
 from app.services.chat.context_manager import ContextManager
 from app.services.analytics.usage_tracker import UsageTracker
 from app.core import logger
@@ -207,7 +204,6 @@ async def process_message_with_chatbot(
             return
         
         search_service = EnhancedSearchService(llm_service)
-        industry_factory = IndustryFactory()
         context_manager = ContextManager()
         
         # Create enhanced chat service (same as stream endpoint)
@@ -215,7 +211,6 @@ async def process_message_with_chatbot(
             db=db,
             search_service=search_service,
             llm_service=llm_service,
-            industry_factory=industry_factory,
             context_manager=context_manager,
         )
         

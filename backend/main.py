@@ -21,7 +21,7 @@ from app.api.auth import routes as auth_routes
 from app.api.client import routes as client_routes
 from app.api.knowledge import routes as knowledge_routes
 from app.api.knowledge import document_routes
-from app.api.chatbot import enhanced_routes as chatbot_routes
+from app.api.chatbot import routes as chatbot_routes
 from app.api.chatbot import session_routes
 from app.api.knowledge import enhanced_routes as enhanced_knowledge_routes
 from app.api.analytics import routes as analytics_routes
