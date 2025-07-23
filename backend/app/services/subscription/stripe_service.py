@@ -42,21 +42,33 @@ PLAN_LIMITS = {
     "free": {
         "message_limit": 100,
         "storage_limit_mb": 0.5,  # 500 KB
+        "call_minutes_limit": 10,  # 10 minutes
+        "phone_number_limit": 1,  # 1 phone number
+        "concurrent_calls_limit": 1,  # 1 concurrent call
         "features": ["basic_chat", "knowledge_integration"]
     },
     "basic": {
         "message_limit": 3000,  
         "storage_limit_mb": 5,  # 5 MB
+        "call_minutes_limit": 60,  # 1 hour
+        "phone_number_limit": 2,  # 3 phone numbers
+        "concurrent_calls_limit": 2,  # 3 concurrent calls
         "features": ["basic_chat", "knowledge_integration", "analytics"]
     },
     "standard": {
         "message_limit": 10000,  
         "storage_limit_mb": 25,  # 25 MB
+        "call_minutes_limit": 300,  # 5 hours
+        "phone_number_limit": 5,  # 5 phone numbers
+        "concurrent_calls_limit": 5,  # 5 concurrent calls
         "features": ["basic_chat", "knowledge_integration", "analytics", "integrations"]
     },
     "professional": {
         "message_limit": 40000,  
         "storage_limit_mb": 35,  
+        "call_minutes_limit": 1000,  # 16 hours
+        "phone_number_limit": 10,  # 10 phone numbers
+        "concurrent_calls_limit": 10,  # 10 concurrent calls
         "features": ["advanced_chat", "knowledge_integration", "analytics", "integrations", "priority_support"]
     }
 }

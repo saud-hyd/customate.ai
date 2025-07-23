@@ -1,6 +1,6 @@
-# backend/app/services/analytics/usage_tracker.py
 
 import logging
+import math
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session
@@ -162,12 +162,6 @@ class UsageTracker:
             })
         except Exception as e:
             logger.exception(f"Error tracking API request: {str(e)}")
-
-    # File: backend/app/services/analytics/usage_tracker.py
-    # Replace the entire _update_storage_usage method (lines ~200-260)
-
-    # File: backend/app/services/analytics/usage_tracker.py
-    # Replace the entire _update_storage_usage method (lines ~200-260)
 
     def _update_storage_usage(self, db: Session, client_id: str) -> None:
         """Update storage usage calculations with ALL BUGS FIXED."""
@@ -347,3 +341,174 @@ class UsageTracker:
         except Exception as e:
             logger.exception(f"Error syncing message counts: {str(e)}")
             return 0
+        
+    def get_call_minutes_used(self, db: Session, client_id: str) -> int:
+        """
+        Calculate call minutes used this month from calls table.
+        Uses your existing comprehensive migration tables.
+        
+        Args:
+            db: Database session
+            client_id: Client identifier
+            
+        Returns:
+            int: Total call minutes used this month
+        """
+        try:
+            # Get current month start
+            now = datetime.utcnow()
+            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            
+            # Calculate total seconds from your calls table
+            result = db.execute(text("""
+                SELECT COALESCE(SUM(duration_seconds), 0) as total_seconds
+                FROM calls
+                WHERE client_id = :client_id 
+                AND created_at >= :month_start
+                AND status IN ('completed', 'ended')
+            """), {
+                "client_id": client_id,
+                "month_start": month_start
+            }).fetchone()
+            
+            total_seconds = result[0] if result else 0
+            
+            # Convert to minutes (round up)
+            call_minutes = math.ceil(total_seconds / 60.0) if total_seconds > 0 else 0
+            
+            return call_minutes
+            
+        except Exception as e:
+            logger.exception(f"Error calculating call minutes for client {client_id}: {str(e)}")
+            return 0
+    
+    def get_phone_numbers_used(self, db: Session, client_id: str) -> int:
+        """
+        Get count of active phone numbers from your phone_numbers table.
+        
+        Args:
+            db: Database session
+            client_id: Client identifier
+            
+        Returns:
+            int: Number of active phone numbers
+        """
+        try:
+            result = db.execute(text("""
+                SELECT COUNT(*) as phone_count
+                FROM phone_numbers
+                WHERE client_id = :client_id 
+                AND status = 'active'
+            """), {"client_id": client_id}).fetchone()
+            
+            return result[0] if result else 0
+            
+        except Exception as e:
+            logger.exception(f"Error counting phone numbers for client {client_id}: {str(e)}")
+            return 0
+
+    def check_call_limits(self, db: Session, client_id: str) -> Dict[str, Any]:
+        """
+        Check call limits using calculated values from your telephony tables.
+        
+        Args:
+            db: Database session
+            client_id: Client identifier
+            
+        Returns:
+            Dict with comprehensive limit status
+        """
+        try:
+            # Get subscription and plan limits
+            from app.repositories.client_repository import SubscriptionRepository
+            from app.services.subscription.stripe_service import PLAN_LIMITS
+            
+            sub_repo = SubscriptionRepository()
+            subscription = sub_repo.get_active_subscription(db, client_id)
+            
+            plan_type = subscription.plan_type if subscription else "free"
+            plan_limits = PLAN_LIMITS.get(plan_type, PLAN_LIMITS["free"])
+            
+            # Get limits from plan
+            call_minutes_limit = plan_limits.get("call_minutes_limit", 10)
+            phone_numbers_limit = plan_limits.get("phone_numbers_limit", 1)
+            concurrent_calls_limit = plan_limits.get("concurrent_calls_limit", 1)
+            
+            # Calculate current usage using your tables
+            call_minutes_used = self.get_call_minutes_used(db, client_id)
+            phone_numbers_used = self.get_phone_numbers_used(db, client_id)
+            
+            # Get active calls count
+            active_calls = db.execute(text("""
+                SELECT COUNT(*) as active_count
+                FROM calls
+                WHERE client_id = :client_id 
+                AND status IN ('ringing', 'in-progress', 'initiated')
+            """), {"client_id": client_id}).fetchone()
+            
+            concurrent_calls_used = active_calls[0] if active_calls else 0
+            
+            # Check limits
+            call_minutes_within_limits = call_minutes_used < call_minutes_limit
+            phone_numbers_within_limits = phone_numbers_used < phone_numbers_limit
+            concurrent_calls_within_limits = concurrent_calls_used < concurrent_calls_limit
+            
+            return {
+                "within_limits": (call_minutes_within_limits and 
+                                phone_numbers_within_limits and 
+                                concurrent_calls_within_limits),
+                "call_minutes": {
+                    "used": call_minutes_used,
+                    "limit": call_minutes_limit,
+                    "percentage": min(100, (call_minutes_used / call_minutes_limit) * 100) if call_minutes_limit > 0 else 0,
+                    "remaining": max(0, call_minutes_limit - call_minutes_used),
+                    "within_limits": call_minutes_within_limits
+                },
+                "phone_numbers": {
+                    "used": phone_numbers_used,
+                    "limit": phone_numbers_limit,
+                    "percentage": min(100, (phone_numbers_used / phone_numbers_limit) * 100) if phone_numbers_limit > 0 else 0,
+                    "remaining": max(0, phone_numbers_limit - phone_numbers_used),
+                    "within_limits": phone_numbers_within_limits
+                },
+                "concurrent_calls": {
+                    "used": concurrent_calls_used,
+                    "limit": concurrent_calls_limit,
+                    "percentage": min(100, (concurrent_calls_used / concurrent_calls_limit) * 100) if concurrent_calls_limit > 0 else 0,
+                    "remaining": max(0, concurrent_calls_limit - concurrent_calls_used),
+                    "within_limits": concurrent_calls_within_limits
+                }
+            }
+            
+        except Exception as e:
+            logger.exception(f"Error checking call limits for client {client_id}: {str(e)}")
+            return {
+                "within_limits": False,
+                "error": str(e)
+            }
+
+    # Optional: Track call completion for real-time updates
+    def track_call_completed(self, db: Session, client_id: str, call_id: str, duration_seconds: int) -> bool:
+        """
+        This method can be called when a call ends to log completion.
+        Your call lifecycle manager should call this.
+        
+        Args:
+            db: Database session
+            client_id: Client identifier  
+            call_id: Call identifier
+            duration_seconds: Call duration
+            
+        Returns:
+            bool: Success status
+        """
+        try:
+            # Update the call record (your existing tables handle this)
+            # This is just for logging/analytics
+            logger.info(f"Call {call_id} completed for client {client_id}: {duration_seconds}s ({math.ceil(duration_seconds/60)} minutes)")
+            return True
+            
+        except Exception as e:
+            logger.exception(f"Error tracking call completion: {str(e)}")
+            return False
+        

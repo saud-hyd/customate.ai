@@ -71,6 +71,23 @@ class Settings(BaseSettings):
     DEFAULT_LLM_MODEL: str = Field(default="gpt-4.1-mini-2025-04-14")
     DEFAULT_EMBEDDING_MODEL: str = Field(default="text-embedding-3-small")
     
+    TWILIO_ACCOUNT_SID: str = Field(default="")
+    TWILIO_AUTH_TOKEN: str = Field(default="")
+    TWILIO_WEBHOOK_URL: str = Field(
+        default="https://customate-ai-1.onrender.com" if IS_PRODUCTION
+        else "http://localhost:8000"
+    )
+    
+    # OpenAI Voice settings
+    OPENAI_VOICE_MODEL: str = Field(default="tts-1")
+    OPENAI_STT_MODEL: str = Field(default="whisper-1")
+    OPENAI_DEFAULT_VOICE: str = Field(default="alloy")
+    
+    # Voice configuration
+    VOICE_RECORDING_ENABLED: bool = Field(default=True)
+    MAX_CALL_DURATION_MINUTES: int = Field(default=30)
+    TELEPHONY_TEST_MODE: bool = Field(default=not IS_PRODUCTION)    
+    
     # Storage settings
     STORAGE_PROVIDER: str = Field(default="local")
     STORAGE_BUCKET: Optional[str] = Field(default=None)
@@ -108,6 +125,11 @@ class Settings(BaseSettings):
         """Check if Stripe is properly configured."""
         return bool(self.STRIPE_SECRET_KEY and 
                    not self.STRIPE_SECRET_KEY.startswith("sk_test_dummy"))
+        
+    def is_telephony_configured(self) -> bool:
+        """Check if telephony is properly configured."""
+        return bool(self.TWILIO_ACCOUNT_SID and self.TWILIO_AUTH_TOKEN and 
+                   self.OPENAI_API_KEY)        
 
 # Create settings instance
 settings = Settings()

@@ -48,7 +48,11 @@ class EnhancedChatService:
     ) -> Dict[str, Any]:
         """
         Non-streaming version - collects streaming response into single result.
+        Used by voice agent calls for complete responses.
         """
+        # ADD THIS LINE - Extract channel information
+        channel = user_info.get("channel", "web") if user_info else "web"
+        
         full_response = ""
         response_data = {}
         
@@ -68,6 +72,14 @@ class EnhancedChatService:
                 response_data["message"] = final_message
                 break
         
+        # ADD CHANNEL INFO TO RESPONSE METADATA
+        if "message" in response_data and "metadata" not in response_data:
+            response_data["metadata"] = {}
+        
+        if "message" in response_data:
+            response_data["metadata"]["channel"] = channel
+            response_data["metadata"]["is_voice_call"] = (channel == "voice")
+        
         return response_data
     
     async def process_message_stream(
@@ -83,9 +95,14 @@ class EnhancedChatService:
         start_time = time.time()
         message_id = str(uuid.uuid4())
         
+        channel = user_info.get("channel", "web") if user_info else "web"
+        
         # Get or create session
         session = self._get_or_create_session(client_id, session_id, user_info)
         session_id = session.session_id
+        
+        user_message_metadata = user_info.copy() if user_info else {}
+        user_message_metadata["channel"] = channel
         
         # Save user message
         user_message_db = self.message_repo.create(self.db, obj_in={
