@@ -10,6 +10,7 @@ from app.services.knowledge.web_crawler_service import WebCrawlerService
 from app.services.knowledge.embedding_service import EmbeddingService
 from app.services.analytics.usage_tracker import UsageTracker  # Import UsageTracker
 from app.services.llm.llm_service import LLMService
+from app.services.llm.llm_factory import LLMFactory
   
 logger = logging.getLogger(__name__)
 
@@ -96,14 +97,18 @@ class CrawlerWorker:
         try:
             # Create a new database session for this job
             db = SessionLocal()
+                                    
+            job = self.job_repo.get_by_job_id(db, job_id)
+
+            if not job:
+                logger.error(f"Job {job_id} not found")
+                return            
             
             # Initialize services
-            llm_service = LLMService()  
+            llm_service = LLMFactory.create_llm_service(db, job.client_id)
             embedding_service = EmbeddingService(llm_service)
             crawler_service = WebCrawlerService(db, embedding_service)
             
-            # Get the job
-            job = self.job_repo.get_by_job_id(db, job_id)
             
             if not job:
                 logger.error(f"Job {job_id} not found")

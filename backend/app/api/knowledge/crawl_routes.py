@@ -11,9 +11,9 @@ from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.services.knowledge.web_crawler_service import WebCrawlerService
 from app.services.knowledge.embedding_service import EmbeddingService
-from app.services.llm.llm_service import LLMService
 from app.repositories.crawl_repository import WebsiteCrawlJobRepository, CrawledPageRepository
 from app.repositories.knowledge_repository import KnowledgeCollectionRepository
+from app.services.llm.llm_factory import LLMFactory
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ async def create_crawl_job(
             )
     
     # Initialize services
-    llm_service = LLMService()  
+    llm_service = LLMFactory.create_llm_service(db, current_client.client_id)
     embedding_service = EmbeddingService(llm_service)
     crawler_service = WebCrawlerService(db, embedding_service)
     

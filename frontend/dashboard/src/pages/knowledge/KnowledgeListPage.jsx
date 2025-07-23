@@ -297,37 +297,51 @@ const KnowledgeListPage = () => {
     setIsCrawling(true);
     setIsAnalyzing(true);
     setIsProcessingBlocked(true);
-    setCrawlingProgress('Starting analysis...');
+    setCrawlingProgress('Starting crawl...');
 
     try {
-      const result = await knowledgeService.crawlWebsite({
+      // Use the correct API method with proper data structure
+      const crawlData = {
         url: url,
-        pages: specificPages.filter(page => page.trim() !== '')
-      });
+        collection_id: selectedCollection || undefined,
+        intelligent_mode: true, // Always use intelligent mode
+        specific_pages: specificPages.filter(page => page.trim() !== '' && page !== 'https://')
+      };
 
-      if (result.success) {
-        setTimeout(() => {
-          success('Website crawled successfully');
-          setIsAddContentModalOpen(false);
-          setContentType('');
-          setUrl('https://');
-          setSpecificPages(['']);
-          setIsCrawling(false);
-          setIsAnalyzing(false);
-          setCrawlingProgress('');
-          setIsProcessingBlocked(false);
-          setDiscoveredPages([]);
-          setAnalysisComplete(false);
-          setAnalysisResults(null);
-          fetchData();
-          fetchStorageData(); // Refresh storage after crawling
-        }, 2000);
+      const response = await knowledgeService.createCrawlJob(crawlData);
+      
+      // Handle successful response
+      if (response && response.job_id) {
+        success(`Crawl started successfully! Job ID: ${response.job_id}`);
+        
+        // Close modal and reset state immediately (no timeout)
+        setIsAddContentModalOpen(false);
+        setContentType('');
+        setUrl('https://');
+        setSpecificPages(['']);
+        setIsCrawling(false);
+        setIsAnalyzing(false);
+        setCrawlingProgress('');
+        setIsProcessingBlocked(false);
+        setDiscoveredPages([]);
+        setAnalysisComplete(false);
+        setAnalysisResults(null);
+        
+        // Refresh data
+        fetchData();
+        fetchStorageData();
       } else {
-        throw new Error(result.message || 'Crawling failed');
+        throw new Error('Invalid response from server');
       }
+      
     } catch (error) {
       console.error('Crawling error:', error);
-      showError('Failed to crawl website');
+      
+      // Show specific error message
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to start crawl';
+      showError(errorMessage);
+      
+      // Reset states but keep modal open for user to try again
       setIsCrawling(false);
       setIsAnalyzing(false);
       setCrawlingProgress('');
@@ -785,10 +799,32 @@ const KnowledgeListPage = () => {
                   <>
                     <button
                       onClick={contentType === 'file' ? handleFileUpload : handleUrlCrawl}
-                      disabled={contentType === 'file' ? !selectedFile : !url || url === 'https://'}
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      disabled={
+                        contentType === 'file' 
+                          ? !selectedFile || isUploading 
+                          : !url || url === 'https://' || isCrawling || isAnalyzing
+                      }
+                      className="w-full inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
-                      {contentType === 'file' ? 'Upload' : 'Start Crawling'}
+                      {contentType === 'file' ? (
+                        isUploading ? (
+                          <>
+                            <ArrowPathIcon className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                            Uploading...
+                          </>
+                        ) : (
+                          'Upload'
+                        )
+                      ) : (
+                        isCrawling || isAnalyzing ? (
+                          <>
+                            <ArrowPathIcon className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                            {isAnalyzing ? 'Analyzing...' : 'Crawling...'}
+                          </>
+                        ) : (
+                          'Start Crawling'
+                        )
+                      )}
                     </button>
                     <button
                       onClick={() => {

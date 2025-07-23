@@ -130,6 +130,10 @@ const knowledgeService = {
   // ================================
 
   // Create a website crawl job with intelligent mode support
+  async crawlWebsite(crawlData) {
+  return await this.createCrawlJob(crawlData);
+},
+  
   async createCrawlJob(crawlData) {
     const response = await api.post('/api/knowledge/crawl', crawlData);
     return response.data;
