@@ -13,10 +13,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
 
-from app.domain.base import BaseEntity
+from app.core.database.session import Base
 
 
-class PhoneNumber(BaseEntity):
+class PhoneNumber(Base):
     """
     Represents a phone number provisioned for a client.
     Each client can have multiple phone numbers for different purposes.
@@ -59,7 +59,7 @@ class PhoneNumber(BaseEntity):
         return f"<PhoneNumber {self.phone_number} for client {self.client_id}>"
 
 
-class Call(BaseEntity):
+class Call(Base):
     """
     Represents a phone call session.
     Core entity that tracks the entire call lifecycle.
@@ -126,7 +126,7 @@ class Call(BaseEntity):
         return f"<Call {self.call_id} from {self.caller_number} - {self.status}>"
 
 
-class VoiceSession(BaseEntity):
+class VoiceSession(Base):
     """
     Represents a voice interaction within a call.
     Maps to the existing ChatSession pattern but for voice.
@@ -184,7 +184,7 @@ class VoiceSession(BaseEntity):
         return f"<VoiceSession {self.session_id} for call {self.call_id}>"
 
 
-class CallEvent(BaseEntity):
+class CallEvent(Base):
     """
     Tracks call lifecycle events for analytics and debugging.
     Lightweight event tracking (not complex event sourcing).
