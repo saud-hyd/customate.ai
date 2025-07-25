@@ -55,16 +55,36 @@ async def serve_embed_script(api_key: str = Query(...)):
         
         document.body.appendChild(iframe);
         
-        // Handle resize messages
+        // FIXED: Handle both WIDGET_RESIZE and WIDGET_STATUS messages
         window.addEventListener('message', function(event) {{
-            if (event.origin !== '{BACKEND_URL}') return;
+            // DEBUG: Log all received messages
+            console.log('🔍 Parent received message:', event.data, 'from:', event.origin);
+            
+            // Accept localhost origins in development
+            const isValidOrigin = event.origin === '{BACKEND_URL}' || 
+                                event.origin.startsWith('http://localhost:') || 
+                                event.origin.startsWith('http://127.0.0.1:');
+            
+            if (!isValidOrigin) {{
+                console.warn('🚫 Message rejected from origin:', event.origin);
+                return;
+            }}
             
             const {{ type, data }} = event.data || {{}};
-            if (type === 'WIDGET_RESIZE') {{
-                const size = data.expanded ? {{width: 400, height: 620}} : {{width: 80, height: 80}};
+            
+            // CRITICAL FIX: Handle WIDGET_STATUS messages (current widget sends these)
+            if (type === 'WIDGET_STATUS' || type === 'WIDGET_RESIZE') {{
+                console.log('🎯 Processing resize message:', type, data);
+                
+                // Extract expanded state
+                const expanded = data.expanded === true;
+                const size = expanded ? {{width: 400, height: 620}} : {{width: 80, height: 80}};
+                
                 iframe.style.width = size.width + 'px';
                 iframe.style.height = size.height + 'px';
-                iframe.style.borderRadius = data.expanded ? '12px' : '50%';
+                iframe.style.borderRadius = expanded ? '12px' : '50%';
+                
+                console.log('✅ IFRAME RESIZED:', expanded ? 'EXPANDED' : 'COLLAPSED', size);
             }}
         }});
         
@@ -88,7 +108,9 @@ async def serve_embed_script(api_key: str = Query(...)):
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, OPTIONS",
-            "Cache-Control": "no-cache"
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
         }
     )
 

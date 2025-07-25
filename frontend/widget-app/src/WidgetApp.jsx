@@ -87,9 +87,25 @@ const WidgetApp = () => {
     };
   }, [config, isExpanded, resetChat]);
   
+  // CRITICAL: Send status updates when expanded state changes
+  useEffect(() => {
+    if (config?.floating) {
+      console.log(`🔄 Widget toggling: ${isExpanded ? 'COLLAPSED → EXPANDED' : 'EXPANDED → COLLAPSED'}`);
+      console.log(`📡 IMMEDIATE status sent to parent:`, { expanded: isExpanded, floating: true });
+      
+      // FIX: Send WIDGET_RESIZE instead of WIDGET_STATUS
+      notifyParent('WIDGET_RESIZE', { 
+        expanded: isExpanded, 
+        floating: true,
+        timestamp: Date.now()
+      });
+    }
+  }, [isExpanded, config]);
+  
   // Notify parent window
   const notifyParent = (type, data = {}) => {
     if (window.parent && window.parent !== window) {
+      console.log(`📤 Sending to parent:`, type, data);
       window.parent.postMessage({ type, data }, '*');
     }
   };
@@ -98,8 +114,9 @@ const WidgetApp = () => {
   const handleToggle = () => {
     if (config?.floating) {
       const newExpanded = !isExpanded;
+      console.log(`🎯 Toggle clicked: ${isExpanded} → ${newExpanded}`);
       setIsExpanded(newExpanded);
-      notifyParent('WIDGET_RESIZE', { expanded: newExpanded });
+      // Note: WIDGET_RESIZE message will be sent by useEffect above
     }
   };
   
