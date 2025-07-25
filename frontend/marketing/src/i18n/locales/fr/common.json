@@ -1,0 +1,63 @@
+{
+  "header": {
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "blog": "Blog",
+    "contact": "Contact",
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "getStarted": "Commencer",
+    "demo": "Démo"
+  },
+  "footer": {
+    "product": {
+      "title": "Produit",
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "useCases": "Cas d'usage",
+      "roadmap": "Feuille de route"
+    },
+    "resources": {
+      "title": "Ressources",
+      "blog": "Blog",
+      "documentation": "Documentation",
+      "apiReference": "Référence API",
+      "help": "Centre d'aide"
+    },
+    "company": {
+      "title": "Entreprise",
+      "about": "À propos",
+      "contact": "Contact",
+      "careers": "Carrières",
+      "press": "Presse"
+    },
+    "legal": {
+      "title": "Légal",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "cookies": "Politique des cookies"
+    },
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "cookies": "Politique des cookies",
+    "rights": "© {{year}} Customate.ai. Tous droits réservés.",
+    "description": "Transformez votre expérience client avec des chatbots alimentés par l'IA qui comprennent votre entreprise et se connectent avec les clients sur toutes les plateformes.",
+    "followUs": "Suivez-nous"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "about": "À propos",
+    "contact": "Contact",
+    "blog": "Blog"
+  },
+  "cookieConsent": {
+    "title": "Nous utilisons des cookies",
+    "description": "Nous utilisons des cookies pour améliorer votre expérience de navigation, fournir un contenu personnalisé et analyser notre trafic. En cliquant sur 'Tout accepter', vous consentez à notre utilisation des cookies.",
+    "learnMore": "En savoir plus sur notre",
+    "cookiePolicy": "Politique des cookies",
+    "accept": "Tout accepter",
+    "decline": "Refuser"
+  }
+}

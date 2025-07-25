@@ -1,0 +1,27 @@
+{
+  "badge": "4 Enkle Trinn",
+  "title": {
+    "part1": "Hvordan",
+    "part2": "Customate.ai Fungerer"
+  },
+  "subtitle": "Få din tilpassede AI-assistent i drift på få minutter",
+  "steps": [
+    {
+      "title": "Registrer deg og opprett en konto",
+      "description": "Opprett kontoen din på sekunder. Ingen kredittkort påkrevd for grunnplanen."
+    },
+    {
+      "title": "Last opp din kunnskapsbase",
+      "description": "Importer dokumentene dine, FAQ-er eller koble til dine eksisterende innholdslagre."
+    },
+    {
+      "title": "Tilpass din AI-agent",
+      "description": "Konfigurer oppførsel, utseende og samtaleflyter for å matche merkevaren din."
+    },
+    {
+      "title": "Distribuer på alle kanaler",
+      "description": "Legg til på nettstedet ditt, mobilapp eller integrer med dine eksisterende plattformer."
+    }
+  ],
+  "cta": "Start i Dag"
+}

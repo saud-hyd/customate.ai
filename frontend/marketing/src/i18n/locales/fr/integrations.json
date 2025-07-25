@@ -1,0 +1,79 @@
+{
+  "badge": "Connectivité Transparente",
+  "title": {
+    "part1": "Une IA,",
+    "part2": "Partout"
+  },
+  "subtitle": "Connectez vos données d'entreprise et atteignez les clients sur chaque plateforme avec des interactions IA intelligentes et cohérentes.",
+  "tabs": {
+    "dataSources": "Sources de Données",
+    "chatPlatforms": "Plateformes de Chat"
+  },
+  "dataSources": {
+    "title": {
+      "part1": "Sources de Données",
+      "part2": "Intelligentes"
+    },
+    "integrations": {
+      "knowledge": {
+        "name": "Base de Connaissances",
+        "description": "Votre IA apprend de vos documents, FAQ et contenu de site web"
+      },
+      "crm": {
+        "name": "Systèmes CRM",
+        "description": "Connectez les données clients depuis Salesforce, Zendesk et plus"
+      },
+      "erp": {
+        "name": "ERP/Inventaire",
+        "description": "Intégration en temps réel des informations produits et stock"
+      },
+      "helpdesk": {
+        "name": "Help Desk",
+        "description": "Liez les tickets de support, l'historique de chat et les problèmes clients"
+      }
+    }
+  },
+  "chatPlatforms": {
+    "title": {
+      "part1": "Messagerie",
+      "part2": "Multi-Plateforme"
+    },
+    "features": {
+      "omnichannelPresence": {
+        "title": "Présence Omnicanal",
+        "description": "Une IA, toute plateforme de communication"
+      },
+      "nativeInterface": {
+        "title": "Interface Native",
+        "description": "Ressemble et fonctionne comme la plateforme originale"
+      },
+      "richMedia": {
+        "title": "Médias Enrichis",
+        "description": "Envoyez des images, boutons, cartes et plus"
+      },
+      "realtimeTranslation": {
+        "title": "Traduction en Temps Réel",
+        "description": "Communiquez automatiquement avec les clients dans plus de 100 langues"
+      },
+      "availability": {
+        "title": "Disponibilité 24/7",
+        "description": "Support toujours disponible pour vos clients"
+      },
+      "consistentVoice": {
+        "title": "Voix Cohérente",
+        "description": "Même expérience de marque partout"
+      },
+      "smartHandoff": {
+        "title": "Transfert Intelligent",
+        "description": "Transfert transparent vers les agents humains"
+      }
+    },
+    "deployMessage": "Déployez sur n'importe quelle plateforme en minutes sans codage"
+  },
+  "cta": {
+    "title": "Prêt à améliorer votre expérience client ?",
+    "subtitle": "Déployez l'IA sur tous vos canaux en minutes, pas en mois. Aucun codage requis.",
+    "startTrial": "Commencer l'Essai Gratuit",
+    "watchDemo": "Voir la Démo"
+  }
+}

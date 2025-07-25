@@ -1,0 +1,37 @@
+{
+  "title": "Benefits",
+  "cards": {
+    "topService": {
+      "title": "Top Service",
+      "description": "Offer reliable, scalable, and uninterrupted customer service with always clear and accurate information."
+    },
+    "lowestTime": {
+      "title": "Lowest Time to Resolution",
+      "description": "Avoid delays. Your customers get immediate answers 24/7 without waiting for an agent."
+    },
+    "multichannel": {
+      "title": "Multichannel Support",
+      "description": "Not just a chatbot widget – our solution works on email, Facebook, WhatsApp, and more. (Telephone channel coming soon.)"
+    },
+    "reduceExpenses": {
+      "title": "Reduce Expenses",
+      "description": "Pay much less for support staff or free up your employees for more productive activities."
+    },
+    "increaseIncome": {
+      "title": "Increase Income",
+      "description": "Get leads, feedback, and key information to boost your sales and improve your customer service."
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "We adapt to you. Connect the applications you use to run your operations to our portal. We retrieve only relevant information."
+    },
+    "advancedAi": {
+      "title": "Advanced AI Analysis",
+      "description": "Through our proprietary machine learning model, we offer optimal information processing and outputs."
+    },
+    "continuousLearning": {
+      "title": "Continuous Learning",
+      "description": "Your Customate Bot evolves alongside the development of your knowledge base."
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "badge": "4 Einfache Schritte",
+  "title": {
+    "part1": "Wie Customate.ai",
+    "part2": "Funktioniert"
+  },
+  "subtitle": "Starten Sie Ihren personalisierten KI-Assistenten in wenigen Minuten",
+  "steps": [
+    {
+      "title": "Registrieren & Konto erstellen",
+      "description": "Erstellen Sie Ihr Konto in Sekunden. Keine Kreditkarte für den Basisplan erforderlich."
+    },
+    {
+      "title": "Wissensbasis hochladen",
+      "description": "Importieren Sie Ihre Dokumente, FAQs oder verbinden Sie sich mit Ihren bestehenden Content-Repositories."
+    },
+    {
+      "title": "KI-Agent anpassen",
+      "description": "Konfigurieren Sie Verhalten, Aussehen und Gesprächsabläufe passend zu Ihrer Marke."
+    },
+    {
+      "title": "Auf allen Kanälen bereitstellen",
+      "description": "Zu Ihrer Website, mobilen App hinzufügen oder in bestehende Plattformen integrieren."
+    }
+  ],
+  "cta": "Heute Starten"
+}

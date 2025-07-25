@@ -1,0 +1,69 @@
+{
+  "heroChat": {
+    "assistant": {
+      "name": "Assistant Customate",
+      "status": "En ligne"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "Avez-vous ce t-shirt en taille Medium ?"
+        },
+        {
+          "role": "bot",
+          "text": "Oui ! Nous avons le T-shirt en Coton Premium en Medium. Il est actuellement en stock et disponible en 3 couleurs : Marine, Blanc et Gris."
+        },
+        {
+          "role": "user",
+          "text": "Quelle est la politique de retour ?"
+        },
+        {
+          "role": "bot",
+          "text": "Nous offrons des retours gratuits dans les 30 jours suivant l'achat. Sans questions ! Utilisez simplement notre étiquette de retour prépayée."
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "Quand est-ce que mon projet de Science des Données est dû ?"
+        },
+        {
+          "role": "bot",
+          "text": "Votre projet de Science des Données est dû vendredi prochain, le 24 mai. Vous avez terminé 3 sections sur 5 requises jusqu'à présent."
+        },
+        {
+          "role": "user",
+          "text": "Quelles ressources sont disponibles pour l'examen de physique ?"
+        },
+        {
+          "role": "bot",
+          "text": "Nous avons des tests d'entraînement, des tutoriels vidéo et des guides d'étude disponibles dans le centre d'apprentissage. Je peux aussi vous connecter avec un tuteur si nécessaire."
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "Mon abonnement ne fonctionne pas correctement."
+        },
+        {
+          "role": "bot",
+          "text": "Je suis désolé d'entendre cela. Laissez-moi vous aider à résoudre le problème. Quel problème spécifique rencontrez-vous avec votre abonnement ?"
+        },
+        {
+          "role": "user",
+          "text": "Je ne peux pas accéder aux fonctionnalités premium après le paiement"
+        },
+        {
+          "role": "bot",
+          "text": "Laissez-moi vérifier cela pour vous. Je vois que votre paiement a été traité mais il y a un problème de synchronisation. J'ai actualisé l'accès à votre compte. Pouvez-vous essayer de vous déconnecter et de vous reconnecter ?"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "E-commerce",
+      "education": "Éducation",
+      "support": "Support"
+    }
+  }
+}

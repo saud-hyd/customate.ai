@@ -1,0 +1,25 @@
+{
+  "form": {
+    "title": "Ta Kontakt",
+    "subtitle": "Har du spørsmål om Customate.ai? Vi vil gjerne høre fra deg.",
+    "name": "Fullt Navn",
+    "namePlaceholder": "Skriv inn navnet ditt",
+    "email": "E-postadresse",
+    "emailPlaceholder": "Skriv inn e-posten din",
+    "company": "Selskap",
+    "companyPlaceholder": "Skriv inn firmanavnet ditt",
+    "message": "Melding",
+    "messagePlaceholder": "Fortell oss om prosjektet ditt eller spør oss om noe",
+    "submit": "Send Melding",
+    "submitting": "Sender...",
+    "success": "Takk! Vi kommer tilbake til deg snart.",
+    "error": "Noe gikk galt. Vennligst prøv igjen."
+  },
+  "info": {
+    "title": "Kontaktinformasjon",
+    "email": "hello@customate.ai",
+    "response": "Vi svarer vanligvis innen 24 timer",
+    "support": "Trenger du umiddelbar støtte?",
+    "documentation": "Sjekk dokumentasjonen vår"
+  }
+}

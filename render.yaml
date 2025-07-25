@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: customate-api
+    env: python
+    buildCommand: |
+      echo "🚀 Starting Customate.ai build process..."
+      
+      # Install Python dependencies
+      pip install -r requirements.txt
+      
+      echo "📁 Current directory structure:"
+      ls -la
+      
+      echo "🔍 Searching for widget files..."
+      find . -name "index.html" -type f 2>/dev/null | head -10
+      find . -name "*widget*" -type d 2>/dev/null | head -10
+      
+      echo "📦 Looking for frontend directory:"
+      if [ -d "frontend" ]; then
+        ls -la frontend/
+        if [ -d "frontend/widget-app" ]; then
+          ls -la frontend/widget-app/
+          if [ -d "frontend/widget-app/dist" ]; then
+            echo "✅ Widget dist directory found!"
+            ls -la frontend/widget-app/dist/
+          else
+            echo "❌ Widget dist directory missing"
+          fi
+        else
+          echo "❌ widget-app directory missing"
+        fi
+      else
+        echo "❌ frontend directory missing"
+      fi
+      
+      echo "🌍 Environment setup complete"
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: customate-db
+          property: connectionString
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLAUDE_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: RENDER
+        value: true
+    plan: starter
+
+databases:
+  - name: customate-db
+    databaseName: customate
+    user: customate_user
+    plan: starter

@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "badge": "Dette er Customate",
+    "title": {
+      "part1": "Automatiser dine",
+      "part2": "kundestøtte-operasjoner."
+    },
+    "subtitle": "En AI-drevet chatbot som svarer på alle dine kunders spørsmål. Engasjer, assist og konverter—direkte fra ditt nettstedets hjørne og på tvers av alle dine sosiale mediekanaler."
+  },
+  "features": {
+    "heading": "Oppladning av virksomhetssamtaler",
+    "subheading": "Customate leverer intelligente, kontekstbevisste svar på dine kunders spørsmål",
+    "cards": {
+      "knowledgeIntegration": {
+        "title": "Kunnskapsintegrasjon",
+        "description": "Vår RAG-implementering kobler dine dokumenter, FAQ-er og data direkte til samtale-AI for kontekstbevisste responser."
+      },
+      "industryBehaviors": {
+        "title": "Industriatferd",
+        "description": "Forhåndskonfigurerte AI-atferd for ulike bransjer som forstår spesialisert vokabular spesifikt for din virksomhet."
+      },
+      "multiChannel": {
+        "title": "Flerkanalintegrasjon",
+        "description": "Distribuer din AI-agent på tvers av nettsted, mobilapp, sosiale medier og alle dine kundeengasjementsplattformer."
+      },
+      "semantic": {
+        "title": "Semantisk forståelse",
+        "description": "Vår AI forstår kontekst, sentiment og intensjon utover nøkkelord for virkelig menneskelignende samtaler."
+      },
+      "analytics": {
+        "title": "Sanntidsanalyse",
+        "description": "Overvåk samtaler, spor tilfredshet og identifiser optimaliseringsmuligheter gjennom vårt intuitive dashbord."
+      },
+      "brand": {
+        "title": "Merketilpasning",
+        "description": "Fullstendig visuell kontroll med tilpassede farger, logoer og samtalestiler som matcher din merkevareidentitet."
+      }
+    }
+  },
+  "cta": {
+    "title": "Start bygging av din AI-assistent i dag",
+    "subtitle": "Bli med i AI-revolusjonen og transformer hvordan du engasjerer med dine kunder. Ingen teknisk kunnskap kreves."
+  }
+}

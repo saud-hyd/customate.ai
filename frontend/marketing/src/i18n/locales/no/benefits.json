@@ -1,0 +1,36 @@
+{
+  "title": "Hvorfor velge Customate.ai?",
+  "subtitle": "Oppdag funksjonene som gjør oss til den foretrukne løsningen for intelligent kundesupport",
+  "cards": [
+    {
+      "title": "24/7 tilgjengelighet",
+      "description": "Din AI-assistent sover aldri, og sikrer at kunder får støtte når de trenger det.",
+      "icon": "clock"
+    },
+    {
+      "title": "Smart læring",
+      "description": "Lærer fra hver interaksjon og gir bedre og bedre svar over tid.",
+      "icon": "brain"
+    },
+    {
+      "title": "Sømløs integrasjon",
+      "description": "Integreres enkelt i ditt eksisterende nettsted og arbeidsflyt på under 5 minutter.",
+      "icon": "plug"
+    },
+    {
+      "title": "Flerspråklig støtte",
+      "description": "Kommuniser med kunder på flere språk og bryt ned språkbarrierer.",
+      "icon": "globe"
+    },
+    {
+      "title": "Kostnadseffektiv",
+      "description": "Reduser støttekostnader samtidig som du øker kundetilfredshet og responstider.",
+      "icon": "dollar"
+    },
+    {
+      "title": "Skalerbarhet",
+      "description": "Fra oppstartsselskap til bedrift, vår løsning skalerer med din virksomhetsvekst.",
+      "icon": "trending"
+    }
+  ]
+}

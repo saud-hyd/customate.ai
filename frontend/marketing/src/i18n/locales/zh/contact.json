@@ -1,0 +1,25 @@
+{
+  "form": {
+    "title": "联系我们",
+    "subtitle": "对 Customate.ai 有疑问吗？我们很乐意听取您的意见。",
+    "name": "全名",
+    "namePlaceholder": "请输入您的姓名",
+    "email": "邮箱地址",
+    "emailPlaceholder": "请输入您的邮箱",
+    "company": "公司",
+    "companyPlaceholder": "请输入您的公司名称",
+    "message": "留言",
+    "messagePlaceholder": "告诉我们您的项目或向我们提问",
+    "submit": "发送消息",
+    "submitting": "发送中...",
+    "success": "谢谢！我们会尽快回复您。",
+    "error": "出现错误，请重试。"
+  },
+  "info": {
+    "title": "联系信息",
+    "email": "hello@customate.ai", 
+    "response": "我们通常在24小时内回复",
+    "support": "需要即时支持？",
+    "documentation": "查看我们的文档"
+  }
+}

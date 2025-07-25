@@ -1,0 +1,79 @@
+{
+  "badge": "Sømløs Tilkobling",
+  "title": {
+    "part1": "Én AI,",
+    "part2": "Overalt"
+  },
+  "subtitle": "Koble dine forretningsdata og nå kunder på alle plattformer med konsistente, intelligente AI-interaksjoner.",
+  "tabs": {
+    "dataSources": "Datakilder",
+    "chatPlatforms": "Chat-plattformer"
+  },
+  "dataSources": {
+    "title": {
+      "part1": "Smarte",
+      "part2": "Datakilder"
+    },
+    "integrations": {
+      "knowledge": {
+        "name": "Kunnskapsbase",
+        "description": "Din AI lærer fra dine dokumenter, FAQ-er og nettstedinnhold"
+      },
+      "crm": {
+        "name": "CRM-systemer",
+        "description": "Koble kundedata fra Salesforce, Zendesk og mer"
+      },
+      "erp": {
+        "name": "ERP/Lager",
+        "description": "Sanntids produkt- og lagerinformasjon integrasjon"
+      },
+      "helpdesk": {
+        "name": "Hjelpeskranke",
+        "description": "Koble støttebilletter, chathistorikk og kundeproblemer"
+      }
+    }
+  },
+  "chatPlatforms": {
+    "title": {
+      "part1": "Multiplattform",
+      "part2": "Meldinger"
+    },
+    "features": {
+      "omnichannelPresence": {
+        "title": "Omnikanal Tilstedeværelse",
+        "description": "Én AI, alle kommunikasjonsplattformer"
+      },
+      "nativeInterface": {
+        "title": "Opprinnelig Grensesnitt",
+        "description": "Ser ut og føles som den originale plattformen"
+      },
+      "richMedia": {
+        "title": "Rik Media",
+        "description": "Send bilder, knapper, kort og mer"
+      },
+      "realtimeTranslation": {
+        "title": "Sanntidsoversettelse",
+        "description": "Kommuniser med kunder på 100+ språk automatisk"
+      },
+      "availability": {
+        "title": "24/7 Tilgjengelighet",
+        "description": "Alltid-på støtte for dine kunder"
+      },
+      "consistentVoice": {
+        "title": "Konsistent Stemme",
+        "description": "Samme merkeopplevelse overalt"
+      },
+      "smartHandoff": {
+        "title": "Smart Overføring",
+        "description": "Sømløs overføring til menneskelige agenter"
+      }
+    },
+    "deployMessage": "Distribuer til alle plattformer på minutter uten koding"
+  },
+  "cta": {
+    "title": "Klar til å forbedre kundeopplevelsen din?",
+    "subtitle": "Distribuer AI på alle dine kanaler på minutter, ikke måneder. Ingen koding påkrevd.",
+    "startTrial": "Start Gratis Prøveperiode",
+    "watchDemo": "Se Demo"
+  }
+}

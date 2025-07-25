@@ -1,0 +1,27 @@
+{
+  "badge": "4 Étapes Simples",
+  "title": {
+    "part1": "Comment Fonctionne",
+    "part2": "Customate.ai"
+  },
+  "subtitle": "Lancez votre assistant IA personnalisé en quelques minutes",
+  "steps": [
+    {
+      "title": "Inscrivez-vous et créez un compte",
+      "description": "Créez votre compte en quelques secondes. Aucune carte de crédit requise pour le plan de base."
+    },
+    {
+      "title": "Téléchargez votre base de connaissances",
+      "description": "Importez vos documents, FAQ ou connectez-vous à vos référentiels de contenu existants."
+    },
+    {
+      "title": "Personnalisez votre agent IA",
+      "description": "Configurez le comportement, l'apparence et les flux de conversation pour correspondre à votre marque."
+    },
+    {
+      "title": "Déployez sur tous les canaux",
+      "description": "Ajoutez à votre site web, application mobile ou intégrez avec vos plateformes existantes."
+    }
+  ],
+  "cta": "Commencer Aujourd'hui"
+}

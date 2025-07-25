@@ -1,0 +1,300 @@
+from typing import Dict, Any, List, Optional, AsyncGenerator
+import httpx
+import os
+import json
+import asyncio
+
+from app.services.llm.llm_service import LLMService
+from app.core.config.settings import settings
+from app.core import logger
+
+class OpenAIService(LLMService):
+    """OpenAI LLM service implementation with mock fallback."""
+    
+    def __init__(self, model_name="gpt-4.1-mini-2025-04-14"):
+        self.api_key = settings.OPENAI_API_KEY
+        self.api_base_url = "https://api.openai.com/v1"
+        self.model = "gpt-4.1-mini-2025-04-14"  
+        self._mock_service = None  # Lazy-loaded mock service
+        
+        # Verify API key is set
+        if not self.api_key:
+            logger.warning("OpenAI API key not configured. LLM service may not function properly.")
+    
+    async def generate_response(
+        self,
+        user_message: str,
+        conversation_history: List[Dict[str, str]],
+        knowledge_context: Optional[List[Dict[str, Any]]] = None,
+        industry_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate a response from OpenAI.
+        
+        Args:
+            user_message: The user's message
+            conversation_history: Previous conversation messages
+            knowledge_context: Relevant knowledge base items
+            industry_context: Industry-specific context
+            
+        Returns:
+            Dict containing response content and any context updates
+        """
+        # Construct system prompt with knowledge context
+        system_prompt = self._build_system_prompt(knowledge_context, industry_context)
+        
+        # Format messages for API
+        messages = self._format_messages(system_prompt, conversation_history, user_message)
+        
+        # Make API request
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.api_base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 1024,
+                    },
+                    timeout=30.0,
+                )
+                
+                if response.status_code != 200:
+                    logger.error(f"OpenAI API error: {response.status_code} - {response.text}")
+                    return {
+                        "content": "I apologize, but I'm having trouble generating a response right now. Please try again later."
+                    }
+                
+                result = response.json()
+                content = result["choices"][0]["message"]["content"]
+                
+                return {
+                    "content": content,
+                    "context_updates": {}  # Add any context updates here if needed
+                }
+                
+        except Exception as e:
+            logger.exception(f"Error calling OpenAI API: {str(e)}")
+            return {
+                "content": "I apologize, but I'm having trouble generating a response right now. Please try again later."
+            }
+    
+    async def generate_embeddings(self, text: str) -> List[float]:
+        """
+        Generate embeddings using OpenAI's text-embedding-3-small model.
+        FIXED: Use 384 dimensions to match existing database vectors.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.api_base_url}/embeddings",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "text-embedding-3-small",
+                        "dimensions": 384,  # ← CRITICAL FIX: Match existing database dimensions
+                        "input": text[:8000]  # Truncate to avoid token limits
+                    },
+                    timeout=30.0,
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    embeddings = result["data"][0]["embedding"]
+                    logger.info(f"Generated embeddings with {len(embeddings)} dimensions (matched to database)")
+                    return embeddings
+                else:
+                    logger.error(f"OpenAI embeddings API error: {response.status_code} - {response.text}")
+                    raise Exception(f"Embedding API failed with status {response.status_code}")
+                    
+        except Exception as e:
+            logger.error(f"Error calling OpenAI embedding API: {str(e)}")
+            # Fallback to mock service if configured
+            if hasattr(self, '_mock_service') or os.environ.get("MOCK_EMBEDDINGS", "").lower() == "true":
+                mock_service = self._get_mock_service()
+                return await mock_service.generate_embeddings(text)
+            raise e
+
+    def _get_mock_service(self):
+        """Lazy-load the mock service with matching dimensions."""
+        if not hasattr(self, '_mock_service') or self._mock_service is None:
+            from app.services.llm.mock_embedding_service import MockEmbeddingService
+            self._mock_service = MockEmbeddingService(dimensions=384)  # ← Match database dimensions
+        return self._mock_service
+    
+    def _build_system_prompt(
+        self, 
+        knowledge_context: Optional[List[Dict[str, Any]]],
+        industry_context: Optional[Dict[str, Any]]
+    ) -> str:
+        base_prompt = """You are a helpful customer support representative for this company.
+
+    IMPORTANT GUIDELINES:
+    - For business and knowledge base questions: Use the company information and knowledge base provided to give detailed, helpful answers  
+    - For general, personal, sensitive, off-topic questions: redirect to business topics politiely within concise sentences, dont give answers to such questions. 
+
+
+    CONVERSATION STYLE:
+    - Be friendly and conversational
+    - Don't be robotic 
+    FOCUS: Try to fix the customer issues efficiently and following with them untill the issue is fixed."""
+        
+        if knowledge_context:
+            knowledge_text = "\n\nHere's information about our company that you can use to answer questions:\n" + "\n".join([
+                f"- {item['title']}: {item['content']}" 
+                for item in knowledge_context
+            ])
+            base_prompt += knowledge_text
+            base_prompt += "\n\nUse this information to answer business-related questions. For anything else, politely redirect to our services."
+        
+        return base_prompt
+    
+    def _format_messages(
+        self, 
+        system_prompt: str, 
+        conversation_history: List[Dict[str, str]],
+        current_message: str
+    ) -> List[Dict[str, str]]:
+        """Format messages for the OpenAI API."""
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # Add conversation history
+        for msg in conversation_history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        
+        # Add current message
+        messages.append({"role": "user", "content": current_message})
+        
+        return messages
+    
+    async def generate_response_stream(
+        self,
+        user_message: str,
+        conversation_history: List[Dict[str, str]],
+        knowledge_context: Optional[List[Dict[str, Any]]] = None,
+        industry_context: Optional[Dict[str, Any]] = None,
+    ) -> AsyncGenerator[str, None]:
+        """
+        Generate a streaming response from OpenAI.
+        
+        Args:
+            user_message: The user's message
+            conversation_history: Previous conversation messages
+            knowledge_context: Relevant knowledge base items
+            industry_context: Industry-specific context
+            
+        Yields:
+            Chunks of the generated response as they're received
+        """
+        # Construct system prompt with knowledge context
+        system_prompt = self._build_system_prompt(knowledge_context, industry_context)
+        
+        # Format messages for API
+        messages = self._format_messages(system_prompt, conversation_history, user_message)
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.api_base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 1024,
+                        "stream": True
+                    },
+                    timeout=60.0,
+                )
+                
+                if response.status_code != 200:
+                    logger.error(f"OpenAI API error: {response.status_code} - {response.text}")
+                    yield "I apologize, but I'm having trouble generating a response right now. Please try again later."
+                    return
+                
+                # Process the streaming response
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        line = line[6:]
+                        if line.strip() == "[DONE]":
+                            break
+                            
+                        try:
+                            chunk = json.loads(line)
+                            delta = chunk.get("choices", [{}])[0].get("delta", {})
+                            if "content" in delta and delta["content"]:
+                                yield delta["content"]
+                        except Exception as e:
+                            logger.error(f"Error parsing OpenAI stream: {str(e)}")
+                
+        except Exception as e:
+            logger.exception(f"Error in OpenAI streaming response: {str(e)}")
+            yield "I apologize, but I'm having trouble generating a streaming response right now. Please try again later."
+            
+    def __init__(self, model_name="gpt-4.1-mini-2025-04-14"):
+        self.api_key = settings.OPENAI_API_KEY
+        self.api_base_url = "https://api.openai.com/v1"
+        self.model = model_name  # Use the specific model
+        self._mock_service = None  # Lazy-loaded mock service
+        
+        # Verify API key is set
+        if not self.api_key:
+            logger.error("OpenAI API key not configured. LLM service will not function.")
+            raise ValueError("OpenAI API key is required but not configured")
+        
+        logger.info(f"OpenAI service initialized with model: {self.model}")
+        
+    async def generate_embeddings(self, text: str) -> List[float]:
+        """
+        Generate embeddings using OpenAI's text-embedding-3-small model.
+        Optimized for cost and performance.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.api_base_url}/embeddings",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "text-embedding-3-small",
+                        "dimensions": 512,  # Optimal balance of performance and cost
+                        "input": text[:8000]  # Truncate to avoid token limits
+                    },
+                    timeout=30.0,
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    embeddings = result["data"][0]["embedding"]
+                    logger.info(f"Generated embeddings with {len(embeddings)} dimensions")
+                    return embeddings
+                else:
+                    logger.error(f"OpenAI embeddings API error: {response.status_code} - {response.text}")
+                    raise Exception(f"Embedding API failed with status {response.status_code}")
+                    
+        except Exception as e:
+            logger.error(f"Error calling OpenAI embedding API: {str(e)}")
+            # Fallback to mock service if configured
+            if hasattr(self, '_mock_service') or os.environ.get("MOCK_EMBEDDINGS", "").lower() == "true":
+                mock_service = self._get_mock_service()
+                return await mock_service.generate_embeddings(text)
+            raise e
+
+    def _get_mock_service(self):
+        """Lazy-load the mock service for development."""
+        if not hasattr(self, '_mock_service') or self._mock_service is None:
+            from app.services.llm.mock_embedding_service import MockEmbeddingService
+            self._mock_service = MockEmbeddingService()
+        return self._mock_service                        

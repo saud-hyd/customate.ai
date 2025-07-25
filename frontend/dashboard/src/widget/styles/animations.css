@@ -1,0 +1,72 @@
+/* Animations for the Customate.ai Widget */
+
+/* Fade In animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Slide Up animation */
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  /* Slide Down animation */
+  @keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  /* Scale animation */
+  @keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  
+  /* Pulse animation */
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  /* Widget animations */
+  .customate-widget.open {
+    animation: scaleIn 0.3s ease forwards;
+  }
+  
+  /* Message animations */
+  .customate-message-bubble {
+    animation: fadeIn 0.3s ease forwards;
+  }
+  
+  .customate-message-group.user .customate-message-bubble {
+    animation: slideUp 0.3s ease forwards;
+  }
+  
+  .customate-message-group.assistant .customate-message-bubble {
+    animation: slideDown 0.3s ease forwards;
+  }
+  
+  /* Pulse animation for the toggle button */
+  .customate-widget-toggle-button:hover {
+    animation: pulse 1s infinite;
+  }
+  
+  /* Disable animations if specified in config */
+  .disable-animations .customate-widget,
+  .disable-animations .customate-message-bubble,
+  .disable-animations .customate-widget-toggle-button {
+    animation: none !important;
+  }
+  
+  /* Loading animation for send button when processing */
+  @keyframes sending {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .customate-send-button.sending svg {
+    animation: sending 1s linear infinite;
+  }

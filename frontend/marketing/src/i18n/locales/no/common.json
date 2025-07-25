@@ -1,0 +1,63 @@
+{
+  "header": {
+    "features": "Funksjoner",
+    "pricing": "Priser",
+    "blog": "Blogg",
+    "contact": "Kontakt",
+    "login": "Logg inn",
+    "signup": "Registrer deg",
+    "getStarted": "Kom i gang",
+    "demo": "Demo"
+  },
+  "footer": {
+    "product": {
+      "title": "Produkt",
+      "features": "Funksjoner",
+      "pricing": "Priser",
+      "useCases": "Bruksområder",
+      "roadmap": "Veikart"
+    },
+    "resources": {
+      "title": "Ressurser",
+      "blog": "Blogg",
+      "documentation": "Dokumentasjon",
+      "apiReference": "API-referanse",
+      "help": "Hjelpesenter"
+    },
+    "company": {
+      "title": "Selskap",
+      "about": "Om oss",
+      "contact": "Kontakt",
+      "careers": "Karriere",
+      "press": "Presse"
+    },
+    "legal": {
+      "title": "Juridisk",
+      "terms": "Vilkår for bruk",
+      "privacy": "Personvernregler",
+      "cookies": "Informasjonskapsler"
+    },
+    "terms": "Vilkår for bruk",
+    "privacy": "Personvernregler",
+    "cookies": "Informasjonskapsler",
+    "rights": "© {{year}} Customate.ai. Alle rettigheter forbeholdt.",
+    "description": "Transformer kundeopplevelsen din med AI-drevne chatbots som forstår din virksomhet og kobler til kunder på alle plattformer.",
+    "followUs": "Følg oss"
+  },
+  "navigation": {
+    "home": "Hjem",
+    "features": "Funksjoner",
+    "pricing": "Priser",
+    "about": "Om oss",
+    "contact": "Kontakt",
+    "blog": "Blogg"
+  },
+  "cookieConsent": {
+    "title": "Vi bruker informasjonskapsler",
+    "description": "Vi bruker informasjonskapsler for å forbedre din nettleseropplevelse, levere tilpasset innhold og analysere trafikken vår. Ved å klikke på 'Godta alle', samtykker du til vår bruk av informasjonskapsler.",
+    "learnMore": "Lær mer om vår",
+    "cookiePolicy": "Informasjonskapselpolicy",
+    "accept": "Godta alle",
+    "decline": "Avslå"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "badge": "Recién Lanzado",
+    "title": {
+      "part1": "Automatiza tus operaciones",
+      "part2": "de atención al cliente"
+    },
+    "subtitle": "Un chatbot con IA que responde a todas las preguntas de tus clientes. Interactúa, asiste y convierte, directamente desde tu sitio web y en todas tus redes sociales."
+  },
+  "features": {
+    "heading": "Potenciando Conversaciones Empresariales",
+    "subheading": "Customate.ai ofrece experiencias inteligentes y contextuales",
+    "cards": {
+      "knowledgeIntegration": {
+        "title": "Integración de Conocimiento",
+        "description": "Nuestra implementación RAG conecta tus documentos, preguntas frecuentes y datos directamente a la IA conversacional para respuestas contextuales."
+      },
+      "industryBehaviors": {
+        "title": "Comportamientos por Industria",
+        "description": "Comportamientos de IA preconfigurados para diferentes industrias que entienden vocabulario especializado específico de tu negocio."
+      },
+      "multiChannel": {
+        "title": "Integración Multicanal",
+        "description": "Implementa tu agente de IA en sitio web, aplicación móvil, SMS, redes sociales y todas tus plataformas de interacción con clientes."
+      },
+      "semantic": {
+        "title": "Comprensión Semántica",
+        "description": "Nuestra IA comprende contexto, sentimiento e intención más allá de las palabras clave para conversaciones verdaderamente humanas."
+      },
+      "analytics": {
+        "title": "Análisis en Tiempo Real",
+        "description": "Monitorea conversaciones, realiza seguimiento de satisfacción e identifica oportunidades de optimización a través de nuestro panel intuitivo."
+      },
+      "brand": {
+        "title": "Personalización de Marca",
+        "description": "Control visual completo con colores personalizados, logotipos y estilos de conversación que coinciden con la identidad de tu marca."
+      }
+    }
+  },
+  "cta": {
+    "title": "Comienza a Crear tu Asistente IA Hoy",
+    "subtitle": "Únete a la revolución de la IA y transforma la forma en que interactúas con tus clientes. No se requieren conocimientos técnicos."
+  }
+}

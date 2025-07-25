@@ -1,0 +1,69 @@
+{
+  "heroChat": {
+    "assistant": {
+      "name": "Customate Assistant",
+      "status": "Online"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "Do you have this t-shirt in size Medium?"
+        },
+        {
+          "role": "bot", 
+          "text": "Yes! We have the Premium Cotton T-shirt in Medium. It's currently in stock and available in 3 colors: Navy, White, and Gray."
+        },
+        {
+          "role": "user",
+          "text": "What's the return policy?"
+        },
+        {
+          "role": "bot",
+          "text": "We offer free returns within 30 days of purchase. No questions asked! Just use our prepaid return label."
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "When is my Data Science project due?"
+        },
+        {
+          "role": "bot",
+          "text": "Your Data Science project is due next Friday, May 24th. You've completed 3 out of 5 required sections so far."
+        },
+        {
+          "role": "user",
+          "text": "What resources are available for the physics exam?"
+        },
+        {
+          "role": "bot",
+          "text": "We have practice tests, video tutorials, and study guides available in the learning center. I can also connect you with a tutor if needed."
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "My subscription isn't working correctly."
+        },
+        {
+          "role": "bot",
+          "text": "I'm sorry to hear that. Let me help troubleshoot. What specific issue are you experiencing with your subscription?"
+        },
+        {
+          "role": "user",
+          "text": "I can't access premium features after payment"
+        },
+        {
+          "role": "bot",
+          "text": "Let me check that for you. I see your payment was processed but there's a sync issue. I've refreshed your account access. Can you try logging out and back in?"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "E-commerce",
+      "education": "Education",
+      "support": "Support"
+    }
+  }
+}

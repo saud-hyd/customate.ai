@@ -1,0 +1,63 @@
+{
+  "header": {
+    "features": "功能",
+    "pricing": "定价",
+    "blog": "博客",
+    "contact": "联系我们",
+    "login": "登录",
+    "signup": "注册",
+    "getStarted": "开始使用",
+    "demo": "演示"
+  },
+  "footer": {
+    "product": {
+      "title": "产品",
+      "features": "功能",
+      "pricing": "定价",
+      "useCases": "使用案例",
+      "roadmap": "路线图"
+    },
+    "resources": {
+      "title": "资源",
+      "blog": "博客",
+      "documentation": "文档",
+      "apiReference": "API参考",
+      "help": "帮助中心"
+    },
+    "company": {
+      "title": "公司",
+      "about": "关于我们",
+      "contact": "联系我们",
+      "careers": "招聘",
+      "press": "媒体"
+    },
+    "legal": {
+      "title": "法律",
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "cookies": "Cookie政策"
+    },
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "cookies": "Cookie政策",
+    "rights": "© {{year}} Customate.ai. 版权所有。",
+    "description": "通过理解您业务并在每个平台上与客户连接的AI驱动聊天机器人，改变您的客户体验。",
+    "followUs": "关注我们"
+  },
+  "navigation": {
+    "home": "首页",
+    "features": "功能",
+    "pricing": "定价",
+    "about": "关于我们",
+    "contact": "联系我们",
+    "blog": "博客"
+  },
+  "cookieConsent": {
+    "title": "我们使用Cookie",
+    "description": "我们使用Cookie来增强您的浏览体验，提供个性化内容，并分析我们的流量。点击“接受所有”即表示您同意我们使用Cookie。",
+    "learnMore": "了解更多关于我们的",
+    "cookiePolicy": "Cookie政策",
+    "accept": "接受所有",
+    "decline": "拒绝"
+  }
+}

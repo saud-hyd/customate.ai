@@ -1,0 +1,69 @@
+{
+  "heroChat": {
+    "assistant": {
+      "name": "Customate Assistent",
+      "status": "Online"
+    },
+    "conversations": {
+      "ecommerce": [
+        {
+          "role": "user",
+          "text": "Haben Sie dieses T-Shirt in Größe Medium?"
+        },
+        {
+          "role": "bot",
+          "text": "Ja! Wir haben das Premium Baumwoll-T-Shirt in Medium. Es ist derzeit auf Lager und in 3 Farben erhältlich: Navy, Weiß und Grau."
+        },
+        {
+          "role": "user",
+          "text": "Wie ist die Rückgaberichtlinie?"
+        },
+        {
+          "role": "bot",
+          "text": "Wir bieten kostenlose Rückgaben innerhalb von 30 Tagen nach dem Kauf. Keine Fragen gestellt! Verwenden Sie einfach unser vorausbezahltes Rücksendeetikett."
+        }
+      ],
+      "education": [
+        {
+          "role": "user",
+          "text": "Wann ist mein Data Science Projekt fällig?"
+        },
+        {
+          "role": "bot",
+          "text": "Ihr Data Science Projekt ist nächsten Freitag, den 24. Mai fällig. Sie haben bisher 3 von 5 erforderlichen Abschnitten abgeschlossen."
+        },
+        {
+          "role": "user",
+          "text": "Welche Ressourcen sind für die Physikprüfung verfügbar?"
+        },
+        {
+          "role": "bot",
+          "text": "Wir haben Übungstests, Video-Tutorials und Studienführer im Lernzentrum verfügbar. Ich kann Sie auch mit einem Tutor verbinden, falls nötig."
+        }
+      ],
+      "support": [
+        {
+          "role": "user",
+          "text": "Mein Abonnement funktioniert nicht richtig."
+        },
+        {
+          "role": "bot",
+          "text": "Das tut mir leid zu hören. Lassen Sie mich bei der Fehlerbehebung helfen. Welches spezifische Problem haben Sie mit Ihrem Abonnement?"
+        },
+        {
+          "role": "user",
+          "text": "Ich kann nach der Zahlung nicht auf Premium-Funktionen zugreifen"
+        },
+        {
+          "role": "bot",
+          "text": "Lassen Sie mich das für Sie überprüfen. Ich sehe, dass Ihre Zahlung verarbeitet wurde, aber es gibt ein Synchronisierungsproblem. Ich habe Ihren Kontozugang aktualisiert. Können Sie versuchen, sich abzumelden und wieder anzumelden?"
+        }
+      ]
+    },
+    "tabLabels": {
+      "ecommerce": "E-Commerce",
+      "education": "Bildung",
+      "support": "Support"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "title": "为什么选择Customate.ai？",
+  "subtitle": "发现使我们成为智能客户支持首选解决方案的功能",
+  "cards": [
+    {
+      "title": "24/7可用性",
+      "description": "您的AI助手永不休息，确保客户在需要时随时获得支持。",
+      "icon": "clock"
+    },
+    {
+      "title": "智能学习",
+      "description": "从每次互动中学习，随着时间推移提供越来越好的响应。",
+      "icon": "brain"
+    },
+    {
+      "title": "无缝集成",
+      "description": "轻松集成到您现有的网站和工作流程中，设置时间不到5分钟。",
+      "icon": "plug"
+    },
+    {
+      "title": "多语言支持",
+      "description": "用多种语言与客户交流，打破语言障碍。",
+      "icon": "globe"
+    },
+    {
+      "title": "成本效益",
+      "description": "减少支持成本，同时提高客户满意度和响应时间。",
+      "icon": "dollar"
+    },
+    {
+      "title": "可扩展性",
+      "description": "从初创公司到企业，我们的解决方案随着您的业务增长而扩展。",
+      "icon": "trending"
+    }
+  ]
+}

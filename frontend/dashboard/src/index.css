@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles for the application */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom utility classes for orange theme */
+@layer utilities {
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .bg-gradient-orange {
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  }
+  
+  .border-gradient-orange {
+    border-image: linear-gradient(135deg, #ea580c 0%, #f97316 100%) 1;
+  }
+  
+  .shadow-orange {
+    box-shadow: 0 4px 14px 0 rgba(234, 88, 12, 0.39);
+  }
+  
+  .shadow-orange-lg {
+    box-shadow: 0 10px 25px -3px rgba(234, 88, 12, 0.3), 0 4px 6px -2px rgba(234, 88, 12, 0.2);
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .btn-orange {
+    @apply bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500;
+  }
+  
+  .btn-orange-outline {
+    @apply border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500;
+  }
+  
+  .input-orange {
+    @apply border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200;
+  }
+  
+  .card-orange {
+    @apply bg-white rounded-xl shadow-lg border border-orange-100 p-6;
+  }
+}
+
+/* Animation classes */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Global focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid #ea580c;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #c2410c, #ea580c);
+}
+
+/* Toast notifications styling override */
+.Toastify__toast--success {
+  background: linear-gradient(135deg, #ea580c, #f97316) !important;
+}
+
+.Toastify__toast--error {
+  background: #ef4444 !important;
+}
+
+.Toastify__toast--info {
+  background: linear-gradient(135deg, #ea580c, #f97316) !important;
+}
+
+/* Ensure widget container takes full space in test mode */
+#customate-test-widget {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Override any potential conflicts with widget styles */
+#customate-test-widget .customate-widget-container {
+  width: 100% !important;
+  height: 100% !important;
+}

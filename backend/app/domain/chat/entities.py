@@ -27,6 +27,7 @@ class ChatSession(Base):
     def __repr__(self):
         return f"<ChatSession {self.session_id}>"
 
+# Update the ChatMessage class to rename the metadata column
 class ChatMessage(Base):
     """Chat message entity representing a single message in a conversation."""
     
@@ -37,7 +38,7 @@ class ChatMessage(Base):
     session_id = Column(String(36), ForeignKey("chat_sessions.session_id", ondelete="CASCADE"), nullable=False)
     role = Column(String(20), nullable=False)  # 'user' or 'assistant'
     content = Column(Text, nullable=False)
-    metadata = Column(JSON, nullable=True)
+    message_metadata = Column(JSON, nullable=True)  # Changed from 'metadata' to 'message_metadata'
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -45,7 +46,7 @@ class ChatMessage(Base):
     
     def __repr__(self):
         return f"<ChatMessage {self.message_id} ({self.role})>"
-
+    
 class ConversationContext(Base):
     """Conversation context entity storing the current state and context of a conversation."""
     

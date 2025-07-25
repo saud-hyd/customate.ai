@@ -1,0 +1,20 @@
+{
+  "form": {
+    "title": "Contact",
+    "subtitle": "We'd love to hear from you. Fill out the form below and we'll get back to you shortly.",
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "company": "Company",
+      "message": "Message"
+    },
+    "submit": "Send Message",
+    "sending": "Sending...",
+    "success": {
+      "title": "Message sent successfully!",
+      "message": "Thank you for reaching out. We'll get back to you as soon as possible.",
+      "sendAnother": "Send another message"
+    },
+    "error": "There was an error submitting the form. Please try again."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "form": {
+    "title": "Nous Contacter",
+    "subtitle": "Vous avez des questions sur Customate.ai ? Nous aimerions avoir de vos nouvelles.",
+    "name": "Nom Complet",
+    "namePlaceholder": "Entrez votre nom",
+    "email": "Adresse Email",
+    "emailPlaceholder": "Entrez votre email",
+    "company": "Entreprise",
+    "companyPlaceholder": "Entrez le nom de votre entreprise", 
+    "message": "Message",
+    "messagePlaceholder": "Parlez-nous de votre projet ou posez-nous des questions",
+    "submit": "Envoyer le Message",
+    "submitting": "Envoi en cours...",
+    "success": "Merci ! Nous vous répondrons bientôt.",
+    "error": "Quelque chose s'est mal passé. Veuillez réessayer."
+  },
+  "info": {
+    "title": "Informations de Contact",
+    "email": "hello@customate.ai",
+    "response": "Nous répondons généralement dans les 24 heures",
+    "support": "Besoin d'un support immédiat ?",
+    "documentation": "Consultez notre documentation"
+  }
+}

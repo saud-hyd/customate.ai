@@ -25,6 +25,7 @@ class KnowledgeCollection(Base):
     def __repr__(self):
         return f"<KnowledgeCollection {self.name}>"
 
+# Update the KnowledgeItem class to rename the metadata column
 class KnowledgeItem(Base):
     """Knowledge item entity representing a single piece of knowledge."""
     
@@ -35,7 +36,7 @@ class KnowledgeItem(Base):
     collection_id = Column(String(36), ForeignKey("knowledge_collections.collection_id", ondelete="CASCADE"), nullable=False)
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
-    metadata = Column(JSON, nullable=True)
+    item_metadata = Column(JSON, nullable=True)  # Changed from 'metadata' to 'item_metadata'
     source_document_id = Column(String(36), ForeignKey("document_sources.document_id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -47,7 +48,7 @@ class KnowledgeItem(Base):
     
     def __repr__(self):
         return f"<KnowledgeItem {self.title}>"
-
+    
 class DocumentSource(Base):
     """Document source entity representing an uploaded document."""
     

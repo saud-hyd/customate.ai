@@ -1,0 +1,63 @@
+{
+  "header": {
+    "features": "Características",
+    "pricing": "Precios",
+    "blog": "Blog",
+    "contact": "Contacto",
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse",
+    "getStarted": "Empezar",
+    "demo": "Demo"
+  },
+  "footer": {
+    "product": {
+      "title": "Producto",
+      "features": "Características",
+      "pricing": "Precios",
+      "useCases": "Casos de Uso",
+      "roadmap": "Hoja de Ruta"
+    },
+    "resources": {
+      "title": "Recursos",
+      "blog": "Blog",
+      "documentation": "Documentación",
+      "apiReference": "Referencia API",
+      "help": "Centro de Ayuda"
+    },
+    "company": {
+      "title": "Empresa",
+      "about": "Acerca de",
+      "contact": "Contacto",
+      "careers": "Carreras",
+      "press": "Prensa"
+    },
+    "legal": {
+      "title": "Legal",
+      "terms": "Términos de Servicio",
+      "privacy": "Política de Privacidad",
+      "cookies": "Política de Cookies"
+    },
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad",
+    "cookies": "Política de Cookies",
+    "rights": "© {{year}} Customate.ai. Todos los derechos reservados.",
+    "description": "Transforma tu experiencia de cliente con chatbots impulsados por IA que entienden tu negocio y se conectan con clientes en todas las plataformas.",
+    "followUs": "Síguenos"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "features": "Características",
+    "pricing": "Precios",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "blog": "Blog"
+  },
+  "cookieConsent": {
+    "title": "Usamos Cookies",
+    "description": "Utilizamos cookies para mejorar su experiencia de navegación, ofrecer contenido personalizado y analizar nuestro tráfico. Al hacer clic en 'Aceptar todo', acepta nuestro uso de cookies.",
+    "learnMore": "Más información sobre nuestra",
+    "cookiePolicy": "Política de Cookies",
+    "accept": "Aceptar Todo",
+    "decline": "Rechazar"
+  }
+}

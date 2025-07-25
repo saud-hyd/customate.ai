@@ -1,0 +1,56 @@
+{
+  "title": "Häufig gestellte Fragen",
+  "subtitle": "Alles was Sie über Customate.ai wissen müssen",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Was ist Customate.ai?",
+      "answer": "Customate.ai ist eine Multi-Tenant-Chatbot-Plattform, die es Unternehmen ermöglicht, KI-gestützte Chatbots mit branchenspezifischen Verhaltensweisen und benutzerdefinierten Wissensbasen zu erstellen, anzupassen und bereitzustellen. Unsere Lösung hilft Unternehmen dabei, besseren Kundensupport zu bieten, Konversionen zu steigern und Zeit durch intelligente Automatisierung zu sparen."
+    },
+    {
+      "id": 2,
+      "question": "Wie funktioniert die Wissensbasis?",
+      "answer": "Unsere Plattform verwendet Retrieval-Augmented Generation (RAG), um genaue Antworten aus Ihrer Wissensbasis zu liefern. Sie können Dokumente (PDFs, DOCs usw.), FAQs oder Produktinformationen hochladen, und unser System extrahiert, verarbeitet und vektorisiert den Inhalt automatisch. Wenn ein Benutzer eine Frage stellt, durchsucht unsere KI Ihre Wissensbasis nach den relevantesten Informationen und generiert eine kontextuell angemessene Antwort."
+    },
+    {
+      "id": 3,
+      "question": "Kann ich das Erscheinungsbild des Chatbots anpassen?",
+      "answer": "Ja! Customate.ai bietet umfangreiche White-Label-Optionen. Sie können die Farben, das Logo, Begrüßungsnachrichten, Schriftarten und mehr des Chatbots anpassen, um Ihrer Markenidentität zu entsprechen. Sie können das Chat-Widget auch überall auf Ihrer Website positionieren."
+    },
+    {
+      "id": 4,
+      "question": "Welche Branchen unterstützen Sie?",
+      "answer": "Unsere Plattform unterstützt mehrere Branchen mit spezialisierten Verhaltensmustern. Derzeit bieten wir optimierte Einstellungen für E-Commerce, Gesundheitswesen, SaaS, Bildung, Finanzen und allgemeine Geschäfte. Jede Branchenkonfiguration kommt mit vordefinierten Absichten, Antworten und Workflows, die auf häufige Anwendungsfälle in diesem Sektor zugeschnitten sind."
+    },
+    {
+      "id": 5,
+      "question": "Wie füge ich den Chatbot zu meiner Website hinzu?",
+      "answer": "Das Hinzufügen des Chatbots zu Ihrer Website ist einfach. Nach der Konfiguration Ihres Chatbots in unserem Dashboard erhalten Sie ein JavaScript-Snippet zum Kopieren und Einfügen in das HTML Ihrer Website. Dies gehört normalerweise kurz vor das schließende </body>-Tag. Nach dem Hinzufügen erscheint das Chat-Widget innerhalb von Minuten auf Ihrer Website."
+    },
+    {
+      "id": 6,
+      "question": "Welche Sprachen unterstützt der Chatbot?",
+      "answer": "Unser Chatbot unterstützt mehrere Sprachen, darunter Englisch, Spanisch, Französisch, Deutsch, Portugiesisch, Italienisch, Niederländisch, Chinesisch, Japanisch und Koreanisch. Sie können verschiedene Sprachmodelle für verschiedene Märkte konfigurieren oder einen einzigen Chatbot haben, der mehrere Sprachen erkennen und darauf antworten kann."
+    },
+    {
+      "id": 7,
+      "question": "Gibt es eine Begrenzung für die Anzahl der Nachrichten?",
+      "answer": "Ja, jeder Preisplan kommt mit einem monatlichen Nachrichtenlimit. Der kostenlose Plan umfasst 100 Nachrichten pro Monat, während unsere bezahlten Pläne höhere Limits basierend auf Ihren Geschäftsanforderungen bieten."
+    },
+    {
+      "id": 8,
+      "question": "Wie sicher sind meine Daten?",
+      "answer": "Wir nehmen Sicherheit sehr ernst. Alle Daten sind sowohl bei der Übertragung als auch im Ruhezustand verschlüsselt. Unsere Multi-Tenant-Architektur gewährleistet vollständige Datenisolation zwischen Kunden. Wir erfüllen DSGVO, CCPA und andere Datenschutzbestimmungen. Zusätzlich behalten Sie das vollständige Eigentum an Ihren Daten, und wir verwenden Ihre Daten niemals zum Trainieren unserer KI-Modelle ohne ausdrückliche Erlaubnis."
+    },
+    {
+      "id": 9,
+      "question": "Kann ich mit meinen bestehenden Tools integrieren?",
+      "answer": "Ja, Customate.ai bietet Integrationen mit beliebten CRM-Systemen, Helpdesk-Software und anderen Geschäftstools. Wir stellen APIs für benutzerdefinierte Integrationen und Webhooks für ereignisgesteuerte Workflows bereit. Unsere Professional- und Enterprise-Pläne umfassen erweiterte Integrationsoptionen für nahtlose Verbindung mit Ihrem Tech-Stack."
+    },
+    {
+      "id": 10,
+      "question": "Welche Art von Analytik bieten Sie?",
+      "answer": "Unser Analytics-Dashboard bietet umfassende Einblicke in die Leistung Ihres Chatbots. Sie können Metriken wie Gesprächsvolumen, Benutzerzufriedenheit, häufige Fragen, Lösungsraten und Gesprächsdauer verfolgen. Sie können auch Trends, Spitzennutzungszeiten und Verbesserungsmöglichkeiten identifizieren."
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "badge": "Seamless Connectivity",
+  "title": {
+    "part1": "One AI,",
+    "part2": "Everywhere"
+  },
+  "subtitle": "Connect your business data and reach customers on every platform with consistent, intelligent AI interactions.",
+  "tabs": {
+    "dataSources": "Data Sources",
+    "chatPlatforms": "Chat Platforms"
+  },
+  "dataSources": {
+    "title": {
+      "part1": "Smart",
+      "part2": "Data Sources"
+    },
+    "integrations": {
+      "knowledge": {
+        "name": "Knowledge Base",
+        "description": "Your AI learns from your docs, FAQs & website content"
+      },
+      "crm": {
+        "name": "CRM Systems", 
+        "description": "Connect customer data from Salesforce, Zendesk & more"
+      },
+      "erp": {
+        "name": "ERP/Inventory",
+        "description": "Real-time product and stock information integration"
+      },
+      "helpdesk": {
+        "name": "Help Desk",
+        "description": "Link support tickets, chat history & customer issues"
+      }
+    }
+  },
+  "chatPlatforms": {
+    "title": {
+      "part1": "Multi-Platform",
+      "part2": "Messaging"
+    },
+    "features": {
+      "omnichannelPresence": {
+        "title": "Omnichannel Presence",
+        "description": "One AI, any communication platform"
+      },
+      "nativeInterface": {
+        "title": "Native Interface",
+        "description": "Looks and feels like the original platform"
+      },
+      "richMedia": {
+        "title": "Rich Media",
+        "description": "Send images, buttons, cards, and more"
+      },
+      "realtimeTranslation": {
+        "title": "Real-time Translation",
+        "description": "Communicate with customers in 100+ languages automatically"
+      },
+      "availability": {
+        "title": "24/7 Availability",
+        "description": "Always-on support for your customers"
+      },
+      "consistentVoice": {
+        "title": "Consistent Voice",
+        "description": "Same brand experience everywhere"
+      },
+      "smartHandoff": {
+        "title": "Smart Handoff",
+        "description": "Seamless transfer to human agents"
+      }
+    },
+    "deployMessage": "Deploy to any platform in minutes with no coding"
+  },
+  "cta": {
+    "title": "Ready to elevate your customer experience?",
+    "subtitle": "Deploy AI across all your channels in minutes, not months. No coding required.",
+    "startTrial": "Start Free Trial",
+    "watchDemo": "Watch Demo"
+  }
+}

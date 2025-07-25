@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "title": "关于我们 - Customate.ai",
+    "description": "了解Customate.ai - 面向企业的AI驱动聊天机器人平台。"
+  },
+  "hero": {
+    "title": "关于Customate.ai",
+    "subtitle": "通过具有行业特定行为和自定义知识库的智能AI驱动聊天机器人，转变客户互动。"
+  },
+  "mission": {
+    "title": "我们的使命",
+    "paragraph1": "在Customate.ai，我们相信每个企业都应该拥有智能、响应迅速且个性化的客户支持。我们的使命是普及先进的AI技术，使各种规模的企业都能够创建有意义的客户互动。",
+    "paragraph2": "我们不仅仅是在构建聊天机器人 - 我们正在打造智能对话体验，能够理解上下文，从互动中学习，并持续改进以更好地为您的客户服务。"
+  },
+  "vision": {
+    "title": "我们的愿景",
+    "paragraph1": "我们设想一个未来，在这个未来中，每次客户互动都是有意义的、高效的和令人愉快的。通过结合尖端的AI技术和深厚的行业专业知识，我们正在为下一代客户体验奠定基础。",
+    "paragraph2": "我们的目标是成为智能客户互动的领先平台，通过AI帮助全球企业与客户建立更强的关系。"
+  },
+  "team": {
+    "title": "领导团队",
+    "subtitle": "认识Customate.ai背后的团队",
+    "members": [
+      {
+        "name": "José Ignacio Orias Calvo",
+        "position": "创始人兼CEO",
+        "bio": "对AI和客户体验创新充满热情。José在为全球企业构建可扩展技术解决方案方面拥有超过10年的经验。"
+      }
+    ]
+  },
+  "company": {
+    "title": "公司信息",
+    "businessName": "企业名称",
+    "businessNameValue": "Customated S&A UG (haftungsbeschränkt)",
+    "address": "企业地址",
+    "addressValue": {
+      "street": "Konrad-Wolf-Straße 93-99 - Haus 7",
+      "postal": "14482 Potsdam",
+      "country": "德国"
+    },
+    "contact": "联系方式",
+    "email": "邮箱: admin@customate.ai",
+    "website": "网站: www.customate.ai",
+    "legalRep": "法定代表人: José Ignacio Orias Calvo"
+  },
+  "values": {
+    "title": "我们的价值观",
+    "subtitle": "指导我们所做一切的原则",
+    "innovation": {
+      "title": "创新",
+      "description": "不断推动AI技术的边界，提供尖端解决方案。"
+    },
+    "security": {
+      "title": "安全",
+      "description": "通过企业级安全措施保护您的数据并确保GDPR合规性。"
+    },
+    "performance": {
+      "title": "性能",
+      "description": "提供快速、可靠和可扩展的AI解决方案，与您的业务共同成长。"
+    },
+    "support": {
+      "title": "支持",
+      "description": "在您的AI之旅中提供卓越的客户服务和支持。"
+    }
+  },
+  "cta": {
+    "title": "准备好转变您的客户体验了吗？",
+    "subtitle": "加入全球信任Customate.ai为其客户互动提供动力的企业。",
+    "primaryButton": "今天开始",
+    "secondaryButton": "了解更多"
+  }
+}

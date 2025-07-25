@@ -1,0 +1,18 @@
+{
+  "name": "customate-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:widget": "cd frontend/widget-app && npm install && npm run build",
+    "dev:widget": "cd frontend/widget-app && npm start",
+    "build:all": "npm run build:widget && cd frontend/dashboard && npm run build"
+  },
+  "dependencies": {
+    "framer-motion": "^12.11.4",
+    "i18next": "^25.2.0",
+    "i18next-browser-languagedetector": "^8.1.0",
+    "i18next-http-backend": "^3.0.2",
+    "react-i18next": "^15.5.1",
+    "three": "^0.176.0"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "title": "Einfache, Transparente Preise",
+  "subtitle": "Wählen Sie den Plan, der zu Ihrem Unternehmen passt",
+  "billing": {
+    "monthly": "Monatlich",
+    "annual": "Jährlich",
+    "annualSave": "(20% sparen)"
+  },
+  "billedAnnually": "Jährlich abgerechnet",
+  "plans": {
+    "free": {
+      "name": "Kostenlos",
+      "description": "Perfekt zum Ausprobieren von Customate.ai",
+      "features": [
+        "100 Nachrichten pro Monat",
+        "500 KB Speicher",
+        "Grundlegende Chatbot-Anpassung"
+      ],
+      "cta": "Kostenlos starten"
+    },
+    "basic": {
+      "name": "Basic",
+      "description": "Für kleine Unternehmen und Startups",
+      "features": [
+        "3.000 Nachrichten pro Monat",
+        "5 MB Speicher",
+        "E-Mail-Support",
+        "Analytics-Dashboard",
+        "API-Zugang"
+      ],
+      "cta": "Mit Basic starten"
+    },
+    "standard": {
+      "name": "Standard",
+      "description": "Für wachsende Unternehmen mit erweiterten Anforderungen",
+      "features": [
+        "10.000 Nachrichten pro Monat",
+        "25 MB Speicher",
+        "Erweiterte Chatbot-Anpassung",
+        "Prioritäts-E-Mail-Support",
+        "Erweiterte Analysen"
+      ],
+      "cta": "Mit Standard starten"
+    },
+    "professional": {
+      "name": "Professional",
+      "description": "Für Organisationen mit komplexen Anforderungen",
+      "features": [
+        "40.000 Nachrichten pro Monat",
+        "35 MB Speicher",
+        "Benutzerdefinierte Bereitstellungsoptionen",
+        "Dedizierter Account Manager",
+        "Telefon- und E-Mail-Support",
+        "Benutzerdefinierte Integrationen"
+      ],
+      "cta": "Mit Professional starten"
+    }
+  },
+  "badges": {
+    "popular": "Beliebt"
+  },
+  "footer": {
+    "customPlan": "Suchen Sie einen individuellen Plan?",
+    "contactUs": "Kontaktieren Sie uns",
+    "tailoredSolution": "für eine maßgeschneiderte Lösung."
+  },
+  "pageHeader": {
+    "title": "Flexible Preise für jedes Unternehmen",
+    "subtitle": "Wählen Sie den perfekten Plan für Ihre Geschäftsanforderungen. Alle Pläne beinhalten Kernfunktionen mit zusätzlichen Fähigkeiten während Sie wachsen."
+  },
+  "enterprise": {
+    "title": "Enterprise-Lösungen",
+    "subtitle": "Benötigen Sie eine maßgeschneiderte Lösung für Ihre Organisation?",
+    "features": {
+      "title": "Enterprise-Features",
+      "items": [
+        "Benutzerdefinierte Bereitstellungsoptionen",
+        "Erweiterte Sicherheit & Compliance",
+        "Entwicklung benutzerdefinierter Integrationen",
+        "Dedizierter Account Manager"
+      ]
+    },
+    "contact": {
+      "title": "Kontaktieren Sie unser Vertriebsteam",
+      "description": "Lassen Sie uns ein maßgeschneidertes Paket erstellen, das auf Ihre spezifischen Bedürfnisse und Geschäftsanforderungen zugeschnitten ist.",
+      "button": "Vertrieb kontaktieren"
+    }
+  }
+}

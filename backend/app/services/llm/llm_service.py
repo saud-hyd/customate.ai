@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
 
+from app.core import logger
+
 class LLMService(ABC):
     """Abstract base class for LLM services."""
     
@@ -10,7 +12,6 @@ class LLMService(ABC):
         user_message: str,
         conversation_history: List[Dict[str, str]],
         knowledge_context: Optional[List[Dict[str, Any]]] = None,
-        industry_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Generate a response from the LLM.
@@ -38,3 +39,20 @@ class LLMService(ABC):
             Vector embeddings as a list of floats
         """
         pass
+    
+    def enhance_system_prompt(self, base_prompt: str, industry_context: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Simplified prompt enhancement - let OpenAI handle context naturally.
+        
+        Args:
+            base_prompt: Original system prompt
+            industry_context: Industry-specific context (now mostly ignored)
+            
+        Returns:
+            Minimally enhanced system prompt
+        """
+        # Just return the base prompt with minimal enhancement
+        if industry_context and industry_context.get("instructions"):
+            return f"{base_prompt}\n\n{industry_context['instructions']}"
+        
+        return base_prompt

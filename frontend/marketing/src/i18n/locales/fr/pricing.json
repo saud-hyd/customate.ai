@@ -1,0 +1,89 @@
+{
+  "title": "Tarifs Simples et Transparents",
+  "subtitle": "Choisissez le plan qui convient à votre entreprise",
+  "billing": {
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "annualSave": "(Économisez 20%)"
+  },
+  "billedAnnually": "Facturé annuellement",
+  "plans": {
+    "free": {
+      "name": "Gratuit",
+      "description": "Parfait pour essayer Customate.ai",
+      "features": [
+        "100 messages par mois",
+        "500 Ko de stockage",
+        "Personnalisation de base du chatbot"
+      ],
+      "cta": "Commencer Gratuitement"
+    },
+    "basic": {
+      "name": "Basic",
+      "description": "Pour les petites entreprises et startups",
+      "features": [
+        "3 000 messages par mois",
+        "5 Mo de stockage",
+        "Support par email",
+        "Tableau de bord analytique",
+        "Accès API"
+      ],
+      "cta": "Commencer avec Basic"
+    },
+    "standard": {
+      "name": "Standard",
+      "description": "Pour les entreprises en croissance avec des besoins avancés",
+      "features": [
+        "10 000 messages par mois",
+        "25 Mo de stockage",
+        "Personnalisation avancée du chatbot",
+        "Support email prioritaire",
+        "Analyses avancées"
+      ],
+      "cta": "Commencer avec Standard"
+    },
+    "professional": {
+      "name": "Professional",
+      "description": "Pour les organisations avec des exigences complexes",
+      "features": [
+        "40 000 messages par mois",
+        "35 Mo de stockage",
+        "Options de déploiement personnalisées",
+        "Gestionnaire de compte dédié",
+        "Support téléphonique et email",
+        "Intégrations personnalisées"
+      ],
+      "cta": "Commencer avec Professional"
+    }
+  },
+  "badges": {
+    "popular": "Populaire"
+  },
+  "footer": {
+    "customPlan": "Recherchez-vous un plan personnalisé ?",
+    "contactUs": "Contactez-nous",
+    "tailoredSolution": "pour une solution sur mesure."
+  },
+  "pageHeader": {
+    "title": "Tarifs Flexibles pour Chaque Entreprise",
+    "subtitle": "Choisissez le plan parfait pour vos besoins d'entreprise. Tous les plans incluent des fonctionnalités de base avec des capacités supplémentaires à mesure que vous grandissez."
+  },
+  "enterprise": {
+    "title": "Solutions Enterprise",
+    "subtitle": "Besoin d'une solution personnalisée pour votre organisation ?",
+    "features": {
+      "title": "Fonctionnalités Enterprise",
+      "items": [
+        "Options de déploiement personnalisées",
+        "Sécurité et conformité avancées",
+        "Développement d'intégrations personnalisées",
+        "Gestionnaire de compte dédié"
+      ]
+    },
+    "contact": {
+      "title": "Contactez Notre Équipe de Vente",
+      "description": "Laissez-nous créer un package personnalisé adapté à vos besoins spécifiques et exigences d'entreprise.",
+      "button": "Contacter les Ventes"
+    }
+  }
+}

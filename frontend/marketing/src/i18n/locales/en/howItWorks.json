@@ -1,0 +1,22 @@
+{
+  "title": {
+    "part1": "How Customate.ai",
+    "part2": "Works"
+  },
+  "subtitle": "Get up and running with your personalized AI Customer Support agent in minutes",
+  "steps": [
+    {
+      "title": "Sign up & create an account",
+      "description": "To access the chatbot admin portal, create your account in seconds."
+    },
+    {
+      "title": "Upload your knowledge base",
+      "description": "Import your PDFs, type personalized FAQs, select websites to crawl, or add integrations to your operation software."
+    },
+    {
+      "title": "Deploy across channels",
+      "description": "Add to your website as a corner widget, mobile app, WhatsApp, and all your social media accounts. Email coming soon."
+    }
+  ],
+  "cta": "Watch Demo"
+}

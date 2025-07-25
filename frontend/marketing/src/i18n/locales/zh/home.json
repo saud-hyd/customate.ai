@@ -1,0 +1,44 @@
+{
+  "hero": {
+    "badge": "这是 Customate",
+    "title": {
+      "part1": "自动化您的",
+      "part2": "客户支持运营。"
+    },
+    "subtitle": "一个AI驱动的聊天机器人，回答您所有客户的问题。直接从您的网站角落和所有社交媒体渠道参与、协助和转换。"
+  },
+  "features": {
+    "heading": "增强业务对话",
+    "subheading": "Customate为您的客户问题提供智能、上下文感知的答案",
+    "cards": {
+      "knowledgeIntegration": {
+        "title": "知识集成",
+        "description": "我们的RAG实现将您的文档、FAQ和数据直接连接到对话AI，以获得上下文感知的响应。"
+      },
+      "industryBehaviors": {
+        "title": "行业行为",
+        "description": "为不同行业预配置AI行为，理解特定于您业务的专业词汇。"
+      },
+      "multiChannel": {
+        "title": "多渠道集成",
+        "description": "在网站、移动应用、社交媒体和所有客户参与平台上部署您的AI代理。"
+      },
+      "semantic": {
+        "title": "语义理解",
+        "description": "我们的AI理解上下文、情感和意图，超越关键词，实现真正的人性化对话。"
+      },
+      "analytics": {
+        "title": "实时分析",
+        "description": "通过我们直观的仪表板监控对话、跟踪满意度并识别优化机会。"
+      },
+      "brand": {
+        "title": "品牌定制",
+        "description": "完全的视觉控制，自定义颜色、标志和对话风格，匹配您的品牌身份。"
+      }
+    }
+  },
+  "cta": {
+    "title": "今天开始构建您的AI助手",
+    "subtitle": "加入AI革命，改变您与客户的互动方式。无需技术知识。"
+  }
+}
