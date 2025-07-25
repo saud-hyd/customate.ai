@@ -492,3 +492,230 @@
   max-width: 100%;
   max-height: 100%;
 }
+
+/* Toggle button container for proper centering in collapsed iframe */
+.toggle-button-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Enhanced responsive adjustments for universal compatibility */
+@media (max-width: 100px) {
+  .widget-toggle-button {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .widget-toggle-button svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+/* Ensure proper widget state display */
+.widget-container.floating.collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-container.floating.expanded {
+  display: block;
+}
+
+.widget-container.inline {
+  display: block;
+}
+
+/* Enhanced test badge positioning */
+.test-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  z-index: 10;
+}
+
+/* Improved close button interactions */
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0.8;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Future: Recommended Questions Styles */
+.recommended-questions {
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+
+.recommended-questions-header {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.questions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.question-button {
+  background: white;
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: fit-content;
+  color: #374151;
+}
+
+.question-button:hover {
+  background: var(--primary-color, #ea580c);
+  color: white;
+  border-color: var(--primary-color, #ea580c);
+  transform: translateY(-1px);
+}
+
+/* Enhanced error states for universal compatibility */
+.widget-error {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.widget-error .error-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.widget-error button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #ea580c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.widget-error button:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* Universal framework compatibility fixes */
+.widget-container * {
+  box-sizing: border-box;
+}
+
+/* Prevent any parent styles from interfering */
+.widget-container {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  line-height: 1.5 !important;
+  color: inherit !important;
+}
+
+/* Better mobile touch targets */
+@media (max-width: 768px) {
+  .widget-toggle-button {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .send-button {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .message-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .chat-input-container {
+    padding: 12px 16px;
+  }
+  
+  .messages-container {
+    padding: 16px;
+  }
+  
+  .widget-header {
+    padding: 12px 16px;
+    min-height: 60px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .message-bubble {
+    border-width: 2px;
+  }
+  
+  .widget-toggle-button {
+    border: 2px solid white;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .widget-toggle-button,
+  .send-button,
+  .question-button,
+  .message {
+    animation: none;
+    transition: none;
+  }
+  
+  .typing-dot {
+    animation: none;
+  }
+  
+  .loading-spinner {
+    animation: none;
+    border-top-color: #ea580c;
+  }
+}
+
+/* Print styles (hide widget when printing) */
+@media print {
+  .widget-container {
+    display: none !important;
+  }
+}

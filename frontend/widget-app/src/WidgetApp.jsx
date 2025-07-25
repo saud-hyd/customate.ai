@@ -1,172 +1,118 @@
+// frontend/widget-app/src/WidgetApp.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import ChatInterface from './components/ChatInterface';
-import useSettings from './hooks/useSettings';
-import useChat from './hooks/useChat';
+import { useSettings } from './hooks/useSettings';
+import { useChat } from './hooks/useChat';
+import './styles/widget.css';
 
 const WidgetApp = () => {
+  // Widget state
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isTestMode, setIsTestMode] = useState(false);
-  const [isFloating, setIsFloating] = useState(true);
-  const [settingsOverride, setSettingsOverride] = useState(null);
+  const [config, setConfig] = useState(null);
+  
+  // Refs
   const containerRef = useRef(null);
   
-  // Get URL parameters
+  // Get settings and chat functionality
+  const { settings, loading: settingsLoading, error: settingsError } = useSettings();
+  const { messages, isTyping, sendMessage, resetChat, error: chatError } = useChat(settings);
+  
+  // Initialize widget configuration
   useEffect(() => {
+    // Get config from URL params or window object
     const urlParams = new URLSearchParams(window.location.search);
-    const testMode = urlParams.get('test') === 'true';
-    const inline = urlParams.get('inline') === 'true';
+    const floating = urlParams.get('floating') === 'true';
     
-    setIsTestMode(testMode);
-    setIsFloating(!inline);
+    const initialConfig = {
+      floating: floating,
+      apiKey: urlParams.get('api_key') || window.REACT_WIDGET_CONFIG?.apiKey,
+      testMode: urlParams.get('test') === 'true' || window.REACT_WIDGET_CONFIG?.testMode
+    };
     
-    // CRITICAL: For floating widgets, ALWAYS start collapsed
-    if (inline) {
-      setIsExpanded(true);
-      console.log('🔧 Inline mode: Widget starts expanded');
-    } else {
+    setConfig(initialConfig);
+    
+    // For floating widgets, start collapsed
+    if (floating) {
       setIsExpanded(false);
-      console.log('🔧 Floating mode: Widget starts collapsed (iframe will be button size)');
+    } else {
+      setIsExpanded(true); // Inline widgets are always expanded
     }
   }, []);
-
-  // CRITICAL: Send immediate status to parent when state changes
-  const sendStatusToParent = (expanded, immediate = false) => {
-    if (window.parent !== window) {
-      const status = {
-        type: 'WIDGET_STATUS',
-        data: {
-          loaded: true,
-          expanded: expanded,
-          floating: isFloating,
-          testMode: isTestMode,
-          timestamp: Date.now()
-        }
-      };
+  
+  // Handle PostMessage communication with parent
+  useEffect(() => {
+    function handleParentMessage(event) {
+      const { type, data } = event.data;
       
-      if (immediate) {
-        // Send immediately for state changes
-        window.parent.postMessage(status, '*');
-        console.log('📡 IMMEDIATE status sent to parent:', { expanded, floating: isFloating });
-      } else {
-        // Small delay for initial load
-        setTimeout(() => {
-          window.parent.postMessage(status, '*');
-          console.log('📡 Status sent to parent:', { expanded, floating: isFloating });
-        }, 100);
+      switch (type) {
+        case 'WIDGET_CONFIG':
+          setConfig(prev => ({ ...prev, ...data.config }));
+          break;
+          
+        case 'EXPAND':
+          if (config?.floating) {
+            setIsExpanded(true);
+            notifyParent('WIDGET_RESIZE', { expanded: true });
+          }
+          break;
+          
+        case 'COLLAPSE':
+          if (config?.floating) {
+            setIsExpanded(false);
+            notifyParent('WIDGET_RESIZE', { expanded: false });
+          }
+          break;
+          
+        case 'TOGGLE':
+          if (config?.floating) {
+            const newExpanded = !isExpanded;
+            setIsExpanded(newExpanded);
+            notifyParent('WIDGET_RESIZE', { expanded: newExpanded });
+          }
+          break;
+          
+        case 'RESET':
+          resetChat();
+          break;
       }
     }
-  };
-
-  // Handle expand/collapse for floating mode
-  const handleToggle = () => {
-    if (isFloating) {
-      const newState = !isExpanded;
-      console.log(`🔄 Widget toggling: ${isExpanded ? 'EXPANDED' : 'COLLAPSED'} → ${newState ? 'EXPANDED' : 'COLLAPSED'}`);
-      
-      setIsExpanded(newState);
-      
-      // CRITICAL: Send status immediately when toggling
-      sendStatusToParent(newState, true);
-    }
-  };
-
-  // Send status when expansion state changes
-  useEffect(() => {
-    sendStatusToParent(isExpanded);
-  }, [isExpanded, isFloating, isTestMode]);
-
-  // Listen for postMessage updates from parent
-  useEffect(() => {
-    const handlePostMessage = (event) => {
-      const trustedOrigins = [
-        'http://localhost:3000',
-        'https://customate.vercel.app',
-        'https://customate-ai-1.onrender.com'
-      ];
-      
-      if (!trustedOrigins.includes(event.origin) && event.origin !== window.location.origin) {
-        return;
-      }
-
-      if (event.data && typeof event.data === 'object') {
-        switch (event.data.type) {
-          case 'SETTINGS_UPDATE':
-            console.log('📨 Received settings update via postMessage:', event.data.settings);
-            setSettingsOverride(event.data.settings);
-            break;
-          
-          case 'RESET_CHAT':
-            console.log('🔄 Received chat reset command via postMessage');
-            if (window.resetChatFunction) {
-              window.resetChatFunction();
-            }
-            break;
-          
-          case 'PING':
-            event.source?.postMessage({
-              type: 'PONG',
-              timestamp: Date.now(),
-              status: 'healthy',
-              expanded: isExpanded,
-              floating: isFloating
-            }, event.origin);
-            break;
-          
-          default:
-            console.log('📨 Received unknown postMessage:', event.data);
-        }
-      }
-    };
-
-    window.addEventListener('message', handlePostMessage);
     
-    // Send ready signal to parent
-    if (window.parent !== window) {
-      window.parent.postMessage({
-        type: 'WIDGET_READY',
-        expanded: isExpanded,
-        floating: isFloating,
-        timestamp: Date.now()
-      }, '*');
+    window.addEventListener('message', handleParentMessage);
+    
+    // Notify parent when widget is ready
+    notifyParent('WIDGET_READY', { config });
+    
+    return () => {
+      window.removeEventListener('message', handleParentMessage);
+    };
+  }, [config, isExpanded, resetChat]);
+  
+  // Notify parent window
+  const notifyParent = (type, data = {}) => {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type, data }, '*');
     }
-
-    return () => {
-      window.removeEventListener('message', handlePostMessage);
-    };
-  }, [isExpanded, isFloating]);
-
-  // Get settings and chat functionality
-  const { settings: apiSettings, loading: settingsLoading, error: settingsError } = useSettings();
+  };
   
-  // Merge API settings with postMessage overrides
-  const settings = settingsOverride ? { ...apiSettings, ...settingsOverride } : apiSettings;
+  // Handle toggle button click
+  const handleToggle = () => {
+    if (config?.floating) {
+      const newExpanded = !isExpanded;
+      setIsExpanded(newExpanded);
+      notifyParent('WIDGET_RESIZE', { expanded: newExpanded });
+    }
+  };
   
-  const { 
-    messages, 
-    isTyping, 
-    sendMessage, 
-    sessionId,
-    error: chatError,
-    resetChat
-  } = useChat(settings);
-
-  // Expose reset function for postMessage
-  useEffect(() => {
-    window.resetChatFunction = resetChat;
-    return () => {
-      window.resetChatFunction = null;
-    };
-  }, [resetChat]);
-
-  if (settingsLoading) {
+  // Loading state
+  if (settingsLoading || !config) {
     return (
       <div className="widget-loading">
         <div className="loading-spinner"></div>
-        <p>Loading widget...</p>
       </div>
     );
   }
-
+  
+  // Error state
   if (settingsError) {
     return (
       <div className="widget-error">
@@ -176,67 +122,35 @@ const WidgetApp = () => {
       </div>
     );
   }
-
-  // CRITICAL: Determine what to render based on mode and state
+  
+  // Determine what to show based on mode and state
   const shouldShowChatContainer = () => {
-    if (!isFloating) {
-      // Inline mode: always show chat
-      return true;
-    }
-    
-    // Floating mode: only show when expanded
-    return isExpanded;
+    return !config.floating || isExpanded;
   };
-
+  
   const shouldShowToggleButton = () => {
-    if (!isFloating) {
-      // Inline mode: never show toggle button
-      return false;
-    }
-    
-    // Floating mode: show toggle button when collapsed
-    return !isExpanded;
+    return config.floating && !isExpanded;
   };
-
-  console.log('🎯 Widget render decision:', {
-    isFloating,
-    isExpanded,
-    shouldShowChatContainer: shouldShowChatContainer(),
-    shouldShowToggleButton: shouldShowToggleButton()
-  });
-
+  
   return (
     <div 
       ref={containerRef}
-      className={`widget-container ${isFloating ? 'floating' : 'inline'} ${isExpanded ? 'expanded' : 'collapsed'}`}
+      className={`widget-container ${config.floating ? 'floating' : 'inline'} ${isExpanded ? 'expanded' : 'collapsed'}`}
       style={{
         '--primary-color': settings?.primary_color || '#ea580c',
-        '--widget-position': settings?.widget_position || 'bottom-right',
-        // CRITICAL: Ensure container fills iframe appropriately
         width: '100%',
         height: '100%',
         overflow: 'hidden'
       }}
     >
-      {/* TOGGLE BUTTON: Only show for floating widgets when collapsed */}
+      {/* Toggle Button (for floating mode when collapsed) */}
       {shouldShowToggleButton() && (
-        <div 
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
+        <div className="toggle-button-container">
           <button 
             className="widget-toggle-button"
             onClick={handleToggle}
             style={{ 
-              backgroundColor: settings?.primary_color || '#ea580c',
-              // Ensure button fits in smaller iframe
-              width: '60px',
-              height: '60px'
+              backgroundColor: settings?.primary_color || '#ea580c'
             }}
             title={`Open ${settings?.chatbot_name || 'AI Assistant'}`}
           >
@@ -245,17 +159,9 @@ const WidgetApp = () => {
         </div>
       )}
 
-      {/* CHAT CONTAINER: Only render when should be visible */}
+      {/* Chat Container */}
       {shouldShowChatContainer() && (
-        <div 
-          className="widget-chat-container"
-          style={{
-            // CRITICAL: Fill entire iframe when expanded
-            width: '100%',
-            height: '100%',
-            position: 'relative'
-          }}
-        >
+        <div className="widget-chat-container">
           {/* Header */}
           <div 
             className="widget-header"
@@ -272,15 +178,12 @@ const WidgetApp = () => {
                 <div className="status">
                   <div className="status-dot"></div>
                   Online
-                  {settingsOverride && (
-                    <span className="ml-2 text-xs opacity-75">• Live sync</span>
-                  )}
                 </div>
               </div>
             </div>
             
             {/* Close button for floating mode */}
-            {isFloating && (
+            {config.floating && (
               <button 
                 className="close-button" 
                 onClick={handleToggle}
@@ -290,10 +193,8 @@ const WidgetApp = () => {
               </button>
             )}
             
-            {isTestMode && (
-              <div className="test-badge">
-                Test Mode
-              </div>
+            {config.testMode && (
+              <div className="test-badge">Test Mode</div>
             )}
           </div>
 
@@ -307,32 +208,11 @@ const WidgetApp = () => {
           />
         </div>
       )}
-
-      {/* Debug info for development */}
-      {isTestMode && (
-        <div style={{
-          position: 'fixed',
-          top: '10px',
-          left: '10px',
-          background: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: '8px',
-          borderRadius: '4px',
-          fontSize: '12px',
-          zIndex: 1000001,
-          fontFamily: 'monospace'
-        }}>
-          Mode: {isFloating ? 'Floating' : 'Inline'} | 
-          State: {isExpanded ? 'EXPANDED' : 'COLLAPSED'} | 
-          Chat: {shouldShowChatContainer() ? 'VISIBLE' : 'HIDDEN'} |
-          Button: {shouldShowToggleButton() ? 'VISIBLE' : 'HIDDEN'}
-        </div>
-      )}
     </div>
   );
 };
 
-// Chat icon
+// Icons
 const ChatIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>

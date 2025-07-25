@@ -403,22 +403,7 @@ async def widget_options_handler(path: str):
         "headers": ["Content-Type", "X-API-Key", "Authorization"]
     }
 
-# Emergency widget endpoints (if main widget routes fail)
-@app.get("/api/widget-emergency/health")
-async def emergency_widget_health():
-    """Emergency widget health check."""
-    return {
-        "status": "emergency_mode",
-        "message": "Widget routes may not be properly loaded",
-        "widget_routes_available": WIDGET_ROUTES_AVAILABLE,
-        "widget_service_available": WIDGET_SERVICE_AVAILABLE,
-        "recommendations": [
-            "Check widget router import in main.py",
-            "Verify widget routes are properly defined",
-            "Check for import errors in widget module",
-            "Build React widget app: cd frontend/widget-app && npm run build"
-        ]
-    }
+
 
 if __name__ == "__main__":
     import uvicorn

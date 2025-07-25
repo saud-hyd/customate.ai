@@ -1,60 +1,54 @@
 # backend/app/api/widget/__init__.py
-"""
-Widget API module for Customate.ai - Fixed Version
-"""
-
-import logging
 from fastapi import APIRouter
 
-logger = logging.getLogger(__name__)
-
-# Create the main router
+# Create main widget router
 router = APIRouter()
 
-# Import and include widget settings/API routes
+# Include embed routes (MOST IMPORTANT)
+try:
+    from .embed_routes import router as embed_router
+    router.include_router(embed_router, tags=["embed"])
+    print("✅ Embed routes included")
+except ImportError as e:
+    print(f"❌ Failed to import embed routes: {e}")
+    
+    # Create fallback embed endpoint
+    @router.get("/embed.js")
+    async def fallback_embed(api_key: str):
+        from fastapi.responses import Response
+        fallback_script = f"""
+        console.error('❌ Embed routes not properly configured');
+        console.log('API Key: {api_key}');
+        alert('Widget embed system not configured properly');
+        """
+        return Response(
+            content=fallback_script,
+            media_type="application/javascript",
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+# Include other widget routes
 try:
     from . import routes
-    router.include_router(routes.router, tags=["widget"])
-    logger.info("✅ Widget API routes loaded successfully")
-except Exception as e:
-    logger.error(f"❌ Failed to load widget API routes: {e}")
-    # Create a fallback route to prevent complete failure
-    @router.get("/settings")
-    async def fallback_settings():
-        return {
-            "primary_color": "#ea580c",
-            "chatbot_name": "AI Assistant",
-            "greeting_message": "Hello! How can I help you today?",
-            "widget_position": "bottom-right",
-            "show_typing_indicator": True,
-            "enable_suggestions": True,
-            "llm_provider": "deepseek",
-            "llm_model": "deepseek-chat"
-        }
+    router.include_router(routes.router, tags=["widget-api"])
+    print("✅ Widget API routes included")
+except ImportError as e:
+    print(f"⚠️ Widget API routes not available: {e}")
 
-# Import and include widget app serving routes
 try:
-    from . import widget_app_routes
+    from . import widget_app_routes  
     router.include_router(widget_app_routes.router, tags=["widget-app"])
-    logger.info("✅ Widget app routes loaded successfully")
-except Exception as e:
-    logger.error(f"❌ Failed to load widget app routes: {e}")
-    # Create a fallback route
-    @router.get("/app/")
-    async def fallback_widget_app():
-        return {"error": "Widget app not available", "details": str(e)}
+    print("✅ Widget app routes included")
+except ImportError as e:
+    print(f"⚠️ Widget app routes not available: {e}")
 
-# Health check route
+# Health check
 @router.get("/health")
 async def widget_health():
-    """Widget-specific health check"""
     return {
         "status": "healthy",
         "service": "widget",
-        "routes_loaded": {
-            "api_routes": "routes" in globals(),
-            "app_routes": "widget_app_routes" in globals()
-        }
+        "embed_available": True
     }
 
-__all__ = ["router"]
+print(f"✅ Widget router configured with {len(router.routes)} routes")
