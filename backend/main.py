@@ -15,6 +15,7 @@ from app.core.middleware.client_context import ClientContextMiddleware
 from app.core.middleware.analytics_middleware import AnalyticsMiddleware
 from app.core.middleware.subscription_limit_middleware import SubscriptionLimitMiddleware
 from app.workers.crawler_worker import run_crawler_worker
+from app.api.demo import routes as demo_routes
 
 
 # Import routes
@@ -46,6 +47,7 @@ try:
 except ImportError as e:
     WIDGET_ROUTES_AVAILABLE = False
     logger.error(f"❌ Failed to import widget router: {e}")
+
 
 # Import widget services for initialization
 try:

@@ -55,7 +55,13 @@ class WidgetApi {
     let accumulatedContent = '';
 
     try {
-      const response = await fetch(`${this.baseURL}/api/widget/message/stream`, {
+      const isDemo = credentials.apiKey?.startsWith('demo_');
+      const endpoint = isDemo
+        ? `${this.baseURL}/api/demo/chat/stream`
+        : `${this.baseURL}/api/widget/message/stream`;
+      console.log(`📡 Using ${isDemo ? 'DEMO' : 'REGULAR'} endpoint:`, endpoint);
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: this.getHeaders(credentials),
         body: JSON.stringify(requestBody)

@@ -6,14 +6,31 @@ const DemoSection = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Dynamic backend URL detection
+  const getBackendUrl = () => {
+    if (process.env.REACT_APP_BACKEND_URL) {
+      return process.env.REACT_APP_BACKEND_URL;
+    }
+    
+    // Auto-detect based on current environment
+    const currentHost = window.location.hostname;
+    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+      return 'http://localhost:8000';
+    } else {
+      // Production: assume backend is on same domain
+      return window.location.origin.replace(':3000', ':8000');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/demo/create', {
-
+      const backendUrl = getBackendUrl();
+      
+      const response = await fetch(`${backendUrl}/api/demo/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,8 +44,8 @@ const DemoSection = () => {
 
       const data = await response.json();
       
-      // Redirect to demo page
-      window.location.href = `/demo/${data.demo_id}?url=${encodeURIComponent(data.target_url)}&key=${data.api_key}`;
+      // Redirect directly to backend demo viewer (this handles everything)
+      window.location.href = `${backendUrl}/api/demo/view?url=${encodeURIComponent(data.target_url)}&session=${data.demo_id}`;
       
     } catch (err) {
       setError('Failed to create demo. Please check the URL and try again.');
@@ -74,7 +91,7 @@ const DemoSection = () => {
         </form>
         
         <p className="text-sm text-gray-500 mt-4">
-          No signup required • Demo expires in 30 minutes • Up to 5 pages crawled
+          No signup required • 15 messages limit • Real website analysis
         </p>
       </div>
     </section>
