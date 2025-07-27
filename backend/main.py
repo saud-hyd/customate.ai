@@ -16,6 +16,7 @@ from app.core.middleware.analytics_middleware import AnalyticsMiddleware
 from app.core.middleware.subscription_limit_middleware import SubscriptionLimitMiddleware
 from app.workers.crawler_worker import run_crawler_worker
 
+
 # Import routes
 from app.api.auth import routes as auth_routes
 from app.api.client import routes as client_routes
@@ -31,6 +32,7 @@ from app.api.channel.routes import router as channel_router
 from app.api.channel.webhook_routes import router as webhook_router
 from app.api.notifications import router as notifications_router
 from app.api.admin.routes import router as admin_router
+from app.api.demo import routes as demo_routes
 from app.api.knowledge import (
     knowledge_router, document_router, collection_router, 
     crawl_router, enhanced_router
@@ -207,6 +209,7 @@ app.include_router(crawl_router, prefix="/api/knowledge")
 app.include_router(enhanced_router, prefix="/api/knowledge")
 app.include_router(channel_router, prefix="/api")
 app.include_router(webhook_router, prefix="/api")
+app.include_router(demo_routes.router, prefix="/api/demo")
 
 logger.info("✅ All routes registered successfully")
 

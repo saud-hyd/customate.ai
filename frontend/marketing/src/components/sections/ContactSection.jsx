@@ -29,20 +29,54 @@ const ContactSection = () => {
     setFormState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Send to Formspree endpoint
+      const response = await fetch('https://formspree.io/f/manbolqd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formState.name,
+          email: formState.email,
+          company: formState.company || 'Not provided',
+          message: formState.message,
+          form_type: 'contact',
+          page: window.location.href,
+          timestamp: new Date().toISOString()
+        }),
+      });
 
-      setFormState((prev) => ({
-        ...prev,
-        submitted: true,
-        loading: false,
-        name: '',
-        email: '',
-        company: '',
-        message: '',
-      }));
+      if (response.ok) {
+        setFormState((prev) => ({
+          ...prev,
+          submitted: true,
+          loading: false,
+          name: '',
+          email: '',
+          company: '',
+          message: '',
+        }));
+      } else {
+        throw new Error('Failed to send message');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
+      
+      // Fallback to mailto
+      const emailBody = `
+Name: ${formState.name}
+Email: ${formState.email}
+Company: ${formState.company || 'Not provided'}
+
+Message:
+${formState.message}
+
+Page: ${window.location.href}
+      `.trim();
+
+      const mailtoLink = `mailto:admin@customate.ai?subject=Contact Form - ${formState.name}&body=${encodeURIComponent(emailBody)}`;
+      window.location.href = mailtoLink;
+      
       setFormState((prev) => ({
         ...prev,
         loading: false,
@@ -309,7 +343,7 @@ const ContactSection = () => {
                   For immediate assistance or specific technical questions, reach our support team directly.
                 </p>
                 <a
-                  href="mailto:support@customate.ai"
+                  href="mailto:admin@customate.ai"
                   className="inline-flex items-center justify-center px-6 py-3 border-2 border-white text-white font-semibold rounded-xl hover:bg-white hover:text-primary-600 transition-all duration-200 shadow-lg"
                 >
                   <svg
@@ -323,10 +357,10 @@ const ContactSection = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                  admin(a±)customate.ai
+                  admin@customate.ai
                 </a>
               </div>
             </div>

@@ -30,6 +30,9 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import SavingsBlogPost from './pages/blog/SavingsBlogPost';
 import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
 import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
+import BuildVsBuyBlogPost from './pages/blog/BuildVsBuyBlogPost';
+import ChatWidgetBlogPost from './pages/blog/ChatWidgetBlogPost';
+import CompetitiveAdvantageBlogPost from './pages/blog/CompetitiveAdvantageBlogPost';
 
 // Utility Components
 import ScrollToTop from './components/ui/ScrollToTop';
@@ -94,6 +97,9 @@ function App() {
                 <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
                 <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
                 <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
+                <Route path="/blog/build-vs-buy" element={<BuildVsBuyBlogPost />} />
+                <Route path="/blog/chat-widget" element={<ChatWidgetBlogPost />} />
+                <Route path="/blog/competitive-advantage" element={<CompetitiveAdvantageBlogPost />} />
                 
                 {/* Legal pages */}
                 <Route path="/about" element={<AboutPage />} />

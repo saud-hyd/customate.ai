@@ -23,6 +23,13 @@ try:
     INTEGRATIONS_AVAILABLE = True
 except ImportError:
     INTEGRATIONS_AVAILABLE = False
+    
+try:
+    from app.api.demo import routes as demo_routes
+    DEMO_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Demo routes not available: {e}")
+    DEMO_AVAILABLE = False    
 
 def create_api_router() -> APIRouter:
     """
@@ -49,7 +56,6 @@ def create_api_router() -> APIRouter:
         tags=["client"]
     )
     
-    
     # Knowledge base routes
     api_router.include_router(
         knowledge_routes.router,
@@ -63,6 +69,17 @@ def create_api_router() -> APIRouter:
         prefix="/analytics",
         tags=["analytics"]
     )
+    
+    # Demo routes (ADD THIS SECTION)
+    if DEMO_AVAILABLE:
+        api_router.include_router(
+            demo_routes.router,
+            prefix="/demo",
+            tags=["demo"]
+        )
+        print("✅ Demo routes registered")
+    else:
+        print("⚠️ Demo routes not available")
     
     # Widget routes (enhanced with streaming support)
     if WIDGET_AVAILABLE:

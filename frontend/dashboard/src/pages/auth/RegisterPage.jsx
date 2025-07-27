@@ -127,33 +127,33 @@ const RegisterPage = () => {
     );
   }
 
-  return (
+return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100">
+        <div className="flex justify-center mb-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100">
               <img 
                 src="/assets/customate-logo.svg" 
                 alt="Customate.ai Logo" 
-                className="w-10 h-10 object-contain"
+                className="w-8 h-8 object-contain"
               />
             </div>
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-xl font-bold text-gray-900">
               Customate.ai
             </span>
           </div>
         </div>
 
-        <h2 className="text-3xl font-bold mb-6 text-center">Create Account</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">Create Account</h2>
         
         {/* Google OAuth Button First */}
-        <div className="mb-6">
+        <div className="mb-4">
           <GoogleOAuthButton isRegistration={true} />
         </div>
 
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
@@ -162,7 +162,7 @@ const RegisterPage = () => {
           </div>
         </div>
         
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-3">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email Address *
@@ -216,7 +216,7 @@ const RegisterPage = () => {
             />
           </div>
           
-          <button
+<button
             type="submit"
             className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 font-medium"
             disabled={isLoading}
@@ -224,13 +224,26 @@ const RegisterPage = () => {
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
-        
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-4 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500">
             Sign in
           </Link>
         </p>
+        
+        <p className="mt-3 text-center text-xs text-gray-500">
+          By continuing, you agree to our{' '}
+          <Link to="https://www.customate.ai/terms" className="text-orange-600 hover:text-orange-500 underline">
+            Terms of Service
+          </Link>
+          {' '}and{' '}
+          <Link to="https://www.customate.ai/privacy" className="text-orange-600 hover:text-orange-500 underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+        
+
       </div>
     </div>
   );

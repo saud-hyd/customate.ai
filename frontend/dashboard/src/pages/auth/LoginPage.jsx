@@ -164,13 +164,25 @@ const LoginPage = () => {
             {isLoading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
-        
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
-            Create account
-          </Link>
-        </p>
+           <p className="mt-6 text-center text-sm text-gray-600">
+                  Don't have an account?{' '}
+                  <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
+                    Create account
+                  </Link>
+                </p> 
+                <p className="mt-4 text-center text-xs text-gray-500">
+                  By continuing, you agree to our{' '}
+                  <Link to="https://www.customate.ai/terms" className="text-orange-600 hover:text-orange-500 underline">
+                    Terms of Service
+                  </Link>
+                  {' '}and{' '}
+                  <Link to="https://www.customate.ai/privacy" className="text-orange-600 hover:text-orange-500 underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
+                
+
       </div>
     </div>
   );

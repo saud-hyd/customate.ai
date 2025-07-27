@@ -25,12 +25,18 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import SavingsBlogPost from './pages/blog/SavingsBlogPost';
 import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
 import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
+import BuildVsBuyBlogPost from './pages/blog/BuildVsBuyBlogPost';
+import ChatWidgetBlogPost from './pages/blog/ChatWidgetBlogPost';
+import CompetitiveAdvantageBlogPost from './pages/blog/CompetitiveAdvantageBlogPost';
 
 // New pages that were missing
 import AboutPage from './pages/AboutPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import CookiesPage from './pages/CookiesPage';
+import DemoPage from './pages/DemoPage';
+
+import FeedbackButton from './components/ui/FeedbackButton';
 
 // CSS
 import './App.css';
@@ -80,11 +86,15 @@ function App() {
                 <Route path="/features" element={<FeaturesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/blog" element={<BlogPage />}/>
+                <Route path="/demo/:demoId" element={<DemoPage />} />
                 
                 {/* ADD THESE BLOG POST ROUTES */}
                 <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
                 <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
                 <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
+                <Route path="/blog/build-vs-buy" element={<BuildVsBuyBlogPost />} />
+                <Route path="/blog/chat-widget" element={<ChatWidgetBlogPost />} />
+                <Route path="/blog/competitive-advantage" element={<CompetitiveAdvantageBlogPost />} />
                 
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
@@ -118,6 +128,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
+            <FeedbackButton /> 
           </div>
         </Router>
       </LanguageProvider>

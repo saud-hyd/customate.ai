@@ -25,6 +25,26 @@ const BlogPage = () => {
       icon: '🤖'
     },
     {
+      id: 'build-vs-buy',
+      title: 'Customer Service Automation: In-House Development vs. External Platforms',
+      excerpt: 'Should you build your own customer service automation solution or subscribe to a specialized platform? We explore both options with their advantages and disadvantages.',
+      readTime: '10 min read',
+      category: 'Business Strategy',
+      featured: true,
+      gradient: 'from-blue-500 via-indigo-500 to-purple-600',
+      icon: '🏗️'
+    },
+    {
+      id: 'chat-widget',
+      title: 'Why Your Landing Page Needs a Customer Support Chat Widget',
+      excerpt: 'Discover how adding a customer support chat widget to your landing page can dramatically improve conversions, user experience, and customer satisfaction.',
+      readTime: '7 min read',
+      category: 'Website Optimization',
+      featured: true,
+      gradient: 'from-purple-500 via-pink-500 to-red-500',
+      icon: '💬'
+    },
+    {
       id: 'choose-chatbot',
       title: 'How to Choose a Customer Support Chatbot for Your Website?',
       excerpt: 'Essential guide to selecting the right AI chatbot for your business needs, covering key features and evaluation criteria.',
@@ -33,10 +53,20 @@ const BlogPage = () => {
       featured: false,
       gradient: 'from-teal-400 via-blue-500 to-indigo-600',
       icon: '🔍'
+    },
+    {
+      id: 'competitive-advantage',
+      title: 'Customate AI: A Differentiated Value Proposition',
+      excerpt: 'A comprehensive comparison of Customate AI with competitors, pricing analysis, and our competitive advantages in customer service automation.',
+      readTime: '12 min read',
+      category: 'Company',
+      featured: false,
+      gradient: 'from-gray-500 via-gray-600 to-gray-700',
+      icon: '📊'
     }
   ];
 
-  const categories = ['All', 'Cost Analysis', 'Technology', 'Guide', 'Industry Insights'];
+  const categories = ['All', 'Cost Analysis', 'Technology', 'Business Strategy', 'Website Optimization', 'Guide', 'Company'];
   const [selectedCategory, setSelectedCategory] = React.useState('All');
 
   const filteredPosts = selectedCategory === 'All' 
