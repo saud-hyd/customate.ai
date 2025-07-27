@@ -69,52 +69,21 @@ async def send_widget_message_stream(
         
         client = get_demo_or_client_by_api_key(api_key, db)
         if not client:
-            raise HTTPException(status_code=401, detail="Invalid demo API key") 
+            raise HTTPException(status_code=401, detail="Invalid API key")
           
         # Get request body
         body = await request.json()
         message = body.get("message", "")
         session_id = body.get("session_id")
         
-        if api_key.startswith("demo_"):
-            async def generate_demo_stream():
-                demo_response = f"Thanks for trying our demo! I'd be happy to help you with questions about this website. You asked: '{message}'. In the full version, I would analyze the website content and provide detailed answers based on the crawled data."
-                
-                # Stream the response word by word for demo effect
-                words = demo_response.split()
-                for i, word in enumerate(words):
-                    chunk_data = {
-                        "type": "chunk",
-                        "content": word + " ",
-                        "session_id": session_id or str(uuid.uuid4()),
-                        "demo_mode": True
-                    }
-                    yield f"data: {json.dumps(chunk_data)}\n\n"
-                    await asyncio.sleep(0.1)  # Small delay for demo effect
-                
-                # Send completion
-                final_data = {
-                    "type": "complete",
-                    "session_id": session_id or str(uuid.uuid4()),
-                    "demo_mode": True
-                }
-                yield f"data: {json.dumps(final_data)}\n\n"
-            
-            return StreamingResponse(
-                generate_demo_stream(),
-                media_type="text/plain",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
-                }
-            )
-        
         if not message:
             raise HTTPException(status_code=400, detail="Message is required")
         
         logger.info(f"📨 Processing streaming message for client {client.client_id}: {message[:100]}...")
+        
+        # REMOVE THIS HARDCODED DEMO BLOCK:
+        # if api_key.startswith("demo_"):
+        #     return { ... hardcoded response ... }
         
         # Collect user info
         user_info = {
@@ -127,7 +96,7 @@ async def send_widget_message_stream(
         async def generate_stream_response():
             """Generate streaming response using EnhancedChatService."""
             try:
-                # Initialize services
+                # Initialize services (works for both demo and regular clients)
                 llm_service = LLMFactory.create_llm_service(db, client.client_id)
                 search_service = EnhancedSearchService(llm_service)
                 context_manager = ContextManager()
