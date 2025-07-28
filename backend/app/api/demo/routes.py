@@ -38,7 +38,7 @@ async def ensure_demo_client_exists(db: Session):
                 "client_id": "demo",
                 "name": "Demo Client",
                 "email": "demo@customate.ai",
-                "api_key": "demo_client_key",
+                "api_key": "demo_api_key",
                 "active": True,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
@@ -180,7 +180,7 @@ async def create_demo_session(
         
         # Generate demo session
         demo_id = str(uuid.uuid4())
-        temp_api_key = f"demo_{demo_id}"
+        temp_api_key = "demo_api_key"
         
         logger.info(f"Creating usage-based demo session {demo_id} for URL: {url}")
         
@@ -399,15 +399,13 @@ async def demo_chat(
         logger.error(f"Demo chat endpoint error: {str(e)}")
         raise HTTPException(status_code=500, detail="Demo service temporarily unavailable")
     
-# backend/app/api/demo/routes.py - ADD this endpoint to your existing file
-
 @router.get("/view")
 async def demo_viewer(
     url: str,
     session: str,
     db: Session = Depends(get_db)
 ):
-    """Serve target website with injected demo widget - shows actual website with widget."""
+    """Serve target website with injected demo widget - Clean version with no syntax errors."""
     
     try:
         # Validate demo session
@@ -417,7 +415,7 @@ async def demo_viewer(
         demo_session_data = demo_sessions[session]
         api_key = demo_session_data.get("api_key")
         
-        # Check if demo is expired (message limit reached)
+        # Check if demo is expired
         messages_used = demo_session_data.get("messages_used", 0)
         messages_limit = demo_session_data.get("messages_limit", 15)
         
@@ -444,7 +442,12 @@ async def demo_viewer(
             </html>
             """)
         
-        # Fetch the target website HTML
+        # Extract domain for asset fixing
+        from urllib.parse import urlparse
+        parsed_url = urlparse(url)
+        base_domain = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        
+        # Try to fetch the target website
         import requests
         from bs4 import BeautifulSoup
         
@@ -453,63 +456,61 @@ async def demo_viewer(
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
             
-            response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+            response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
             
             if response.status_code == 200:
                 html_content = response.text
-                
-                # Parse HTML
                 soup = BeautifulSoup(html_content, 'html.parser')
                 
-                # Remove any existing chat widgets or feedback buttons
-                for element in soup.find_all(['script', 'div', 'iframe'], src=True):
-                    if element.get('src') and any(keyword in element.get('src').lower() for keyword in ['widget', 'chat', 'embed', 'feedback']):
-                        element.decompose()
+                # Remove all scripts to prevent conflicts
+                for script in soup.find_all('script'):
+                    script.decompose()
                 
-                # Remove elements with widget-related classes/ids
-                for element in soup.find_all(attrs={'class': True}):
-                    classes = ' '.join(element.get('class', []))
-                    if any(keyword in classes.lower() for keyword in ['widget', 'chat', 'feedback', 'messenger']):
-                        element.decompose()
+                # Fix asset URLs
+                for element in soup.find_all(['link', 'img'], {'src': True, 'href': True}):
+                    for attr in ['src', 'href']:
+                        if element.get(attr):
+                            asset_url = element[attr]
+                            if asset_url.startswith('/') and not asset_url.startswith('//'):
+                                element[attr] = base_domain + asset_url
+                            elif asset_url.startswith('./'):
+                                element[attr] = base_domain + '/' + asset_url[2:]
                 
-                # Create demo notification bar
+                # Remove problematic elements
+                for element in soup.find_all(['base']):
+                    element.decompose()
+                
+                # Create demo bar
                 demo_bar = soup.new_tag('div', id='demo-notification-bar')
-                demo_bar.string = f"🤖 AI Demo Mode | Website: {url} | {messages_limit - messages_used} messages remaining"
-                demo_bar['style'] = """
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    height: 50px !important;
-                    background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important;
-                    color: white !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    font-family: system-ui !important;
-                    font-size: 14px !important;
-                    font-weight: 600 !important;
-                    z-index: 999999 !important;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-                """
+                demo_bar.string = f"🤖 AI Demo Mode | Website: {parsed_url.netloc} | {messages_limit - messages_used} messages remaining"
                 
-                # Add body margin to account for demo bar
-                body_style = soup.new_tag('style')
-                # In the demo_viewer function, update the body_style:
-                body_style.string = """
-                    body { margin-top: 50px !important; }
-                    /* Hide any existing widgets/chat buttons */
-                    [class*="widget"]:not(#customate-widget):not([id*="customate"]),
-                    [class*="chat"]:not(#customate-widget):not([id*="customate"]),
-                    [class*="feedback"]:not(#customate-widget):not([id*="customate"]),
-                    [id*="widget"]:not(#customate-widget):not([id*="customate"]),
-                    [id*="chat"]:not(#customate-widget):not([id*="customate"]),
-                    div[style*="position: fixed"][style*="bottom"]:not(#customate-widget):not([id*="customate"]) {
-                        display: none !important;
-                    }
+                # Set demo bar style
+                bar_style = (
+                    "position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; "
+                    "height: 50px !important; background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important; "
+                    "color: white !important; display: flex !important; align-items: center !important; "
+                    "justify-content: center !important; font-family: system-ui !important; font-size: 14px !important; "
+                    "font-weight: 600 !important; z-index: 999999 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;"
+                )
+                demo_bar['style'] = bar_style
+                
+                # Create comprehensive styling
+                demo_style = soup.new_tag('style')
+                style_content = f"""
+                    body {{
+                        margin-top: 50px !important;
+                        overflow-x: hidden !important;
+                    }}
                     
-                    /* FORCE SHOW our widget */
-                    #customate-widget {
+                    [class*="widget"]:not(#customate-widget),
+                    [class*="chat"]:not(#customate-widget),
+                    [class*="feedback"]:not(#customate-widget),
+                    [id*="widget"]:not(#customate-widget),
+                    [id*="chat"]:not(#customate-widget) {{
+                        display: none !important;
+                    }}
+                    
+                    #customate-widget {{
                         display: block !important;
                         visibility: visible !important;
                         opacity: 1 !important;
@@ -517,43 +518,47 @@ async def demo_viewer(
                         position: fixed !important;
                         bottom: 20px !important;
                         right: 20px !important;
-                    }
-                    
-                    /* Hide broken elements from missing assets */
-                    img[src^="/"]:not([src*="customate"]), 
-                    img[src^="./"]:not([src*="customate"]) { 
-                        display: none !important; 
-                    }
-                    link[href*="localhost:8000"]:not([href*="widget"]):not([href*="customate"]) { 
-                        display: none !important; 
-                    }
-                    script[src*="localhost:8000"]:not([src*="widget"]):not([src*="customate"]) { 
-                        display: none !important; 
-                    }
+                    }}
                 """
+                demo_style.string = style_content
                 
-                # Inject demo widget script (using our enhanced embed script)
+                # Create widget script
                 widget_script = soup.new_tag('script')
-                widget_script['src'] = f'{BACKEND_URL}/api/widget/embed.js?api_key={api_key}'
-                widget_script['async'] = True
-                widget_script['id'] = 'customate-demo-widget'
+                script_content = f"""
+                (function() {{
+                    console.log('🚀 Demo Widget Initializing...');
+                    
+                    var script = document.createElement('script');
+                    script.src = '{BACKEND_URL}/api/widget/embed.js?api_key={api_key}';
+                    script.async = true;
+                    script.onload = function() {{
+                        console.log('✅ Widget script loaded successfully');
+                    }};
+                    script.onerror = function() {{
+                        console.error('❌ Failed to load widget script');
+                    }};
+                    
+                    document.head.appendChild(script);
+                }})();
+                """
+                widget_script.string = script_content
                 
                 # Insert elements
                 if soup.body:
                     soup.body.insert(0, demo_bar)
                 if soup.head:
-                    soup.head.append(body_style)
+                    soup.head.append(demo_style)
                     soup.head.append(widget_script)
-                elif soup.body:
-                    soup.body.append(widget_script)
                 
-                # Return modified HTML
+                logger.info("✅ Demo page prepared successfully")
+                
                 return HTMLResponse(
                     content=str(soup),
                     headers={
                         "Content-Type": "text/html; charset=utf-8",
                         "X-Frame-Options": "SAMEORIGIN",
-                        "Cache-Control": "no-cache, no-store, must-revalidate"
+                        "Cache-Control": "no-cache, no-store, must-revalidate",
+                        "Access-Control-Allow-Origin": "*"
                     }
                 )
             
@@ -563,7 +568,7 @@ async def demo_viewer(
         except Exception as fetch_error:
             logger.error(f"Failed to fetch {url}: {fetch_error}")
             
-            # Fallback: Create a demo page that simulates the website
+            # Fallback clean demo page
             fallback_html = f"""
             <!DOCTYPE html>
             <html lang="en">
@@ -573,7 +578,7 @@ async def demo_viewer(
                 <title>Demo: {url}</title>
                 <style>
                     body {{ 
-                        font-family: system-ui, -apple-system, sans-serif; 
+                        font-family: system-ui; 
                         margin: 0; 
                         padding: 0; 
                         background: #f9fafb;
@@ -592,7 +597,6 @@ async def demo_viewer(
                         justify-content: center;
                         font-weight: 600;
                         z-index: 999999;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                     }}
                     .container {{ 
                         max-width: 1200px; 
@@ -604,7 +608,7 @@ async def demo_viewer(
                     .hero {{ 
                         text-align: center; 
                         padding: 60px 0; 
-                        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                        background: #f3f4f6;
                         border-radius: 12px;
                         margin-bottom: 40px;
                     }}
@@ -619,47 +623,79 @@ async def demo_viewer(
                         background: white; 
                         border-radius: 8px; 
                         box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+                        border-left: 4px solid #ea580c;
+                    }}
+                    #customate-widget {{
+                        display: block !important;
+                        visibility: visible !important;
+                        z-index: 2147483647 !important;
                     }}
                 </style>
             </head>
             <body>
                 <div class="demo-bar">
-                    🤖 AI Demo Mode | Simulating: {url} | {messages_limit - messages_used} messages remaining
+                    🤖 AI Demo Mode | Website: {parsed_url.netloc} | {messages_limit - messages_used} messages remaining
                 </div>
                 
                 <div class="container">
                     <div class="hero">
-                        <h1>Welcome to {url}</h1>
-                        <p>This is a demo simulation of the website. The AI chatbot has analyzed the real website content and can answer questions about it.</p>
-                        <p><strong>Try asking the chatbot:</strong> "What services do you offer?" or "How much does it cost?"</p>
+                        <h1>Welcome to Our Demo</h1>
+                        <p>This is a demonstration of how our AI chatbot integrates with websites.</p>
+                        <p><strong>💬 Try asking the chatbot:</strong> "What services do you offer?" or "How can I get started?"</p>
                     </div>
                     
                     <div class="features">
                         <div class="feature">
-                            <h3>🚀 Our Services</h3>
-                            <p>We provide comprehensive solutions for businesses looking to grow and succeed in today's digital landscape.</p>
+                            <h3>🚀 Smart Integration</h3>
+                            <p>Our AI seamlessly integrates with your existing website, learning from your content to provide intelligent responses.</p>
                         </div>
                         
                         <div class="feature">
-                            <h3>💡 Why Choose Us</h3>
-                            <p>With years of experience and a commitment to excellence, we deliver results that exceed expectations.</p>
+                            <h3>💡 Instant Responses</h3>
+                            <p>Get immediate, accurate answers based on your website content, reducing response time and improving customer satisfaction.</p>
                         </div>
                         
                         <div class="feature">
-                            <h3>📞 Get In Touch</h3>
-                            <p>Ready to get started? Contact us today to learn more about how we can help your business thrive.</p>
+                            <h3>📈 Boost Engagement</h3>
+                            <p>Increase visitor engagement and conversion rates with 24/7 intelligent customer support that never sleeps.</p>
                         </div>
                     </div>
                     
                     <div style="text-align: center; padding: 40px; background: #f9fafb; border-radius: 8px; margin-top: 40px;">
-                        <h2>🤖 AI-Powered Customer Support</h2>
-                        <p>The chatbot on this page has been trained on the actual content from <strong>{url}</strong>. 
-                        Ask it anything about their services, pricing, or company information!</p>
+                        <h2>🤖 Try the AI Assistant</h2>
+                        <p>The chatbot in the bottom-right corner has been trained on website content. Ask it anything!</p>
                     </div>
                 </div>
                 
-                <!-- Inject the demo widget -->
-                <script async src="{BACKEND_URL}/api/widget/embed.js?api_key={api_key}"></script>
+                <script>
+                    (function() {{
+                        console.log('🚀 Initializing Demo Widget...');
+                        
+                        function loadWidget() {{
+                            var script = document.createElement('script');
+                            script.src = '{BACKEND_URL}/api/widget/embed.js?api_key={api_key}';
+                            script.async = true;
+                            script.onload = function() {{
+                                console.log('✅ Demo widget loaded successfully');
+                            }};
+                            script.onerror = function() {{
+                                console.error('❌ Failed to load demo widget');
+                                setTimeout(loadWidget, 3000);
+                            }};
+                            document.head.appendChild(script);
+                        }}
+                        
+                        loadWidget();
+                        
+                        window.addEventListener('load', function() {{
+                            setTimeout(function() {{
+                                if (!window.CustomateWidget) {{
+                                    loadWidget();
+                                }}
+                            }}, 2000);
+                        }});
+                    }})();
+                </script>
             </body>
             </html>
             """

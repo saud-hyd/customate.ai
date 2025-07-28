@@ -33,16 +33,18 @@ def get_demo_or_client_by_api_key(api_key: str, db: Session):
     try:
         # Check if it's a demo key
         if api_key.startswith("demo_"):
-            # For demo keys, just return a simple mock client
-            # No need to validate expiry for this simple demo
-            class DemoClient:
-                def __init__(self):
-                    self.client_id = "demo"
-                    self.active = True
-                    self.is_demo = True
+            # For demo keys, return the actual demo client from database
+            client_repo = ClientRepository()
+            demo_client = client_repo.get_by_client_id(db, "demo")
             
-            logger.info(f"Demo client created for API key: {api_key[:12]}...")
-            return DemoClient()
+            if demo_client:
+                logger.info(f"Demo client found for API key: {api_key[:12]}...")
+                # Add demo flag for identification
+                demo_client.is_demo = True
+                return demo_client
+            else:
+                logger.error("Demo client not found in database")
+                return None
         
         # Regular API key - use existing logic
         return get_widget_client_by_api_key(api_key, db)
