@@ -16,6 +16,7 @@ from app.services.llm.llm_factory import LLMFactory
 from app.services.chat.context_manager import ContextManager
 from app.repositories.client_repository import ClientRepository
 from app.core import logger
+from app.api.demo.routes import demo_sessions
 
 router = APIRouter()
 
@@ -77,39 +78,158 @@ async def send_widget_message_stream(
         session_id = body.get("session_id")
         
         if api_key.startswith("demo_"):
-            async def generate_demo_stream():
-                demo_response = f"Thanks for trying our demo! I'd be happy to help you with questions about this website. You asked: '{message}'. In the full version, I would analyze the website content and provide detailed answers based on the crawled data."
-                
-                # Stream the response word by word for demo effect
-                words = demo_response.split()
-                for i, word in enumerate(words):
-                    chunk_data = {
-                        "type": "chunk",
-                        "content": word + " ",
-                        "session_id": session_id or str(uuid.uuid4()),
-                        "demo_mode": True
-                    }
-                    yield f"data: {json.dumps(chunk_data)}\n\n"
-                    await asyncio.sleep(0.1)  # Small delay for demo effect
-                
-                # Send completion
-                final_data = {
-                    "type": "complete",
-                    "session_id": session_id or str(uuid.uuid4()),
-                    "demo_mode": True
-                }
-                yield f"data: {json.dumps(final_data)}\n\n"
-            
-            return StreamingResponse(
-                generate_demo_stream(),
-                media_type="text/plain",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
-                }
-            )
+                    # Extract demo_id from API key (format: demo_{demo_id})
+                    demo_id = api_key[5:]  # Remove "demo_" prefix
+                    
+                    # Get demo session
+                    if demo_id not in demo_sessions:
+                        raise HTTPException(status_code=404, detail="Demo session not found")
+                    
+                    demo_session = demo_sessions[demo_id]
+                    
+                    # Check if demo session expired
+                    if datetime.utcnow() > demo_session["expires_at"]:
+                        raise HTTPException(status_code=410, detail="Demo session expired")
+                    
+                    # Check if demo is ready (crawling completed)
+                    if demo_session["status"] != "ready":
+                        async def generate_demo_status_stream():
+                            status_response = f"Demo is still being prepared. Current status: {demo_session['status']}. Please wait a moment and try again."
+                            
+                            chunk_data = {
+                                "type": "chunk",
+                                "content": status_response,
+                                "session_id": session_id or str(uuid.uuid4()),
+                                "demo_mode": True
+                            }
+                            yield f"data: {json.dumps(chunk_data)}\n\n"
+                            
+                            final_data = {
+                                "type": "complete",
+                                "session_id": session_id or str(uuid.uuid4()),
+                                "demo_mode": True
+                            }
+                            yield f"data: {json.dumps(final_data)}\n\n"
+                        
+                        return StreamingResponse(
+                            generate_demo_status_stream(),
+                            media_type="text/plain",
+                            headers={
+                                "Cache-Control": "no-cache",
+                                "Connection": "keep-alive",
+                                "Access-Control-Allow-Origin": "*",
+                                "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
+                            }
+                        )
+                    
+                    # Check 15-message limit
+                    if demo_session["message_count"] >= 15:
+                        async def generate_demo_limit_stream():
+                            limit_response = "Demo message limit reached (15 messages). Please sign up for a full account to continue chatting!"
+                            
+                            chunk_data = {
+                                "type": "chunk",
+                                "content": limit_response,
+                                "session_id": session_id or str(uuid.uuid4()),
+                                "demo_mode": True
+                            }
+                            yield f"data: {json.dumps(chunk_data)}\n\n"
+                            
+                            final_data = {
+                                "type": "complete",
+                                "session_id": session_id or str(uuid.uuid4()),
+                                "demo_mode": True,
+                                "limit_reached": True
+                            }
+                            yield f"data: {json.dumps(final_data)}\n\n"
+                        
+                        return StreamingResponse(
+                            generate_demo_limit_stream(),
+                            media_type="text/plain",
+                            headers={
+                                "Cache-Control": "no-cache",
+                                "Connection": "keep-alive",
+                                "Access-Control-Allow-Origin": "*",
+                                "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
+                            }
+                        )
+                    
+                    # Increment message count
+                    demo_sessions[demo_id]["message_count"] += 1
+                    
+                    # Get demo collection ID
+                    demo_collection_id = demo_session.get("knowledge_collection_id")
+                    if not demo_collection_id:
+                        raise HTTPException(status_code=500, detail="Demo knowledge base not ready")
+                    
+                    logger.info(f"🎯 Processing demo message for collection: {demo_collection_id}")
+                    
+                    # Use REAL RAG pipeline with demo scope
+                    async def generate_demo_rag_stream():
+                        try:
+                            # Initialize services with demo scope
+                            llm_service = LLMFactory.create_llm_service(db, "demo")
+                            search_service = EnhancedSearchService(llm_service)
+                            context_manager = ContextManager()
+                            
+                            # Create enhanced chat service
+                            chat_service = EnhancedChatService(
+                                db=db,
+                                search_service=search_service,
+                                llm_service=llm_service,
+                                context_manager=context_manager,
+                            )
+                            
+                            # Process message with RAG, scoped to demo collection
+                            user_info = {
+                                "user_id": body.get("user_id"),
+                                "ip_address": request.client.host if request.client else None,
+                                "user_agent": request.headers.get("user-agent"),
+                                "referrer": request.headers.get("referer"),
+                                "demo_mode": True,
+                                "demo_collection_id": demo_collection_id  # Scope to demo collection
+                            }
+                            
+                            # Stream real RAG response
+                            async for chunk in chat_service.process_message_stream(
+                                client_id="demo",
+                                user_message=message,
+                                session_id=f"demo_{demo_id}_{session_id}" if session_id else f"demo_{demo_id}",
+                                user_info=user_info
+                            ):
+                                # Add demo mode flag to all chunks
+                                if isinstance(chunk, dict):
+                                    chunk["demo_mode"] = True
+                                
+                                yield f"data: {json.dumps(chunk)}\n\n"
+                                
+                                # Small delay for smooth streaming
+                                if chunk.get("type") == "chunk":
+                                    await asyncio.sleep(0.01)
+                            
+                            logger.info(f"✅ Demo RAG response completed for {demo_id}")
+                            
+                        except Exception as stream_error:
+                            logger.error(f"❌ Demo RAG error: {stream_error}")
+                            error_data = {
+                                'type': 'error',
+                                'error': f"Demo processing failed: {str(stream_error)}",
+                                'demo_mode': True
+                            }
+                            yield f"data: {json.dumps(error_data)}\n\n"
+                    
+                    return StreamingResponse(
+                        generate_demo_rag_stream(),
+                        media_type="text/plain",
+                        headers={
+                            "Cache-Control": "no-cache",
+                            "Connection": "keep-alive",
+                            "Access-Control-Allow-Origin": "*",
+                            "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
+                            "X-Demo-Mode": "true",
+                            "X-Demo-Collection": demo_collection_id
+                        }
+                    )
         
         if not message:
             raise HTTPException(status_code=400, detail="Message is required")

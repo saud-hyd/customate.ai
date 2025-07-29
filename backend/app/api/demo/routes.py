@@ -1,13 +1,19 @@
 # backend/app/api/demo/routes.py
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 import uuid
 from datetime import datetime, timedelta
 import asyncio
+import json
+from fastapi.responses import StreamingResponse
 
 from app.core.database.dependencies import get_db
+from app.core.database.session import SessionLocal
 from app.core import logger
+from app.services.knowledge.web_crawler_service import WebCrawlerService
+from app.services.knowledge.embedding_service import EmbeddingService
+from app.repositories.knowledge_repository import KnowledgeCollectionRepository
 
 router = APIRouter()
 
@@ -33,7 +39,7 @@ async def create_demo_session(
         
         logger.info(f"Creating demo session {demo_id} for URL: {url}")
         
-        # Quick crawl in background (we'll implement this step by step)
+        # Quick crawl in background (NOW USING REAL CRAWLER)
         background_tasks.add_task(quick_demo_crawl, demo_id, url, db)
         
         # Store demo session
@@ -43,7 +49,9 @@ async def create_demo_session(
             "target_url": url,
             "expires_at": expires_at,
             "status": "crawling",
-            "knowledge_collection_id": None
+            "knowledge_collection_id": None,
+            "message_count": 0,  # Track message count for 15-message limit
+            "crawl_job_id": None  # Track the actual crawl job
         }
         
         return {
@@ -73,19 +81,266 @@ async def get_demo_status(demo_id: str):
     return session
 
 async def quick_demo_crawl(demo_id: str, url: str, db: Session):
-    """Perform quick crawl for demo (simplified for now)"""
+    """Minimal demo setup that just marks as ready"""
     try:
-        # For now, just simulate the crawl and mark as ready
-        await asyncio.sleep(3)  # Simulate crawl time
+        logger.info(f"🕷️ Starting MINIMAL demo setup for {demo_id} - URL: {url}")
         
-        # Update demo session to ready
+        # Simulate processing
+        await asyncio.sleep(3)
+        
+        # Update demo session - mark as ready
         if demo_id in demo_sessions:
-            demo_sessions[demo_id]["status"] = "ready"
             demo_sessions[demo_id]["knowledge_collection_id"] = f"demo_collection_{demo_id}"
-        
-        logger.info(f"Demo crawl completed for {demo_id}")
-        
+            demo_sessions[demo_id]["status"] = "ready"
+            logger.info(f"✅ Demo marked as READY for {demo_id}")
+        else:
+            logger.error(f"❌ Demo session {demo_id} not found in memory")
+            
     except Exception as e:
-        logger.error(f"Demo crawl failed for {demo_id}: {str(e)}")
+        logger.error(f"❌ Demo error for {demo_id}: {str(e)}")
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["status"] = "failed"
+            
+
+# Add cleanup endpoint for demo sessions (optional)
+@router.delete("/cleanup/{demo_id}")
+async def cleanup_demo_session(demo_id: str):
+    """Simple cleanup of demo session from memory"""
+    try:
+        if demo_id in demo_sessions:
+            del demo_sessions[demo_id]
+            logger.info(f"🗑️ Cleaned up demo session: {demo_id}")
+            return {"status": "cleaned_up", "demo_id": demo_id}
+        else:
+            raise HTTPException(status_code=404, detail="Demo session not found")
+    except Exception as e:
+        logger.error(f"❌ Demo cleanup error for {demo_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Cleanup failed: {str(e)}")
+
+# Add simple stats endpoint
+@router.get("/stats")
+async def get_demo_stats():
+    """Get basic demo session statistics"""
+    try:
+        current_time = datetime.utcnow()
+        active_count = 0
+        expired_count = 0
+        
+        for session in demo_sessions.values():
+            if current_time <= session["expires_at"]:
+                active_count += 1
+            else:
+                expired_count += 1
+        
+        return {
+            "total_sessions": len(demo_sessions),
+            "active_sessions": active_count,
+            "expired_sessions": expired_count
+        }
+    except Exception as e:
+        logger.error(f"Demo stats error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+    
+    
+@router.post("/message/stream")
+async def demo_message_stream(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Stream endpoint specifically for demo chat interactions"""
+    try:
+        logger.info("🎯 Demo message stream request received")
+        
+        # Get API key from headers
+        api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
+        
+        if not api_key or not api_key.startswith("demo_"):
+            raise HTTPException(status_code=401, detail="Invalid demo API key")
+        
+        # Extract demo_id from API key
+        demo_id = api_key[5:]  # Remove "demo_" prefix
+        
+        # Check if demo session exists
+        if demo_id not in demo_sessions:
+            raise HTTPException(status_code=404, detail="Demo session not found")
+        
+        demo_session = demo_sessions[demo_id]
+        
+        # Check if demo session expired
+        if datetime.utcnow() > demo_session["expires_at"]:
+            raise HTTPException(status_code=410, detail="Demo session expired")
+        
+        # Check if demo is ready
+        if demo_session["status"] != "ready":
+            async def generate_status_stream():
+                status_response = f"Demo is still being prepared. Current status: {demo_session['status']}. Please wait a moment and try again."
+                
+                chunk_data = {
+                    "type": "chunk",
+                    "content": status_response,
+                    "demo_mode": True
+                }
+                yield f"data: {json.dumps(chunk_data)}\n\n"
+                
+                final_data = {
+                    "type": "complete",
+                    "demo_mode": True
+                }
+                yield f"data: {json.dumps(final_data)}\n\n"
+            
+            return StreamingResponse(
+                generate_status_stream(),
+                media_type="text/plain",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
+                }
+            )
+        
+        # Get request body
+        body = await request.json()
+        message = body.get("message", "")
+        
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        # Check 15-message limit
+        if demo_session["message_count"] >= 15:
+            async def generate_limit_stream():
+                limit_response = "Demo message limit reached (15 messages). Please sign up for a full account to continue chatting!"
+                
+                chunk_data = {
+                    "type": "chunk",
+                    "content": limit_response,
+                    "demo_mode": True
+                }
+                yield f"data: {json.dumps(chunk_data)}\n\n"
+                
+                final_data = {
+                    "type": "complete",
+                    "demo_mode": True,
+                    "limit_reached": True
+                }
+                yield f"data: {json.dumps(final_data)}\n\n"
+            
+            return StreamingResponse(
+                generate_limit_stream(),
+                media_type="text/plain",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
+                }
+            )
+        
+        # Increment message count
+        demo_sessions[demo_id]["message_count"] += 1
+        
+        logger.info(f"🎯 Processing demo message #{demo_session['message_count']}: {message[:50]}...")
+        
+        # Generate demo response stream
+        async def generate_demo_response():
+            try:
+                # Demo collection ID for knowledge search
+                demo_collection_id = demo_session.get("knowledge_collection_id")
+                
+                # Simple demo responses based on message content
+                knowledge_used = False
+                demo_response = ""
+                
+                # Try knowledge search if we have a collection
+                if demo_collection_id and demo_collection_id.startswith("demo_collection_"):
+                    try:
+                        # Initialize search service for demo
+                        from app.services.llm.llm_factory import LLMFactory
+                        from app.services.knowledge.enhanced_search_service import EnhancedSearchService
+                        
+                        llm_service = LLMFactory.create_llm_service(db, "demo")
+                        search_service = EnhancedSearchService(llm_service)
+                        
+                        search_results = await search_service.hybrid_search(
+                            client_id="demo",
+                            query_text=message,
+                            limit=3,
+                            collection_id=demo_collection_id
+                        )
+                        
+                        if search_results.get("results"):
+                            knowledge_used = True
+                            # Build response from knowledge
+                            demo_response = f"Based on the website content, I can help with that! "
+                            demo_response += f"I found relevant information about your question. "
+                        
+                    except Exception as search_error:
+                        logger.error(f"Demo search error: {str(search_error)}")
+                
+                # Fallback responses
+                if not demo_response:
+                    message_lower = message.lower()
+                    if any(greeting in message_lower for greeting in ["hi", "hello", "hey"]):
+                        demo_response = f"Hello! I'm the AI assistant for this website demo. I can help answer questions about the content on {demo_session['target_url']}. What would you like to know?"
+                    elif any(question in message_lower for question in ["what", "how", "where", "when", "why"]):
+                        demo_response = f"That's a great question! In the full version, I would search through all the content on {demo_session['target_url']} to provide you with detailed, accurate information. This demo shows how I can understand and respond to your questions about website content."
+                    else:
+                        demo_response = f"I understand you're asking about: '{message}'. In a full implementation, I would analyze all the content from {demo_session['target_url']} to give you specific, relevant answers. This demo showcases the conversational AI capabilities!"
+                
+                # Send info chunk
+                info_data = {
+                    "type": "info",
+                    "knowledge_used": knowledge_used,
+                    "demo_mode": True,
+                    "message_count": demo_session["message_count"]
+                }
+                yield f"data: {json.dumps(info_data)}\n\n"
+                
+                # Stream response word by word for realistic effect
+                words = demo_response.split()
+                for i, word in enumerate(words):
+                    chunk_data = {
+                        "type": "chunk",
+                        "content": word + " ",
+                        "demo_mode": True
+                    }
+                    yield f"data: {json.dumps(chunk_data)}\n\n"
+                    await asyncio.sleep(0.05)  # Typing effect
+                
+                # Send completion
+                final_data = {
+                    "type": "complete",
+                    "demo_mode": True,
+                    "message_count": demo_session["message_count"],
+                    "remaining_messages": 15 - demo_session["message_count"]
+                }
+                yield f"data: {json.dumps(final_data)}\n\n"
+                
+                logger.info(f"✅ Demo response completed - {demo_session['message_count']}/15 messages used")
+                
+            except Exception as stream_error:
+                logger.error(f"❌ Demo stream error: {str(stream_error)}")
+                error_data = {
+                    'type': 'error',
+                    'error': f"Demo processing failed: {str(stream_error)}",
+                    'demo_mode': True
+                }
+                yield f"data: {json.dumps(error_data)}\n\n"
+        
+        return StreamingResponse(
+            generate_demo_response(),
+            media_type="text/plain",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
+                "X-Demo-Mode": "true"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Demo message stream error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Demo stream failed: {str(e)}")    

@@ -16,7 +16,6 @@ from app.core.middleware.analytics_middleware import AnalyticsMiddleware
 from app.core.middleware.subscription_limit_middleware import SubscriptionLimitMiddleware
 from app.workers.crawler_worker import run_crawler_worker
 
-
 # Import routes
 from app.api.auth import routes as auth_routes
 from app.api.client import routes as client_routes
@@ -117,17 +116,9 @@ async def lifespan(app: FastAPI):
     # Initialize widget services
     if WIDGET_SERVICE_AVAILABLE:
         logger.info("🚀 Widget chat service available for streaming responses")
-        logger.info("   Features: Real-time streaming, LLM integration, settings sync")
     else:
         logger.warning("⚠️ Widget chat service not available - using basic widget functionality")
     
-    # Log widget configuration
-    logger.info("🔧 Widget configuration:")
-    logger.info(f"   - Widget routes: {'✅ Available' if WIDGET_ROUTES_AVAILABLE else '❌ Not Available'}")
-    logger.info(f"   - Streaming responses: {'✅ Enabled' if WIDGET_SERVICE_AVAILABLE else '❌ Basic mode'}")
-    logger.info(f"   - LLM integration: {'✅ Available' if WIDGET_SERVICE_AVAILABLE else '❌ Limited'}")
-    logger.info(f"   - Settings sync: {'✅ Real-time' if WIDGET_SERVICE_AVAILABLE else '❌ Manual'}")
-    logger.info(f"   - CORS origins: {len(get_allowed_origins())} configured")
     
     crawler_task = asyncio.create_task(run_crawler_worker())
     logger.info("🕷️ Started crawler worker in background")
