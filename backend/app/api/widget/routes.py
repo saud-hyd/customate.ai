@@ -7,7 +7,6 @@ import uuid
 import json
 import asyncio
 import logging
-from datetime import datetime
 
 from app.core.database.dependencies import get_db
 from app.services.chat.enhanced_chat_service import EnhancedChatService
@@ -16,7 +15,6 @@ from app.services.llm.llm_factory import LLMFactory
 from app.services.chat.context_manager import ContextManager
 from app.repositories.client_repository import ClientRepository
 from app.core import logger
-from app.api.demo.routes import demo_sessions
 
 router = APIRouter()
 
@@ -28,30 +26,74 @@ def get_widget_client_by_api_key(api_key: str, db: Session):
     except Exception as e:
         logger.error(f"Error getting client by API key: {str(e)}")
         return None
-    
-def get_demo_or_client_by_api_key(api_key: str, db: Session):
-    """Get client by API key - supports both regular and demo keys."""
-    try:
-        # Check if it's a demo key
-        if api_key.startswith("demo_"):
-            # For demo keys, just return a simple mock client
-            # No need to validate expiry for this simple demo
-            class DemoClient:
-                def __init__(self):
-                    self.client_id = "demo"
-                    self.active = True
-                    self.is_demo = True
-            
-            logger.info(f"Demo client created for API key: {api_key[:12]}...")
-            return DemoClient()
-        
-        # Regular API key - use existing logic
-        return get_widget_client_by_api_key(api_key, db)
-        
-    except Exception as e:
-        logger.error(f"Error getting client by API key: {str(e)}")
-        return None
 
+@router.post("/message")
+async def send_widget_message(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Send message to widget (regular response) using EnhancedChatService."""
+    try:
+        logger.info("📨 Widget message request received")
+        
+        # Get API key from headers
+        api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
+        
+        if not api_key:
+            raise HTTPException(status_code=401, detail="API key required")
+        
+        # Validate client
+        client = get_widget_client_by_api_key(api_key, db)
+        if not client:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+        
+        # Get request body
+        body = await request.json()
+        message = body.get("message", "")
+        session_id = body.get("session_id")
+        
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        logger.info(f"📨 Processing message for client {client.client_id}: {message[:100]}...")
+        
+        # Collect user info
+        user_info = {
+            "user_id": body.get("user_id"),
+            "ip_address": request.client.host if request.client else None,
+            "user_agent": request.headers.get("user-agent"),
+            "referrer": request.headers.get("referer"),
+        }
+        
+        # Initialize services
+        llm_service = LLMFactory.create_llm_service(db, client.client_id)
+        search_service = EnhancedSearchService(llm_service)
+        context_manager = ContextManager()
+        
+        # Create enhanced chat service
+        chat_service = EnhancedChatService(
+            db=db,
+            search_service=search_service,
+            llm_service=llm_service,
+            context_manager=context_manager,
+        )
+        
+        # Process message with full RAG pipeline
+        response = await chat_service.process_message(
+            client_id=client.client_id,
+            user_message=message,
+            session_id=session_id,
+            user_info=user_info
+        )
+        
+        logger.info(f"✅ Widget message processed successfully - Knowledge used: {response.get('knowledge_used', False)}")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Widget message error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Message processing failed: {str(e)}")
 
 @router.post("/message/stream")
 async def send_widget_message_stream(
@@ -68,168 +110,15 @@ async def send_widget_message_stream(
         if not api_key:
             raise HTTPException(status_code=401, detail="API key required")
         
-        client = get_demo_or_client_by_api_key(api_key, db)
+        # Validate client
+        client = get_widget_client_by_api_key(api_key, db)
         if not client:
-            raise HTTPException(status_code=401, detail="Invalid demo API key") 
-          
+            raise HTTPException(status_code=401, detail="Invalid API key")
+        
         # Get request body
         body = await request.json()
         message = body.get("message", "")
         session_id = body.get("session_id")
-        
-        if api_key.startswith("demo_"):
-                    # Extract demo_id from API key (format: demo_{demo_id})
-                    demo_id = api_key[5:]  # Remove "demo_" prefix
-                    
-                    # Get demo session
-                    if demo_id not in demo_sessions:
-                        raise HTTPException(status_code=404, detail="Demo session not found")
-                    
-                    demo_session = demo_sessions[demo_id]
-                    
-                    # Check if demo session expired
-                    if datetime.utcnow() > demo_session["expires_at"]:
-                        raise HTTPException(status_code=410, detail="Demo session expired")
-                    
-                    # Check if demo is ready (crawling completed)
-                    if demo_session["status"] != "ready":
-                        async def generate_demo_status_stream():
-                            status_response = f"Demo is still being prepared. Current status: {demo_session['status']}. Please wait a moment and try again."
-                            
-                            chunk_data = {
-                                "type": "chunk",
-                                "content": status_response,
-                                "session_id": session_id or str(uuid.uuid4()),
-                                "demo_mode": True
-                            }
-                            yield f"data: {json.dumps(chunk_data)}\n\n"
-                            
-                            final_data = {
-                                "type": "complete",
-                                "session_id": session_id or str(uuid.uuid4()),
-                                "demo_mode": True
-                            }
-                            yield f"data: {json.dumps(final_data)}\n\n"
-                        
-                        return StreamingResponse(
-                            generate_demo_status_stream(),
-                            media_type="text/plain",
-                            headers={
-                                "Cache-Control": "no-cache",
-                                "Connection": "keep-alive",
-                                "Access-Control-Allow-Origin": "*",
-                                "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
-                            }
-                        )
-                    
-                    # Check 15-message limit
-                    if demo_session["message_count"] >= 15:
-                        async def generate_demo_limit_stream():
-                            limit_response = "Demo message limit reached (15 messages). Please sign up for a full account to continue chatting!"
-                            
-                            chunk_data = {
-                                "type": "chunk",
-                                "content": limit_response,
-                                "session_id": session_id or str(uuid.uuid4()),
-                                "demo_mode": True
-                            }
-                            yield f"data: {json.dumps(chunk_data)}\n\n"
-                            
-                            final_data = {
-                                "type": "complete",
-                                "session_id": session_id or str(uuid.uuid4()),
-                                "demo_mode": True,
-                                "limit_reached": True
-                            }
-                            yield f"data: {json.dumps(final_data)}\n\n"
-                        
-                        return StreamingResponse(
-                            generate_demo_limit_stream(),
-                            media_type="text/plain",
-                            headers={
-                                "Cache-Control": "no-cache",
-                                "Connection": "keep-alive",
-                                "Access-Control-Allow-Origin": "*",
-                                "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
-                            }
-                        )
-                    
-                    # Increment message count
-                    demo_sessions[demo_id]["message_count"] += 1
-                    
-                    # Get demo collection ID
-                    demo_collection_id = demo_session.get("knowledge_collection_id")
-                    if not demo_collection_id:
-                        raise HTTPException(status_code=500, detail="Demo knowledge base not ready")
-                    
-                    logger.info(f"🎯 Processing demo message for collection: {demo_collection_id}")
-                    
-                    # Use REAL RAG pipeline with demo scope
-                    async def generate_demo_rag_stream():
-                        try:
-                            # Initialize services with demo scope
-                            llm_service = LLMFactory.create_llm_service(db, "demo")
-                            search_service = EnhancedSearchService(llm_service)
-                            context_manager = ContextManager()
-                            
-                            # Create enhanced chat service
-                            chat_service = EnhancedChatService(
-                                db=db,
-                                search_service=search_service,
-                                llm_service=llm_service,
-                                context_manager=context_manager,
-                            )
-                            
-                            # Process message with RAG, scoped to demo collection
-                            user_info = {
-                                "user_id": body.get("user_id"),
-                                "ip_address": request.client.host if request.client else None,
-                                "user_agent": request.headers.get("user-agent"),
-                                "referrer": request.headers.get("referer"),
-                                "demo_mode": True,
-                                "demo_collection_id": demo_collection_id  # Scope to demo collection
-                            }
-                            
-                            # Stream real RAG response
-                            async for chunk in chat_service.process_message_stream(
-                                client_id="demo",
-                                user_message=message,
-                                session_id=f"demo_{demo_id}_{session_id}" if session_id else f"demo_{demo_id}",
-                                user_info=user_info
-                            ):
-                                # Add demo mode flag to all chunks
-                                if isinstance(chunk, dict):
-                                    chunk["demo_mode"] = True
-                                
-                                yield f"data: {json.dumps(chunk)}\n\n"
-                                
-                                # Small delay for smooth streaming
-                                if chunk.get("type") == "chunk":
-                                    await asyncio.sleep(0.01)
-                            
-                            logger.info(f"✅ Demo RAG response completed for {demo_id}")
-                            
-                        except Exception as stream_error:
-                            logger.error(f"❌ Demo RAG error: {stream_error}")
-                            error_data = {
-                                'type': 'error',
-                                'error': f"Demo processing failed: {str(stream_error)}",
-                                'demo_mode': True
-                            }
-                            yield f"data: {json.dumps(error_data)}\n\n"
-                    
-                    return StreamingResponse(
-                        generate_demo_rag_stream(),
-                        media_type="text/plain",
-                        headers={
-                            "Cache-Control": "no-cache",
-                            "Connection": "keep-alive",
-                            "Access-Control-Allow-Origin": "*",
-                            "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
-                            "X-Demo-Mode": "true",
-                            "X-Demo-Collection": demo_collection_id
-                        }
-                    )
         
         if not message:
             raise HTTPException(status_code=400, detail="Message is required")
@@ -358,7 +247,7 @@ async def get_widget_settings(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Get widget settings (supports demo mode)."""
+    """Get widget configuration settings."""
     try:
         # Get API key from headers
         api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
@@ -366,30 +255,23 @@ async def get_widget_settings(
         if not api_key:
             raise HTTPException(status_code=401, detail="API key required")
         
-        # Validate client (including demo clients)
-        client = get_demo_or_client_by_api_key(api_key, db)
+        # Validate client
+        client = get_widget_client_by_api_key(api_key, db)
         if not client:
             raise HTTPException(status_code=401, detail="Invalid API key")
         
-        # Return settings (same for demo and regular)
+        # Return widget configuration (you can expand this based on your client settings)
         return {
-            "primary_color": "#ea580c",
-            "chatbot_name": "AI Assistant",
-            "greeting_message": "Hello! I can help you with questions about this website. What would you like to know?",
-            "widget_position": "bottom-right",
-            "show_typing_indicator": True,
-            "enable_suggestions": True,
-            "llm_provider": "deepseek",
-            "llm_model": "deepseek-chat",
-            "reset_on_page_refresh": True,
-            "session_timeout": 30,
-            "demo_mode": api_key.startswith("demo_"),
-            "styles": {
-                "primary_color": "#ea580c",
-                "widget_position": "bottom-right",
-                "chat_height": "600px",
-                "chat_width": "380px",
-                "border_radius": "12px",
+            "client_id": client.client_id,
+            "widget_enabled": True,
+            "streaming_enabled": True,
+            "rag_enabled": True,
+            "knowledge_base_enabled": True,
+            "integration_enabled": True,
+            "settings": {
+                "theme": "default",
+                "position": "bottom-right",
+                "greeting": "Hello! How can I help you today?",
                 "placeholder": "Type your message..."
             }
         }
@@ -399,7 +281,7 @@ async def get_widget_settings(
     except Exception as e:
         logger.error(f"❌ Widget settings error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get widget settings: {str(e)}")
-    
+
 @router.get("/health")
 async def widget_health_check():
     """Widget health check endpoint."""

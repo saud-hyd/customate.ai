@@ -4,9 +4,12 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any
 import uuid
 from datetime import datetime, timedelta
-import asyncio
+import asyncio, aiohttp
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 import json
 from fastapi.responses import StreamingResponse
+from app.core.database.session import SessionLocal
 
 from app.core.database.dependencies import get_db
 from app.core.database.session import SessionLocal
@@ -14,6 +17,7 @@ from app.core import logger
 from app.services.knowledge.web_crawler_service import WebCrawlerService
 from app.services.knowledge.embedding_service import EmbeddingService
 from app.repositories.knowledge_repository import KnowledgeCollectionRepository
+from app.repositories.knowledge_repository import KnowledgeItemRepository
 
 router = APIRouter()
 
@@ -81,25 +85,62 @@ async def get_demo_status(demo_id: str):
     return session
 
 async def quick_demo_crawl(demo_id: str, url: str, db: Session):
-    """Minimal demo setup that just marks as ready"""
+    """Working demo crawl using existing client"""
+    db = SessionLocal()
+    
     try:
-        logger.info(f"🕷️ Starting MINIMAL demo setup for {demo_id} - URL: {url}")
+        logger.info(f"Starting demo crawl for {demo_id} - URL: {url}")
         
-        # Simulate processing
-        await asyncio.sleep(3)
+        # Get ANY existing client
+        result = db.execute("SELECT client_id FROM clients WHERE active = true LIMIT 1")
+        existing_client = result.fetchone()
         
-        # Update demo session - mark as ready
+        if not existing_client:
+            logger.error("No active clients found!")
+            if demo_id in demo_sessions:
+                demo_sessions[demo_id]["status"] = "failed"
+            return
+            
+        client_id = existing_client[0]
+        logger.info(f"Using client for demo: {client_id}")
+        
+        # Parse URL
+        domain = urlparse(url).netloc or url.replace('https://', '').replace('http://', '')
+        
+        # Create collection
+        collection_repo = KnowledgeCollectionRepository()
+        demo_collection = collection_repo.create(db, obj_in={
+            "client_id": client_id,
+            "name": f"Demo: {domain}",
+            "description": f"Demo content from {url}",
+            "type": "demo_website"
+        })
+        
+        # Create knowledge item
+        item_repo = KnowledgeItemRepository()
+        basic_content = f"This is {url}, a website about {domain}. [Your existing content...]"
+        
+        item_repo.create(db, obj_in={
+            "collection_id": demo_collection.collection_id,
+            "title": f"About {domain}",
+            "content": basic_content,
+            "source_url": url,
+            "item_type": "demo_page"
+        })
+        
+        # Update demo session
         if demo_id in demo_sessions:
-            demo_sessions[demo_id]["knowledge_collection_id"] = f"demo_collection_{demo_id}"
+            demo_sessions[demo_id]["knowledge_collection_id"] = demo_collection.collection_id
+            demo_sessions[demo_id]["client_id"] = client_id  # STORE CLIENT ID
             demo_sessions[demo_id]["status"] = "ready"
-            logger.info(f"✅ Demo marked as READY for {demo_id}")
-        else:
-            logger.error(f"❌ Demo session {demo_id} not found in memory")
+            logger.info(f"Demo ready: {demo_id}")
             
     except Exception as e:
-        logger.error(f"❌ Demo error for {demo_id}: {str(e)}")
+        logger.error(f"Demo error: {str(e)}")
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["status"] = "failed"
+    finally:
+        db.close()
             
 
 # Add cleanup endpoint for demo sessions (optional)
@@ -252,7 +293,7 @@ async def demo_message_stream(
                 demo_response = ""
                 
                 # Try knowledge search if we have a collection
-                if demo_collection_id and demo_collection_id.startswith("demo_collection_"):
+                if demo_collection_id :
                     try:
                         # Initialize search service for demo
                         from app.services.llm.llm_factory import LLMFactory
@@ -271,11 +312,19 @@ async def demo_message_stream(
                         if search_results.get("results"):
                             knowledge_used = True
                             # Build response from knowledge
-                            demo_response = f"Based on the website content, I can help with that! "
-                            demo_response += f"I found relevant information about your question. "
-                        
+                            knowledge_content = ""
+                            for result in search_results["results"][:2]:
+                                knowledge_content += f"{result.get('content', '')[:200]}... "
+                            demo_response = f"I found relevant information about your question: {knowledge_content}"
+                            logger.info(f"✅ Demo knowledge search found {len(search_results['results'])} results")
+                        else:
+                            demo_response = f"I'm a demo AI assistant and I couldn't find specific information about '{message}'. "
+                            logger.info("🔄 Demo knowledge search returned no results")                        
                     except Exception as search_error:
-                        logger.error(f"Demo search error: {str(search_error)}")
+                        logger.error(f"Demo search error: {search_error}")
+                        demo_response = f"I'm a demo AI assistant and I encountered an error while searching for information about '{message}'. "
+                else:
+                    demo_response = f"I'm a demo AI assistant and I don't have any specific information about '{message}'. "
                 
                 # Fallback responses
                 if not demo_response:
