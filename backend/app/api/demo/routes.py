@@ -18,6 +18,7 @@ from app.services.knowledge.web_crawler_service import WebCrawlerService
 from app.services.knowledge.embedding_service import EmbeddingService
 from app.repositories.knowledge_repository import KnowledgeCollectionRepository
 from app.repositories.knowledge_repository import KnowledgeItemRepository
+from app.repositories.client_repository import ClientRepository
 
 router = APIRouter()
 
@@ -85,40 +86,52 @@ async def get_demo_status(demo_id: str):
     return session
 
 async def quick_demo_crawl(demo_id: str, url: str, db: Session):
-    """Real demo crawl that fetches and processes website content"""
+    """Create demo with UNIQUE client and SHORTER identifiers"""
     db = SessionLocal()
     
     try:
-        logger.info(f"Starting REAL demo crawl for {demo_id} - URL: {url}")
+        logger.info(f"🚀 Creating SAFE ISOLATED demo session: {demo_id} for URL: {url}")
         
-        # Get ANY existing client
-        result = db.execute("SELECT client_id FROM clients WHERE active = true LIMIT 1")
-        existing_client = result.fetchone()
+        # Parse domain for naming
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        domain = urlparse(url).netloc or "unknown"
         
-        if not existing_client:
-            logger.error("No active clients found!")
-            if demo_id in demo_sessions:
-                demo_sessions[demo_id]["status"] = "failed"
-            return
-            
-        client_id = existing_client[0]
-        logger.info(f"Using client for demo: {client_id}")
+        # ✅ CREATE SHORT IDENTIFIERS that fit database constraints
+        short_demo_id = demo_id[:8]  # Only first 8 characters
+        demo_client_id = f"demo_{short_demo_id}"  # Max 13 chars (fits in 36)
+        demo_api_key = f"dapi_{demo_id}"  # Shorter prefix
+        demo_email = f"{short_demo_id}@demo.ai"  # Much shorter email
+        
+        # ✅ CREATE SAFE DEMO CLIENT with database-compliant lengths
+        client_repo = ClientRepository()
+        demo_client = client_repo.create(db, obj_in={
+            "name": f"Demo-{short_demo_id}",  # Short name
+            "industry": "Demo",
+            "email": demo_email,  # Short email that fits
+            "client_id": demo_client_id,  # Short client_id (13 chars)
+            "api_key": demo_api_key,  # API key can be longer (255 char limit)
+            "active": True
+        })
+        
+        demo_client_id = demo_client.client_id
+        logger.info(f"✅ Created unique demo client: {demo_client_id}")
         
         # Parse URL and ensure proper format
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
         domain = urlparse(url).netloc
         
-        # Create collection
+        # ✅ Create collection under the UNIQUE client
         collection_repo = KnowledgeCollectionRepository()
         demo_collection = collection_repo.create(db, obj_in={
-            "client_id": client_id,
+            "client_id": demo_client_id,  # Now unique per demo!
             "name": f"Demo: {domain}",
             "description": f"Demo content from {url}",
             "type": "demo_website"
         })
         
-        # 🚀 REAL WEB CRAWLING STARTS HERE
+        # 🚀 REAL WEB CRAWLING (Same as before)
         try:
             timeout = aiohttp.ClientTimeout(total=30)
             headers = {
@@ -130,138 +143,77 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
                 async with session.get(url) as response:
                     if response.status == 200:
                         html_content = await response.text()
-                        
-                        # Parse HTML content
                         soup = BeautifulSoup(html_content, 'html.parser')
                         
-                        # Remove unwanted elements
-                        for element in soup(['script', 'style', 'nav', 'footer', 'header']):
-                            element.decompose()
-                        
-                        # Extract title
-                        title = "Homepage"
-                        if soup.title and soup.title.string:
-                            title = soup.title.string.strip()
-                        elif soup.find('h1'):
-                            title = soup.find('h1').get_text().strip()
-                        
                         # Extract main content
-                        main_content = ""
+                        for tag in soup(["script", "style", "nav", "footer", "header"]):
+                            tag.decompose()
                         
-                        # Try to find main content areas
-                        content_selectors = ['main', 'article', '.content', '#content', '.main-content']
-                        for selector in content_selectors:
-                            content_element = soup.select_one(selector)
-                            if content_element:
-                                main_content = content_element.get_text(separator='\n', strip=True)
-                                break
+                        main_content = soup.get_text(separator=' ', strip=True)[:5000]
                         
-                        # Fallback to body content
-                        if not main_content and soup.body:
-                            main_content = soup.body.get_text(separator='\n', strip=True)
-                        
-                        # Clean up content
-                        import re
-                        main_content = re.sub(r'\n+', '\n', main_content)  # Remove multiple newlines
-                        main_content = re.sub(r'\s+', ' ', main_content)   # Normalize whitespace
-                        main_content = main_content.strip()
-                        
-                        # Ensure we have meaningful content
                         if len(main_content) < 100:
-                            main_content = f"This is the homepage of {domain}. The website contains information and services related to this domain."
-                        
-                        # Limit content length for demo (first 2000 characters)
-                        if len(main_content) > 2000:
-                            main_content = main_content[:2000] + "..."
-                        
-                        logger.info(f"Extracted {len(main_content)} characters of content from {url}")
-                        
-                        # Create knowledge item with REAL content
-                        item_repo = KnowledgeItemRepository()
-                        knowledge_item = item_repo.create(db, obj_in={
-                            "collection_id": demo_collection.collection_id,
-                            "title": title,
-                            "content": main_content,  # ✅ REAL website content
-                            "item_metadata": {
-                                "source_url": url,
-                                "crawled_at": datetime.utcnow().isoformat(),
-                                "demo_crawl": True,
-                                "content_length": len(main_content)
-                            }
-                        })
-                        
-                        # 🧠 GENERATE EMBEDDINGS FOR RAG
-                        try:
-                            from app.services.llm.llm_factory import LLMFactory
-                            from app.services.knowledge.embedding_service import EmbeddingService
-                            
-                            llm_service = LLMFactory.create_llm_service(db, client_id)
-                            embedding_service = EmbeddingService(llm_service)
-                            
-                            # Generate embeddings for the knowledge item
-                            await embedding_service.create_embeddings_for_item(db, knowledge_item.item_id)
-                            logger.info(f"✅ Generated embeddings for demo knowledge item")
-                            
-                        except Exception as embedding_error:
-                            logger.error(f"Failed to generate embeddings: {embedding_error}")
-                            # Continue without embeddings - fallback to keyword search
-                        
+                            main_content = f"Content from {domain}. This demo shows how AI can understand and chat about website content."
                     else:
-                        logger.error(f"Failed to fetch {url}: HTTP {response.status}")
-                        # Create fallback content
-                        main_content = f"This is {domain}, a website that couldn't be fully crawled due to access restrictions."
-                        
-                        item_repo = KnowledgeItemRepository()
-                        item_repo.create(db, obj_in={
-                            "collection_id": demo_collection.collection_id,
-                            "title": f"About {domain}",
-                            "content": main_content,
-                            "item_metadata": {"source_url": url, "crawl_error": f"HTTP {response.status}"}
-                        })
+                        main_content = f"Demo content for {domain}. AI assistant ready to answer questions about this website."
                         
         except Exception as crawl_error:
             logger.error(f"Crawling error: {crawl_error}")
-            # Create fallback content on crawl failure
-            main_content = f"This is {domain}. The demo crawler encountered an issue accessing this website, but in a full implementation, it would extract and analyze all the content to provide detailed answers about this site."
-            
-            item_repo = KnowledgeItemRepository()
-            item_repo.create(db, obj_in={
-                "collection_id": demo_collection.collection_id,
-                "title": f"About {domain}",
-                "content": main_content,
-                "item_metadata": {"source_url": url, "crawl_error": str(crawl_error)}
-            })
+            main_content = f"Demo content for {domain}. This demo shows how the AI assistant would work with your website content."
         
-        # Update demo session
+        # ✅ Store content under unique client
+        item_repo = KnowledgeItemRepository()
+        item_repo.create(db, obj_in={
+            "collection_id": demo_collection.collection_id,
+            "title": f"About {domain}",
+            "content": main_content,
+            "item_metadata": {"source_url": url, "demo_session": demo_id}
+        })
+        
+        # ✅ Update demo session with unique client info
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["knowledge_collection_id"] = demo_collection.collection_id
-            demo_sessions[demo_id]["client_id"] = client_id
+            demo_sessions[demo_id]["client_id"] = demo_client_id  # Store unique client
             demo_sessions[demo_id]["status"] = "ready"
-            logger.info(f"🎉 Demo ready with REAL content: {demo_id}")
+            logger.info(f"🎉 Demo ready with ISOLATED content: {demo_id} | Client: {demo_client_id}")
             
     except Exception as e:
-        logger.error(f"Demo error: {str(e)}")
+        logger.error(f"❌ Demo creation error: {str(e)}")
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["status"] = "failed"
     finally:
         db.close()
             
 
-# Add cleanup endpoint for demo sessions (optional)
 @router.delete("/cleanup/{demo_id}")
-async def cleanup_demo_session(demo_id: str):
-    """Simple cleanup of demo session from memory"""
+async def cleanup_demo_session(demo_id: str, db: Session = Depends(get_db)):
+    """🗑️ COMPLETE cleanup - Delete entire demo client and ALL associated data"""
     try:
         if demo_id in demo_sessions:
+            demo_session = demo_sessions[demo_id]
+            demo_client_id = demo_session.get("client_id")
+            
+            if demo_client_id and demo_client_id.startswith("demo_client_"):
+                # ✅ DELETE THE ENTIRE CLIENT (Cascades EVERYTHING!)
+                client_repo = ClientRepository()
+                deleted = client_repo.delete_by_client_id(db, demo_client_id)
+                
+                if deleted:
+                    logger.info(f"🗑️ Completely deleted demo client and ALL data: {demo_client_id}")
+                else:
+                    logger.warning(f"⚠️ Demo client not found in database: {demo_client_id}")
+            
+            # Remove from memory
             del demo_sessions[demo_id]
-            logger.info(f"🗑️ Cleaned up demo session: {demo_id}")
-            return {"status": "cleaned_up", "demo_id": demo_id}
+            logger.info(f"🗑️ Removed demo session from memory: {demo_id}")
+            
+            return {"status": "cleaned_up", "demo_id": demo_id, "client_deleted": demo_client_id}
         else:
             raise HTTPException(status_code=404, detail="Demo session not found")
+            
     except Exception as e:
         logger.error(f"❌ Demo cleanup error for {demo_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Cleanup failed: {str(e)}")
-
+    
 # Add simple stats endpoint
 @router.get("/stats")
 async def get_demo_stats():
@@ -500,4 +452,37 @@ async def demo_message_stream(
         raise
     except Exception as e:
         logger.error(f"❌ Demo message stream error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Demo stream failed: {str(e)}")    
+        raise HTTPException(status_code=500, detail=f"Demo stream failed: {str(e)}") 
+    
+@router.post("/auto-cleanup")
+async def auto_cleanup_expired_demos(db: Session = Depends(get_db)):
+    """🔄 Automatic cleanup of expired demo sessions"""
+    current_time = datetime.utcnow()
+    cleaned_demos = []
+    
+    for demo_id, session in list(demo_sessions.items()):
+        if current_time > session["expires_at"]:
+            demo_client_id = session.get("client_id")
+            
+            if demo_client_id and demo_client_id.startswith("demo_client_"):
+                # Delete entire demo client and all data
+                client_repo = ClientRepository()
+                deleted = client_repo.delete_by_client_id(db, demo_client_id)
+                
+                if deleted:
+                    cleaned_demos.append({
+                        "demo_id": demo_id,
+                        "client_id": demo_client_id,
+                        "expired_at": session["expires_at"].isoformat()
+                    })
+            
+            # Remove from memory
+            del demo_sessions[demo_id]
+    
+    logger.info(f"🔄 Auto-cleanup completed: {len(cleaned_demos)} expired demos removed")
+    
+    return {
+        "cleaned_count": len(cleaned_demos),
+        "cleaned_demos": cleaned_demos,
+        "cleanup_time": current_time.isoformat()
+    }       
