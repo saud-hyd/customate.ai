@@ -21,6 +21,22 @@ router = APIRouter()
 def get_widget_client_by_api_key(api_key: str, db: Session):
     """Get client by API key for widget authentication."""
     try:
+        # Check if it's a demo API key
+        if api_key.startswith("demo_"):
+            # Import demo_sessions from demo routes
+            from app.api.demo.routes import demo_sessions
+            demo_id = api_key[5:]  # Remove "demo_" prefix
+            
+            if demo_id in demo_sessions:
+                demo_session = demo_sessions[demo_id]
+                stored_client_id = demo_session.get("client_id")
+                
+                if stored_client_id:
+                    # Return the actual client using stored client_id
+                    client_repo = ClientRepository()
+                    return client_repo.get_by_client_id(db, stored_client_id)
+        
+        # Regular client lookup for non-demo API keys
         client_repo = ClientRepository()
         return client_repo.get_by_api_key(db, api_key)
     except Exception as e:

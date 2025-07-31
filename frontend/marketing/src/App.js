@@ -74,62 +74,54 @@ function App() {
       <LanguageProvider>
         <Router>
           <ScrollToTop />
-          <div className="flex flex-col min-h-screen">
-            <Header />
+          
+          <Routes>
+            {/* Demo route - NO layout (completely separate) */}
+            <Route path="/demo/:demoId" element={<DemoPage />} />
             
-            {/* Cookie Consent Popup - ADD THIS LINE */}
-            <CookieConsent />
-            
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/features" element={<FeaturesPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/blog" element={<BlogPage />}/>
-                <Route path="/demo/:demoId" element={<DemoPage />} />
+            {/* All other routes WITH layout */}
+            <Route path="/*" element={
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <CookieConsent />
                 
-                {/* ADD THESE BLOG POST ROUTES */}
-                <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
-                <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
-                <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
-                <Route path="/blog/build-vs-buy" element={<BuildVsBuyBlogPost />} />
-                <Route path="/blog/chat-widget" element={<ChatWidgetBlogPost />} />
-                <Route path="/blog/competitive-advantage" element={<CompetitiveAdvantageBlogPost />} />
+                <main className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/features" element={<FeaturesPage />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/blog" element={<BlogPage />}/>
+                    
+                    {/* Blog post routes */}
+                    <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
+                    <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
+                    <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
+                    <Route path="/blog/build-vs-buy" element={<BuildVsBuyBlogPost />} />
+                    <Route path="/blog/chat-widget" element={<ChatWidgetBlogPost />} />
+                    <Route path="/blog/competitive-advantage" element={<CompetitiveAdvantageBlogPost />} />
+                    
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+                    
+                    {/* Other pages */}
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/terms" element={<TermsPage />} />
+                    <Route path="/privacy" element={<PrivacyPage />} />
+                    <Route path="/cookies" element={<CookiesPage />} />
+                    
+                    {/* Redirect routes */}
+                    <Route path="/login" element={<RedirectPage url="https://app.customate.ai/login" />} />
+                    <Route path="/register" element={<RedirectPage url="https://app.customate.ai/register" />} />
+                    <Route path="/dashboard" element={<RedirectPage url="https://app.customate.ai/dashboard" />} />
+                  </Routes>
+                </main>
                 
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-                
-                {/* New routes for missing pages */}
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/cookies" element={<CookiesPage />} />
-                
-                {/* Redirect to dashboard app for these routes */}
-                <Route 
-                  path="/login" 
-                  element={
-                    <RedirectPage url="https://app.customate.ai/login" />
-                  }
-                />
-                <Route 
-                  path="/register" 
-                  element={
-                    <RedirectPage url="https://app.customate.ai/register" />
-                  } 
-                />
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <RedirectPage url="https://app.customate.ai/dashboard" />
-                  } 
-                />
-              </Routes>
-            </main>
-            <Footer />
-            <FeedbackButton /> 
-          </div>
+                <Footer />
+                <FeedbackButton />
+              </div>
+            } />
+          </Routes>
         </Router>
       </LanguageProvider>
     </HelmetProvider>

@@ -12,7 +12,8 @@ const DemoSection = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/demo/create', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/demo/create`, {  
 
         method: 'POST',
         headers: {

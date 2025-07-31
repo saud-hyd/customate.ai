@@ -85,11 +85,11 @@ async def get_demo_status(demo_id: str):
     return session
 
 async def quick_demo_crawl(demo_id: str, url: str, db: Session):
-    """Working demo crawl using existing client"""
+    """Real demo crawl that fetches and processes website content"""
     db = SessionLocal()
     
     try:
-        logger.info(f"Starting demo crawl for {demo_id} - URL: {url}")
+        logger.info(f"Starting REAL demo crawl for {demo_id} - URL: {url}")
         
         # Get ANY existing client
         result = db.execute("SELECT client_id FROM clients WHERE active = true LIMIT 1")
@@ -104,8 +104,10 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
         client_id = existing_client[0]
         logger.info(f"Using client for demo: {client_id}")
         
-        # Parse URL
-        domain = urlparse(url).netloc or url.replace('https://', '').replace('http://', '')
+        # Parse URL and ensure proper format
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        domain = urlparse(url).netloc
         
         # Create collection
         collection_repo = KnowledgeCollectionRepository()
@@ -116,24 +118,126 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
             "type": "demo_website"
         })
         
-        # Create knowledge item
-        item_repo = KnowledgeItemRepository()
-        basic_content = f"This is {url}, a website about {domain}. [Your existing content...]"
-        
-        item_repo.create(db, obj_in={
-            "collection_id": demo_collection.collection_id,
-            "title": f"About {domain}",
-            "content": basic_content,
-            "source_url": url,
-            "item_type": "demo_page"
-        })
+        # 🚀 REAL WEB CRAWLING STARTS HERE
+        try:
+            timeout = aiohttp.ClientTimeout(total=30)
+            headers = {
+                "User-Agent": "Customate.ai Demo Crawler (https://customate.ai)"
+            }
+            
+            async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
+                logger.info(f"Fetching webpage: {url}")
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        html_content = await response.text()
+                        
+                        # Parse HTML content
+                        soup = BeautifulSoup(html_content, 'html.parser')
+                        
+                        # Remove unwanted elements
+                        for element in soup(['script', 'style', 'nav', 'footer', 'header']):
+                            element.decompose()
+                        
+                        # Extract title
+                        title = "Homepage"
+                        if soup.title and soup.title.string:
+                            title = soup.title.string.strip()
+                        elif soup.find('h1'):
+                            title = soup.find('h1').get_text().strip()
+                        
+                        # Extract main content
+                        main_content = ""
+                        
+                        # Try to find main content areas
+                        content_selectors = ['main', 'article', '.content', '#content', '.main-content']
+                        for selector in content_selectors:
+                            content_element = soup.select_one(selector)
+                            if content_element:
+                                main_content = content_element.get_text(separator='\n', strip=True)
+                                break
+                        
+                        # Fallback to body content
+                        if not main_content and soup.body:
+                            main_content = soup.body.get_text(separator='\n', strip=True)
+                        
+                        # Clean up content
+                        import re
+                        main_content = re.sub(r'\n+', '\n', main_content)  # Remove multiple newlines
+                        main_content = re.sub(r'\s+', ' ', main_content)   # Normalize whitespace
+                        main_content = main_content.strip()
+                        
+                        # Ensure we have meaningful content
+                        if len(main_content) < 100:
+                            main_content = f"This is the homepage of {domain}. The website contains information and services related to this domain."
+                        
+                        # Limit content length for demo (first 2000 characters)
+                        if len(main_content) > 2000:
+                            main_content = main_content[:2000] + "..."
+                        
+                        logger.info(f"Extracted {len(main_content)} characters of content from {url}")
+                        
+                        # Create knowledge item with REAL content
+                        item_repo = KnowledgeItemRepository()
+                        knowledge_item = item_repo.create(db, obj_in={
+                            "collection_id": demo_collection.collection_id,
+                            "title": title,
+                            "content": main_content,  # ✅ REAL website content
+                            "item_metadata": {
+                                "source_url": url,
+                                "crawled_at": datetime.utcnow().isoformat(),
+                                "demo_crawl": True,
+                                "content_length": len(main_content)
+                            }
+                        })
+                        
+                        # 🧠 GENERATE EMBEDDINGS FOR RAG
+                        try:
+                            from app.services.llm.llm_factory import LLMFactory
+                            from app.services.knowledge.embedding_service import EmbeddingService
+                            
+                            llm_service = LLMFactory.create_llm_service(db, client_id)
+                            embedding_service = EmbeddingService(llm_service)
+                            
+                            # Generate embeddings for the knowledge item
+                            await embedding_service.create_embeddings_for_item(db, knowledge_item.item_id)
+                            logger.info(f"✅ Generated embeddings for demo knowledge item")
+                            
+                        except Exception as embedding_error:
+                            logger.error(f"Failed to generate embeddings: {embedding_error}")
+                            # Continue without embeddings - fallback to keyword search
+                        
+                    else:
+                        logger.error(f"Failed to fetch {url}: HTTP {response.status}")
+                        # Create fallback content
+                        main_content = f"This is {domain}, a website that couldn't be fully crawled due to access restrictions."
+                        
+                        item_repo = KnowledgeItemRepository()
+                        item_repo.create(db, obj_in={
+                            "collection_id": demo_collection.collection_id,
+                            "title": f"About {domain}",
+                            "content": main_content,
+                            "item_metadata": {"source_url": url, "crawl_error": f"HTTP {response.status}"}
+                        })
+                        
+        except Exception as crawl_error:
+            logger.error(f"Crawling error: {crawl_error}")
+            # Create fallback content on crawl failure
+            main_content = f"This is {domain}. The demo crawler encountered an issue accessing this website, but in a full implementation, it would extract and analyze all the content to provide detailed answers about this site."
+            
+            item_repo = KnowledgeItemRepository()
+            item_repo.create(db, obj_in={
+                "collection_id": demo_collection.collection_id,
+                "title": f"About {domain}",
+                "content": main_content,
+                "item_metadata": {"source_url": url, "crawl_error": str(crawl_error)}
+            })
         
         # Update demo session
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["knowledge_collection_id"] = demo_collection.collection_id
-            demo_sessions[demo_id]["client_id"] = client_id  # STORE CLIENT ID
+            demo_sessions[demo_id]["client_id"] = client_id
             demo_sessions[demo_id]["status"] = "ready"
-            logger.info(f"Demo ready: {demo_id}")
+            logger.info(f"🎉 Demo ready with REAL content: {demo_id}")
             
     except Exception as e:
         logger.error(f"Demo error: {str(e)}")
@@ -299,11 +403,15 @@ async def demo_message_stream(
                         from app.services.llm.llm_factory import LLMFactory
                         from app.services.knowledge.enhanced_search_service import EnhancedSearchService
                         
-                        llm_service = LLMFactory.create_llm_service(db, "demo")
+                        stored_client_id = demo_session.get("client_id")
+                        if not stored_client_id:
+                            raise Exception("No client ID found in demo session")
+                        
+                        llm_service = LLMFactory.create_llm_service(db, stored_client_id)
                         search_service = EnhancedSearchService(llm_service)
                         
                         search_results = await search_service.hybrid_search(
-                            client_id="demo",
+                            client_id=stored_client_id,
                             query_text=message,
                             limit=3,
                             collection_id=demo_collection_id
