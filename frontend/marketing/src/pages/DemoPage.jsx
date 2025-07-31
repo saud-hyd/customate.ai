@@ -131,9 +131,7 @@ const DemoPage = () => {
               Ask questions about the content on {new URL(targetUrl).hostname}
             </p>
           </div>
-          <div className="text-sm text-gray-500">
-            Demo expires in 30 minutes
-          </div>
+       
         </div>
       </header>
       

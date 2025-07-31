@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timedelta
 import asyncio, aiohttp
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import json
 from fastapi.responses import StreamingResponse
 from app.core.database.session import SessionLocal
@@ -39,7 +39,7 @@ async def create_demo_session(
         
         # Generate demo session
         demo_id = str(uuid.uuid4())
-        expires_at = datetime.utcnow() + timedelta(minutes=30)
+        expires_at = datetime.utcnow() + timedelta(days=7)
         temp_api_key = f"demo_{demo_id}"
         
         logger.info(f"Creating demo session {demo_id} for URL: {url}")
@@ -86,7 +86,7 @@ async def get_demo_status(demo_id: str):
     return session
 
 async def quick_demo_crawl(demo_id: str, url: str, db: Session):
-    """Create demo with UNIQUE client and SHORTER identifiers"""
+    """Complete demo crawling function that discovers and crawls up to 100KB of content"""
     db = SessionLocal()
     
     try:
@@ -117,11 +117,6 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
         demo_client_id = demo_client.client_id
         logger.info(f"✅ Created unique demo client: {demo_client_id}")
         
-        # Parse URL and ensure proper format
-        if not url.startswith(('http://', 'https://')):
-            url = 'https://' + url
-        domain = urlparse(url).netloc
-        
         # ✅ Create collection under the UNIQUE client
         collection_repo = KnowledgeCollectionRepository()
         demo_collection = collection_repo.create(db, obj_in={
@@ -131,58 +126,352 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
             "type": "demo_website"
         })
         
-        # 🚀 REAL WEB CRAWLING (Same as before)
+        # 🚀 COMPLETE CRAWLING LOGIC - UP TO 100KB
         try:
-            timeout = aiohttp.ClientTimeout(total=30)
+            timeout = aiohttp.ClientTimeout(total=120)  # 2 minutes for thorough crawling
             headers = {
-                "User-Agent": "Customate.ai Demo Crawler (https://customate.ai)"
+                "User-Agent": "Customate.ai Demo Crawler (https://customate.ai)",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Accept-Encoding": "gzip, deflate",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1"
             }
             
-            async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
-                logger.info(f"Fetching webpage: {url}")
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        html_content = await response.text()
-                        soup = BeautifulSoup(html_content, 'html.parser')
-                        
-                        # Extract main content
-                        for tag in soup(["script", "style", "nav", "footer", "header"]):
-                            tag.decompose()
-                        
-                        main_content = soup.get_text(separator=' ', strip=True)[:5000]
-                        
-                        if len(main_content) < 100:
-                            main_content = f"Content from {domain}. This demo shows how AI can understand and chat about website content."
+            async with aiohttp.ClientSession(
+                timeout=timeout, 
+                headers=headers,
+                connector=aiohttp.TCPConnector(limit=10, limit_per_host=5)
+            ) as session:
+                logger.info(f"🎯 Starting comprehensive demo crawl for: {url}")
+                logger.info(f"🎯 Target: 100KB ({100 * 1024} bytes)")
+                
+                # Initialize crawling state
+                total_content_size = 0
+                max_content_size = 100 * 1024  # 100KB limit
+                pages_crawled = []
+                pages_to_crawl = [url]
+                visited_urls = set()
+                failed_urls = set()
+                base_domain = urlparse(url).netloc
+                
+                # Priority URLs to check first
+                priority_urls = []
+                
+                logger.info(f"🌐 Base domain: {base_domain}")
+                logger.info(f"🎯 Starting crawl loop...")
+                
+                crawl_iteration = 0
+                while (pages_to_crawl and 
+                       total_content_size < max_content_size and 
+                       len(pages_crawled) < 35 and  # Increased page limit
+                       crawl_iteration < 50):  # Prevent infinite loops
+                    
+                    crawl_iteration += 1
+                    
+                    # Get next URL (prioritize certain pages)
+                    if priority_urls:
+                        current_url = priority_urls.pop(0)
+                        if current_url in pages_to_crawl:
+                            pages_to_crawl.remove(current_url)
                     else:
-                        main_content = f"Demo content for {domain}. AI assistant ready to answer questions about this website."
+                        current_url = pages_to_crawl.pop(0)
+                    
+                    # Skip if already processed
+                    if current_url in visited_urls or current_url in failed_urls:
+                        logger.debug(f"⏭️ Skipping already processed: {current_url}")
+                        continue
                         
+                    visited_urls.add(current_url)
+                    
+                    try:
+                        logger.info(f"📄 [{crawl_iteration}] Crawling page {len(pages_crawled)+1}: {current_url}")
+                        logger.info(f"📊 Progress: {total_content_size/1024:.1f}KB / 100KB ({(total_content_size/max_content_size)*100:.1f}%)")
+                        logger.info(f"📋 Queue: {len(pages_to_crawl)} URLs remaining")
+                        
+                        async with session.get(current_url, allow_redirects=True) as response:
+                            # Handle redirects
+                            final_url = str(response.url)
+                            if final_url != current_url:
+                                logger.info(f"🔄 Redirected to: {final_url}")
+                                if final_url in visited_urls:
+                                    continue
+                                visited_urls.add(final_url)
+                            
+                            if response.status == 200:
+                                # Get content
+                                try:
+                                    html_content = await response.text(encoding='utf-8')
+                                except UnicodeDecodeError:
+                                    html_content = await response.text(encoding='latin-1', errors='ignore')
+                                
+                                # Parse HTML
+                                soup = BeautifulSoup(html_content, 'html.parser')
+                                
+                                # Remove unwanted elements
+                                unwanted_tags = [
+                                    "script", "style",", "noscript", "meta", "link", "title", 
+                                    "form", "input", "button", "select", "textarea",
+                                    "img", "svg", "canvas", "audio", "video"
+                                ]
+                                for tag in soup(unwanted_tags):
+                                    tag.decompose()
+                                
+                                # Extract main content areas first
+                                main_content_selectors = [
+                                    'main', 'article', '[role="main"]', '.main-content', 
+                                    '#main-content', '.content', '#content', '.post-content',
+                                    '.entry-content', '.page-content', '.article-content'
+                                ]
+                                
+                                main_content_element = None
+                                for selector in main_content_selectors:
+                                    main_content_element = soup.select_one(selector)
+                                    if main_content_element:
+                                        logger.debug(f"📄 Found main content with selector: {selector}")
+                                        break
+                                
+                                # Extract text content
+                                if main_content_element:
+                                    content_element = main_content_element
+                                else:
+                                    content_element = soup.find('body') or soup
+                                
+                                # Get clean text
+                                page_content = content_element.get_text(separator=' ', strip=True)
+                                
+                                # Clean up content
+                                import re
+                                # Remove extra whitespace
+                                page_content = re.sub(r'\s+', ' ', page_content)
+                                # Remove common navigation text
+                                page_content = re.sub(r'\b(Home|Menu|Navigation|Skip to|Jump to)\b', '', page_content, flags=re.IGNORECASE)
+                                page_content = page_content.strip()
+                                
+                                # Calculate content size
+                                content_bytes = len(page_content.encode('utf-8'))
+                                logger.info(f"📊 Extracted {content_bytes} bytes ({content_bytes/1024:.1f} KB) from {current_url}")
+                                
+                                # Check if we should add this content
+                                if content_bytes > 30:  # Must have at least 100 bytes of meaningful content
+                                    # Check if adding would exceed limit
+                                    if total_content_size + content_bytes > max_content_size:
+                                        remaining_bytes = max_content_size - total_content_size
+                                        logger.info(f"⚠️ Would exceed limit. Remaining: {remaining_bytes} bytes")
+                                        
+                                        if remaining_bytes > 500:  # Only truncate if we have reasonable space
+                                            # Truncate content safely
+                                            page_content_bytes = page_content.encode('utf-8')
+                                            truncated_bytes = page_content_bytes[:remaining_bytes]
+                                            
+                                            # Ensure valid UTF-8
+                                            try:
+                                                page_content = truncated_bytes.decode('utf-8')
+                                            except UnicodeDecodeError:
+                                                # Find safe cut point
+                                                for i in range(remaining_bytes - 1, max(0, remaining_bytes - 10), -1):
+                                                    try:
+                                                        page_content = page_content_bytes[:i].decode('utf-8')
+                                                        break
+                                                    except UnicodeDecodeError:
+                                                        continue
+                                            
+                                            content_bytes = len(page_content.encode('utf-8'))
+                                            logger.info(f"✂️ Truncated to: {content_bytes} bytes")
+                                        else:
+                                            logger.info(f"🛑 Stopping - insufficient space remaining")
+                                            break
+                                    
+                                    # Add the page content
+                                    pages_crawled.append({
+                                        'url': current_url,
+                                        'content': page_content,
+                                        'size_bytes': content_bytes,
+                                        'title': soup.find('title').get_text(strip=True) if soup.find('title') else 'Untitled'
+                                    })
+                                    
+                                    total_content_size += content_bytes
+                                    logger.info(f"✅ Page added: {content_bytes} bytes. Total: {total_content_size}/{max_content_size} bytes ({total_content_size/1024:.1f}/100 KB)")
+                                else:
+                                    logger.info(f"⏭️ Skipping page with insufficient content: {content_bytes} bytes")
+                                
+                                # Discover new links
+                                if total_content_size < max_content_size and len(pages_to_crawl) < 100:
+                                    links = soup.find_all('a', href=True)
+                                    logger.info(f"🔍 Found {len(links)} total links on page")
+                                    
+                                    new_links = 0
+                                    rejected_links = 0
+                                    rejection_stats = {}
+                                    
+                                    for link in links:
+                                        href = link.get('href', '').strip()
+                                        if not href:
+                                            continue
+                                        
+                                        try:
+                                            # Build absolute URL
+                                            absolute_url = urljoin(current_url, href)
+                                            parsed = urlparse(absolute_url)
+                                            
+                                            # Clean the URL
+                                            clean_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                                            if parsed.query:
+                                                # Keep important query parameters
+                                                important_params = ['id', 'page', 'category', 'slug', 'post']
+                                                query_params = []
+                                                for param in parsed.query.split('&'):
+                                                    if any(imp in param.lower() for imp in important_params):
+                                                        query_params.append(param)
+                                                if query_params:
+                                                    clean_url += '?' + '&'.join(query_params)
+                                            
+                                            # Filter links
+                                            rejection_reason = None
+                                            
+                                            # Domain check
+                                            if parsed.netloc != base_domain:
+                                                rejection_reason = "external_domain"
+                                            # Already processed
+                                            elif clean_url in visited_urls or clean_url in failed_urls:
+                                                rejection_reason = "already_processed"
+                                            # Already queued
+                                            elif clean_url in pages_to_crawl or clean_url in priority_urls:
+                                                rejection_reason = "already_queued"
+                                            # Special protocols
+                                            elif href.startswith(('mailto:', 'tel:', 'javascript:', 'ftp:', '#')):
+                                                rejection_reason = "special_protocol"
+                                            # File downloads
+                                            elif any(clean_url.lower().endswith(ext) for ext in [
+                                                '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                                                '.zip', '.rar', '.tar', '.gz', '.exe', '.dmg', '.pkg',
+                                                '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp',
+                                                '.mp3', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv'
+                                            ]):
+                                                rejection_reason = "file_download"
+                                            # Same as current page
+                                            elif clean_url == current_url:
+                                                rejection_reason = "self_reference"
+                                            # Admin/system paths
+                                            elif any(pattern in clean_url.lower() for pattern in [
+                                                '/admin', '/wp-admin', '/login', '/register', '/logout',
+                                                '/api/', '/ajax', '/json', '/xml', '/rss', '/feed',
+                                                '/search', '/cart', '/checkout', '/account'
+                                            ]):
+                                                rejection_reason = "system_path"
+                                            
+                                            if rejection_reason:
+                                                rejected_links += 1
+                                                rejection_stats[rejection_reason] = rejection_stats.get(rejection_reason, 0) + 1
+                                            else:
+                                                # Prioritize certain types of pages
+                                                link_text = link.get_text(strip=True).lower()
+                                                if any(keyword in link_text for keyword in [
+                                                    'about', 'service', 'product', 'solution', 'feature',
+                                                    'pricing', 'contact', 'team', 'company', 'help', 'support'
+                                                ]):
+                                                    if clean_url not in priority_urls:
+                                                        priority_urls.append(clean_url)
+                                                        logger.debug(f"⭐ Priority link: {clean_url} ({link_text})")
+                                                else:
+                                                    if clean_url not in pages_to_crawl:
+                                                        pages_to_crawl.append(clean_url)
+                                                
+                                                new_links += 1
+                                                logger.debug(f"➕ Added: {clean_url}")
+                                        
+                                        except Exception as link_error:
+                                            logger.debug(f"❌ Link processing error for {href}: {link_error}")
+                                            continue
+                                    
+                                    logger.info(f"🔗 Link discovery: {new_links} added, {rejected_links} rejected")
+                                    if rejection_stats:
+                                        logger.info(f"📊 Rejection reasons: {rejection_stats}")
+                                    logger.info(f"📋 Queue status: {len(priority_urls)} priority, {len(pages_to_crawl)} regular")
+                                
+                                # Check if we've reached our target
+                                if total_content_size >= max_content_size:
+                                    logger.info(f"🎯 Target size reached! Stopping crawl.")
+                                    break
+                                    
+                            else:
+                                logger.warning(f"❌ HTTP {response.status} for {current_url}")
+                                failed_urls.add(current_url)
+                                
+                    except asyncio.TimeoutError:
+                        logger.warning(f"⏱️ Timeout crawling {current_url}")
+                        failed_urls.add(current_url)
+                    except Exception as page_error:
+                        logger.warning(f"⚠️ Error crawling {current_url}: {str(page_error)}")
+                        failed_urls.add(current_url)
+                
+                # Final crawl summary
+                logger.info(f"")
+                logger.info(f"🏁 CRAWL COMPLETED!")
+                logger.info(f"=" * 50)
+                logger.info(f"📊 URLs discovered: {len(visited_urls) + len(failed_urls)}")
+                logger.info(f"✅ URLs successfully crawled: {len(visited_urls) - len(failed_urls)}")
+                logger.info(f"❌ URLs failed: {len(failed_urls)}")
+                logger.info(f"📄 Pages with content: {len(pages_crawled)}")
+                logger.info(f"💾 Total content size: {total_content_size} bytes ({total_content_size/1024:.1f} KB)")
+                logger.info(f"🎯 Target achievement: {(total_content_size/max_content_size)*100:.1f}% of 100KB")
+                logger.info(f"📋 Remaining queue: {len(pages_to_crawl)} URLs")
+                
+                if pages_crawled:
+                    logger.info(f"📄 Successfully crawled pages:")
+                    for i, page in enumerate(pages_crawled, 1):
+                        logger.info(f"  {i:2d}. {page['url']} ({page['size_bytes']} bytes) - {page['title'][:50]}")
+                
+                # Combine all content
+                if pages_crawled:
+                    all_content_parts = []
+                    for page in pages_crawled:
+                        page_header = f"=== {page['title']} ===\nURL: {page['url']}\nSize: {page['size_bytes']} bytes\n\n"
+                        all_content_parts.append(page_header + page['content'])
+                    
+                    main_content = "\n\n" + "="*80 + "\n\n".join(all_content_parts)
+                    
+                    final_size = len(main_content.encode('utf-8'))
+                    logger.info(f"✅ Final content compiled: {final_size} bytes ({final_size/1024:.1f} KB)")
+                else:
+                    main_content = f"Demo content for {domain}. This demo shows how AI can understand and chat about website content."
+                    logger.warning(f"⚠️ No pages crawled successfully - using fallback content")
+                    
         except Exception as crawl_error:
-            logger.error(f"Crawling error: {crawl_error}")
+            logger.error(f"❌ Critical crawling error: {str(crawl_error)}")
+            import traceback
+            logger.error(f"❌ Full traceback: {traceback.format_exc()}")
             main_content = f"Demo content for {domain}. This demo shows how the AI assistant would work with your website content."
         
         # ✅ Store content under unique client
         item_repo = KnowledgeItemRepository()
         item_repo.create(db, obj_in={
             "collection_id": demo_collection.collection_id,
-            "title": f"About {domain}",
+            "title": f"Website Content: {domain}",
             "content": main_content,
-            "item_metadata": {"source_url": url, "demo_session": demo_id}
+            "item_metadata": {
+                "source_url": url, 
+                "demo_session": demo_id,
+                "pages_crawled": len(pages_crawled) if 'pages_crawled' in locals() else 0,
+                "content_size_bytes": len(main_content.encode('utf-8'))
+            }
         })
         
         # ✅ Update demo session with unique client info
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["knowledge_collection_id"] = demo_collection.collection_id
-            demo_sessions[demo_id]["client_id"] = demo_client_id  # Store unique client
+            demo_sessions[demo_id]["client_id"] = demo_client_id
             demo_sessions[demo_id]["status"] = "ready"
-            logger.info(f"🎉 Demo ready with ISOLATED content: {demo_id} | Client: {demo_client_id}")
+            logger.info(f"🎉 Demo ready with content: {demo_id} | Client: {demo_client_id}")
             
     except Exception as e:
-        logger.error(f"❌ Demo creation error: {str(e)}")
+        logger.error(f"❌ Demo setup error: {str(e)}")
+        import traceback
+        logger.error(f"❌ Full setup traceback: {traceback.format_exc()}")
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["status"] = "failed"
     finally:
-        db.close()
-            
+        db.close()            
 
 @router.delete("/cleanup/{demo_id}")
 async def cleanup_demo_session(demo_id: str, db: Session = Depends(get_db)):
