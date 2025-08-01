@@ -1,120 +1,109 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const ChatInput = ({ onSendMessage, settings, disabled }) => {
+const ChatInput = ({ onSendMessage, settings, disabled = false }) => {
   const [message, setMessage] = useState('');
   const [isLocalSending, setIsLocalSending] = useState(false);
-  const inputRef = useRef(null);
-
-  // FIXED: Simple disabled state management
-  const isDisabled = disabled || isLocalSending;
-
-  // Reset local sending state when external disabled changes
+  const textareaRef = useRef(null);
+  
+  // Auto-resize textarea
   useEffect(() => {
-    if (!disabled && isLocalSending) {
-      setIsLocalSending(false);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      const scrollHeight = Math.min(textarea.scrollHeight, 120); // Max height of ~4 lines
+      textarea.style.height = scrollHeight + 'px';
     }
-  }, [disabled, isLocalSending]);
+  }, [message]);
+  
+  // Focus management
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [disabled]);
 
-  // FIXED: Simplified submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!message.trim() || isDisabled) {
-      console.log('❌ Cannot send - disabled or empty message');
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || isLocalSending) {
       return;
     }
 
-    const messageText = message.trim();
-    console.log('📤 Sending message:', messageText);
-    
-    // Clear input and set local sending state
-    setMessage('');
-    setIsLocalSending(true);
-
     try {
-      await onSendMessage(messageText);
-      console.log('✅ Message sent successfully');
+      setIsLocalSending(true);
+      setMessage(''); // Clear immediately for better UX
+      
+      await onSendMessage(trimmedMessage);
     } catch (error) {
-      console.error('❌ Error sending message:', error);
+      console.error('Error sending message:', error);
       // Restore message on error
-      setMessage(messageText);
+      setMessage(trimmedMessage);
     } finally {
-      // Always reset local sending state
       setIsLocalSending(false);
       
-      // Focus input after brief delay
+      // Refocus after send
       setTimeout(() => {
-        if (inputRef.current && !disabled) {
-          inputRef.current.focus();
+        if (textareaRef.current) {
+          textareaRef.current.focus();
         }
       }, 100);
     }
   };
 
-  // Handle Enter key
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isDisabled) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
 
-  const canSend = message.trim() && !isDisabled;
+  const isDisabled = isLocalSending;
+  const canSend = message.trim().length > 0 && !isDisabled;
 
   return (
     <form onSubmit={handleSubmit} className="chat-input-container">
       <div className="input-wrapper">
-        <input
-          ref={inputRef}
-          type="text"
+        <textarea
+          ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={
-            isDisabled 
-              ? "AI is responding..." 
-              : "Type your message..."
-          }
+          placeholder={isDisabled ? "Please wait..." : "Type your message..."}
           disabled={isDisabled}
-          className="message-input"
-          autoComplete="off"
-          autoFocus={!isDisabled}
-          maxLength={1000} // Reasonable limit
+          className="message-input-textarea"
+          rows={1}
+          maxLength={2000}
         />
         
         <button
           type="submit"
+          className="send-button-tabbed"
           disabled={!canSend}
-          className="send-button"
           title={
-            !canSend 
-              ? (isDisabled ? "Please wait for response..." : "Enter a message")
-              : "Send message"
+            isDisabled 
+              ? "Please wait for response..." 
+              : canSend 
+                ? "Send message" 
+                : "Enter a message to send"
           }
           style={{ 
-            backgroundColor: canSend ? (settings?.primary_color || '#ea580c') : '#9ca3af',
+            backgroundColor: canSend ? (settings?.primary_color || '#ea580c') : 'rgba(255, 255, 255, 0.3)',
             cursor: canSend ? 'pointer' : 'not-allowed'
           }}
         >
           {isDisabled ? (
-            <div className="loading-spinner small"></div>
+            <div className="loading-spinner-small"></div>
           ) : (
             <SendIcon />
           )}
         </button>
       </div>
       
-      {/* Status indicator for debugging */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ 
-          fontSize: '10px', 
-          color: '#666', 
-          marginTop: '4px',
-          fontFamily: 'monospace'
-        }}>
-          External Disabled: {disabled ? 'Yes' : 'No'} | 
-          Local Sending: {isLocalSending ? 'Yes' : 'No'} | 
-          Can Send: {canSend ? 'Yes' : 'No'}
+      {/* Character counter for long messages */}
+      {message.length > 1500 && (
+        <div className="character-counter">
+          {message.length}/2000 characters
         </div>
       )}
     </form>
