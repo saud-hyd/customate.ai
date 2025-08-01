@@ -210,7 +210,7 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
                                 
                                 # Remove unwanted elements
                                 unwanted_tags = [
-                                    "script", "style",", "noscript", "meta", "link", "title", 
+                                    "script", "style","noscript", "meta", "link", "title", 
                                     "form", "input", "button", "select", "textarea",
                                     "img", "svg", "canvas", "audio", "video"
                                 ]
