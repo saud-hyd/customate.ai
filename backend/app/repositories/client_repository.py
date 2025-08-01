@@ -30,6 +30,44 @@ class ClientRepository(BaseRepository[Client, Dict[str, Any], Dict[str, Any]]):
         logger.debug(f"Looking up client by API key: {api_key[:8]}...")
         return db.query(self.model).filter(self.model.api_key == api_key).first()
     
+    def delete_by_client_id(self, db: Session, client_id: str) -> bool:
+        """
+        🛡️ SAFE Delete a client by client_id - ONLY deletes demo clients.
+        Multiple safety checks prevent deletion of regular users.
+        """
+        try:
+            client = self.get_by_client_id(db, client_id)
+            if not client:
+                logger.warning(f"No client found with client_id: {client_id}")
+                return False
+            
+            # 🛡️ SAFETY CHECK 1: Must be demo client (if field exists)
+            if hasattr(client, 'is_demo') and not client.is_demo:
+                logger.error(f"🚨 SAFETY: Refusing to delete regular client: {client_id}")
+                return False
+            
+            # 🛡️ SAFETY CHECK 2: Client ID must follow demo pattern
+            if not client_id.startswith("demo_client_"):
+                logger.error(f"🚨 SAFETY: Client ID doesn't match demo pattern: {client_id}")
+                return False
+            
+            # 🛡️ SAFETY CHECK 3: Email must be demo email
+            if not client.email.endswith("@temp.customate.ai"):
+                logger.error(f"🚨 SAFETY: Email doesn't match demo pattern: {client.email}")
+                return False
+            
+            # ✅ ALL SAFETY CHECKS PASSED - Safe to delete
+            db.delete(client)
+            db.commit()
+            
+            logger.info(f"✅ SAFELY deleted demo client: {client_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Error deleting client {client_id}: {str(e)}")
+            db.rollback()
+            return False    
+    
     def update_api_key(self, db: Session, client_id: str, new_api_key: str) -> bool:
         """Update a client's API key (password)."""
         try:

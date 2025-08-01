@@ -7,7 +7,6 @@ import uuid
 import json
 import asyncio
 import logging
-from datetime import datetime
 
 from app.core.database.dependencies import get_db
 from app.services.chat.enhanced_chat_service import EnhancedChatService
@@ -22,37 +21,95 @@ router = APIRouter()
 def get_widget_client_by_api_key(api_key: str, db: Session):
     """Get client by API key for widget authentication."""
     try:
+        # Check if it's a demo API key
+        if api_key.startswith("demo_"):
+            # Import demo_sessions from demo routes
+            from app.api.demo.routes import demo_sessions
+            demo_id = api_key[5:]  # Remove "demo_" prefix
+            
+            if demo_id in demo_sessions:
+                demo_session = demo_sessions[demo_id]
+                stored_client_id = demo_session.get("client_id")
+                
+                if stored_client_id:
+                    # Return the actual client using stored client_id
+                    client_repo = ClientRepository()
+                    return client_repo.get_by_client_id(db, stored_client_id)
+        
+        # Regular client lookup for non-demo API keys
         client_repo = ClientRepository()
         return client_repo.get_by_api_key(db, api_key)
     except Exception as e:
         logger.error(f"Error getting client by API key: {str(e)}")
         return None
-    
-def get_demo_or_client_by_api_key(api_key: str, db: Session):
-    """Get client by API key - supports both regular and demo keys."""
-    try:
-        # Check if it's a demo key
-        if api_key.startswith("demo_"):
-            # For demo keys, return the actual demo client from database
-            client_repo = ClientRepository()
-            demo_client = client_repo.get_by_client_id(db, "demo")
-            
-            if demo_client:
-                logger.info(f"Demo client found for API key: {api_key[:12]}...")
-                # Add demo flag for identification
-                demo_client.is_demo = True
-                return demo_client
-            else:
-                logger.error("Demo client not found in database")
-                return None
-        
-        # Regular API key - use existing logic
-        return get_widget_client_by_api_key(api_key, db)
-        
-    except Exception as e:
-        logger.error(f"Error getting client by API key: {str(e)}")
-        return None
 
+@router.post("/message")
+async def send_widget_message(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Send message to widget (regular response) using EnhancedChatService."""
+    try:
+        logger.info("📨 Widget message request received")
+        
+        # Get API key from headers
+        api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
+        
+        if not api_key:
+            raise HTTPException(status_code=401, detail="API key required")
+        
+        # Validate client
+        client = get_widget_client_by_api_key(api_key, db)
+        if not client:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+        
+        # Get request body
+        body = await request.json()
+        message = body.get("message", "")
+        session_id = body.get("session_id")
+        
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        logger.info(f"📨 Processing message for client {client.client_id}: {message[:100]}...")
+        
+        # Collect user info
+        user_info = {
+            "user_id": body.get("user_id"),
+            "ip_address": request.client.host if request.client else None,
+            "user_agent": request.headers.get("user-agent"),
+            "referrer": request.headers.get("referer"),
+        }
+        
+        # Initialize services
+        llm_service = LLMFactory.create_llm_service(db, client.client_id)
+        search_service = EnhancedSearchService(llm_service)
+        context_manager = ContextManager()
+        
+        # Create enhanced chat service
+        chat_service = EnhancedChatService(
+            db=db,
+            search_service=search_service,
+            llm_service=llm_service,
+            context_manager=context_manager,
+        )
+        
+        # Process message with full RAG pipeline
+        response = await chat_service.process_message(
+            client_id=client.client_id,
+            user_message=message,
+            session_id=session_id,
+            user_info=user_info
+        )
+        
+        logger.info(f"✅ Widget message processed successfully - Knowledge used: {response.get('knowledge_used', False)}")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Widget message error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Message processing failed: {str(e)}")
 
 @router.post("/message/stream")
 async def send_widget_message_stream(
@@ -69,10 +126,11 @@ async def send_widget_message_stream(
         if not api_key:
             raise HTTPException(status_code=401, detail="API key required")
         
-        client = get_demo_or_client_by_api_key(api_key, db)
+        # Validate client
+        client = get_widget_client_by_api_key(api_key, db)
         if not client:
             raise HTTPException(status_code=401, detail="Invalid API key")
-          
+        
         # Get request body
         body = await request.json()
         message = body.get("message", "")
@@ -82,10 +140,6 @@ async def send_widget_message_stream(
             raise HTTPException(status_code=400, detail="Message is required")
         
         logger.info(f"📨 Processing streaming message for client {client.client_id}: {message[:100]}...")
-        
-        # REMOVE THIS HARDCODED DEMO BLOCK:
-        # if api_key.startswith("demo_"):
-        #     return { ... hardcoded response ... }
         
         # Collect user info
         user_info = {
@@ -98,7 +152,7 @@ async def send_widget_message_stream(
         async def generate_stream_response():
             """Generate streaming response using EnhancedChatService."""
             try:
-                # Initialize services (works for both demo and regular clients)
+                # Initialize services
                 llm_service = LLMFactory.create_llm_service(db, client.client_id)
                 search_service = EnhancedSearchService(llm_service)
                 context_manager = ContextManager()
@@ -209,7 +263,7 @@ async def get_widget_settings(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Get widget settings (supports demo mode)."""
+    """Get widget configuration settings."""
     try:
         # Get API key from headers
         api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
@@ -217,30 +271,23 @@ async def get_widget_settings(
         if not api_key:
             raise HTTPException(status_code=401, detail="API key required")
         
-        # Validate client (including demo clients)
-        client = get_demo_or_client_by_api_key(api_key, db)
+        # Validate client
+        client = get_widget_client_by_api_key(api_key, db)
         if not client:
             raise HTTPException(status_code=401, detail="Invalid API key")
         
-        # Return settings (same for demo and regular)
+        # Return widget configuration (you can expand this based on your client settings)
         return {
-            "primary_color": "#ea580c",
-            "chatbot_name": "AI Assistant",
-            "greeting_message": "Hello! I can help you with questions about this website. What would you like to know?",
-            "widget_position": "bottom-right",
-            "show_typing_indicator": True,
-            "enable_suggestions": True,
-            "llm_provider": "deepseek",
-            "llm_model": "deepseek-chat",
-            "reset_on_page_refresh": True,
-            "session_timeout": 30,
-            "demo_mode": api_key.startswith("demo_"),
-            "styles": {
-                "primary_color": "#ea580c",
-                "widget_position": "bottom-right",
-                "chat_height": "600px",
-                "chat_width": "380px",
-                "border_radius": "12px",
+            "client_id": client.client_id,
+            "widget_enabled": True,
+            "streaming_enabled": True,
+            "rag_enabled": True,
+            "knowledge_base_enabled": True,
+            "integration_enabled": True,
+            "settings": {
+                "theme": "default",
+                "position": "bottom-right",
+                "greeting": "Hello! How can I help you today?",
                 "placeholder": "Type your message..."
             }
         }
@@ -250,7 +297,7 @@ async def get_widget_settings(
     except Exception as e:
         logger.error(f"❌ Widget settings error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get widget settings: {str(e)}")
-    
+
 @router.get("/health")
 async def widget_health_check():
     """Widget health check endpoint."""

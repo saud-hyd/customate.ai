@@ -77,9 +77,7 @@ function App() {
           
           <Routes>
             {/* Demo route - NO layout (completely separate) */}
-            <Route path="/demo" element={<DemoPage />} />
-             <Route path="/demo/view" element={<DemoPage />} />
-
+            <Route path="/demo/:demoId" element={<DemoPage />} />
             
             {/* All other routes WITH layout */}
             <Route path="/*" element={
