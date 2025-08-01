@@ -75,7 +75,7 @@ const DemoSection = () => {
         </form>
         
         <p className="text-sm text-gray-500 mt-4">
-          No signup required • Demo expires in 30 minutes • Up to 5 pages crawled
+          No signup required • Demo expires in 7 days • Up to 5 pages crawled
         </p>
       </div>
     </section>
