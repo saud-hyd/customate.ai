@@ -15,6 +15,15 @@
     <div id="root"></div>
     
     <!-- Customate.ai Widget Implementation -->
-    <script async src="https://customate-ai-1.onrender.com/api/widget/embed.js?api_key=0FPEoTPDDK-rNbMSDNL4gtEHtR6lxaMmOofVJbr9Cs4"></script>
+    <script>
+      (function() {
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isLocal ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `${baseUrl}/api/widget/embed.js?api_key=0FPEoTPDDK-rNbMSDNL4gtEHtR6lxaMmOofVJbr9Cs4`;
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>
