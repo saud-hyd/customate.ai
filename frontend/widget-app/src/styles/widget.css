@@ -386,7 +386,7 @@
   background-color: white !important;
   color: #6b7280 !important;
   display: flex;
-  padding: 14px 16px !important;
+  padding: 8px 4px !important;
   border: 1px solid #e5e7eb !important;
 }
 
@@ -539,7 +539,7 @@
 
 /* FIXED: Force override original chat input container for tabbed widget */
 .tabbed-chat-widget .chat-input-wrapper-no-gap {
-  padding: 12px !important;
+  padding: 2px !important;
   background: rgba(255, 255, 255, 0.05) !important;
   backdrop-filter: blur(10px) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -564,12 +564,12 @@
 /* FIXED: Tabbed widget input wrapper - proper sizing */
 .tabbed-chat-widget .input-wrapper {
   display: flex !important;
-  align-items: flex-end !important;
-  gap: 8px !important;
+  align-items: center !important;
+  gap: 2px !important;
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 24px !important;
-  padding: 8px 8px 8px 16px !important;
+  padding: 2px 2px 2px 4px !important;
   margin: 0 !important;
   transition: all 0.3s ease !important;
   backdrop-filter: blur(10px) !important;
@@ -594,11 +594,11 @@
   font-family: inherit !important;
   resize: none !important;
   line-height: 1.5 !important;
-  min-height: 20px !important;
+  min-height: 16px !important;
   max-height: 120px !important;
   height: auto !important;
   overflow-y: auto !important;
-  padding: 6px 0 !important;
+  padding: 0px 0 !important;
   margin: 0 !important;
 }
 
@@ -667,7 +667,7 @@
 
 /* Keep original wrapper for contact tab */
 .chat-input-wrapper {
-  padding: 12px;
+  padding: 10px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -774,11 +774,11 @@
 }
 
 .tabbed-chat-widget .message-bubble {
-  padding: 10px 14px;
+  padding: 6px 14px;
   border-radius: 18px;
   max-width: 85%;
   word-wrap: break-word;
-  line-height: 1.4;
+  line-height: 1.2;
   font-size: 14px;
   margin: 0;
 }
@@ -819,7 +819,7 @@
 .tabbed-chat-widget .typing-bubble {
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== CONTACT TAB STYLES ===== */
@@ -1393,6 +1393,29 @@
     background: rgba(255, 255, 255, 0.08) !important;
     box-shadow: none !important;
   }
+}
+
+/* ===== WATERMARK ===== */
+.widget-watermark {
+  padding: 4px 16px;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  flex-shrink: 0;
+}
+
+.widget-watermark a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.widget-watermark a:hover {
+  color: #ea580c;
 }
 
 /* ===== PRINT STYLES ===== */

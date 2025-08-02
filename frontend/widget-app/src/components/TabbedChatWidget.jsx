@@ -42,6 +42,20 @@ const TabbedChatWidget = ({ messages, isTyping, onSendMessage, settings, error }
     }
   }, [error]);
 
+  useEffect(() => {
+    // Notify parent that widget content has changed and needs proper sizing
+    if (window.parent !== window) {
+      window.parent.postMessage({
+        type: 'WIDGET_RESIZE',
+        data: {
+          expanded: true,
+          activeTab: activeTab,
+          timestamp: Date.now()
+        }
+      }, '*');
+    }
+  }, [activeTab]);  
+
   // Enhanced message send handler
   const handleSendMessage = async (messageText) => {
     try {
@@ -189,6 +203,13 @@ const TabbedChatWidget = ({ messages, isTyping, onSendMessage, settings, error }
           </div>
         )}
       </div>
+    {/* Watermark */}
+        <div className="widget-watermark">
+            <span>Powered by </span>
+            <a href="https://customate.ai" target="_blank" rel="noopener noreferrer">
+            Customate
+            </a>
+        </div>
 
       {/* Bottom Tab Navigation */}
       <div className="tab-navigation">

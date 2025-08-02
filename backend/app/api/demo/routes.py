@@ -6,10 +6,12 @@ import uuid
 from datetime import datetime, timedelta
 import asyncio, aiohttp
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 import json
 from fastapi.responses import StreamingResponse
 from app.core.database.session import SessionLocal
+from app.domain.knowledge.entities import VectorEmbedding, KnowledgeItem, KnowledgeCollection
+
 
 from app.core.database.dependencies import get_db
 from app.core.database.session import SessionLocal
@@ -19,6 +21,7 @@ from app.services.knowledge.embedding_service import EmbeddingService
 from app.repositories.knowledge_repository import KnowledgeCollectionRepository
 from app.repositories.knowledge_repository import KnowledgeItemRepository
 from app.repositories.client_repository import ClientRepository
+from app.domain.client.entities import Client
 
 router = APIRouter()
 
@@ -39,7 +42,7 @@ async def create_demo_session(
         
         # Generate demo session
         demo_id = str(uuid.uuid4())
-        expires_at = datetime.utcnow() + timedelta(days=7)
+        expires_at = datetime.utcnow() + timedelta(minutes=30)
         temp_api_key = f"demo_{demo_id}"
         
         logger.info(f"Creating demo session {demo_id} for URL: {url}")
@@ -86,7 +89,7 @@ async def get_demo_status(demo_id: str):
     return session
 
 async def quick_demo_crawl(demo_id: str, url: str, db: Session):
-    """Complete demo crawling function that discovers and crawls up to 100KB of content"""
+    """Create demo with UNIQUE client and SHORTER identifiers"""
     db = SessionLocal()
     
     try:
@@ -117,6 +120,11 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
         demo_client_id = demo_client.client_id
         logger.info(f"✅ Created unique demo client: {demo_client_id}")
         
+        # Parse URL and ensure proper format
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        domain = urlparse(url).netloc
+        
         # ✅ Create collection under the UNIQUE client
         collection_repo = KnowledgeCollectionRepository()
         demo_collection = collection_repo.create(db, obj_in={
@@ -126,326 +134,38 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
             "type": "demo_website"
         })
         
-        # 🚀 COMPLETE CRAWLING LOGIC - UP TO 100KB
+        # 🚀 REAL WEB CRAWLING (Same as before)
         try:
-            timeout = aiohttp.ClientTimeout(total=120)  # 2 minutes for thorough crawling
+            timeout = aiohttp.ClientTimeout(total=30)
             headers = {
-                "User-Agent": "Customate.ai Demo Crawler (https://customate.ai)",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.5",
-                "Accept-Encoding": "gzip, deflate",
-                "Connection": "keep-alive",
-                "Upgrade-Insecure-Requests": "1"
+                "User-Agent": "Customate.ai Demo Crawler (https://customate.ai)"
             }
             
-            async with aiohttp.ClientSession(
-                timeout=timeout, 
-                headers=headers,
-                connector=aiohttp.TCPConnector(limit=10, limit_per_host=5)
-            ) as session:
-                logger.info(f"🎯 Starting comprehensive demo crawl for: {url}")
-                logger.info(f"🎯 Target: 100KB ({100 * 1024} bytes)")
-                
-                # Initialize crawling state
-                total_content_size = 0
-                max_content_size = 100 * 1024  # 100KB limit
-                pages_crawled = []
-                pages_to_crawl = [url]
-                visited_urls = set()
-                failed_urls = set()
-                base_domain = urlparse(url).netloc
-                
-                # Priority URLs to check first
-                priority_urls = []
-                
-                logger.info(f"🌐 Base domain: {base_domain}")
-                logger.info(f"🎯 Starting crawl loop...")
-                
-                crawl_iteration = 0
-                while (pages_to_crawl and 
-                       total_content_size < max_content_size and 
-                       len(pages_crawled) < 35 and  # Increased page limit
-                       crawl_iteration < 50):  # Prevent infinite loops
-                    
-                    crawl_iteration += 1
-                    
-                    # Get next URL (prioritize certain pages)
-                    if priority_urls:
-                        current_url = priority_urls.pop(0)
-                        if current_url in pages_to_crawl:
-                            pages_to_crawl.remove(current_url)
+            async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
+                logger.info(f"Fetching webpage: {url}")
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        html_content = await response.text()
+                        soup = BeautifulSoup(html_content, 'html.parser')
+                        
+                        # Extract main content
+                        for tag in soup(["script", "style", "nav", "footer", "header"]):
+                            tag.decompose()
+                        
+                        main_content = soup.get_text(separator=' ', strip=True)[:5000]
+                        
+                        if len(main_content) < 100:
+                            main_content = f"Content from {domain}. This demo shows how AI can understand and chat about website content."
                     else:
-                        current_url = pages_to_crawl.pop(0)
-                    
-                    # Skip if already processed
-                    if current_url in visited_urls or current_url in failed_urls:
-                        logger.debug(f"⏭️ Skipping already processed: {current_url}")
-                        continue
+                        main_content = f"Demo content for {domain}. AI assistant ready to answer questions about this website."
                         
-                    visited_urls.add(current_url)
-                    
-                    try:
-                        logger.info(f"📄 [{crawl_iteration}] Crawling page {len(pages_crawled)+1}: {current_url}")
-                        logger.info(f"📊 Progress: {total_content_size/1024:.1f}KB / 100KB ({(total_content_size/max_content_size)*100:.1f}%)")
-                        logger.info(f"📋 Queue: {len(pages_to_crawl)} URLs remaining")
-                        
-                        async with session.get(current_url, allow_redirects=True) as response:
-                            # Handle redirects
-                            final_url = str(response.url)
-                            if final_url != current_url:
-                                logger.info(f"🔄 Redirected to: {final_url}")
-                                if final_url in visited_urls:
-                                    continue
-                                visited_urls.add(final_url)
-                            
-                            if response.status == 200:
-                                # Get content
-                                try:
-                                    html_content = await response.text(encoding='utf-8')
-                                except UnicodeDecodeError:
-                                    html_content = await response.text(encoding='latin-1', errors='ignore')
-                                
-                                # Parse HTML
-                                soup = BeautifulSoup(html_content, 'html.parser')
-                                
-                                # Remove unwanted elements
-                                unwanted_tags = [
-                                    "script", "style","noscript", "meta", "link", "title", 
-                                    "form", "input", "button", "select", "textarea",
-                                    "img", "svg", "canvas", "audio", "video"
-                                ]
-                                for tag in soup(unwanted_tags):
-                                    tag.decompose()
-                                
-                                # Extract main content areas first
-                                main_content_selectors = [
-                                    'main', 'article', '[role="main"]', '.main-content', 
-                                    '#main-content', '.content', '#content', '.post-content',
-                                    '.entry-content', '.page-content', '.article-content'
-                                ]
-                                
-                                main_content_element = None
-                                for selector in main_content_selectors:
-                                    main_content_element = soup.select_one(selector)
-                                    if main_content_element:
-                                        logger.debug(f"📄 Found main content with selector: {selector}")
-                                        break
-                                
-                                # Extract text content
-                                if main_content_element:
-                                    content_element = main_content_element
-                                else:
-                                    content_element = soup.find('body') or soup
-                                
-                                # Get clean text
-                                page_content = content_element.get_text(separator=' ', strip=True)
-                                
-                                # Clean up content
-                                import re
-                                # Remove extra whitespace
-                                page_content = re.sub(r'\s+', ' ', page_content)
-                                # Remove common navigation text
-                                page_content = re.sub(r'\b(Home|Menu|Navigation|Skip to|Jump to)\b', '', page_content, flags=re.IGNORECASE)
-                                page_content = page_content.strip()
-                                
-                                # Calculate content size
-                                content_bytes = len(page_content.encode('utf-8'))
-                                logger.info(f"📊 Extracted {content_bytes} bytes ({content_bytes/1024:.1f} KB) from {current_url}")
-                                
-                                # Check if we should add this content
-                                if content_bytes > 30:  # Must have at least 100 bytes of meaningful content
-                                    # Check if adding would exceed limit
-                                    if total_content_size + content_bytes > max_content_size:
-                                        remaining_bytes = max_content_size - total_content_size
-                                        logger.info(f"⚠️ Would exceed limit. Remaining: {remaining_bytes} bytes")
-                                        
-                                        if remaining_bytes > 500:  # Only truncate if we have reasonable space
-                                            # Truncate content safely
-                                            page_content_bytes = page_content.encode('utf-8')
-                                            truncated_bytes = page_content_bytes[:remaining_bytes]
-                                            
-                                            # Ensure valid UTF-8
-                                            try:
-                                                page_content = truncated_bytes.decode('utf-8')
-                                            except UnicodeDecodeError:
-                                                # Find safe cut point
-                                                for i in range(remaining_bytes - 1, max(0, remaining_bytes - 10), -1):
-                                                    try:
-                                                        page_content = page_content_bytes[:i].decode('utf-8')
-                                                        break
-                                                    except UnicodeDecodeError:
-                                                        continue
-                                            
-                                            content_bytes = len(page_content.encode('utf-8'))
-                                            logger.info(f"✂️ Truncated to: {content_bytes} bytes")
-                                        else:
-                                            logger.info(f"🛑 Stopping - insufficient space remaining")
-                                            break
-                                    
-                                    # Add the page content
-                                    pages_crawled.append({
-                                        'url': current_url,
-                                        'content': page_content,
-                                        'size_bytes': content_bytes,
-                                        'title': soup.find('title').get_text(strip=True) if soup.find('title') else 'Untitled'
-                                    })
-                                    
-                                    total_content_size += content_bytes
-                                    logger.info(f"✅ Page added: {content_bytes} bytes. Total: {total_content_size}/{max_content_size} bytes ({total_content_size/1024:.1f}/100 KB)")
-                                else:
-                                    logger.info(f"⏭️ Skipping page with insufficient content: {content_bytes} bytes")
-                                
-                                # Discover new links
-                                if total_content_size < max_content_size and len(pages_to_crawl) < 100:
-                                    links = soup.find_all('a', href=True)
-                                    logger.info(f"🔍 Found {len(links)} total links on page")
-                                    
-                                    new_links = 0
-                                    rejected_links = 0
-                                    rejection_stats = {}
-                                    
-                                    for link in links:
-                                        href = link.get('href', '').strip()
-                                        if not href:
-                                            continue
-                                        
-                                        try:
-                                            # Build absolute URL
-                                            absolute_url = urljoin(current_url, href)
-                                            parsed = urlparse(absolute_url)
-                                            
-                                            # Clean the URL
-                                            clean_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-                                            if parsed.query:
-                                                # Keep important query parameters
-                                                important_params = ['id', 'page', 'category', 'slug', 'post']
-                                                query_params = []
-                                                for param in parsed.query.split('&'):
-                                                    if any(imp in param.lower() for imp in important_params):
-                                                        query_params.append(param)
-                                                if query_params:
-                                                    clean_url += '?' + '&'.join(query_params)
-                                            
-                                            # Filter links
-                                            rejection_reason = None
-                                            
-                                            # Domain check
-                                            if parsed.netloc != base_domain:
-                                                rejection_reason = "external_domain"
-                                            # Already processed
-                                            elif clean_url in visited_urls or clean_url in failed_urls:
-                                                rejection_reason = "already_processed"
-                                            # Already queued
-                                            elif clean_url in pages_to_crawl or clean_url in priority_urls:
-                                                rejection_reason = "already_queued"
-                                            # Special protocols
-                                            elif href.startswith(('mailto:', 'tel:', 'javascript:', 'ftp:', '#')):
-                                                rejection_reason = "special_protocol"
-                                            # File downloads
-                                            elif any(clean_url.lower().endswith(ext) for ext in [
-                                                '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
-                                                '.zip', '.rar', '.tar', '.gz', '.exe', '.dmg', '.pkg',
-                                                '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp',
-                                                '.mp3', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv'
-                                            ]):
-                                                rejection_reason = "file_download"
-                                            # Same as current page
-                                            elif clean_url == current_url:
-                                                rejection_reason = "self_reference"
-                                            # Admin/system paths
-                                            elif any(pattern in clean_url.lower() for pattern in [
-                                                '/admin', '/wp-admin', '/login', '/register', '/logout',
-                                                '/api/', '/ajax', '/json', '/xml', '/rss', '/feed',
-                                                '/search', '/cart', '/checkout', '/account'
-                                            ]):
-                                                rejection_reason = "system_path"
-                                            
-                                            if rejection_reason:
-                                                rejected_links += 1
-                                                rejection_stats[rejection_reason] = rejection_stats.get(rejection_reason, 0) + 1
-                                            else:
-                                                # Prioritize certain types of pages
-                                                link_text = link.get_text(strip=True).lower()
-                                                if any(keyword in link_text for keyword in [
-                                                    'about', 'service', 'product', 'solution', 'feature',
-                                                    'pricing', 'contact', 'team', 'company', 'help', 'support'
-                                                ]):
-                                                    if clean_url not in priority_urls:
-                                                        priority_urls.append(clean_url)
-                                                        logger.debug(f"⭐ Priority link: {clean_url} ({link_text})")
-                                                else:
-                                                    if clean_url not in pages_to_crawl:
-                                                        pages_to_crawl.append(clean_url)
-                                                
-                                                new_links += 1
-                                                logger.debug(f"➕ Added: {clean_url}")
-                                        
-                                        except Exception as link_error:
-                                            logger.debug(f"❌ Link processing error for {href}: {link_error}")
-                                            continue
-                                    
-                                    logger.info(f"🔗 Link discovery: {new_links} added, {rejected_links} rejected")
-                                    if rejection_stats:
-                                        logger.info(f"📊 Rejection reasons: {rejection_stats}")
-                                    logger.info(f"📋 Queue status: {len(priority_urls)} priority, {len(pages_to_crawl)} regular")
-                                
-                                # Check if we've reached our target
-                                if total_content_size >= max_content_size:
-                                    logger.info(f"🎯 Target size reached! Stopping crawl.")
-                                    break
-                                    
-                            else:
-                                logger.warning(f"❌ HTTP {response.status} for {current_url}")
-                                failed_urls.add(current_url)
-                                
-                    except asyncio.TimeoutError:
-                        logger.warning(f"⏱️ Timeout crawling {current_url}")
-                        failed_urls.add(current_url)
-                    except Exception as page_error:
-                        logger.warning(f"⚠️ Error crawling {current_url}: {str(page_error)}")
-                        failed_urls.add(current_url)
-                
-                # Final crawl summary
-                logger.info(f"")
-                logger.info(f"🏁 CRAWL COMPLETED!")
-                logger.info(f"=" * 50)
-                logger.info(f"📊 URLs discovered: {len(visited_urls) + len(failed_urls)}")
-                logger.info(f"✅ URLs successfully crawled: {len(visited_urls) - len(failed_urls)}")
-                logger.info(f"❌ URLs failed: {len(failed_urls)}")
-                logger.info(f"📄 Pages with content: {len(pages_crawled)}")
-                logger.info(f"💾 Total content size: {total_content_size} bytes ({total_content_size/1024:.1f} KB)")
-                logger.info(f"🎯 Target achievement: {(total_content_size/max_content_size)*100:.1f}% of 100KB")
-                logger.info(f"📋 Remaining queue: {len(pages_to_crawl)} URLs")
-                
-                if pages_crawled:
-                    logger.info(f"📄 Successfully crawled pages:")
-                    for i, page in enumerate(pages_crawled, 1):
-                        logger.info(f"  {i:2d}. {page['url']} ({page['size_bytes']} bytes) - {page['title'][:50]}")
-                
-                # Combine all content
-                if pages_crawled:
-                    all_content_parts = []
-                    for page in pages_crawled:
-                        page_header = f"=== {page['title']} ===\nURL: {page['url']}\nSize: {page['size_bytes']} bytes\n\n"
-                        all_content_parts.append(page_header + page['content'])
-                    
-                    main_content = "\n\n" + "="*80 + "\n\n".join(all_content_parts)
-                    
-                    final_size = len(main_content.encode('utf-8'))
-                    logger.info(f"✅ Final content compiled: {final_size} bytes ({final_size/1024:.1f} KB)")
-                else:
-                    main_content = f"Demo content for {domain}. This demo shows how AI can understand and chat about website content."
-                    logger.warning(f"⚠️ No pages crawled successfully - using fallback content")
-                    
         except Exception as crawl_error:
-            logger.error(f"❌ Critical crawling error: {str(crawl_error)}")
-            import traceback
-            logger.error(f"❌ Full traceback: {traceback.format_exc()}")
+            logger.error(f"Crawling error: {crawl_error}")
             main_content = f"Demo content for {domain}. This demo shows how the AI assistant would work with your website content."
         
         # ✅ Store content under unique client
         item_repo = KnowledgeItemRepository()
-        item_repo.create(db, obj_in={
+        created_item = item_repo.create(db, obj_in={
             "collection_id": demo_collection.collection_id,
             "title": f"Website Content: {domain}",
             "content": main_content,
@@ -456,22 +176,37 @@ async def quick_demo_crawl(demo_id: str, url: str, db: Session):
                 "content_size_bytes": len(main_content.encode('utf-8'))
             }
         })
+
+        # 🔥 CRITICAL: Generate embeddings (what normal crawler does automatically)
+        try:
+            from app.services.llm.llm_factory import LLMFactory
+            
+            llm_service = LLMFactory.create_llm_service(db, demo_client_id)
+            embedding_service = EmbeddingService(llm_service)
+            
+            success = await embedding_service.create_embeddings_for_item(db, created_item.item_id)
+            if success:
+                logger.info(f"✅ Generated embeddings for demo content: {demo_id}")
+            else:
+                logger.error(f"❌ Failed to generate embeddings for demo: {demo_id}")
+                
+        except Exception as embedding_error:
+            logger.error(f"❌ Demo embedding error: {str(embedding_error)}")
         
         # ✅ Update demo session with unique client info
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["knowledge_collection_id"] = demo_collection.collection_id
-            demo_sessions[demo_id]["client_id"] = demo_client_id
+            demo_sessions[demo_id]["client_id"] = demo_client_id  # Store unique client
             demo_sessions[demo_id]["status"] = "ready"
-            logger.info(f"🎉 Demo ready with content: {demo_id} | Client: {demo_client_id}")
+            logger.info(f"🎉 Demo ready with ISOLATED content: {demo_id} | Client: {demo_client_id}")
             
     except Exception as e:
-        logger.error(f"❌ Demo setup error: {str(e)}")
-        import traceback
-        logger.error(f"❌ Full setup traceback: {traceback.format_exc()}")
+        logger.error(f"❌ Demo creation error: {str(e)}")
         if demo_id in demo_sessions:
             demo_sessions[demo_id]["status"] = "failed"
     finally:
-        db.close()            
+        db.close()
+            
 
 @router.delete("/cleanup/{demo_id}")
 async def cleanup_demo_session(demo_id: str, db: Session = Depends(get_db)):
@@ -533,7 +268,7 @@ async def demo_message_stream(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Stream endpoint specifically for demo chat interactions"""
+    """Demo message stream - uses SAME logic as normal widget"""
     try:
         logger.info("🎯 Demo message stream request received")
         
@@ -546,175 +281,88 @@ async def demo_message_stream(
         # Extract demo_id from API key
         demo_id = api_key[5:]  # Remove "demo_" prefix
         
-        # Check if demo session exists
+        # Check if demo session exists and is ready
         if demo_id not in demo_sessions:
             raise HTTPException(status_code=404, detail="Demo session not found")
         
         demo_session = demo_sessions[demo_id]
         
-        # Check if demo session expired
         if datetime.utcnow() > demo_session["expires_at"]:
             raise HTTPException(status_code=410, detail="Demo session expired")
         
-        # Check if demo is ready
         if demo_session["status"] != "ready":
-            async def generate_status_stream():
-                status_response = f"Demo is still being prepared. Current status: {demo_session['status']}. Please wait a moment and try again."
-                
-                chunk_data = {
-                    "type": "chunk",
-                    "content": status_response,
-                    "demo_mode": True
-                }
-                yield f"data: {json.dumps(chunk_data)}\n\n"
-                
-                final_data = {
-                    "type": "complete",
-                    "demo_mode": True
-                }
-                yield f"data: {json.dumps(final_data)}\n\n"
-            
-            return StreamingResponse(
-                generate_status_stream(),
-                media_type="text/plain",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
-                }
-            )
-        
-        # Get request body
-        body = await request.json()
-        message = body.get("message", "")
-        
-        if not message:
-            raise HTTPException(status_code=400, detail="Message is required")
+            raise HTTPException(status_code=400, detail="Demo not ready")
         
         # Check 15-message limit
         if demo_session["message_count"] >= 15:
-            async def generate_limit_stream():
-                limit_response = "Demo message limit reached (15 messages). Please sign up for a full account to continue chatting!"
-                
-                chunk_data = {
-                    "type": "chunk",
-                    "content": limit_response,
-                    "demo_mode": True
-                }
-                yield f"data: {json.dumps(chunk_data)}\n\n"
-                
-                final_data = {
-                    "type": "complete",
-                    "demo_mode": True,
-                    "limit_reached": True
-                }
-                yield f"data: {json.dumps(final_data)}\n\n"
-            
-            return StreamingResponse(
-                generate_limit_stream(),
-                media_type="text/plain",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type, X-API-Key"
-                }
-            )
+            raise HTTPException(status_code=429, detail="Demo message limit reached (15 messages)")
         
         # Increment message count
         demo_sessions[demo_id]["message_count"] += 1
         
-        logger.info(f"🎯 Processing demo message #{demo_session['message_count']}: {message[:50]}...")
+        # Get request body
+        body = await request.json()
+        message = body.get("message", "")
+        session_id = body.get("session_id", f"demo_session_{demo_id}")
         
-        # Generate demo response stream
-        async def generate_demo_response():
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        logger.info(f"📨 Processing demo message #{demo_session['message_count']}: {message[:100]}...")
+        
+        # 🔥 USE EXACT SAME LOGIC AS NORMAL WIDGET
+        # Get client using the same function as widget
+        from app.api.widget.routes import get_widget_client_by_api_key
+        client = get_widget_client_by_api_key(api_key, db)
+        
+        if not client:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+        
+        # Collect user info
+        user_info = {
+            "user_id": body.get("user_id"),
+            "ip_address": request.client.host if request.client else None,
+            "user_agent": request.headers.get("user-agent"),
+            "referrer": request.headers.get("referer"),
+        }
+        
+        async def generate_stream_response():
+            """Generate streaming response using SAME EnhancedChatService as normal widget."""
             try:
-                # Demo collection ID for knowledge search
-                demo_collection_id = demo_session.get("knowledge_collection_id")
+                # Initialize services EXACTLY like normal widget
+                from app.services.llm.llm_factory import LLMFactory
+                from app.services.knowledge.enhanced_search_service import EnhancedSearchService
+                from app.services.chat.enhanced_chat_service import EnhancedChatService
+                from app.services.chat.context_manager import ContextManager
                 
-                # Simple demo responses based on message content
-                knowledge_used = False
-                demo_response = ""
+                llm_service = LLMFactory.create_llm_service(db, client.client_id)
+                search_service = EnhancedSearchService(llm_service)
+                context_manager = ContextManager()
                 
-                # Try knowledge search if we have a collection
-                if demo_collection_id :
-                    try:
-                        # Initialize search service for demo
-                        from app.services.llm.llm_factory import LLMFactory
-                        from app.services.knowledge.enhanced_search_service import EnhancedSearchService
-                        
-                        stored_client_id = demo_session.get("client_id")
-                        if not stored_client_id:
-                            raise Exception("No client ID found in demo session")
-                        
-                        llm_service = LLMFactory.create_llm_service(db, stored_client_id)
-                        search_service = EnhancedSearchService(llm_service)
-                        
-                        search_results = await search_service.hybrid_search(
-                            client_id=stored_client_id,
-                            query_text=message,
-                            limit=3,
-                            collection_id=demo_collection_id
-                        )
-                        
-                        if search_results.get("results"):
-                            knowledge_used = True
-                            # Build response from knowledge
-                            knowledge_content = ""
-                            for result in search_results["results"][:2]:
-                                knowledge_content += f"{result.get('content', '')[:200]}... "
-                            demo_response = f"I found relevant information about your question: {knowledge_content}"
-                            logger.info(f"✅ Demo knowledge search found {len(search_results['results'])} results")
-                        else:
-                            demo_response = f"I'm a demo AI assistant and I couldn't find specific information about '{message}'. "
-                            logger.info("🔄 Demo knowledge search returned no results")                        
-                    except Exception as search_error:
-                        logger.error(f"Demo search error: {search_error}")
-                        demo_response = f"I'm a demo AI assistant and I encountered an error while searching for information about '{message}'. "
-                else:
-                    demo_response = f"I'm a demo AI assistant and I don't have any specific information about '{message}'. "
+                # Create enhanced chat service (SAME as normal widget)
+                chat_service = EnhancedChatService(
+                    db=db,
+                    search_service=search_service,
+                    llm_service=llm_service,
+                    context_manager=context_manager,
+                )
                 
-                # Fallback responses
-                if not demo_response:
-                    message_lower = message.lower()
-                    if any(greeting in message_lower for greeting in ["hi", "hello", "hey"]):
-                        demo_response = f"Hello! I'm the AI assistant for this website demo. I can help answer questions about the content on {demo_session['target_url']}. What would you like to know?"
-                    elif any(question in message_lower for question in ["what", "how", "where", "when", "why"]):
-                        demo_response = f"That's a great question! In the full version, I would search through all the content on {demo_session['target_url']} to provide you with detailed, accurate information. This demo shows how I can understand and respond to your questions about website content."
-                    else:
-                        demo_response = f"I understand you're asking about: '{message}'. In a full implementation, I would analyze all the content from {demo_session['target_url']} to give you specific, relevant answers. This demo showcases the conversational AI capabilities!"
+                # Process message using SAME pipeline as normal widget
+                async for chunk in chat_service.process_message_stream(
+                    client_id=client.client_id,
+                    user_message=message,
+                    session_id=session_id,
+                    user_info=user_info
+                ):
+                    # Add demo metadata to response
+                    if isinstance(chunk, dict):
+                        chunk["demo_mode"] = True
+                        chunk["message_count"] = demo_session["message_count"]
+                        chunk["remaining_messages"] = 15 - demo_session["message_count"]
+                    
+                    yield f"data: {json.dumps(chunk)}\n\n"
                 
-                # Send info chunk
-                info_data = {
-                    "type": "info",
-                    "knowledge_used": knowledge_used,
-                    "demo_mode": True,
-                    "message_count": demo_session["message_count"]
-                }
-                yield f"data: {json.dumps(info_data)}\n\n"
-                
-                # Stream response word by word for realistic effect
-                words = demo_response.split()
-                for i, word in enumerate(words):
-                    chunk_data = {
-                        "type": "chunk",
-                        "content": word + " ",
-                        "demo_mode": True
-                    }
-                    yield f"data: {json.dumps(chunk_data)}\n\n"
-                    await asyncio.sleep(0.05)  # Typing effect
-                
-                # Send completion
-                final_data = {
-                    "type": "complete",
-                    "demo_mode": True,
-                    "message_count": demo_session["message_count"],
-                    "remaining_messages": 15 - demo_session["message_count"]
-                }
-                yield f"data: {json.dumps(final_data)}\n\n"
-                
-                logger.info(f"✅ Demo response completed - {demo_session['message_count']}/15 messages used")
+                logger.info(f"✅ Demo message processed using EnhancedChatService - {demo_session['message_count']}/15 messages used")
                 
             except Exception as stream_error:
                 logger.error(f"❌ Demo stream error: {str(stream_error)}")
@@ -726,7 +374,7 @@ async def demo_message_stream(
                 yield f"data: {json.dumps(error_data)}\n\n"
         
         return StreamingResponse(
-            generate_demo_response(),
+            generate_stream_response(),
             media_type="text/plain",
             headers={
                 "Cache-Control": "no-cache",
@@ -775,3 +423,566 @@ async def auto_cleanup_expired_demos(db: Session = Depends(get_db)):
         "cleaned_demos": cleaned_demos,
         "cleanup_time": current_time.isoformat()
     }       
+    
+# Add this search debug endpoint to backend/app/api/demo/routes.py
+
+@router.post("/debug-search/{demo_id}")
+async def debug_demo_search(demo_id: str, request: Request, db: Session = Depends(get_db)):
+    """🔍 Debug the actual search process for a demo"""
+    try:
+        if demo_id not in demo_sessions:
+            raise HTTPException(status_code=404, detail="Demo session not found")
+        
+        demo_session = demo_sessions[demo_id]
+        stored_client_id = demo_session.get("client_id")
+        collection_id = demo_session.get("knowledge_collection_id")
+        
+        # Get search query
+        body = await request.json()
+        message = body.get("message", "hello")
+        
+        debug_info = {
+            "query": message,
+            "demo_client_id": stored_client_id,
+            "collection_id": collection_id,
+            "search_steps": {}
+        }
+        
+        if not stored_client_id or not collection_id:
+            debug_info["error"] = "Missing client_id or collection_id"
+            return debug_info
+        
+        # Step 1: Test LLM service creation
+        try:
+            from app.services.llm.llm_factory import LLMFactory
+            llm_service = LLMFactory.create_llm_service(db, stored_client_id)
+            debug_info["search_steps"]["llm_service_created"] = True
+        except Exception as e:
+            debug_info["search_steps"]["llm_service_error"] = str(e)
+            return debug_info
+        
+        # Step 2: Test query embedding generation
+        try:
+            query_embedding = await llm_service.generate_embeddings(message)
+            debug_info["search_steps"]["query_embedding"] = {
+                "success": True,
+                "dimensions": len(query_embedding) if query_embedding else 0,
+                "first_few_values": query_embedding[:5] if query_embedding else None
+            }
+        except Exception as e:
+            debug_info["search_steps"]["query_embedding_error"] = str(e)
+            return debug_info
+        
+        # Step 3: Test search service creation
+        try:
+            from app.services.knowledge.enhanced_search_service import EnhancedSearchService
+            search_service = EnhancedSearchService(llm_service)
+            debug_info["search_steps"]["search_service_created"] = True
+        except Exception as e:
+            debug_info["search_steps"]["search_service_error"] = str(e)
+            return debug_info
+        
+        # Step 4: Test hybrid search with different thresholds  
+        debug_info["search_steps"]["search_test"] = {}
+        
+        try:
+            search_results = await search_service.hybrid_search(
+                client_id=stored_client_id,
+                query_text=message,
+                limit=5,
+                collection_id=collection_id
+            )
+            
+            debug_info["search_steps"]["search_test"] = {
+                "results_count": len(search_results.get("results", [])),
+                "metadata": search_results.get("metadata", {}),
+                "results": search_results.get("results", [])[:2] if search_results.get("results") else []
+            }
+        except Exception as e:
+            debug_info["search_steps"]["search_test"] = {
+                "error": str(e)
+            }
+        
+        # Step 5: Test direct vector repository search (bypassing EnhancedSearchService)
+        try:
+            from app.repositories.vector_repository import VectorRepository
+            vector_repo = VectorRepository()
+            
+            direct_results = vector_repo.find_similar_items(
+                db=db,
+                query_vector=query_embedding,
+                client_id=stored_client_id,
+                limit=5,
+                threshold=0.1,  # Very low threshold
+                collection_id=collection_id
+            )
+            
+            debug_info["search_steps"]["direct_vector_search"] = {
+                "results_count": len(direct_results),
+                "results": direct_results[:2] if direct_results else []  # First 2 results
+            }
+        except Exception as e:
+            debug_info["search_steps"]["direct_vector_search_error"] = str(e)
+        
+        return debug_info
+        
+    except Exception as e:
+        logger.error(f"Search debug error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# Add this endpoint to test with very low threshold
+# backend/app/api/demo/routes.py
+
+@router.post("/debug-search-low-threshold/{demo_id}")
+async def debug_demo_search_low_threshold(demo_id: str, request: Request, db: Session = Depends(get_db)):
+    """🔍 Debug search with very low threshold to see if any matches exist"""
+    try:
+        if demo_id not in demo_sessions:
+            raise HTTPException(status_code=404, detail="Demo session not found")
+        
+        demo_session = demo_sessions[demo_id]
+        stored_client_id = demo_session.get("client_id")
+        collection_id = demo_session.get("knowledge_collection_id")
+        
+        body = await request.json()
+        message = body.get("message", "hello")
+        
+        if not stored_client_id or not collection_id:
+            return {"error": "Missing client_id or collection_id"}
+        
+        # Test with different thresholds
+        from app.services.llm.llm_factory import LLMFactory
+        from app.repositories.vector_repository import VectorRepository
+        
+        llm_service = LLMFactory.create_llm_service(db, stored_client_id)
+        query_embedding = await llm_service.generate_embeddings(message)
+        
+        vector_repo = VectorRepository()
+        
+        thresholds = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+        results_by_threshold = {}
+        
+        for threshold in thresholds:
+            try:
+                results = vector_repo.find_similar_items(
+                    db=db,
+                    query_vector=query_embedding,
+                    client_id=stored_client_id,
+                    limit=5,
+                    threshold=threshold,
+                    collection_id=collection_id
+                )
+                
+                results_by_threshold[f"threshold_{threshold}"] = {
+                    "count": len(results),
+                    "results": results[:1] if results else []  # First result only
+                }
+            except Exception as e:
+                results_by_threshold[f"threshold_{threshold}"] = {"error": str(e)}
+        
+        return {
+            "query": message,
+            "query_dimensions": len(query_embedding),
+            "client_id": stored_client_id,
+            "collection_id": collection_id,
+            "threshold_test": results_by_threshold
+        }
+        
+    except Exception as e:
+        return {"error": str(e)}   
+    
+@router.get("/debug/{demo_id}")
+async def debug_demo_session(demo_id: str, db: Session = Depends(get_db)):
+    """🔍 Debug endpoint - Check what's actually stored for a demo"""
+    try:
+        if demo_id not in demo_sessions:
+            raise HTTPException(status_code=404, detail="Demo session not found")
+        
+        demo_session = demo_sessions[demo_id]
+        stored_client_id = demo_session.get("client_id")
+        collection_id = demo_session.get("knowledge_collection_id")
+        
+        debug_info = {
+            "demo_session": demo_session,
+            "stored_client_id": stored_client_id,
+            "collection_id": collection_id,
+            "database_check": {}
+        }
+        
+        if stored_client_id:
+            # Check if client exists in database
+            client_repo = ClientRepository()
+            client = client_repo.get_by_client_id(db, stored_client_id)
+            debug_info["database_check"]["client_exists"] = client is not None
+            if client:
+                debug_info["database_check"]["client_name"] = client.name
+                debug_info["database_check"]["client_email"] = client.email
+        
+        if collection_id:
+            # Check if collection exists
+            collection_repo = KnowledgeCollectionRepository()
+            collection = collection_repo.get_by_collection_id(db, collection_id)
+            debug_info["database_check"]["collection_exists"] = collection is not None
+            
+            if collection:
+                # Check knowledge items
+                item_repo = KnowledgeItemRepository()
+                items = item_repo.get_by_collection_id(db, collection_id)
+                debug_info["database_check"]["knowledge_items_count"] = len(items)
+                debug_info["database_check"]["knowledge_items"] = []
+                
+                for item in items:
+                    item_info = {
+                        "item_id": item.item_id,
+                        "title": item.title,
+                        "content_length": len(item.content),
+                        "content_preview": item.content[:200] + "..." if len(item.content) > 200 else item.content
+                    }
+                    debug_info["database_check"]["knowledge_items"].append(item_info)
+                    
+                    # Check if embeddings exist for this item
+                    embeddings = db.query(VectorEmbedding).filter(
+                        VectorEmbedding.item_id == item.item_id
+                    ).all()
+                    item_info["embeddings_count"] = len(embeddings)
+                    if embeddings:
+                        # Check embedding format
+                        first_embedding = embeddings[0]
+                        try:
+                            import json
+                            parsed_vector = json.loads(first_embedding.vector)
+                            item_info["embedding_dimensions"] = len(parsed_vector) if isinstance(parsed_vector, list) else "invalid"
+                            item_info["embedding_type"] = type(parsed_vector).__name__
+                        except:
+                            item_info["embedding_format"] = "parse_error"
+        
+        return debug_info
+        
+    except Exception as e:
+        logger.error(f"Debug error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) 
+    
+# Add this simple recovery endpoint to backend/app/api/demo/routes.py
+
+@router.post("/recover/{demo_id}")
+async def recover_demo_session(demo_id: str, db: Session = Depends(get_db)):
+    """🔄 Manually recover a demo session from database after server restart"""
+    try:
+        # Construct expected client ID
+        demo_client_id = f"demo_{demo_id[:8]}"
+        
+        # Check if demo client exists in database
+        client_repo = ClientRepository()
+        client = client_repo.get_by_client_id(db, demo_client_id)
+        
+        if not client:
+            raise HTTPException(status_code=404, detail=f"Demo client {demo_client_id} not found in database")
+        
+        # Find collection for this client
+        collection_repo = KnowledgeCollectionRepository()
+        collections = collection_repo.get_by_client_id(db, client.client_id)
+        collection_id = collections[0].collection_id if collections else None
+        
+        if not collection_id:
+            raise HTTPException(status_code=404, detail="No collection found for demo client")
+        
+        # Recover demo session
+        demo_sessions[demo_id] = {
+            "demo_id": demo_id,
+            "api_key": f"demo_{demo_id}",
+            "target_url": "https://recovered-demo.com",
+            "expires_at": datetime.utcnow() + timedelta(hours=24),
+            "status": "ready",
+            "knowledge_collection_id": collection_id,
+            "message_count": 0,
+            "crawl_job_id": None,
+            "client_id": client.client_id
+        }
+        
+        logger.info(f"🔄 Manually recovered demo session: {demo_id}")
+        
+        return {
+            "status": "recovered",
+            "demo_id": demo_id,
+            "client_id": client.client_id,
+            "collection_id": collection_id,
+            "message": "Demo session recovered successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Demo recovery error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Recovery failed: {str(e)}")   
+    
+# Add this debug endpoint to backend/app/api/demo/routes.py
+
+@router.post("/debug-search-detailed/{demo_id}")
+async def debug_search_process_detailed(demo_id: str, request: Request, db: Session = Depends(get_db)):
+    """🔍 Debug the search process step by step to find why embeddings aren't found"""
+    try:
+        if demo_id not in demo_sessions:
+            raise HTTPException(status_code=404, detail="Demo session not found")
+        
+        demo_session = demo_sessions[demo_id]
+        stored_client_id = demo_session.get("client_id")
+        collection_id = demo_session.get("knowledge_collection_id")
+        
+        body = await request.json()
+        message = body.get("message", "hello")
+        
+        debug_info = {
+            "query": message,
+            "demo_client_id": stored_client_id,
+            "collection_id": collection_id,
+            "search_debug": {}
+        }
+        
+        # Step 1: Get query embedding
+        from app.services.llm.llm_factory import LLMFactory
+        llm_service = LLMFactory.create_llm_service(db, stored_client_id)
+        query_embedding = await llm_service.generate_embeddings(message)
+        
+        debug_info["search_debug"]["query_embedding"] = {
+            "dimensions": len(query_embedding),
+            "first_values": query_embedding[:3]
+        }
+        
+        # Step 2: Check what's in the database for this collection
+        embeddings_query = db.query(VectorEmbedding, KnowledgeItem).join(
+            KnowledgeItem, VectorEmbedding.item_id == KnowledgeItem.item_id
+        ).filter(
+            KnowledgeItem.collection_id == collection_id
+        ).all()
+        
+        debug_info["search_debug"]["database_embeddings"] = {
+            "total_found": len(embeddings_query),
+            "embeddings": []
+        }
+        
+        # Step 3: Check each stored embedding
+        for embedding, item in embeddings_query:
+            try:
+                import json
+                stored_vector = json.loads(embedding.vector)
+                
+                embedding_info = {
+                    "item_id": item.item_id,
+                    "title": item.title,
+                    "embedding_id": embedding.embedding_id,
+                    "stored_dimensions": len(stored_vector) if isinstance(stored_vector, list) else "invalid",
+                    "stored_type": type(stored_vector).__name__,
+                    "first_values": stored_vector[:3] if isinstance(stored_vector, list) else None
+                }
+                
+                # Calculate similarity manually
+                if isinstance(stored_vector, list) and len(stored_vector) == len(query_embedding):
+                    import numpy as np
+                    a = np.array(query_embedding)
+                    b = np.array(stored_vector)
+                    
+                    norm_a = np.linalg.norm(a)
+                    norm_b = np.linalg.norm(b)
+                    
+                    if norm_a > 0 and norm_b > 0:
+                        similarity = np.dot(a, b) / (norm_a * norm_b)
+                        embedding_info["manual_similarity"] = float(similarity)
+                    else:
+                        embedding_info["manual_similarity"] = "zero_norm"
+                else:
+                    embedding_info["manual_similarity"] = "dimension_mismatch"
+                
+                debug_info["search_debug"]["database_embeddings"]["embeddings"].append(embedding_info)
+                
+            except Exception as e:
+                debug_info["search_debug"]["database_embeddings"]["embeddings"].append({
+                    "item_id": item.item_id,
+                    "error": str(e)
+                })
+        
+        # Step 4: Test vector repository directly with exact parameters
+        from app.repositories.vector_repository import VectorRepository
+        vector_repo = VectorRepository()
+        
+        # Test the exact query used by the search
+        try:
+            direct_results = vector_repo.find_similar_items(
+                db=db,
+                query_vector=query_embedding,
+                client_id=stored_client_id,
+                limit=5,
+                threshold=0.0,
+                collection_id=collection_id
+            )
+            
+            debug_info["search_debug"]["direct_vector_search"] = {
+                "results_count": len(direct_results),
+                "results": direct_results[:2] if direct_results else []
+            }
+        except Exception as e:
+            debug_info["search_debug"]["direct_vector_search"] = {"error": str(e)}
+        
+        # Step 5: Test collection repository
+        from app.repositories.knowledge_repository import KnowledgeCollectionRepository
+        collection_repo = KnowledgeCollectionRepository()
+        
+        try:
+            # Check if collection belongs to client
+            collection = collection_repo.get_by_collection_id(db, collection_id)
+            debug_info["search_debug"]["collection_check"] = {
+                "collection_exists": collection is not None,
+                "collection_client_id": collection.client_id if collection else None,
+                "client_ids_match": collection.client_id == stored_client_id if collection else False
+            }
+            
+            # Get all collections for this client
+            client_collections = collection_repo.get_by_client_id(db, stored_client_id)
+            debug_info["search_debug"]["client_collections"] = {
+                "count": len(client_collections),
+                "collection_ids": [c.collection_id for c in client_collections]
+            }
+            
+        except Exception as e:
+            debug_info["search_debug"]["collection_check"] = {"error": str(e)}
+        
+        return debug_info
+        
+    except Exception as e:
+        logger.error(f"Detailed search debug error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))        
+    
+# Add this debug endpoint to backend/app/api/demo/routes.py
+
+@router.post("/debug-vector-repository/{demo_id}")
+async def debug_vector_repository_method(demo_id: str, request: Request, db: Session = Depends(get_db)):
+    """🐛 Debug the exact VectorRepository.find_similar_items process"""
+    try:
+        if demo_id not in demo_sessions:
+            raise HTTPException(status_code=404, detail="Demo session not found")
+        
+        demo_session = demo_sessions[demo_id]
+        stored_client_id = demo_session.get("client_id")
+        collection_id = demo_session.get("knowledge_collection_id")
+        
+        body = await request.json()
+        message = body.get("message", "hello")
+        
+        # Get query embedding
+        from app.services.llm.llm_factory import LLMFactory
+        llm_service = LLMFactory.create_llm_service(db, stored_client_id)
+        query_embedding = await llm_service.generate_embeddings(message)
+        
+        debug_info = {
+            "query": message,
+            "client_id": stored_client_id,
+            "collection_id": collection_id,
+            "vector_repo_debug": {}
+        }
+        
+        # Manually execute the EXACT query that find_similar_items does
+        from app.repositories.knowledge_repository import KnowledgeCollectionRepository
+        collection_repo = KnowledgeCollectionRepository()
+        
+        # Step 1: Get collection IDs (same logic as find_similar_items)
+        if collection_id:
+            collection = collection_repo.get_by_collection_id(db, collection_id)
+            if not collection or collection.client_id != stored_client_id:
+                debug_info["vector_repo_debug"]["collection_check"] = "FAILED - collection not found or wrong client"
+                return debug_info
+            collection_ids = [collection_id]
+        else:
+            client_collections = collection_repo.get_by_client_id(db, stored_client_id)
+            collection_ids = [collection.collection_id for collection in client_collections]
+        
+        debug_info["vector_repo_debug"]["collection_ids"] = collection_ids
+        
+        if not collection_ids:
+            debug_info["vector_repo_debug"]["error"] = "No collection IDs found"
+            return debug_info
+        
+        # Step 2: Execute the EXACT database query from find_similar_items
+        query = db.query(
+            VectorEmbedding, KnowledgeItem, KnowledgeCollection
+        ).join(
+            KnowledgeItem, VectorEmbedding.item_id == KnowledgeItem.item_id
+        ).join(
+            KnowledgeCollection, KnowledgeItem.collection_id == KnowledgeCollection.collection_id
+        ).filter(
+            KnowledgeItem.collection_id.in_(collection_ids)
+        )
+        
+        # Execute query and get results
+        query_results = query.all()
+        debug_info["vector_repo_debug"]["query_results_count"] = len(query_results)
+        
+        # Step 3: Process each result exactly like find_similar_items does
+        results = []
+        for embedding, item, collection in query_results:
+            try:
+                # Parse vector exactly like the VectorRepository does
+                item_vector = embedding.vector
+                
+                debug_info["vector_repo_debug"]["raw_vector_type"] = type(item_vector).__name__
+                debug_info["vector_repo_debug"]["raw_vector_value"] = str(item_vector)[:100] + "..."
+                
+                # Check if it's a string (should be)
+                if isinstance(item_vector, str):
+                    try:
+                        import json
+                        parsed_vector = json.loads(item_vector)
+                        debug_info["vector_repo_debug"]["parsed_vector_type"] = type(parsed_vector).__name__
+                        debug_info["vector_repo_debug"]["parsed_vector_length"] = len(parsed_vector) if isinstance(parsed_vector, list) else "not_list"
+                        
+                        if isinstance(parsed_vector, list):
+                            item_vector = parsed_vector
+                        else:
+                            debug_info["vector_repo_debug"]["parse_error"] = f"Parsed to {type(parsed_vector)}, not list"
+                            continue
+                    except Exception as parse_error:
+                        debug_info["vector_repo_debug"]["json_parse_error"] = str(parse_error)
+                        continue
+                
+                # Validate dimensions
+                if not isinstance(item_vector, list) or len(item_vector) != len(query_embedding):
+                    debug_info["vector_repo_debug"]["dimension_check"] = f"FAILED - item:{len(item_vector) if isinstance(item_vector, list) else 'not_list'} vs query:{len(query_embedding)}"
+                    continue
+                
+                # Calculate similarity (same method as VectorRepository)
+                import numpy as np
+                a = np.array(query_embedding)
+                b = np.array(item_vector)
+                
+                norm_a = np.linalg.norm(a)
+                norm_b = np.linalg.norm(b)
+                if norm_a == 0 or norm_b == 0:
+                    similarity = 0
+                else:
+                    similarity = np.dot(a, b) / (norm_a * norm_b)
+                
+                debug_info["vector_repo_debug"]["similarity_calculated"] = float(similarity)
+                
+                # Check threshold (testing with 0.0)
+                threshold = 0.0
+                if similarity >= threshold:
+                    results.append({
+                        "item_id": item.item_id,
+                        "title": item.title,
+                        "similarity": float(similarity)
+                    })
+                    debug_info["vector_repo_debug"]["threshold_passed"] = True
+                else:
+                    debug_info["vector_repo_debug"]["threshold_failed"] = f"similarity {similarity} < threshold {threshold}"
+                
+            except Exception as process_error:
+                debug_info["vector_repo_debug"]["processing_error"] = str(process_error)
+                import traceback
+                debug_info["vector_repo_debug"]["processing_traceback"] = traceback.format_exc()
+        
+        debug_info["vector_repo_debug"]["manual_results_count"] = len(results)
+        debug_info["vector_repo_debug"]["manual_results"] = results
+        
+        return debug_info
+        
+    except Exception as e:
+        logger.error(f"Vector repository debug error: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))     

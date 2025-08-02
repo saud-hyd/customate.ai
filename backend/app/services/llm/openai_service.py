@@ -99,7 +99,7 @@ class OpenAIService(LLMService):
                     },
                     json={
                         "model": "text-embedding-3-small",
-                        "dimensions": 384,  # ← CRITICAL FIX: Match existing database dimensions
+                        "dimensions": 512,  # ← CRITICAL FIX: Match existing database dimensions
                         "input": text[:8000]  # Truncate to avoid token limits
                     },
                     timeout=30.0,
@@ -126,7 +126,7 @@ class OpenAIService(LLMService):
         """Lazy-load the mock service with matching dimensions."""
         if not hasattr(self, '_mock_service') or self._mock_service is None:
             from app.services.llm.mock_embedding_service import MockEmbeddingService
-            self._mock_service = MockEmbeddingService(dimensions=384)  # ← Match database dimensions
+            self._mock_service = MockEmbeddingService(dimensions=512)  # ← Match database dimensions
         return self._mock_service
     
     def _build_system_prompt(
@@ -142,7 +142,7 @@ class OpenAIService(LLMService):
 
 
     CONVERSATION STYLE:
-    - Be friendly and conversational
+    - Be friendly and conversational-but treat this as a continuous conversation without repeating greetings
     - Don't be robotic 
     FOCUS: Try to fix the customer issues efficiently and following with them untill the issue is fixed."""
         

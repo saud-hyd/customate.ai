@@ -4,6 +4,7 @@ import TabbedChatWidget from './components/TabbedChatWidget'; // NEW: Import the
 import useSettings from './hooks/useSettings';
 import useChat from './hooks/useChat';
 import './styles/widget.css';
+import ChatInterface from './components/ChatInterface'; // Import ChatInterface if needed
 
 const WidgetApp = () => {
   // Widget state
@@ -14,7 +15,7 @@ const WidgetApp = () => {
   const containerRef = useRef(null);
   
   // Get settings and chat functionality
-  const { settings, loading: settingsLoading, error: settingsError } = useSettings();
+  const { settings, error: settingsError } = useSettings();
   const { messages, isTyping, sendMessage, resetChat, error: chatError } = useChat(settings);
   
   // Helper function to notify parent window
@@ -123,17 +124,6 @@ const WidgetApp = () => {
     }
   };
   
-  // Show loading state
-  if (settingsLoading) {
-    return (
-      <div className="widget-container">
-        <div className="widget-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
   
   // Show error state
   if (settingsError) {

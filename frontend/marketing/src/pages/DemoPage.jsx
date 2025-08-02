@@ -65,8 +65,7 @@ const DemoPage = () => {
   }, [demoId]);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  const widgetUrl = `${API_URL}/api/widget/app/?api_key=${apiKey}&demo=true`;
-
+  const widgetUrl = `${API_URL}/api/widget/app/?api_key=${apiKey}&demo=true&floating=true`;
   if (demoStatus === 'loading' || demoStatus === 'crawling') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

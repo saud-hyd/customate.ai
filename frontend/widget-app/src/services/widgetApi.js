@@ -57,7 +57,7 @@ class WidgetApi {
     try {
       const isDemo = credentials.apiKey?.startsWith('demo_');
       const endpoint = isDemo
-        ? `${this.baseURL}/api/demo/chat/stream`
+        ? `${this.baseURL}/api/demo/message/stream`
         : `${this.baseURL}/api/widget/message/stream`;
       console.log(`📡 Using ${isDemo ? 'DEMO' : 'REGULAR'} endpoint:`, endpoint);
 
