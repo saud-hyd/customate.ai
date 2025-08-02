@@ -6,7 +6,15 @@ import os
 router = APIRouter()
 
 # Environment detection
-IS_PRODUCTION = os.environ.get("ENVIRONMENT", "development").lower() == "production"
+IS_PRODUCTION = os.environ.get("ENVIRONMENT", "").lower() == "production"
+if not IS_PRODUCTION:
+    IS_PRODUCTION = any([
+        os.environ.get("RENDER", "").lower() == "true",
+        os.environ.get("PRODUCTION", "").lower() == "true",
+        os.environ.get("NODE_ENV", "").lower() == "production",
+        "render.com" in os.environ.get("RENDER_EXTERNAL_URL", ""),
+        "/opt/render" in str(Path.cwd())
+    ])
 BACKEND_URL = "https://customate-ai-1.onrender.com" if IS_PRODUCTION else "http://localhost:8000"
 
 @router.get("/embed.js")
