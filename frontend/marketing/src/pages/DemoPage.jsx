@@ -180,7 +180,13 @@ const DemoPage = () => {
       // Listen for resize messages from widget
       const handleMessage = (event) => {
         // Accept messages from localhost (development)
-        if (event.origin.startsWith('http://localhost:') || 
+        // Accept messages from valid origins
+        const validOrigins = [
+          'http://localhost:8000',
+          'https://customate-ai-1.onrender.com'
+        ];
+        if (validOrigins.some(origin => event.origin === origin) ||
+            event.origin.startsWith('http://localhost:') || 
             event.origin.startsWith('http://127.0.0.1:')) {
           
           const { type, data } = event.data || {};

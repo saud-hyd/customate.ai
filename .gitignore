@@ -45,5 +45,7 @@ storage/*
 backend/app.log.*
 backend/.env
 .env*
+.env/development
+backend/.env.development
 
 backend/app/core/config/settings.py
