@@ -7,7 +7,6 @@ import IntegrationsSection from '../components/sections/IntegrationsSection';
 import HowItWorksSection from '../components/sections/HowItWorksSection';
 import CTASection from '../components/sections/CTASection';
 import ProcurementBanner from '../components/sections/ProcurementBanner';
-import DemoSection from '../components/sections/DemoSection';
 
 const HomePage = () => {
   // Scroll to top when page loads
@@ -18,7 +17,6 @@ const HomePage = () => {
   return (
     <>
       <HeroSection />
-      <DemoSection />
       <HowItWorksSection />
       <FeaturesSection />
       <IntegrationsSection />

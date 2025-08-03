@@ -1,3 +1,5 @@
+// Updated App.js - Add these changes to your existing App.js file:
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
@@ -9,7 +11,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 // Layout components
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
-import CookieConsent from './components/ui/CookieConsent'; // ADD THIS LINE
+import CookieConsent from './components/ui/CookieConsent';
 import './landingpage.css';
 
 // Pages
@@ -20,8 +22,9 @@ import BlogPage from './pages/BlogPage';
 import ContactPage from './pages/ContactPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
+import DemoFormPage from './pages/DemoFormPage'; // ADD THIS LINE
 
-// Individual blog posts - ADD THESE IMPORTS
+// Individual blog posts
 import SavingsBlogPost from './pages/blog/SavingsBlogPost';
 import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
 import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
@@ -29,7 +32,7 @@ import BuildVsBuyBlogPost from './pages/blog/BuildVsBuyBlogPost';
 import ChatWidgetBlogPost from './pages/blog/ChatWidgetBlogPost';
 import CompetitiveAdvantageBlogPost from './pages/blog/CompetitiveAdvantageBlogPost';
 
-// New pages that were missing
+// Other pages
 import AboutPage from './pages/AboutPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
@@ -90,6 +93,7 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/features" element={<FeaturesPage />} />
                     <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/demo" element={<DemoFormPage />} /> {/* ADD THIS LINE */}
                     <Route path="/blog" element={<BlogPage />}/>
                     
                     {/* Blog post routes */}
