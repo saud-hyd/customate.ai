@@ -139,7 +139,14 @@ const WidgetApp = () => {
       </div>
     );
   }
-  
+  const handleClose = () => {
+  // Close the widget and reset chat for next opening
+  if (config?.floating) {
+    setIsExpanded(false);
+    resetChat(); // Clear conversation
+    notifyParent('WIDGET_CLOSED_AND_RESET');
+  }
+};
   // Main render logic
   return (
     <div 
@@ -179,22 +186,32 @@ const WidgetApp = () => {
               }}
             >
               <div className="header-content">
-                <div className="header-info">
-                  <h3 className="header-title">
-                    {settings?.company_name || 'Chat Support'}
-                  </h3>
-                  <p className="header-subtitle">
-                    {isTyping ? 'AI is typing...' : 'We\'re here to help!'}
-                  </p>
-                </div>
+              <div className="header-info">
+                <h3 className="header-title">
+                  {settings?.company_name || 'Chat Support'}
+                </h3>
+                <p className="header-subtitle">
+                  {isTyping ? 'AI is typing...' : 'We\'re here to help!'}
+                </p>
+              </div>
+              <div className="header-controls">
                 <button 
-                  className="close-button"
+                  className="header-control-button"
                   onClick={handleToggle}
+                  title="Minimize chat"
+                  aria-label="Minimize chat widget"
+                >
+                  <MinusIcon />
+                </button>
+                <button 
+                  className="header-control-button"
+                  onClick={handleClose}
                   title="Close chat"
-                  aria-label="Close chat widget"
+                  aria-label="Close chat and start fresh"
                 >
                   <CloseIcon />
                 </button>
+              </div>
               </div>
             </div>
           )}
@@ -222,8 +239,14 @@ const ChatToggleIcon = () => (
   </svg>
 );
 
+const MinusIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+
 const CloseIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
     <line x1="18" y1="6" x2="6" y2="18"/>
     <line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
