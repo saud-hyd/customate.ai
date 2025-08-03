@@ -57,20 +57,20 @@ def authenticate_client(db, email: str, password: str) -> Optional[Client]:
     client = client_repo.get_by_email(db, email)
     
     if not client:
-        logger.warning(f"No client found with email: {email}")
+        logger.warning(f"No client found with email")
         return None
     
     # Check if account is active
     if not client.active:
-        logger.warning(f"Login attempt for inactive account: {email}")
+        logger.warning(f"Login attempt for inactive account")
         return None
     
     # Only check password_hash - NEVER use API key for login
     if client.password_hash and verify_password(password, client.password_hash):
-        logger.info(f"Password authentication successful for: {email}")
+        logger.info(f"Password authentication successful ")
         return client
     
-    logger.warning(f"Password authentication failed for: {email}")
+    logger.warning(f"Password authentication failed")
     return None
 
 def create_magic_link_token(data: Dict[str, Any]) -> str:

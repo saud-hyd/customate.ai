@@ -314,7 +314,7 @@ async def log_requests(request: Request, call_next):
             f"- Status: {response.status_code} "
             f"- Process Time: {process_time:.4f}s "
             f"- Origin: {request.headers.get('origin', 'N/A')} "
-            f"- API Key: {request.headers.get('X-API-Key', 'N/A')[:8] + '...' if request.headers.get('X-API-Key') else 'None'}"
+            f"- API Key: {request.headers.get('X-API-Key', 'N/A')[:4] + '...' if request.headers.get('X-API-Key') else 'None'}"
         )
     else:
         # Standard request logging

@@ -22,7 +22,7 @@ class ClientRepository(BaseRepository[Client, Dict[str, Any], Dict[str, Any]]):
     
     def get_by_email(self, db: Session, email: str) -> Optional[Client]:
         """Get client by email."""
-        logger.debug(f"Looking up client by email: {email}")
+        logger.debug(f"Looking up client by email")
         return db.query(self.model).filter(self.model.email == email).first()
     
     def get_by_api_key(self, db: Session, api_key: str) -> Optional[Client]:
@@ -38,33 +38,33 @@ class ClientRepository(BaseRepository[Client, Dict[str, Any], Dict[str, Any]]):
         try:
             client = self.get_by_client_id(db, client_id)
             if not client:
-                logger.warning(f"No client found with client_id: {client_id}")
+                logger.warning(f"No client found with client_id")
                 return False
             
             # 🛡️ SAFETY CHECK 1: Must be demo client (if field exists)
             if hasattr(client, 'is_demo') and not client.is_demo:
-                logger.error(f"🚨 SAFETY: Refusing to delete regular client: {client_id}")
+                logger.error(f"🚨 SAFETY: Refusing to delete regular client")
                 return False
             
             # 🛡️ SAFETY CHECK 2: Client ID must follow demo pattern
             if not client_id.startswith("demo_client_"):
-                logger.error(f"🚨 SAFETY: Client ID doesn't match demo pattern: {client_id}")
+                logger.error(f"🚨 SAFETY: Client ID doesn't match demo pattern")
                 return False
             
             # 🛡️ SAFETY CHECK 3: Email must be demo email
             if not client.email.endswith("@temp.customate.ai"):
-                logger.error(f"🚨 SAFETY: Email doesn't match demo pattern: {client.email}")
+                logger.error(f"🚨 SAFETY: Email doesn't match demo pattern")
                 return False
             
             # ✅ ALL SAFETY CHECKS PASSED - Safe to delete
             db.delete(client)
             db.commit()
             
-            logger.info(f"✅ SAFELY deleted demo client: {client_id}")
+            logger.info(f"✅ SAFELY deleted demo client")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error deleting client {client_id}: {str(e)}")
+            logger.error(f"❌ Error deleting client ")
             db.rollback()
             return False    
     
@@ -75,7 +75,7 @@ class ClientRepository(BaseRepository[Client, Dict[str, Any], Dict[str, Any]]):
             client = self.get_by_client_id(db, client_id)
             
             if not client:
-                logger.error(f"No client found with ID: {client_id}")
+                logger.error(f"No client found with ID")
                 return False
             
             # Update the API key
@@ -85,7 +85,7 @@ class ClientRepository(BaseRepository[Client, Dict[str, Any], Dict[str, Any]]):
             db.add(client)
             db.commit()
             
-            logger.info(f"Successfully updated API key for client: {client_id}")
+            logger.info(f"Successfully updated API key for client")
             return True
         except Exception as e:
             logger.error(f"Error updating API key: {str(e)}")
@@ -221,7 +221,7 @@ class ClientSettingsRepository(BaseRepository[ClientSettings, Dict[str, Any], Di
                 "session_timeout": 30
             }
         }
-        logger.info(f"Creating default OpenAI settings for client: {client_id}")
+        logger.info(f"Creating default OpenAI settings for client")
         return self.create(db, obj_in=default_settings)
     
     def get_or_create_settings(self, db: Session, client_id: str) -> ClientSettings:
