@@ -49,3 +49,9 @@ backend/.env
 backend/.env.development
 
 backend/app/core/config/settings.py
+
+# Environment files
+.env
+.env.*
+backend/.env*
+frontend/*/.env*
