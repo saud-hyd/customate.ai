@@ -321,7 +321,36 @@ async def root():
         }
     }
 
-
+# Enhanced health check endpoint with detailed component status
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": int(time.time()),
+        "environment": "production" if IS_PRODUCTION else "development",
+        "backend_url": BACKEND_URL,
+        "components": {
+            "api": "up",
+            "database": "up",
+            "widget_routes": "up" if WIDGET_ROUTES_AVAILABLE else "down",
+            "widget_service": "up" if WIDGET_SERVICE_AVAILABLE else "limited",
+            "streaming": "available" if WIDGET_SERVICE_AVAILABLE else "unavailable",
+            "cors": "configured"
+        },
+        "widget_info": {
+            "routes_available": WIDGET_ROUTES_AVAILABLE,
+            "service_available": WIDGET_SERVICE_AVAILABLE,
+            "settings_endpoint": f"{BACKEND_URL}/api/widget/settings",
+            "app_endpoint": f"{BACKEND_URL}/api/widget/app/",
+            "test_endpoint": f"{BACKEND_URL}/api/widget/test",
+            "embed_endpoint": f"{BACKEND_URL}/api/widget/embed"
+        },
+        "debug_endpoints": {
+            "all_routes": f"{BACKEND_URL}/debug/routes",
+            "widget_routes": f"{BACKEND_URL}/debug/widget-routes", 
+            "widget_status": f"{BACKEND_URL}/debug/widget-status"
+        }
+    }
 
 # CORS preflight handler for widget embedding
 @app.options("/api/widget/{path:path}")

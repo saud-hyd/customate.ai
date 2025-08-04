@@ -222,7 +222,7 @@ const SubscriptionPage = () => {
                   </div>
                 </div>
 
-                {/* All Upgrade buttons with same shiny effect */}
+{/* Dynamic plan change buttons */}
                 <div className="mt-auto">
                   <button
                     onClick={() => handlePlanChange(planKey)}
@@ -230,7 +230,9 @@ const SubscriptionPage = () => {
                     className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isCurrentPlan
                         ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                        : 'btn-orange shadow-orange hover:shadow-orange-lg transform hover:scale-105'
+                        : planKey === 'free' 
+                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                          : 'btn-orange shadow-orange hover:shadow-orange-lg transform hover:scale-105'
                     } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isProcessing ? (
@@ -241,7 +243,16 @@ const SubscriptionPage = () => {
                     ) : isCurrentPlan ? (
                       'Current Plan'
                     ) : (
-                      plan.cta
+                      (() => {
+                        const currentPlan = subscription?.plan_type || 'free';
+                        const planHierarchy = { free: 0, basic: 1, standard: 2, professional: 3 };
+                        const currentLevel = planHierarchy[currentPlan] || 0;
+                        const targetLevel = planHierarchy[planKey] || 0;
+                        
+                        if (targetLevel > currentLevel) return 'Upgrade';
+                        if (targetLevel < currentLevel) return 'Downgrade';
+                        return 'Switch';
+                      })()
                     )}
                   </button>
                 </div>
