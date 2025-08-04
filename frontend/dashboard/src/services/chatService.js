@@ -6,6 +6,13 @@ import { API_URL, API_BASE_URL } from '../utils/environment';
 class ChatService {
   constructor() {
     // Get API key from local storage on initialization
+    this.refreshCredentials();
+  }
+
+  /**
+   * Refresh credentials from localStorage
+   */
+  refreshCredentials() {
     this.apiKey = localStorage.getItem('apiKey');
     this.token = localStorage.getItem('token');
   }
@@ -41,18 +48,46 @@ class ChatService {
    * @returns {function} Function to cancel the stream
    */
   // Add this method to the ChatService class to fix the error
-  async getConversations(limit = 100, skip = 0) {
+  async getConversations(page = 1, limit = 25) {
     try {
       const headers = this.getAuthHeaders();
       
       const response = await axios.get(`${API_URL}/chatbot/sessions`, {
         headers,
-        params: { limit, skip }
+        params: { page, limit }
+      });
+      
+      // Backend now returns { data: [...], pagination: {...} }
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      throw error;
+    }
+  }
+
+  async getConversationMessages(sessionId, page = 1, limit = 50) {
+    try {
+      const headers = this.getAuthHeaders();
+      
+      const response = await axios.get(`${API_URL}/chatbot/history/${sessionId}`, {
+        headers,
+        params: { page, limit }
       });
       
       return response.data;
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      console.error('Error fetching conversation messages:', error);
+      throw error;
+    }
+  }  
+
+  // Add this new method for backward compatibility
+  async getConversationsLegacy() {
+    try {
+      const result = await this.getConversations(1, 1000); // Large limit for legacy usage
+      return result.data || result; // Handle both new and old response formats
+    } catch (error) {
+      console.error('Error fetching conversations (legacy):', error);
       throw error;
     }
   }
@@ -76,14 +111,8 @@ class ChatService {
   // Add this function to get messages for a specific conversation
   async getMessages(sessionId, limit = 50) {
     try {
-      const headers = this.getAuthHeaders();
-      
-      const response = await axios.get(`${API_URL}/chatbot/history/${sessionId}`, {
-        headers,
-        params: { limit }
-      });
-      
-      return response.data;
+      const result = await this.getConversationMessages(sessionId, 1, limit);
+      return result.data || result; // Handle both new and old response formats
     } catch (error) {
       console.error('Error fetching messages:', error);
       throw error;

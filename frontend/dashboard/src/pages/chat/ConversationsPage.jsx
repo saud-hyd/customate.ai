@@ -21,25 +21,35 @@ const ConversationsPage = () => {
   const { success, error: showError } = useToast();
   
   // Fetch conversations on mount and when refresh is triggered
+  // Fetch conversations on mount and when refresh/pagination changes
   useEffect(() => {
-    fetchConversations();
+    fetchConversations(1); // Always start from page 1 when itemsPerPage changes
+    setCurrentPage(1);
   }, [refreshTrigger, itemsPerPage]);
 
-  const fetchConversations = async () => {
+  // Fetch conversations when page changes
+  useEffect(() => {
+    fetchConversations(currentPage);
+  }, [currentPage]);
+
+  const fetchConversations = async (page = currentPage) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await chatService.getConversations();
-
-      // Sort conversations by created_at in descending order (newest first)
-      const sortedData = data.sort((a, b) => {
-        const dateA = new Date(a.created_at || '1970-01-01T00:00:00Z');
-        const dateB = new Date(b.created_at || '1970-01-01T00:00:00Z');
-        return dateB.getTime() - dateA.getTime();
-      });
-
-      setConversations(sortedData);
-      setTotalPages(Math.ceil(sortedData.length / itemsPerPage));
+      
+      // Use new paginated API
+      const result = await chatService.getConversations(page, itemsPerPage);
+      
+      // Handle new response format with pagination
+      if (result.data && result.pagination) {
+        setConversations(result.data);
+        setTotalPages(result.pagination.total_pages);
+        setCurrentPage(result.pagination.current_page);
+      } else {
+        // Fallback for old format
+        setConversations(result);
+        setTotalPages(Math.ceil(result.length / itemsPerPage));
+      }
     } catch (err) {
       console.error('Error fetching conversations:', err);
       setError('Failed to load conversation history. Please try again later.');
@@ -61,7 +71,10 @@ const ConversationsPage = () => {
   };
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    if (page !== currentPage && page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // fetchConversations will be called by useEffect
+    }
   };
 
   const handleViewDetail = async (sessionId) => {
@@ -104,7 +117,7 @@ const ConversationsPage = () => {
   const handleItemsPerPageChange = (e) => {
     const newItemsPerPage = parseInt(e.target.value);
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when changing items per page
+    // useEffect will handle the reset to page 1 and refetch
   };
 
   const handleSelectConversation = (sessionId) => {
@@ -166,24 +179,13 @@ const ConversationsPage = () => {
     }
   };
 
-  // Filter conversations based on search query
-  const filteredConversations = searchQuery 
-    ? conversations.filter(c => {
-        const sessionId = c.id || c.session_id || '';
-        const userId = c.user || c.user_id || '';
-        const ipAddress = c.ip_address || '';
-        
-        return sessionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               userId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               ipAddress.toLowerCase().includes(searchQuery.toLowerCase());
-      })
-    : conversations;
+  // Search is now handled by backend pagination, so we use conversations directly
+  const currentConversations = conversations;
+  const filteredConversations = conversations; // For backward compatibility
 
-  // Get current page data (pagination)
+  // Calculate display indices for pagination info
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentConversations = filteredConversations.slice(indexOfFirstItem, indexOfLastItem);
-
   const formatDuration = (seconds) => {
     if (!seconds) return '0m 0s';
     const minutes = Math.floor(seconds / 60);
@@ -207,56 +209,9 @@ const ConversationsPage = () => {
               View and analyze past conversations with your chatbot.
             </p>
           </div>
-          
-          {/* Search form */}
-          <div className="w-full max-w-xs">
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder="Search conversations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
-              />
-              <button
-                type="submit"
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
-              >
-                <MagnifyingGlassIcon className="h-5 w-5" />
-              </button>
-            </form>
-          </div>
-          
-          <div className="flex space-x-3">
-            <button 
-              onClick={handleRefresh}
-              className="btn btn-outline flex items-center"
-              disabled={loading}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-1 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-            <button 
-              onClick={() => window.location.href = '/dashboard/chat'}
-              className="btn btn-primary"
-            >
-              New Conversation
-            </button>
-          </div>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
+          
 
       {/* Bulk actions */}
       {selectedConversations.length > 0 && (
@@ -298,7 +253,6 @@ const ConversationsPage = () => {
                   </div>
                 </th>
                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session ID</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Messages</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
@@ -345,23 +299,7 @@ const ConversationsPage = () => {
                       <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         #{typeof sessionId === 'string' ? sessionId.substring(0, 6).toUpperCase() : ''}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {conversation.user || conversation.user_id ? (
-                          <div>
-                            <div className="font-medium">{conversation.user || conversation.user_id}</div>
-                            {conversation.ip_address && (
-                              <div className="text-xs text-gray-400">IP: {conversation.ip_address}</div>
-                            )}
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="font-medium">Anonymous User</div>
-                            {conversation.ip_address && (
-                              <div className="text-xs text-gray-400">IP: {conversation.ip_address}</div>
-                            )}
-                          </div>
-                        )}
-                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(createdAt).toLocaleString()}
                       </td>
@@ -424,9 +362,9 @@ const ConversationsPage = () => {
             </div>
             
             <div className="flex items-center justify-between md:justify-end w-full md:w-auto">
-              <div className="text-sm text-gray-500 mr-4">
-                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredConversations.length)} of {filteredConversations.length} conversations
-              </div>
+            <div className="text-sm text-gray-500 mr-4">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, conversations.length)} of {totalPages * itemsPerPage} conversations
+            </div>
               {totalPages > 1 && (
                 <div>
                   <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">

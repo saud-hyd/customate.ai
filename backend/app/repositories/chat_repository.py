@@ -1,6 +1,8 @@
 # app/repositories/chat_repository.py
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
+import sqlalchemy.orm
 
 from app.domain.chat.entities import ChatSession, ChatMessage, ConversationContext
 from app.repositories.base_repository import BaseRepository
@@ -15,9 +17,27 @@ class ChatSessionRepository(BaseRepository[ChatSession, dict, dict]):
         """Get chat session by session_id."""
         return db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
     
-    def get_by_client_id(self, db: Session, client_id: str) -> List[ChatSession]:
-        """Get all chat sessions for a client."""
-        return db.query(ChatSession).filter(ChatSession.client_id == client_id).all()
+    def get_by_client_id(self, db: Session, client_id: str, limit: int = 100, skip: int = 0) -> List[ChatSession]:
+        """Get chat sessions for a client with pagination."""
+        return db.query(self.model).filter(
+            self.model.client_id == client_id
+        ).order_by(desc(self.model.created_at)).offset(skip).limit(limit).all()
+        
+    def count_by_client_id(self, db: Session, client_id: str) -> int:
+        """Count total chat sessions for a client."""
+        from sqlalchemy import func
+        return db.query(func.count(self.model.id)).filter(
+            self.model.client_id == client_id
+        ).scalar() or 0
+
+    def get_by_client_id_with_summary(self, db: Session, client_id: str, limit: int = 100, skip: int = 0) -> List[ChatSession]:
+        """Get chat sessions for a client with minimal data (no messages loaded)."""
+        return db.query(self.model).filter(
+            self.model.client_id == client_id
+        ).order_by(desc(self.model.created_at)).offset(skip).limit(limit).options(
+            # Prevent loading the messages relationship
+            sqlalchemy.orm.noload(self.model.messages)
+        ).all()        
     
     def get_by_user_id(self, db: Session, user_id: str) -> List[ChatSession]:
         """Get all chat sessions for a user."""
@@ -40,6 +60,13 @@ class ChatMessageRepository(BaseRepository[ChatMessage, dict, dict]):
             .order_by(ChatMessage.created_at)\
             .limit(limit)\
             .all()
+            
+    def count_by_session_id(self, db: Session, session_id: str) -> int:
+        """Count messages in a session without loading them."""
+        from sqlalchemy import func
+        return db.query(func.count(self.model.id)).filter(
+            self.model.session_id == session_id
+        ).scalar() or 0            
 
 class ConversationContextRepository(BaseRepository[ConversationContext, dict, dict]):
     """Repository for ConversationContext entity."""
