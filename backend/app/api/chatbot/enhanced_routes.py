@@ -182,16 +182,13 @@ async def send_message_stream(
             if session_id_value and final_response:
                 usage_tracker = UsageTracker()
                 
-                # Track the assistant's message (is_user_message=False)
-                usage_tracker.track_chat_message(
-                    db=db,
-                    client_id=current_client.client_id,
-                    session_id=session_id_value,
-                    message_content=final_response,
-                    is_user_message=False,
-                    response_time_ms=int((time.time() - start_time) * 1000),
-                    knowledge_used=knowledge_used
-                )
+                # Increment message count for subscription tracking
+                try:
+                    usage_tracker._increment_message_count(db, current_client.client_id)
+                    logger.debug(f"Incremented message count for client {current_client.client_id}")
+                except Exception as e:
+                    logger.error(f"Error tracking message count: {str(e)}")
+                    # Don't fail the request if tracking fails
                 
                 logger.info(f"Completed OpenAI streaming chat for client {current_client.client_id}")
                 

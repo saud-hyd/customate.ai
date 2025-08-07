@@ -28,8 +28,8 @@ class Channel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    client = relationship("Client", back_populates="channels")
+    # Relationships - removed back_populates to fix circular reference
+    # client = relationship("Client", back_populates="channels")  # Removed to fix circular reference
     conversations = relationship("ChannelConversation", back_populates="channel", cascade="all, delete-orphan")
     
     def __repr__(self):

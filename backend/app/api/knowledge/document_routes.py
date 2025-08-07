@@ -190,8 +190,9 @@ async def upload_document(
                             return
                         
                         # Initialize services within the task scope
+                        from app.services.llm.llm_factory import LLMFactory
                         doc_service = DocumentService()
-                        llm_service = LLMService()  
+                        llm_service = LLMFactory.create_llm_service(async_db, client_id)
                         embedding_service = EmbeddingService(llm_service)
                         document_processor = DocumentProcessor(doc_service, embedding_service)
                         

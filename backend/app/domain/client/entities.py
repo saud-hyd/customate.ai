@@ -30,8 +30,8 @@ class Client(Base):
     # Relationships
     settings = relationship("ClientSettings", back_populates="client", uselist=False, cascade="all, delete-orphan")
     subscriptions = relationship("Subscription", back_populates="client", cascade="all, delete-orphan")
-    integrations = relationship("Integration", back_populates="client", cascade="all, delete-orphan") 
-    channels = relationship("Channel", back_populates="client", lazy="select")
+    # integrations = relationship("Integration", lazy="select", cascade="all, delete-orphan")  # Removed to fix circular reference 
+    # channels = relationship("Channel", back_populates="client", lazy="select")  # Disabled to fix SQLAlchemy issues
     
     def __repr__(self):
         return f"<Client {self.name}>"

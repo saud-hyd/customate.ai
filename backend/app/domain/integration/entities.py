@@ -30,8 +30,7 @@ class Integration(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    client = relationship("Client", back_populates="integrations")
+    # Relationships - removed back_populates to fix circular reference
     syncs = relationship("IntegrationSync", back_populates="integration", cascade="all, delete-orphan")
     
     def __repr__(self):
