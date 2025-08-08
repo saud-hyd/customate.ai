@@ -252,13 +252,21 @@ class EnhancedChatService:
             if session and session.client_id == client_id:
                 return session
         
-        # Create new session
+        # Create new session (with field length limits to prevent database errors)
+        referrer = user_info.get("referrer") if user_info else None
+        if referrer and len(referrer) > 255:
+            referrer = referrer[:252] + "..."  # Truncate to fit 255 char limit
+            
+        user_agent = user_info.get("user_agent") if user_info else None  
+        if user_agent and len(user_agent) > 255:
+            user_agent = user_agent[:252] + "..."  # Truncate to fit 255 char limit
+            
         session_data = {
             "client_id": client_id,
             "user_id": user_info.get("user_id") if user_info else None,
             "ip_address": user_info.get("ip_address") if user_info else None,
-            "user_agent": user_info.get("user_agent") if user_info else None,
-            "referrer": user_info.get("referrer") if user_info else None,
+            "user_agent": user_agent,
+            "referrer": referrer,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }

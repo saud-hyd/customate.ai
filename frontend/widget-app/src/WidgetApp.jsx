@@ -223,6 +223,58 @@ const WidgetApp = () => {
           setConfig(prev => ({ ...prev, ...data.config }));
           break;
           
+        case 'UPDATE_CUSTOMIZATION':
+          // Handle smooth customization updates from test page
+          if (data?.allSettings) {
+            console.log('🎨 Received customization update:', data);
+            // Update the widget's styling in real-time
+            if (containerRef.current) {
+              const container = containerRef.current;
+              const newSettings = data.allSettings;
+              
+              // Apply CSS custom properties immediately
+              if (newSettings.primary_color) {
+                container.style.setProperty('--primary-color', newSettings.primary_color);
+              }
+              if (newSettings.header_color) {
+                container.style.setProperty('--header-color', newSettings.header_color);
+              }
+              if (newSettings.background_color) {
+                container.style.setProperty('--background-color', newSettings.background_color);
+              }
+              if (newSettings.text_color) {
+                container.style.setProperty('--text-color', newSettings.text_color);
+              }
+              if (newSettings.border_radius) {
+                container.style.setProperty('--border-radius', `${newSettings.border_radius}px`);
+              }
+              if (newSettings.font_family) {
+                container.style.setProperty('--font-family', newSettings.font_family);
+                container.style.fontFamily = newSettings.font_family;
+              }
+              
+              // Update header elements directly
+              const headerTitle = container.querySelector('.header-title');
+              if (headerTitle && newSettings.chatbot_name) {
+                headerTitle.textContent = newSettings.chatbot_name;
+              }
+              
+              // Update button and header backgrounds
+              const toggleButton = container.querySelector('.widget-toggle-button');
+              if (toggleButton && newSettings.primary_color) {
+                toggleButton.style.background = `linear-gradient(135deg, ${newSettings.primary_color}, ${newSettings.primary_color}dd)`;
+              }
+              
+              const header = container.querySelector('.widget-header');
+              if (header && newSettings.header_color) {
+                header.style.background = `linear-gradient(135deg, ${newSettings.header_color}, ${newSettings.header_color}dd)`;
+              } else if (header && newSettings.primary_color) {
+                header.style.background = `linear-gradient(135deg, ${newSettings.primary_color}, ${newSettings.primary_color}dd)`;
+              }
+            }
+          }
+          break;
+          
         case 'EXPAND':
           if (config?.floating) {
             setIsExpanded(true);
@@ -358,11 +410,123 @@ const WidgetApp = () => {
     }
   }, [isMobile, isExpanded, config?.floating]);
   
+  // Apply custom CSS variables for theming
+  const applyCustomStyling = () => {
+    if (containerRef.current && settings) {
+      const container = containerRef.current;
+      
+      // Apply CSS custom properties for dynamic theming
+      if (settings.primary_color) {
+        container.style.setProperty('--primary-color', settings.primary_color);
+      }
+      if (settings.header_color) {
+        container.style.setProperty('--header-color', settings.header_color);
+      }
+      if (settings.background_color) {
+        container.style.setProperty('--background-color', settings.background_color);
+      }
+      if (settings.text_color) {
+        container.style.setProperty('--text-color', settings.text_color);
+      }
+      if (settings.border_radius) {
+        container.style.setProperty('--border-radius', `${settings.border_radius}px`);
+      }
+      if (settings.font_family) {
+        container.style.setProperty('--font-family', settings.font_family);
+      }
+    }
+  };
+
+  // Apply immediate styling on mount to prevent flash of default styles
+  useEffect(() => {
+    // Apply styling as soon as the container and config are available
+    if (containerRef.current && config) {
+      const container = containerRef.current;
+      
+      // Get URL parameters for immediate styling (before settings load)
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      const immediateStyles = {
+        primary_color: urlParams.get('primary_color'),
+        header_color: urlParams.get('header_color'), 
+        background_color: urlParams.get('background_color'),
+        text_color: urlParams.get('text_color'),
+        border_radius: urlParams.get('border_radius'),
+        font_family: urlParams.get('font_family'),
+        chatbot_name: urlParams.get('chatbot_name')
+      };
+      
+      // Apply immediate styles to prevent flash
+      if (immediateStyles.primary_color) {
+        container.style.setProperty('--primary-color', immediateStyles.primary_color);
+      }
+      if (immediateStyles.header_color) {
+        container.style.setProperty('--header-color', immediateStyles.header_color);
+      }
+      if (immediateStyles.background_color) {
+        container.style.setProperty('--background-color', immediateStyles.background_color);
+      }
+      if (immediateStyles.text_color) {
+        container.style.setProperty('--text-color', immediateStyles.text_color);
+      }
+      if (immediateStyles.border_radius) {
+        container.style.setProperty('--border-radius', `${immediateStyles.border_radius}px`);
+      }
+      if (immediateStyles.font_family) {
+        container.style.setProperty('--font-family', immediateStyles.font_family);
+        container.style.fontFamily = immediateStyles.font_family;
+      }
+      
+      // Update header title immediately if available
+      setTimeout(() => {
+        const headerTitle = container.querySelector('.header-title');
+        if (headerTitle && immediateStyles.chatbot_name) {
+          headerTitle.textContent = immediateStyles.chatbot_name;
+        }
+        
+        // Apply immediate styling to interactive elements
+        const toggleButton = container.querySelector('.widget-toggle-button');
+        if (toggleButton && immediateStyles.primary_color) {
+          toggleButton.style.background = `linear-gradient(135deg, ${immediateStyles.primary_color}, ${immediateStyles.primary_color}dd)`;
+        }
+        
+        const header = container.querySelector('.widget-header');
+        if (header) {
+          if (immediateStyles.header_color) {
+            header.style.background = `linear-gradient(135deg, ${immediateStyles.header_color}, ${immediateStyles.header_color}dd)`;
+          } else if (immediateStyles.primary_color) {
+            header.style.background = `linear-gradient(135deg, ${immediateStyles.primary_color}, ${immediateStyles.primary_color}dd)`;
+          }
+        }
+      }, 0);
+    }
+  }, [config]); // Run when config is set
+  
+  // Apply styling whenever settings change
+  React.useEffect(() => {
+    applyCustomStyling();
+  }, [settings]);
+  
+  // Get URL params for immediate styling
+  const getImmediateStyles = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      '--primary-color': urlParams.get('primary_color') || settings?.primary_color || '#ea580c',
+      '--header-color': urlParams.get('header_color') || settings?.header_color || urlParams.get('primary_color') || settings?.primary_color || '#ea580c',
+      '--background-color': urlParams.get('background_color') || settings?.background_color || '#ffffff',
+      '--text-color': urlParams.get('text_color') || settings?.text_color || '#1f2937',
+      '--border-radius': `${urlParams.get('border_radius') || settings?.border_radius || '8'}px`,
+      '--font-family': urlParams.get('font_family') || settings?.font_family || 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: urlParams.get('font_family') || settings?.font_family || 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    };
+  };
+
   // Main render logic - mobile-fullscreen class only added on mobile devices
   return (
     <div 
       ref={containerRef}
       className={`widget-container ${config?.floating ? 'floating' : 'inline'} ${isExpanded ? 'expanded' : 'collapsed'}`}
+      style={getImmediateStyles()}
     >
       {config?.testMode && (
         <div className="test-badge">TEST</div>
@@ -377,7 +541,11 @@ const WidgetApp = () => {
             title="Open chat"
             aria-label="Open chat widget"
             style={{
-              background: `linear-gradient(135deg, ${settings?.primary_color || '#ea580c'}, #f97316)`
+              background: (() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const color = urlParams.get('primary_color') || settings?.primary_color || '#ea580c';
+                return `linear-gradient(135deg, ${color}, ${color}dd)`;
+              })()
             }}
           >
             <ChatToggleIcon />
@@ -388,41 +556,53 @@ const WidgetApp = () => {
       {/* Chat interface when expanded (or always for inline) */}
       {(isExpanded || !config?.floating) && (
         <div className="widget-chat-container">
-          {/* Header for floating mode only */}
-          {config?.floating && (
+          {/* Header for floating mode or test mode */}
+          {(config?.floating || config?.testMode) && (
             <div 
               className="widget-header"
               style={{
-                background: `linear-gradient(135deg, ${settings?.primary_color || '#ea580c'}, #f97316)`
+                background: (() => {
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const headerColor = urlParams.get('header_color') || settings?.header_color;
+                  const primaryColor = urlParams.get('primary_color') || settings?.primary_color || '#ea580c';
+                  const color = headerColor || primaryColor;
+                  return `linear-gradient(135deg, ${color}, ${color}dd)`;
+                })()
               }}
             >
               <div className="header-content">
               <div className="header-info">
                 <h3 className="header-title">
-                  {settings?.company_name || 'Chat Support'}
+                  {(() => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    return urlParams.get('chatbot_name') || settings?.company_name || 'Chat Support';
+                  })()}
                 </h3>
                 <p className="header-subtitle">
                   {isTyping ? 'AI is typing...' : 'We\'re here to help!'}
                 </p>
               </div>
-              <div className="header-controls">
-                <button 
-                  className="header-control-button"
-                  onClick={handleToggle}
-                  title="Minimize chat"
-                  aria-label="Minimize chat widget"
-                >
-                  <MinusIcon />
-                </button>
-                <button 
-                  className="header-control-button"
-                  onClick={handleClose}
-                  title="Close chat"
-                  aria-label="Close chat and start fresh"
-                >
-                  <CloseIcon />
-                </button>
-              </div>
+              {/* Controls only for floating widgets, not test mode */}
+              {config?.floating && (
+                <div className="header-controls">
+                  <button 
+                    className="header-control-button"
+                    onClick={handleToggle}
+                    title="Minimize chat"
+                    aria-label="Minimize chat widget"
+                  >
+                    <MinusIcon />
+                  </button>
+                  <button 
+                    className="header-control-button"
+                    onClick={handleClose}
+                    title="Close chat"
+                    aria-label="Close chat and start fresh"
+                  >
+                    <CloseIcon />
+                  </button>
+                </div>
+              )}
               </div>
             </div>
           )}

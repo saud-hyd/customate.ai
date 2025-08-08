@@ -27,24 +27,47 @@ const useSettings = () => {
 
       console.log('🔧 Fetching widget settings (one-time)...');
       const data = await widgetApi.getSettings(credentials);
-      setSettings(data);
+      
+      // Apply customizations from window configuration if available
+      const windowCustomizations = window.REACT_WIDGET_CONFIG?.customizations || {};
+      const mergedSettings = {
+        ...data,
+        ...windowCustomizations
+      };
+      
+      setSettings(mergedSettings);
       setError(null);
-      console.log('✅ Widget settings loaded:', data);
+      console.log('✅ Widget settings loaded:', mergedSettings);
+      if (Object.keys(windowCustomizations).length > 0) {
+        console.log('🎨 Applied customizations:', windowCustomizations);
+      }
     } catch (err) {
       console.error('❌ Error fetching settings:', err);
       setError(err.message);
       
-      // Set default settings on error
-      setSettings({
+      // Get customizations from window config even on error
+      const windowCustomizations = window.REACT_WIDGET_CONFIG?.customizations || {};
+      
+      // Set default settings with customizations applied
+      const defaultSettings = {
         primary_color: '#ea580c',
-        chatbot_name: 'AI Assistant',
+        company_name: 'AI Assistant',
         greeting_message: 'Hello! How can I help you today?',
         widget_position: 'bottom-right',
         show_typing_indicator: true,
         enable_suggestions: true,
         llm_provider: 'deepseek',
         llm_model: 'deepseek-chat'
+      };
+      
+      setSettings({
+        ...defaultSettings,
+        ...windowCustomizations
       });
+      
+      if (Object.keys(windowCustomizations).length > 0) {
+        console.log('🎨 Applied customizations to defaults:', windowCustomizations);
+      }
     } finally {
       setLoading(false);
     }

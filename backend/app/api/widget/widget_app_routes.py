@@ -142,7 +142,16 @@ async def serve_widget_app(
     api_key: Optional[str] = Query(None),
     test: Optional[str] = Query(None),
     inline: Optional[str] = Query(None),
-    client_id: Optional[str] = Query(None)
+    client_id: Optional[str] = Query(None),
+    # Customization parameters
+    primary_color: Optional[str] = Query(None),
+    greeting_message: Optional[str] = Query(None),
+    chatbot_name: Optional[str] = Query(None),
+    header_color: Optional[str] = Query(None),
+    background_color: Optional[str] = Query(None),
+    text_color: Optional[str] = Query(None),
+    border_radius: Optional[str] = Query(None),
+    font_family: Optional[str] = Query(None)
 ):
     """Serve the main React widget app HTML file."""
     try:
@@ -209,6 +218,25 @@ async def serve_widget_app(
         with open(index_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
         
+        # Prepare customization settings
+        customizations = {}
+        if primary_color:
+            customizations['primary_color'] = primary_color
+        if greeting_message:
+            customizations['greeting_message'] = greeting_message
+        if chatbot_name:
+            customizations['company_name'] = chatbot_name  # Map to existing field
+        if header_color:
+            customizations['header_color'] = header_color
+        if background_color:
+            customizations['background_color'] = background_color
+        if text_color:
+            customizations['text_color'] = text_color
+        if border_radius:
+            customizations['border_radius'] = border_radius
+        if font_family:
+            customizations['font_family'] = font_family
+
         # Inject configuration
         config_script = f"""
         <script>
@@ -219,7 +247,8 @@ async def serve_widget_app(
                 clientId: '{client_id or ''}',
                 backendUrl: '{BACKEND_URL}',
                 environment: '{"production" if IS_PRODUCTION else "development"}',
-                timestamp: {int(__import__('time').time() * 1000)}
+                timestamp: {int(__import__('time').time() * 1000)},
+                customizations: {json.dumps(customizations)}
             }};
             console.log('⚛️ Widget Config:', window.REACT_WIDGET_CONFIG);
         </script>
