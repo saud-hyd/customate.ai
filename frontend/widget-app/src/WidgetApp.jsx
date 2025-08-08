@@ -35,25 +35,37 @@ const WidgetApp = () => {
     }
   };
   
-  // Mobile detection utility
+  // Mobile detection utility - optimized for device toolbar testing
   const detectMobile = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+    const screenHeight = window.innerHeight || document.documentElement.clientHeight;
     
-    // Check for mobile devices based on user agent and screen size
-    const isMobileDevice = (
+    // Primary detection: Screen width (for device toolbar testing)
+    const isSmallScreen = screenWidth <= 768;
+    
+    // Secondary detection: User agent for actual mobile devices
+    const isMobileUserAgent = (
       /android/i.test(userAgent) ||
       /iPad|iPhone|iPod/.test(userAgent) ||
-      (screenWidth <= 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0))
+      /Mobile/i.test(userAgent)
     );
     
+    // Touch support detection
+    const hasTouchSupport = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    
+    // Mobile if: small screen OR (mobile user agent AND touch support)
+    const isMobileDevice = isSmallScreen || (isMobileUserAgent && hasTouchSupport);
+    
     // Debug logging
-    console.log('Mobile Detection:', {
-      userAgent: userAgent,
+    console.log('📱 Mobile Detection:', {
       screenWidth: screenWidth,
-      isMobileDevice: isMobileDevice,
-      touchSupport: 'ontouchstart' in window,
-      maxTouchPoints: navigator.maxTouchPoints
+      screenHeight: screenHeight,
+      isSmallScreen: isSmallScreen,
+      isMobileUserAgent: isMobileUserAgent,
+      hasTouchSupport: hasTouchSupport,
+      finalResult: isMobileDevice,
+      userAgent: userAgent.slice(0, 50) + '...'
     });
     
     return isMobileDevice;
@@ -85,18 +97,50 @@ const WidgetApp = () => {
     }
   }, []);
   
-  // Handle window resize for responsive mobile detection
+  // Handle window resize for responsive mobile detection and fullscreen updates
   useEffect(() => {
     const handleResize = () => {
       const mobileDetected = detectMobile();
       if (mobileDetected !== isMobile) {
+        console.log('Mobile detection changed:', { from: isMobile, to: mobileDetected });
         setIsMobile(mobileDetected);
+        
+        // If widget is expanded and mobile detection changes, update fullscreen state
+        if (config?.floating && isExpanded && containerRef.current) {
+          if (mobileDetected) {
+            // Switched to mobile - enable fullscreen
+            containerRef.current.classList.add('mobile-fullscreen');
+            notifyParent('MOBILE_FULLSCREEN_ENABLE', { 
+              isMobile: true,
+              fullscreen: true 
+            });
+            console.log('🔄 Resize: Mobile fullscreen enabled');
+          } else {
+            // Switched to desktop - disable fullscreen
+            containerRef.current.classList.remove('mobile-fullscreen');
+            notifyParent('MOBILE_FULLSCREEN_DISABLE', { 
+              isMobile: false,
+              fullscreen: false 
+            });
+            console.log('🔄 Resize: Mobile fullscreen disabled');
+          }
+        }
       }
     };
     
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isMobile]);
+    // Debounce resize events to avoid excessive calls
+    let resizeTimeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(handleResize, 100);
+    };
+    
+    window.addEventListener('resize', debouncedResize);
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, [isMobile, config, isExpanded]);
   
   // Handle PostMessage communication with parent
   useEffect(() => {

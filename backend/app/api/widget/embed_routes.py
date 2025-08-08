@@ -64,7 +64,7 @@ async def serve_embed_script(api_key: str = Query(...)):
         
         document.body.appendChild(iframe);
         
-        // FIXED: Handle both WIDGET_RESIZE and WIDGET_STATUS messages
+        // FIXED: Handle both WIDGET_RESIZE and WIDGET_STATUS messages + MOBILE FULLSCREEN
         window.addEventListener('message', function(event) {{
             // DEBUG: Log all received messages
             console.log('🔍 Parent received message:', event.data, 'from:', event.origin);
@@ -81,19 +81,75 @@ async def serve_embed_script(api_key: str = Query(...)):
             
             const {{ type, data }} = event.data || {{}};
             
+            // MOBILE FULLSCREEN: Enable mobile fullscreen mode
+            if (type === 'MOBILE_FULLSCREEN_ENABLE') {{
+                console.log('📱 MOBILE FULLSCREEN ENABLED');
+                iframe.style.position = 'fixed';
+                iframe.style.top = '0px';
+                iframe.style.left = '0px';
+                iframe.style.bottom = 'auto';
+                iframe.style.right = 'auto';
+                iframe.style.width = '100vw';
+                iframe.style.height = '100vh';
+                iframe.style.borderRadius = '0px';
+                iframe.style.zIndex = '2147483647';
+                iframe.style.transition = 'all 0.3s ease';
+                console.log('✅ IFRAME FULLSCREEN ENABLED');
+                return;
+            }}
+            
+            // MOBILE FULLSCREEN: Disable mobile fullscreen mode
+            if (type === 'MOBILE_FULLSCREEN_DISABLE') {{
+                console.log('📱 MOBILE FULLSCREEN DISABLED');
+                iframe.style.position = 'fixed';
+                iframe.style.bottom = '20px';
+                iframe.style.right = '20px';
+                iframe.style.top = 'auto';
+                iframe.style.left = 'auto';
+                iframe.style.width = '80px';
+                iframe.style.height = '80px';
+                iframe.style.borderRadius = '50%';
+                iframe.style.zIndex = '2147483647';
+                iframe.style.transition = 'all 0.3s ease';
+                console.log('✅ IFRAME FULLSCREEN DISABLED');
+                return;
+            }}
+            
             // CRITICAL FIX: Handle WIDGET_STATUS messages (current widget sends these)
             if (type === 'WIDGET_STATUS' || type === 'WIDGET_RESIZE') {{
                 console.log('🎯 Processing resize message:', type, data);
                 
-                // Extract expanded state
+                // Extract expanded state and mobile info
                 const expanded = data.expanded === true;
-                const size = expanded ? {{width: 400, height: 620}} : {{width: 80, height: 80}};
+                const isMobile = data.isMobile === true;
+                const fullscreen = data.fullscreen === true;
                 
-                iframe.style.width = size.width + 'px';
-                iframe.style.height = size.height + 'px';
-                iframe.style.borderRadius = expanded ? '12px' : '50%';
-                
-                console.log('✅ IFRAME RESIZED:', expanded ? 'EXPANDED' : 'COLLAPSED', size);
+                // If mobile and fullscreen, use fullscreen dimensions
+                if (isMobile && fullscreen) {{
+                    iframe.style.position = 'fixed';
+                    iframe.style.top = '0px';
+                    iframe.style.left = '0px';
+                    iframe.style.bottom = 'auto';
+                    iframe.style.right = 'auto';
+                    iframe.style.width = '100vw';
+                    iframe.style.height = '100vh';
+                    iframe.style.borderRadius = '0px';
+                    iframe.style.transition = 'all 0.3s ease';
+                    console.log('✅ IFRAME MOBILE FULLSCREEN via STATUS');
+                }} else {{
+                    // Standard desktop/collapsed behavior
+                    const size = expanded ? {{width: 400, height: 620}} : {{width: 80, height: 80}};
+                    iframe.style.position = 'fixed';
+                    iframe.style.bottom = '20px';
+                    iframe.style.right = '20px';
+                    iframe.style.top = 'auto';
+                    iframe.style.left = 'auto';
+                    iframe.style.width = size.width + 'px';
+                    iframe.style.height = size.height + 'px';
+                    iframe.style.borderRadius = expanded ? '12px' : '50%';
+                    iframe.style.transition = 'all 0.3s ease';
+                    console.log('✅ IFRAME RESIZED:', expanded ? 'EXPANDED' : 'COLLAPSED', size);
+                }}
             }}
         }});
         

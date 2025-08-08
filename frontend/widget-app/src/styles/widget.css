@@ -1019,19 +1019,25 @@
 
 /* Mobile optimizations with fullscreen behavior */
 @media (max-width: 768px) {
-  /* Mobile fullscreen: Widget container takes full viewport */
+  /* Mobile fullscreen: Widget container takes full viewport with safe areas */
   .widget-container.floating.mobile-fullscreen {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
+    /* Account for mobile browser UI and safe areas */
+    height: 100dvh !important; /* Dynamic viewport height - newer browsers */
     z-index: 999999 !important;
     margin: 0 !important;
     padding: 0 !important;
+    /* Ensure proper viewport sizing */
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
   }
   
-  /* Mobile fullscreen: Chat container fills entire screen */
+  /* Mobile fullscreen: Chat container fills entire screen perfectly */
   .widget-container.floating.mobile-fullscreen .widget-chat-container {
     width: 100% !important;
     height: 100% !important;
@@ -1039,31 +1045,91 @@
     box-shadow: none !important;
     max-width: none !important;
     max-height: none !important;
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
-  /* Mobile fullscreen: Tabbed widget fills screen */
+  /* Mobile fullscreen: Tabbed widget fills screen with proper flex layout */
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget {
     height: 100% !important;
+    min-height: 100% !important;
     border-radius: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
-  /* Mobile fullscreen: Header styling */
+  /* Mobile fullscreen: Header with proper mobile spacing and safe areas */
   .widget-container.floating.mobile-fullscreen .widget-header {
-    padding: 16px 20px;
-    min-height: 70px;
-    border-radius: 0;
+    padding: max(16px, env(safe-area-inset-top)) 20px 16px 20px !important;
+    min-height: calc(70px + env(safe-area-inset-top)) !important;
+    border-radius: 0 !important;
+    flex-shrink: 0 !important;
+    /* Ensure header doesn't get cut off on notched phones */
+    padding-top: max(16px, env(safe-area-inset-top, 16px)) !important;
   }
   
-  /* Mobile fullscreen: Messages container optimization */
+  /* Mobile fullscreen: Messages container optimization for all screen sizes */
   .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
-    padding: 16px 12px 12px 12px !important;
-    gap: 8px;
+    flex: 1 !important;
+    padding: 16px 16px 12px 16px !important;
+    gap: 12px !important;
+    /* Ensure messages use full available height */
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    /* Account for mobile keyboard and safe areas */
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
   }
   
-  /* Mobile fullscreen: Input wrapper optimization */
+  /* Mobile fullscreen: Input wrapper with safe area optimization */
   .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
   .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
-    padding: 12px !important;
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom)) 16px !important;
+    flex-shrink: 0 !important;
+    /* Account for mobile keyboard space */
+    min-height: calc(60px + env(safe-area-inset-bottom)) !important;
+  }
+  
+  /* Mobile fullscreen: Enhanced input area for better touch targets */
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
+    padding: 12px 12px 12px 16px !important;
+    gap: 12px !important;
+    border-radius: 28px !important;
+    min-height: 48px !important; /* Better touch target */
+  }
+  
+  /* Mobile fullscreen: Larger send button for better mobile interaction */
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .send-button-tabbed {
+    width: 44px !important;
+    height: 44px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Mobile fullscreen: Better textarea sizing for mobile */
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .message-input-textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    line-height: 1.4 !important;
+    min-height: 20px !important;
+    max-height: 120px !important;
+  }
+  
+  /* Mobile fullscreen: Message bubbles optimization */
+  .widget-container.floating.mobile-fullscreen .message-bubble {
+    max-width: 90% !important; /* Use more screen width on mobile */
+    padding: 12px 16px !important; /* Better touch-friendly padding */
+    font-size: 16px !important; /* Readable font size */
+    line-height: 1.4 !important;
+  }
+  
+  /* Mobile fullscreen: Header controls optimization */
+  .widget-container.floating.mobile-fullscreen .header-controls {
+    gap: 12px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .header-control-button {
+    padding: 8px !important; /* Better touch targets */
+    min-width: 44px !important;
+    min-height: 44px !important;
   }
   
   /* Regular mobile styles for non-fullscreen */
@@ -1113,11 +1179,39 @@
   }
 }
 
+/* Small mobile screens optimization */
 @media (max-width: 480px) {
-  /* Mobile fullscreen: Enhanced input styling */
+  /* Mobile fullscreen: Compact header for small screens */
+  .widget-container.floating.mobile-fullscreen .widget-header {
+    padding: max(12px, env(safe-area-inset-top)) 16px 12px 16px !important;
+    min-height: calc(64px + env(safe-area-inset-top)) !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .header-title {
+    font-size: 15px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .header-subtitle {
+    font-size: 11px !important;
+  }
+  
+  /* Mobile fullscreen: Optimized messages for small screens */
+  .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
+    padding: 12px 14px 10px 14px !important;
+    gap: 10px !important;
+  }
+  
+  /* Mobile fullscreen: Compact input for small screens */
+  .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
+  .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
+    padding: 12px 14px max(12px, env(safe-area-inset-bottom)) 14px !important;
+  }
+  
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
-    padding: 8px 8px 8px 14px !important;
-    gap: 8px !important;
+    padding: 10px 10px 10px 14px !important;
+    gap: 10px !important;
+    border-radius: 24px !important;
+    min-height: 44px !important;
   }
   
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .send-button-tabbed {
@@ -1134,16 +1228,18 @@
     font-size: 16px !important; /* Prevents zoom on iOS */
   }
   
-  .widget-container.floating.mobile-fullscreen .widget-header {
-    padding: 16px 20px;
+  /* Mobile fullscreen: Smaller message bubbles for readability */
+  .widget-container.floating.mobile-fullscreen .message-bubble {
+    max-width: 85% !important;
+    padding: 10px 14px !important;
+    font-size: 15px !important;
   }
   
-  .widget-container.floating.mobile-fullscreen .header-title {
-    font-size: 16px;
-  }
-  
-  .widget-container.floating.mobile-fullscreen .header-subtitle {
-    font-size: 12px;
+  /* Mobile fullscreen: Compact header controls */
+  .widget-container.floating.mobile-fullscreen .header-control-button {
+    padding: 6px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
   }
   
   /* Regular mobile styles for non-fullscreen */
@@ -1176,6 +1272,105 @@
   
   .widget-container:not(.mobile-fullscreen) .header-subtitle {
     font-size: 11px;
+  }
+}
+
+/* Large mobile screens and small tablets optimization */
+@media (min-width: 481px) and (max-width: 768px) {
+  /* Mobile fullscreen: Enhanced spacing for larger mobile screens */
+  .widget-container.floating.mobile-fullscreen .widget-header {
+    padding: max(18px, env(safe-area-inset-top)) 24px 18px 24px !important;
+    min-height: calc(76px + env(safe-area-inset-top)) !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .header-title {
+    font-size: 17px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .header-subtitle {
+    font-size: 13px !important;
+  }
+  
+  /* Mobile fullscreen: Generous spacing for messages */
+  .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
+    padding: 20px 18px 16px 18px !important;
+    gap: 14px !important;
+  }
+  
+  /* Mobile fullscreen: Comfortable input area */
+  .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
+  .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
+    padding: 18px 18px max(18px, env(safe-area-inset-bottom)) 18px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
+    padding: 14px 14px 14px 18px !important;
+    gap: 14px !important;
+    border-radius: 30px !important;
+    min-height: 52px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .send-button-tabbed {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .send-button-tabbed svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  /* Mobile fullscreen: Better message readability on larger screens */
+  .widget-container.floating.mobile-fullscreen .message-bubble {
+    max-width: 88% !important;
+    padding: 14px 18px !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Mobile fullscreen: Enhanced header controls */
+  .widget-container.floating.mobile-fullscreen .header-control-button {
+    padding: 10px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+  }
+}
+
+/* Very large mobile screens / phablets optimization */
+@media (min-width: 600px) and (max-width: 768px) {
+  /* Mobile fullscreen: Maximum content utilization for large screens */
+  .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
+    padding: 24px 20px 20px 20px !important;
+    gap: 16px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .message-bubble {
+    max-width: 92% !important; /* Use even more space on very large mobile screens */
+    font-size: 17px !important;
+    line-height: 1.5 !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
+  .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
+    padding: 20px !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
+    min-height: 56px !important;
+    padding: 16px 16px 16px 20px !important;
+    gap: 16px !important;
+    border-radius: 32px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .send-button-tabbed {
+    width: 52px !important;
+    height: 52px !important;
+  }
+  
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .send-button-tabbed svg {
+    width: 22px !important;
+    height: 22px !important;
   }
 }
 
