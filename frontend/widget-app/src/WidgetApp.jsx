@@ -35,32 +35,66 @@ const WidgetApp = () => {
     }
   };
   
-  // Mobile detection utility - optimized for device toolbar testing
+  // Mobile detection utility - desktop-first with precise mobile detection
   const detectMobile = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const screenWidth = window.innerWidth || document.documentElement.clientWidth;
     const screenHeight = window.innerHeight || document.documentElement.clientHeight;
     
-    // Primary detection: Screen width (for device toolbar testing)
+    // Check if this is definitely a desktop environment
+    const isDesktopUserAgent = (
+      /Windows NT|Macintosh|Linux x86_64|X11.*Linux|CrOS/i.test(userAgent) &&
+      !/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(userAgent)
+    );
+    
+    // If definitely desktop UA with large screen, never treat as mobile
+    if (isDesktopUserAgent && screenWidth > 1024) {
+      console.log('📱 Mobile Detection: Desktop detected (large screen + desktop UA)', {
+        screenWidth: screenWidth,
+        isDesktopUserAgent: isDesktopUserAgent,
+        finalResult: false
+      });
+      return false;
+    }
+    
+    // Screen width threshold - but be more conservative
     const isSmallScreen = screenWidth <= 768;
     
-    // Secondary detection: User agent for actual mobile devices
+    // Mobile user agent detection
     const isMobileUserAgent = (
       /android/i.test(userAgent) ||
       /iPad|iPhone|iPod/.test(userAgent) ||
-      /Mobile/i.test(userAgent)
+      /Mobile|Opera Mini|Opera Mobi|BlackBerry|Windows Phone/i.test(userAgent)
     );
     
-    // Touch support detection
+    // Touch support - but desktop can have touch too
     const hasTouchSupport = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
     
-    // Mobile if: small screen OR (mobile user agent AND touch support)
-    const isMobileDevice = isSmallScreen || (isMobileUserAgent && hasTouchSupport);
+    // More precise mobile detection:
+    // 1. If mobile user agent - likely mobile regardless of screen size
+    // 2. If small screen AND touch support - likely mobile (device toolbar testing)
+    // 3. If small screen but no mobile UA and no touch - likely desktop browser resized
+    let isMobileDevice = false;
+    
+    if (isMobileUserAgent) {
+      isMobileDevice = true; // True mobile device
+    } else if (isSmallScreen && hasTouchSupport) {
+      isMobileDevice = true; // Desktop browser in mobile mode with touch
+    } else if (isSmallScreen && !hasTouchSupport) {
+      // Small screen but no mobile UA and no touch - could be desktop browser resized
+      // Check if this looks like device toolbar testing (common mobile widths)
+      const commonMobileWidths = [320, 375, 414, 360, 390, 428, 768];
+      const isCommonMobileWidth = commonMobileWidths.some(width => 
+        Math.abs(screenWidth - width) <= 2
+      );
+      isMobileDevice = isCommonMobileWidth; // Only if it matches common mobile widths
+    }
     
     // Debug logging
     console.log('📱 Mobile Detection:', {
       screenWidth: screenWidth,
       screenHeight: screenHeight,
+      isDesktopUserAgent: isDesktopUserAgent,
       isSmallScreen: isSmallScreen,
       isMobileUserAgent: isMobileUserAgent,
       hasTouchSupport: hasTouchSupport,
@@ -99,11 +133,41 @@ const WidgetApp = () => {
   
   // Handle window resize for responsive mobile detection and fullscreen updates
   useEffect(() => {
+    let lastDetectionTime = 0;
+    let stableDetectionCount = 0;
+    let lastStableResult = isMobile;
+    
     const handleResize = () => {
+      const now = Date.now();
       const mobileDetected = detectMobile();
-      if (mobileDetected !== isMobile) {
-        console.log('Mobile detection changed:', { from: isMobile, to: mobileDetected });
+      
+      // Prevent rapid oscillation by requiring stable detection
+      if (mobileDetected === lastStableResult) {
+        stableDetectionCount++;
+      } else {
+        stableDetectionCount = 0;
+        lastStableResult = mobileDetected;
+      }
+      
+      // Only change state if we have stable detection for at least 2 checks
+      // or if enough time has passed (500ms) to prevent oscillation
+      const timeSinceLastChange = now - lastDetectionTime;
+      const shouldUpdate = (
+        mobileDetected !== isMobile && 
+        (stableDetectionCount >= 1 || timeSinceLastChange > 500)
+      );
+      
+      if (shouldUpdate) {
+        console.log('Mobile detection changed:', { 
+          from: isMobile, 
+          to: mobileDetected,
+          stableCount: stableDetectionCount,
+          timeSinceLastChange: timeSinceLastChange
+        });
+        
         setIsMobile(mobileDetected);
+        lastDetectionTime = now;
+        stableDetectionCount = 0;
         
         // If widget is expanded and mobile detection changes, update fullscreen state
         if (config?.floating && isExpanded && containerRef.current) {
@@ -125,6 +189,13 @@ const WidgetApp = () => {
             console.log('🔄 Resize: Mobile fullscreen disabled');
           }
         }
+      } else if (mobileDetected !== isMobile) {
+        console.log('📱 Mobile detection change ignored (stability check):', {
+          detected: mobileDetected,
+          current: isMobile,
+          stableCount: stableDetectionCount,
+          timeSinceLastChange: timeSinceLastChange
+        });
       }
     };
     
@@ -132,7 +203,7 @@ const WidgetApp = () => {
     let resizeTimeout;
     const debouncedResize = () => {
       clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(handleResize, 100);
+      resizeTimeout = setTimeout(handleResize, 150); // Slightly longer debounce
     };
     
     window.addEventListener('resize', debouncedResize);
