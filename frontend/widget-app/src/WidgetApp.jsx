@@ -10,6 +10,7 @@ const WidgetApp = () => {
   // Widget state
   const [isExpanded, setIsExpanded] = useState(false);
   const [config, setConfig] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Refs
   const containerRef = useRef(null);
@@ -34,8 +35,27 @@ const WidgetApp = () => {
     }
   };
   
-  // Initialize widget configuration
+  // Mobile detection utility
+  const detectMobile = () => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+    
+    // Check for mobile devices based on user agent and screen size
+    const isMobileDevice = (
+      /android/i.test(userAgent) ||
+      /iPad|iPhone|iPod/.test(userAgent) ||
+      (screenWidth <= 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0))
+    );
+    
+    return isMobileDevice;
+  };
+  
+  // Initialize widget configuration and mobile detection
   useEffect(() => {
+    // Detect mobile device
+    const mobileDetected = detectMobile();
+    setIsMobile(mobileDetected);
+    
     // Get config from URL params or window object
     const urlParams = new URLSearchParams(window.location.search);
     const floating = urlParams.get('floating') === 'true';
@@ -55,6 +75,19 @@ const WidgetApp = () => {
       setIsExpanded(true); // Inline widgets are always expanded
     }
   }, []);
+  
+  // Handle window resize for responsive mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      const mobileDetected = detectMobile();
+      if (mobileDetected !== isMobile) {
+        setIsMobile(mobileDetected);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile]);
   
   // Handle PostMessage communication with parent
   useEffect(() => {
@@ -115,11 +148,26 @@ const WidgetApp = () => {
     }
   }, [isExpanded, config]);
   
-  // Toggle handler
+  // Toggle handler - mobile fullscreen only affects mobile devices
   const handleToggle = () => {
     if (config?.floating) {
       const newExpanded = !isExpanded;
       setIsExpanded(newExpanded);
+      
+      // ONLY apply mobile fullscreen changes on actual mobile devices
+      if (isMobile && containerRef.current) {
+        if (newExpanded) {
+          containerRef.current.classList.add('mobile-fullscreen');
+          // Prevent body scroll when widget is open on mobile
+          document.body.style.overflow = 'hidden';
+        } else {
+          containerRef.current.classList.remove('mobile-fullscreen');
+          // Restore body scroll when widget is closed on mobile
+          document.body.style.overflow = '';
+        }
+      }
+      
+      // Desktop behavior remains completely unchanged
       notifyParent('WIDGET_TOGGLE', { expanded: newExpanded });
     }
   };
@@ -140,14 +188,36 @@ const WidgetApp = () => {
     );
   }
   const handleClose = () => {
-  // Close the widget and reset chat for next opening
-  if (config?.floating) {
-    setIsExpanded(false);
-    resetChat(); // Clear conversation
-    notifyParent('WIDGET_CLOSED_AND_RESET');
-  }
-};
-  // Main render logic
+    // Close the widget and reset chat for next opening
+    if (config?.floating) {
+      setIsExpanded(false);
+      
+      // ONLY remove mobile fullscreen on mobile devices
+      if (isMobile && containerRef.current) {
+        containerRef.current.classList.remove('mobile-fullscreen');
+        document.body.style.overflow = '';
+      }
+      
+      resetChat(); // Clear conversation
+      notifyParent('WIDGET_CLOSED_AND_RESET');
+    }
+  };
+  // Handle escape key to close mobile fullscreen (mobile only)
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isMobile && isExpanded && config?.floating) {
+        handleClose();
+      }
+    };
+    
+    // Only add escape key listener on mobile devices
+    if (isMobile && isExpanded) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isMobile, isExpanded, config?.floating]);
+  
+  // Main render logic - mobile-fullscreen class only added on mobile devices
   return (
     <div 
       ref={containerRef}
