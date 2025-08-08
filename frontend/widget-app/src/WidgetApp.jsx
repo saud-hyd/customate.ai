@@ -47,6 +47,15 @@ const WidgetApp = () => {
       (screenWidth <= 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0))
     );
     
+    // Debug logging
+    console.log('Mobile Detection:', {
+      userAgent: userAgent,
+      screenWidth: screenWidth,
+      isMobileDevice: isMobileDevice,
+      touchSupport: 'ontouchstart' in window,
+      maxTouchPoints: navigator.maxTouchPoints
+    });
+    
     return isMobileDevice;
   };
   
@@ -140,13 +149,15 @@ const WidgetApp = () => {
   // Send status updates when expanded state changes
   useEffect(() => {
     if (config?.floating) {
-      console.log(`🔄 Widget toggling: ${isExpanded ? 'expanded' : 'collapsed'}`);
+      console.log(`🔄 Widget toggling: ${isExpanded ? 'expanded' : 'collapsed'} (Mobile: ${isMobile})`);
       notifyParent('WIDGET_STATUS', { 
         expanded: isExpanded,
-        floating: true 
+        floating: true,
+        isMobile: isMobile,
+        fullscreen: isMobile && isExpanded
       });
     }
-  }, [isExpanded, config]);
+  }, [isExpanded, config, isMobile]);
   
   // Toggle handler - mobile fullscreen only affects mobile devices
   const handleToggle = () => {
@@ -156,15 +167,26 @@ const WidgetApp = () => {
       
       // ONLY apply mobile fullscreen changes on actual mobile devices
       if (isMobile && containerRef.current) {
+        console.log('Applying mobile fullscreen:', { newExpanded, isMobile, containerClasses: containerRef.current.className });
         if (newExpanded) {
           containerRef.current.classList.add('mobile-fullscreen');
-          // Prevent body scroll when widget is open on mobile
-          document.body.style.overflow = 'hidden';
+          // Notify parent to make iframe fullscreen on mobile
+          notifyParent('MOBILE_FULLSCREEN_ENABLE', { 
+            isMobile: true,
+            fullscreen: true 
+          });
+          console.log('Mobile fullscreen enabled, notified parent');
         } else {
           containerRef.current.classList.remove('mobile-fullscreen');
-          // Restore body scroll when widget is closed on mobile
-          document.body.style.overflow = '';
+          // Notify parent to remove iframe fullscreen
+          notifyParent('MOBILE_FULLSCREEN_DISABLE', { 
+            isMobile: true,
+            fullscreen: false 
+          });
+          console.log('Mobile fullscreen disabled');
         }
+      } else {
+        console.log('Mobile fullscreen not applied:', { isMobile, hasContainer: !!containerRef.current });
       }
       
       // Desktop behavior remains completely unchanged
@@ -195,7 +217,11 @@ const WidgetApp = () => {
       // ONLY remove mobile fullscreen on mobile devices
       if (isMobile && containerRef.current) {
         containerRef.current.classList.remove('mobile-fullscreen');
-        document.body.style.overflow = '';
+        // Notify parent to remove iframe fullscreen
+        notifyParent('MOBILE_FULLSCREEN_DISABLE', { 
+          isMobile: true,
+          fullscreen: false 
+        });
       }
       
       resetChat(); // Clear conversation
