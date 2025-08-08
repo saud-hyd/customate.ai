@@ -13,14 +13,14 @@ if not IS_PRODUCTION:
         
         if os.path.exists(".env.development"):
             load_dotenv(".env.development")
-            print("✅ Loaded .env.development")
+            print("Loaded .env.development")
         elif os.path.exists(".env"):
             load_dotenv()
-            print("⚠️ Using .env fallback")
+            print("Using .env fallback")
     except ImportError:
         pass
 else:
-    print("🚀 Production mode - using Render environment variables")
+    print("Production mode - using Render environment variables")
 
 class Settings(BaseSettings):
     """Application settings with environment-aware defaults."""
@@ -114,6 +114,6 @@ settings = Settings()
 
 # Optional: Print configuration status
 if not IS_PRODUCTION:
-    print(f"📧 Email configured: {settings.is_email_configured()}")
-    print(f"🔐 OAuth configured: {settings.is_oauth_configured()}")
-    print(f"💳 Stripe configured: {settings.is_stripe_configured()}")
+    print(f"Email configured: {settings.is_email_configured()}")
+    print(f"OAuth configured: {settings.is_oauth_configured()}")
+    print(f"Stripe configured: {settings.is_stripe_configured()}")

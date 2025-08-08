@@ -112,6 +112,7 @@ class WhatsAppConnector(ChannelConnector):
         signature = headers.get("X-Hub-Signature-256")
         if not signature:
             logger.warning("No X-Hub-Signature-256 header in WhatsApp webhook")
+            logger.warning(f"Available headers: {list(headers.keys())}")
             return False
         
         expected_signature = 'sha256=' + hmac.new(
@@ -123,6 +124,11 @@ class WhatsAppConnector(ChannelConnector):
         is_valid = hmac.compare_digest(signature, expected_signature)
         if not is_valid:
             logger.warning("Invalid WhatsApp webhook signature")
+            logger.warning(f"Received signature: {signature}")
+            logger.warning(f"Expected signature: {expected_signature}")
+            logger.warning(f"App secret configured: {bool(self.app_secret)}")
+            logger.warning(f"Body length: {len(body)} bytes")
+            logger.warning(f"Body preview: {body[:100]}...")
         
         return is_valid
     
