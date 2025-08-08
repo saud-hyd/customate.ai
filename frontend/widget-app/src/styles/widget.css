@@ -5,11 +5,22 @@
   padding: 0;
 }
 
+/* ===== CSS CUSTOM PROPERTIES FOR THEMING ===== */
+.widget-container {
+  --primary-color: #ea580c;
+  --header-color: #ea580c;
+  --background-color: #ffffff;
+  --text-color: #1f2937;
+  --border-radius: 8px;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 /* ===== WIDGET CONTAINER STYLES ===== */
 
 /* CRITICAL: Widget container fills iframe completely */
 .widget-container {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  color: var(--text-color, #1f2937);
   width: 100%;
   height: 100%;
   position: relative;
@@ -125,8 +136,8 @@
 /* ===== CHAT CONTAINER STYLES ===== */
 
 .widget-chat-container {
-  background: white;
-  border-radius: 12px;
+  background: var(--background-color, white);
+  border-radius: var(--border-radius, 12px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   display: flex;
@@ -361,7 +372,7 @@
 }
 
 .message.user .message-bubble {
-  background-color: #ea580c;
+  background-color: var(--primary-color, #ea580c);
   color: white;
   border-bottom-right-radius: 4px;
 }

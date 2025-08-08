@@ -8,16 +8,16 @@ router = APIRouter()
 try:
     from .embed_routes import router as embed_router
     router.include_router(embed_router, tags=["embed"])
-    print("✅ Embed routes included")
+    print("OK Embed routes included")
 except ImportError as e:
-    print(f"❌ Failed to import embed routes: {e}")
+    print(f"X Failed to import embed routes: {e}")
     
     # Create fallback embed endpoint
     @router.get("/embed.js")
     async def fallback_embed(api_key: str):
         from fastapi.responses import Response
         fallback_script = f"""
-        console.error('❌ Embed routes not properly configured');
+        console.error('X Embed routes not properly configured');
         console.log('API Key: {api_key}');
         alert('Widget embed system not configured properly');
         """
@@ -31,16 +31,16 @@ except ImportError as e:
 try:
     from . import routes
     router.include_router(routes.router, tags=["widget-api"])
-    print("✅ Widget API routes included")
+    print("OK Widget API routes included")
 except ImportError as e:
-    print(f"⚠️ Widget API routes not available: {e}")
+    print(f"! Widget API routes not available: {e}")
 
 try:
     from . import widget_app_routes  
     router.include_router(widget_app_routes.router, tags=["widget-app"])
-    print("✅ Widget app routes included")
+    print("OK Widget app routes included")
 except ImportError as e:
-    print(f"⚠️ Widget app routes not available: {e}")
+    print(f"! Widget app routes not available: {e}")
 
 # Health check
 @router.get("/health")
@@ -51,4 +51,4 @@ async def widget_health():
         "embed_available": True
     }
 
-print(f"✅ Widget router configured with {len(router.routes)} routes")
+print(f"OK Widget router configured with {len(router.routes)} routes")
