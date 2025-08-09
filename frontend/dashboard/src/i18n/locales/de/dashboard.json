@@ -1,0 +1,55 @@
+{
+  "title": "Dashboard",
+  "overview": "Übersicht",
+  "metrics": {
+    "totalMessages": "Nachrichten gesamt",
+    "activeChats": "Aktive Chats",
+    "knowledgeItems": "Wissenseinträge",
+    "integrations": "Integrationen",
+    "monthlyUsage": "Monatliche Nutzung",
+    "storageUsed": "Genutzter Speicher"
+  },
+  "charts": {
+    "messagesOverTime": "Nachrichten im Zeitverlauf",
+    "topIntegrations": "Top-Integrationen",
+    "userEngagement": "Nutzerengagement",
+    "knowledgeUsage": "Wissensnutzung"
+  },
+  "quickActions": {
+    "title": "Schnellaktionen",
+    "startChat": "Neuen Chat starten",
+    "uploadDocument": "Dokument hochladen",
+    "createIntegration": "Integration erstellen",
+    "viewAnalytics": "Analytics anzeigen",
+    "upgradeplan": "Plan erweitern"
+  },
+  "recentActivity": {
+    "title": "Letzte Aktivitäten",
+    "noActivity": "Keine aktuellen Aktivitäten"
+  },
+  "status": {
+    "lastUpdated": "Zuletzt aktualisiert",
+    "refreshing": "Wird aktualisiert...",
+    "refreshData": "Daten aktualisieren",
+    "version": "Version 2.1.0",
+    "subscriptionActive": "Ihr Abonnement ist aktiv",
+    "subscriptionNeedsAttention": "Ihr Abonnement benötigt Aufmerksamkeit"
+  },
+  "usage": {
+    "totalConversations": "Gesamte Gespräche",
+    "vsPreviousDay": "vs. vorheriger Tag",
+    "assistantMessages": "Assistenten-Nachrichten (API-Nutzung)",
+    "storage": "Speicher",
+    "documents": "Dokumente",
+    "knowledgeBase": "Wissensbasis",
+    "crawledContent": "Gecrawlte Inhalte",
+    "freePlan": "Kostenloser Plan"
+  },
+  "warnings": {
+    "approachingLimits": "Sie nähern sich Ihren Plan-Limits",
+    "upgradePrompt": "Erwägen Sie ein Upgrade Ihres Plans, um Service-Unterbrechungen zu vermeiden.",
+    "messagesWarning": "Sie haben {{percentage}}% Ihres monatlichen Nachrichten-Limits verwendet ({{current}} von {{limit}})",
+    "storageWarning": "Sie haben {{percentage}}% Ihres Speicher-Limits verwendet ({{current}} von {{limit}})",
+    "upgradeNow": "Jetzt upgraden"
+  }
+}

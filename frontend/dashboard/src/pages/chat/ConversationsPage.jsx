@@ -1,11 +1,13 @@
 // frontend/dashboard/src/pages/chat/ConversationsPage.jsx
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MagnifyingGlassIcon, EyeIcon, ArrowDownTrayIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 import chatService from '../../services/chatService';
 import ConversationDetailModal from '../../components/chat/ConversationDetailModal';
 import { useToast } from '../../context/ToastContext';
 
 const ConversationsPage = () => {
+  const { t } = useTranslation(['chat', 'common']);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -204,7 +206,7 @@ const ConversationsPage = () => {
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Conversation History</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('chat:conversationsPage.title')}</h1>
             <p className="mt-1 text-sm text-gray-500">
               View and analyze past conversations with your chatbot.
             </p>
@@ -252,12 +254,12 @@ const ConversationsPage = () => {
                     />
                   </div>
                 </th>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session ID</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Messages</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('chat:conversationsPage.tableHeaders.sessionId')}</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('chat:conversationsPage.tableHeaders.dateTime')}</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('chat:conversationsPage.tableHeaders.messages')}</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('chat:conversationsPage.tableHeaders.duration')}</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('chat:conversationsPage.tableHeaders.status')}</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('chat:conversationsPage.tableHeaders.actions')}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -265,7 +267,7 @@ const ConversationsPage = () => {
                 <tr>
                   <td colSpan="8" className="px-6 py-4 text-center">
                     <div className="spinner mx-auto"></div>
-                    <p className="mt-2 text-sm text-gray-500">Loading conversations...</p>
+                    <p className="mt-2 text-sm text-gray-500">{t('chat:conversationsPage.loadingConversations')}</p>
                   </td>
                 </tr>
               ) : currentConversations.length === 0 ? (
@@ -345,7 +347,7 @@ const ConversationsPage = () => {
         <div className="px-6 py-4 border-t border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div className="flex items-center mb-4 md:mb-0">
-              <span className="text-sm text-gray-500 mr-2">Show</span>
+              <span className="text-sm text-gray-500 mr-2">{t('chat:conversationsPage.pagination.show')}</span>
               <select
                 value={itemsPerPage}
                 onChange={handleItemsPerPageChange}
@@ -375,7 +377,7 @@ const ConversationsPage = () => {
                         currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
                       }`}
                     >
-                      <span className="sr-only">Previous</span>
+                      <span className="sr-only">{t('chat:conversationsPage.pagination.previous')}</span>
                       <span>←</span>
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -398,7 +400,7 @@ const ConversationsPage = () => {
                         currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
                       }`}
                     >
-                      <span className="sr-only">Next</span>
+                      <span className="sr-only">{t('chat:conversationsPage.pagination.next')}</span>
                       <span>→</span>
                     </button>
                   </nav>

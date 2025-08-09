@@ -1,0 +1,186 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "upload": "Upload",
+    "download": "Download",
+    "view": "View",
+    "close": "Close",
+    "confirm": "Confirm",
+    "submit": "Submit",
+    "reset": "Reset",
+    "refresh": "Refresh",
+    "next": "Next",
+    "previous": "Previous",
+    "back": "Back",
+    "continue": "Continue",
+    "select": "Select",
+    "clear": "Clear",
+    "or": "Or",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "refreshing": "Refreshing...",
+    "noDataAvailable": "No data available",
+    "comingSoon": "Coming Soon",
+    "inDevelopment": "In Development",
+    "saveChanges": "Save Changes",
+    "noChanges": "No Changes",
+    "refreshData": "Refresh Data",
+    "today": "Today",
+    "last7Days": "Last 7 Days",
+    "last30Days": "Last 30 Days", 
+    "last90Days": "Last 90 Days",
+    "customRange": "Custom Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "applyCustomRange": "Apply Custom Range"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "success": "Success",
+    "error": "Error",
+    "loading": "Loading",
+    "processing": "Processing"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "chat": "Chat",
+    "knowledge": "Knowledge",
+    "analytics": "Analytics",
+    "integrations": "Integrations",
+    "channels": "Channels",
+    "settings": "Settings",
+    "subscription": "Subscription",
+    "testChatbot": "Test Chatbot"
+  },
+  "messages": {
+    "success": "Operation completed successfully",
+    "error": "An error occurred. Please try again.",
+    "noData": "No data available",
+    "loading": "Loading data...",
+    "unauthorized": "You are not authorized to perform this action",
+    "networkError": "Network error. Please check your connection.",
+    "validationError": "Please check the form data"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "lastUpdated": "Last updated",
+    "seconds": "seconds",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "weeks": "weeks",
+    "months": "months"
+  },
+  "forms": {
+    "enterEmail": "Enter your email",
+    "searchConversations": "Search conversations...",
+    "typeMessage": "Type your message...",
+    "collectionName": "Collection name",
+    "urlPlaceholder": "https://example.com",
+    "searchPlaceholder": "Search...",
+    "emailPlaceholder": "Enter your email address",
+    "namePlaceholder": "Enter your name"
+  },
+  "error": {
+    "title": "Error",
+    "dismiss": "Dismiss"
+  },
+  "errors": {
+    "failedToLoad": "Failed to load",
+    "somethingWrong": "Something went wrong",
+    "connectionFailed": "Connection failed", 
+    "invalidCredentials": "Invalid credentials",
+    "tryAgain": "Please try again",
+    "loadingError": "Error loading data",
+    "updateError": "Failed to update"
+  },
+  "buttons": {
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "viewAll": "View All",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "copyCode": "Copy Code",
+    "copied": "Copied!",
+    "close": "Close",
+    "retry": "Retry"
+  },
+  "header": {
+    "viewNotifications": "View notifications",
+    "openUserMenu": "Open user menu",
+    "defaultUser": "User",
+    "defaultEmail": "user@example.com",
+    "freePlan": "Free Plan",
+    "accountSettings": "Account Settings",
+    "manageSubscription": "Manage Subscription",
+    "helpSupport": "Help & Support",
+    "signOut": "Sign out"
+  },
+  "modal": {
+    "close": "Close"
+  },
+  "sidebar": {
+    "upgradeToPro": "Upgrade to Pro",
+    "upgradeNow": "Upgrade Now"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "viewNotifications": "View notifications",
+    "markAllAsRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "loading": "Loading notifications...",
+    "noNew": "No new notifications",
+    "viewAll": "View all notifications",
+    "close": "Close",
+    "subscriptionLimitReached": "Subscription Limit Reached"
+  },
+  "layout": {
+    "footer": {
+      "help": "Help",
+      "privacy": "Privacy", 
+      "terms": "Terms"
+    }
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong"
+  },
+  "search": {
+    "searchDocuments": "Search documents...",
+    "searchConversations": "Search conversations..."
+  },
+  "filters": {
+    "allStatus": "All Status",
+    "processed": "Processed",
+    "processing": "Processing",
+    "failed": "Failed"
+  },
+  "sorting": {
+    "nameAZ": "Name (A-Z)",
+    "nameZA": "Name (Z-A)"
+  },
+  "support": {
+    "faqs": "FAQs",
+    "sendMessage": "Send us a message",
+    "issuePlaceholder": "What can we help you with?",
+    "detailsPlaceholder": "Describe your issue or question in detail"
+  }
+}

@@ -2,6 +2,7 @@
 // Fixed version with proper error handling and authentication
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import knowledgeService from '../../services/knowledgeService';
 import subscriptionService from '../../services/subscriptionService';
 import { useToast } from '../../context/ToastContext';
@@ -22,6 +23,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const KnowledgeListPage = () => {
+  const { t } = useTranslation(['knowledge', 'common']);
   // State management
   const [searchQuery, setSearchQuery] = useState('');
   const [items, setItems] = useState([]);
@@ -424,14 +426,14 @@ const KnowledgeListPage = () => {
 
       {/* Enhanced Header with Storage Indicator */}
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Knowledge Base</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('knowledge:pages.knowledgeBaseTitle')}</h1>
         
         {/* Storage Indicator */}
         <div className="mb-4 pb-4 border-b border-gray-200">
           {storageLoading ? (
             <div className="flex items-center space-x-2 text-gray-500">
               <div className="animate-pulse w-4 h-4 bg-gray-300 rounded"></div>
-              <span className="text-sm">Loading storage...</span>
+              <span className="text-sm">{t('knowledge:pages.loadingStorage')}</span>
             </div>
           ) : storageError ? (
             <div className="flex items-center space-x-2 text-gray-500">
@@ -519,7 +521,7 @@ const KnowledgeListPage = () => {
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search documents and websites..."
+              placeholder={t('knowledge:pages.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -536,7 +538,7 @@ const KnowledgeListPage = () => {
             title={storageData && storageData.percentage >= 100 ? 'Storage limit reached' : 'Add new content'}
           >
             <PlusIcon className="h-5 w-5" />
-            Add Content
+            {t('common:actions.add')} Content
           </button>
         </div>
       </div>
@@ -546,12 +548,12 @@ const KnowledgeListPage = () => {
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading knowledge base...</p>
+            <p className="text-gray-500">{t('knowledge:pages.loadingKnowledgeBase')}</p>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-8 text-center">
             <DocumentIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No content yet</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('knowledge:pages.noContentYet')}</h3>
             <p className="text-gray-500 mb-4">
               {searchQuery 
                 ? 'No items match your search criteria.' 
@@ -563,7 +565,7 @@ const KnowledgeListPage = () => {
                 onClick={() => setIsAddContentModalOpen(true)}
                 className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
               >
-                Add Your First Content
+                {t('common:actions.add')} Your First Content
               </button>
             )}
           </div>
@@ -573,19 +575,19 @@ const KnowledgeListPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                    {t('knowledge:documentName')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
+                    {t('knowledge:documentType')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Size
+                    {t('knowledge:documentSize')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date Added
+                    {t('knowledge:uploadDate')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('common:actions.actions') || 'Actions'}
                   </th>
                 </tr>
               </thead>
@@ -615,7 +617,7 @@ const KnowledgeListPage = () => {
                           ? 'bg-blue-100 text-blue-800' 
                           : 'bg-green-100 text-green-800'
                       }`}>
-                        {item.type === 'document' ? 'Document' : 'Website'}
+                        {item.type === 'document' ? t('knowledge:documents') : 'Website'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -660,7 +662,7 @@ const KnowledgeListPage = () => {
                 <div className="flex items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                     <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                      Add Content to Knowledge Base
+                      {t('common:actions.add')} Content to {t('knowledge:title')}
                     </h3>
                     
                     {!contentType ? (
@@ -671,8 +673,8 @@ const KnowledgeListPage = () => {
                         >
                           <DocumentIcon className="h-6 w-6 text-blue-500 mr-3" />
                           <div className="text-left">
-                            <div className="font-medium text-gray-900">Upload Document</div>
-                            <div className="text-sm text-gray-500">PDF, DOCX, DOC, or TXT files</div>
+                            <div className="font-medium text-gray-900">{t('knowledge:pages.uploadDocumentAction')}</div>
+                            <div className="text-sm text-gray-500">{t('knowledge:pages.uploadDescription')}</div>
                           </div>
                         </button>
                         
@@ -682,8 +684,8 @@ const KnowledgeListPage = () => {
                         >
                           <GlobeAltIcon className="h-6 w-6 text-green-500 mr-3" />
                           <div className="text-left">
-                            <div className="font-medium text-gray-900">Crawl Website</div>
-                            <div className="text-sm text-gray-500">Extract content from web pages</div>
+                            <div className="font-medium text-gray-900">{t('knowledge:pages.crawlWebsiteAction')}</div>
+                            <div className="text-sm text-gray-500">{t('knowledge:pages.crawlDescription')}</div>
                           </div>
                         </button>
                       </div>
@@ -691,14 +693,14 @@ const KnowledgeListPage = () => {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Select Collection (Optional)
+                            {t('knowledge:upload.chooseCollection')} (Optional)
                           </label>
                           <select
                             value={selectedCollection}
                             onChange={(e) => setSelectedCollection(e.target.value)}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                           >
-                            <option value="">Default Collection</option>
+                            <option value="">{t('knowledge:pages.defaultCollection')}</option>
                             {collections.map(collection => (
                               <option key={collection.id} value={collection.name}>
                                 {collection.name}
@@ -709,7 +711,7 @@ const KnowledgeListPage = () => {
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Upload File
+                            {t('knowledge:upload.uploadDocument')}
                           </label>
                           <div
                             onDrop={handleFileDrop}
@@ -737,7 +739,7 @@ const KnowledgeListPage = () => {
                                     />
                                   </label>
                                 </div>
-                                <div className="text-xs text-gray-500">PDF, DOCX, DOC, TXT up to 10MB</div>
+                                <div className="text-xs text-gray-500">{t('knowledge:pages.fileSizeLimit')}</div>
                               </div>
                             )}
                           </div>
@@ -747,7 +749,7 @@ const KnowledgeListPage = () => {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Website URL
+                            {t('knowledge:webCrawler.url')}
                           </label>
                           <input
                             type="url"
@@ -813,7 +815,7 @@ const KnowledgeListPage = () => {
                             Uploading...
                           </>
                         ) : (
-                          'Upload'
+                          t('common:actions.upload')
                         )
                       ) : (
                         isCrawling || isAnalyzing ? (
@@ -822,7 +824,7 @@ const KnowledgeListPage = () => {
                             {isAnalyzing ? 'Analyzing...' : 'Crawling...'}
                           </>
                         ) : (
-                          'Start Crawling'
+                          t('knowledge:webCrawler.crawl')
                         )
                       )}
                     </button>
@@ -835,7 +837,7 @@ const KnowledgeListPage = () => {
                       }}
                       className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                     >
-                      Back
+                      {t('common:actions.back')}
                     </button>
                   </>
                 ) : (
@@ -843,7 +845,7 @@ const KnowledgeListPage = () => {
                     onClick={() => setIsAddContentModalOpen(false)}
                     className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:mt-0 sm:w-auto sm:text-sm"
                   >
-                    Cancel
+                    {t('common:actions.cancel')}
                   </button>
                 )}
               </div>

@@ -1,0 +1,80 @@
+{
+  "title": "Analytics",
+  "overview": "Analytics-Übersicht",
+  "loadingData": "Lade Analytics-Daten...",
+  "messageStatistics": "Nachrichtenstatistiken",
+  "assistantMessages": "Assistenten-Nachrichten",
+  "storageUsed": "Genutzter Speicher",
+  "usage": "Nutzung",
+  "nearLimit": "Nahe dem Limit - erwägen Sie ein Upgrade",
+  "currentPlan": "Aktueller Plan:",
+  "messages": "Nachrichten",
+  "storage": "Speicher",
+  "storageBreakdown": "Speicher-Aufschlüsselung",
+  "documents": "Dokumente",
+  "knowledgeBase": "Wissensbasis",
+  "crawledContent": "Gecrawlte Inhalte",
+  "engagementAnalytics": "Engagement-Analytics",
+  "engagementDescription": "Detaillierte Gesprächsanalysen und Nutzer-Engagement-Metriken kommen bald.",
+  "knowledgeAnalytics": "Wissens-Analytics",
+  "volume": "Volumen",
+  "responseTime": "Antwortzeit",
+  "knowledgeUsage": "Wissensnutzung",
+  "totalSessions": "Gesamtsitzungen",
+  "averageResponseTime": "Durchschnittliche Antwortzeit",
+  "knowledgeUsageRatio": "Wissensnutzungsrate",
+  "noMessageStats": "Keine Nachrichtenstatistiken verfügbar",
+  "knowledgePercentage": "Prozentsatz der Antworten mit Wissensbasis",
+  "selectDateRange": "Datumsbereich Auswählen",
+  "dateRange": "Datumsbereich",
+  "last7Days": "Letzte 7 Tage",
+  "last30Days": "Letzte 30 Tage",
+  "last90Days": "Letzte 90 Tage",
+  "customRange": "Benutzerdefinierten Bereich",
+  "metrics": {
+    "totalMessages": "Nachrichten gesamt",
+    "uniqueUsers": "Eindeutige Nutzer",
+    "avgResponseTime": "Durchschnittliche Antwortzeit",
+    "satisfactionRate": "Zufriedenheitsrate",
+    "apiCalls": "API-Aufrufe",
+    "knowledgeQueries": "Wissensabfragen"
+  },
+  "charts": {
+    "messageVolume": "Nachrichtenvolumen",
+    "userEngagement": "Nutzerengagement",
+    "responseTime": "Antwortzeit",
+    "topQuestions": "Top-Fragen",
+    "integrationUsage": "Integrationsnutzung"
+  },
+  "export": {
+    "title": "Daten exportieren",
+    "csv": "Als CSV exportieren",
+    "pdf": "Als PDF exportieren",
+    "json": "Als JSON exportieren"
+  },
+  "comingSoon": "Kommt bald",
+  "apiUsage": {
+    "title": "API-Nutzungsanalyse",
+    "description": "Wir arbeiten an detaillierten API-Nutzungsanalysen, um Ihnen bei der Überwachung und Optimierung Ihres API-Verbrauchs zu helfen."
+  },
+  "engagement": {
+    "title": "Engagement-Analytics",
+    "description": "Verfolgen Sie Nutzer-Engagement-Muster und Gesprächsqualität, um die Leistung Ihres Chatbots zu verbessern."
+  },
+  "knowledge": {
+    "title": "Wissens-Analytics",
+    "description": "Entdecken Sie Einblicke in die Leistung Ihrer Wissensbasis und die Effektivität des Inhalts."
+  },
+  "timeRanges": {
+    "day": "Tag",
+    "week": "Woche",
+    "month": "Monat"
+  },
+  "knowledgeInsights": {
+    "performanceInsights": "Leistungseinblicke der Wissensbasis und Optimierungsempfehlungen."
+  },
+  "messageStats": {
+    "responseTime": "Antwortzeit",
+    "knowledgeUsage": "Wissensnutzung"
+  }
+}

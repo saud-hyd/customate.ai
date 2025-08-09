@@ -6,6 +6,7 @@ import {
   InformationCircleIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import notificationService from '../../services/notificationService';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,6 +16,7 @@ import { formatDistanceToNow } from 'date-fns';
  * Displays a dropdown with system notifications and alerts
  */
 const NotificationCenter = () => {
+  const { t } = useTranslation('common');
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -111,7 +113,7 @@ const NotificationCenter = () => {
         className="relative p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         onClick={toggleDropdown}
       >
-        <span className="sr-only">View notifications</span>
+        <span className="sr-only">{t('notifications.viewNotifications')}</span>
         <BellIcon className="h-6 w-6" aria-hidden="true" />
         
         {/* Unread indicator */}
@@ -126,13 +128,13 @@ const NotificationCenter = () => {
           <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="notifications-menu">
             {/* Header */}
             <div className="px-4 py-2 flex justify-between items-center border-b">
-              <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
+              <h3 className="text-sm font-medium text-gray-900">{t('notifications.title')}</h3>
               {unreadCount > 0 && (
                 <button
                   className="text-xs text-primary-600 hover:text-primary-800"
                   onClick={markAllAsRead}
                 >
-                  Mark all as read
+                  {t('notifications.markAllAsRead')}
                 </button>
               )}
             </div>
@@ -141,7 +143,7 @@ const NotificationCenter = () => {
             <div className="max-h-80 overflow-y-auto">
               {loading && notifications.length === 0 ? (
                 <div className="px-4 py-2 text-center text-sm text-gray-500">
-                  Loading notifications...
+                  {t('notifications.loading')}
                 </div>
               ) : notifications.length > 0 ? (
                 notifications.map(notification => (
@@ -171,7 +173,7 @@ const NotificationCenter = () => {
                             className="text-xs text-primary-600 hover:text-primary-800"
                             onClick={() => markAsRead(notification.id)}
                           >
-                            Mark as read
+                            {t('notifications.markAsRead')}
                           </button>
                         )}
                       </div>
@@ -183,7 +185,7 @@ const NotificationCenter = () => {
                         className="bg-white rounded-md text-gray-400 hover:text-gray-500"
                         onClick={() => markAsRead(notification.id)}
                       >
-                        <span className="sr-only">Close</span>
+                        <span className="sr-only">{t('notifications.close')}</span>
                         <XMarkIcon className="h-5 w-5" aria-hidden="true" />
                       </button>
                     </div>
@@ -191,7 +193,7 @@ const NotificationCenter = () => {
                 ))
               ) : (
                 <div className="px-4 py-6 text-center text-sm text-gray-500">
-                  No new notifications
+                  {t('notifications.noNew')}
                 </div>
               )}
             </div>
@@ -202,7 +204,7 @@ const NotificationCenter = () => {
                 href="/notifications" 
                 className="text-primary-600 hover:text-primary-800"
               >
-                View all notifications
+                {t('notifications.viewAll')}
               </a>
             </div>
           </div>

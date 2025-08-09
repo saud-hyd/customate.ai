@@ -1,0 +1,83 @@
+{
+  "title": "Einstellungen",
+  "tabs": {
+    "profile": "Profil",
+    "billing": "Abrechnung",
+    "team": "Teammitglieder",
+    "support": "Support",
+    "language": "Sprache"
+  },
+  "profile": {
+    "title": "Profileinstellungen",
+    "description": "Verwalten Sie Ihre Kontoinformationen und Einstellungen",
+    "name": "Name",
+    "email": "E-Mail",
+    "company": "Unternehmen",
+    "companyName": "Unternehmensname",
+    "companyNamePlaceholder": "Geben Sie Ihren Unternehmensnamen ein",
+    "emailAddress": "E-Mail-Adresse",
+    "emailPlaceholder": "Geben Sie Ihre E-Mail-Adresse ein",
+    "website": "Website",
+    "websitePlaceholder": "https://ihrunternehmen.com",
+    "phoneNumber": "Telefonnummer",
+    "phonePlaceholder": "+49 (30) 123-4567",
+    "industry": "Branche",
+    "industryPlaceholder": "Wählen Sie eine Branche aus",
+    "industryOptions": {
+      "saas": "SaaS",
+      "ecommerce": "E-Commerce",
+      "healthcare": "Gesundheitswesen",
+      "education": "Bildung",
+      "finance": "Finanzen",
+      "realestate": "Immobilien",
+      "consulting": "Beratung",
+      "other": "Sonstiges"
+    },
+    "notProvided": "Nicht angegeben",
+    "notSelected": "Nicht ausgewählt",
+    "updatePassword": "Passwort aktualisieren",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Neues Passwort bestätigen",
+    "profileUpdated": "Profil erfolgreich aktualisiert",
+    "passwordUpdated": "Passwort erfolgreich aktualisiert",
+    "profileUpdateFailed": "Profil konnte nicht aktualisiert werden",
+    "manageSubscription": "Abonnement verwalten",
+    "logOut": "Abmelden"
+  },
+  "billing": {
+    "title": "Abrechnung & Abonnement",
+    "currentPlan": "Aktueller Tarif",
+    "usage": "Nutzung",
+    "paymentMethods": "Zahlungsmethoden",
+    "billingHistory": "Abrechnungshistorie",
+    "nextBilling": "Nächstes Abrechnungsdatum",
+    "upgradeplan": "Tarif upgraden",
+    "manageBilling": "Abrechnung verwalten"
+  },
+  "team": {
+    "title": "Teammitglieder",
+    "inviteMembers": "Mitglieder einladen",
+    "memberName": "Name",
+    "memberEmail": "E-Mail",
+    "memberRole": "Rolle",
+    "memberStatus": "Status",
+    "invitationSent": "Einladung erfolgreich gesendet",
+    "memberRemoved": "Mitglied erfolgreich entfernt"
+  },
+  "support": {
+    "title": "Support",
+    "contactUs": "Kontakt",
+    "documentation": "Dokumentation",
+    "apiDocs": "API-Dokumentation",
+    "helpCenter": "Hilfe-Center",
+    "reportIssue": "Problem melden"
+  },
+  "language": {
+    "title": "Spracheinstellungen",
+    "selectLanguage": "Sprache auswählen",
+    "currentLanguage": "Aktuelle Sprache",
+    "languageUpdated": "Sprache erfolgreich aktualisiert",
+    "description": "Wählen Sie Ihre bevorzugte Sprache für die Dashboard-Oberfläche."
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "title": "Knowledge Base",
+  "documents": "Documents",
+  "collections": "Collections",
+  "uploadDocument": "Upload Document",
+  "createCollection": "Create Collection",
+  "searchDocuments": "Search documents...",
+  "documentName": "Document Name",
+  "documentType": "Type",
+  "documentSize": "Size",
+  "uploadDate": "Upload Date",
+  "noDocuments": "No documents found",
+  "processing": "Processing document...",
+  "processed": "Document processed successfully",
+  "failed": "Document processing failed",
+  "webCrawler": {
+    "title": "Web Crawler",
+    "url": "Website URL",
+    "crawl": "Start Crawl",
+    "crawling": "Crawling...",
+    "completed": "Crawl completed",
+    "failed": "Crawl failed"
+  },
+  "storage": {
+    "used": "Storage Used",
+    "available": "Available",
+    "limit": "Storage Limit",
+    "warning": "Storage limit approaching"
+  },
+  "upload": {
+    "selectFile": "Please select a file to upload",
+    "selectCollection": "Please select a collection",
+    "chooseCollection": "Select a collection",
+    "uploadFailed": "Failed to upload document. Please try again.",
+    "uploadSuccess": "Document uploaded successfully",
+    "uploadProcessing": "Document \"{{filename}}\" has been uploaded and is being processed.",
+    "dropZoneText": "Drag and drop your file here or click to browse",
+    "supportedFormats": "Supported formats: PDF, DOCX, DOC, TXT",
+    "uploading": "Uploading document...",
+    "uploadDocument": "Upload Document"
+  },
+  "pages": {
+    "knowledgeBaseTitle": "Knowledge Base",
+    "loadingStorage": "Loading storage...",
+    "storageError": "Storage: {{error}}",
+    "documentsLabel": "Documents:",
+    "crawledLabel": "Crawled:",
+    "knowledgeLabel": "Knowledge:",
+    "searchPlaceholder": "Search documents and websites...",
+    "loadingKnowledgeBase": "Loading knowledge base...",
+    "noContentYet": "No content yet",
+    "uploadDocumentAction": "Upload Document",
+    "uploadDescription": "PDF, DOCX, DOC, or TXT files",
+    "crawlWebsiteAction": "Crawl Website",
+    "crawlDescription": "Extract content from web pages",
+    "defaultCollection": "Default Collection",
+    "fileSizeLimit": "PDF, DOCX, DOC, TXT up to 10MB"
+  },
+  "enhanced": {
+    "collectionsTitle": "Collections",
+    "loadingCollections": "Loading collections...",
+    "noCollectionsYet": "No collections yet",
+    "searchItemsPlaceholder": "Search items...",
+    "loadingItems": "Loading items...",
+    "selectCollectionToView": "Select a collection to view items",
+    "noItemsInCollection": "No items in this collection",
+    "updatedLabel": "Updated: {{date}}",
+    "uploadedDocuments": "Uploaded Documents",
+    "loadingDocuments": "Loading documents...",
+    "noDocumentsYet": "No documents uploaded yet",
+    "tableHeaders": {
+      "document": "Document",
+      "status": "Status",
+      "size": "Size",
+      "uploaded": "Uploaded",
+      "actions": "Actions"
+    },
+    "createCollectionModal": {
+      "title": "Create New Collection",
+      "nameLabel": "Name",
+      "namePlaceholder": "Collection name",
+      "descriptionLabel": "Description (Optional)",
+      "descriptionPlaceholder": "Collection description",
+      "typeLabel": "Type",
+      "types": {
+        "general": "General",
+        "faqs": "FAQs",
+        "policies": "Policies",
+        "products": "Products",
+        "procedures": "Procedures"
+      }
+    },
+    "deleteCollectionModal": {
+      "title": "Delete Collection"
+    },
+    "addKnowledgeItemModal": {
+      "title": "Add Knowledge Item",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Item title",
+      "contentLabel": "Content",
+      "contentPlaceholder": "Item content"
+    }
+  },
+  "webCrawlerPage": {
+    "intelligentWebCrawler": "Intelligent Web Crawler",
+    "storageUsage": "Storage Usage",
+    "siteAnalysis": "Site Analysis",
+    "smartPrioritization": "Smart Prioritization",
+    "storageOptimization": "Storage Optimization",
+    "realTimeProgress": "Real-time Progress"
+  }
+}

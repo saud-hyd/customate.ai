@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import knowledgeService from '../../services/knowledgeService';
 
 const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
+  const { t } = useTranslation(['knowledge', 'common']);
   const [file, setFile] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -36,12 +38,12 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
 
   const handleUpload = async () => {
     if (!file) {
-      setError('Please select a file to upload');
+      setError(t('knowledge:upload.selectFile'));
       return;
     }
 
     if (!selectedCollection) {
-      setError('Please select a collection');
+      setError(t('knowledge:upload.selectCollection'));
       return;
     }
 
@@ -76,7 +78,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
       
     } catch (err) {
       console.error('Error uploading document:', err);
-      setError(err.response?.data?.detail || 'Failed to upload document. Please try again.');
+      setError(err.response?.data?.detail || t('knowledge:upload.uploadFailed'));
       setUploading(false);
       setUploadProgress(0);
     }
@@ -98,9 +100,9 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
         <div className="bg-green-50 border-l-4 border-green-500 p-4">
           <div className="flex">
             <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">Document uploaded successfully</p>
+              <p className="text-sm font-medium text-green-800">{t('knowledge:upload.uploadSuccess')}</p>
               <p className="text-sm text-green-700 mt-1">
-                Document "{uploadResult.filename}" has been uploaded and is being processed.
+                {t('knowledge:upload.uploadProcessing', { filename: uploadResult.filename })}
               </p>
             </div>
           </div>
@@ -151,10 +153,10 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
               <div>
                 <i className="fas fa-file-upload text-gray-400 text-3xl mb-2"></i>
                 <p className="mt-2 text-sm font-medium text-gray-900">
-                  Drag and drop your file here or click to browse
+                  {t('knowledge:upload.dropZoneText')}
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
-                  Supported formats: PDF, DOCX, DOC, TXT
+                  {t('knowledge:upload.supportedFormats')}
                 </p>
               </div>
             )}
@@ -163,7 +165,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
           {/* Collection Selector */}
           <div>
             <label htmlFor="collection" className="block text-sm font-medium text-gray-700 mb-1">
-              Select Collection
+              {t('knowledge:upload.selectCollection')}
             </label>
             <select
               id="collection"
@@ -172,7 +174,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
               onChange={handleCollectionChange}
               disabled={uploading}
             >
-              <option value="">Select a collection</option>
+              <option value="">{t('knowledge:upload.chooseCollection')}</option>
               {collections.map((collection) => (
                 <option key={collection.collection_id} value={collection.collection_id}>
                   {collection.name}
@@ -185,7 +187,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
           {uploading && (
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm text-gray-700">
-                <span>Uploading document...</span>
+                <span>{t('knowledge:upload.uploading')}</span>
                 <span>{uploadProgress}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -205,7 +207,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
               disabled={uploading}
               className="btn btn-outline"
             >
-              Cancel
+              {t('common:cancel')}
             </button>
             <button
               type="button"
@@ -213,7 +215,7 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
               disabled={!file || !selectedCollection || uploading}
               className="btn btn-primary"
             >
-              {uploading ? 'Uploading...' : 'Upload Document'}
+              {uploading ? t('knowledge:upload.uploading') : t('knowledge:upload.uploadDocument')}
             </button>
           </div>
         </>

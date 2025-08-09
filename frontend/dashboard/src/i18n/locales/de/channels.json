@@ -1,0 +1,47 @@
+{
+  "title": "Kanäle",
+  "connected": "Verbundene Kanäle",
+  "available": "Verfügbare Kanäle",
+  "connect": "Kanal verbinden",
+  "disconnect": "Trennen",
+  "configure": "Konfigurieren",
+  "status": "Status",
+  "conversations": "Unterhaltungen",
+  "platforms": {
+    "whatsapp": "WhatsApp",
+    "facebook": "Facebook Messenger",
+    "instagram": "Instagram",
+    "twitter": "Twitter",
+    "telegram": "Telegram",
+    "email": "E-Mail"
+  },
+  "setup": {
+    "title": "Kanal einrichten",
+    "webhookUrl": "Webhook-URL",
+    "accessToken": "Access Token",
+    "verifyToken": "Verify Token",
+    "testConnection": "Verbindung testen",
+    "connectionSuccess": "Kanal erfolgreich verbunden",
+    "connectionFailed": "Kanal konnte nicht verbunden werden"
+  },
+  "conversations": {
+    "title": "Kanal-Unterhaltungen",
+    "noConversations": "Keine Unterhaltungen gefunden",
+    "lastMessage": "Letzte Nachricht",
+    "unread": "Ungelesen",
+    "markRead": "Als gelesen markieren",
+    "searchPlaceholder": "Unterhaltungen durchsuchen..."
+  },
+  "pages": {
+    "messagingChannels": "Messaging-Kanäle"
+  },
+  "whatsapp": {
+    "setup": {
+      "step1": "Gehen Sie zur Meta Developer Console → Ihre App → Webhooks",
+      "step2": "Klicken Sie auf \"Bearbeiten\" für die WhatsApp-Webhook-Subscription",
+      "step3": "Fügen Sie die Webhook-URL in das Feld \"Callback URL\" ein",
+      "step4": "Abonnieren Sie die oben aufgelisteten erforderlichen Webhook-Events",
+      "step5": "Klicken Sie auf \"Verifizieren und Speichern\" um die Verbindung zu testen"
+    }
+  }
+}

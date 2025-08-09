@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
+  const { t } = useTranslation(['auth', 'common']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
@@ -27,14 +29,14 @@ const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
     <div className="space-y-6">
       <div>
         <div className="text-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Verify your email</h3>
+          <h3 className="text-lg font-medium text-gray-900">{t('auth:verification.verifyEmail')}</h3>
           <p className="mt-1 text-sm text-gray-600">
-            We've sent a verification code to <span className="font-medium">{email}</span>
+            {t('auth:verification.verificationSent')} <span className="font-medium">{email}</span>
           </p>
         </div>
         
         <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
-          Verification Code
+          {t('auth:verification.verificationCode')}
         </label>
         <input
           id="otp"
@@ -42,7 +44,7 @@ const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-          placeholder="Enter 6-digit code"
+          placeholder={t('auth:verification.enterCode')}
           maxLength={6}
           required
         />
@@ -55,7 +57,7 @@ const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
           disabled={!canResend}
           className="text-sm text-orange-600 hover:text-orange-500 disabled:text-gray-400"
         >
-          {canResend ? 'Resend code' : `Resend in ${timer}s`}
+          {canResend ? t('auth:verification.resendCode') : t('auth:verification.resendIn') + ` ${timer}s`}
         </button>
         
         <button
@@ -64,7 +66,7 @@ const OTPVerification = ({ email, otp, setOtp, onVerify, resendOTP }) => {
           disabled={otp.length !== 6}
           className="bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-400"
         >
-          Verify
+          {t('auth:verification.verify')}
         </button>
       </div>
     </div>

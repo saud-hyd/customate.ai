@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import subscriptionService from '../../services/subscriptionService';
 
 const SubscriptionContent = ({ setError, setSuccess }) => {
+  const { t } = useTranslation(['subscription', 'common']);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
   const [formProcessing, setFormProcessing] = useState(false);
@@ -23,7 +25,7 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
       
     } catch (err) {
       console.error('Error fetching subscription data:', err);
-      setError('Failed to load subscription information. Please try again later.');
+      setError(t('common:errors.loadFailed', 'Failed to load subscription information. Please try again later.'));
     } finally {
       setLoading(false);
     }
@@ -42,7 +44,7 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
       
     } catch (err) {
       console.error('Error upgrading subscription:', err);
-      setError(`Failed to upgrade: ${err.message}`);
+      setError(t('common:errors.upgradeFailed', 'Failed to upgrade: {{error}}', { error: err.message }));
     } finally {
       setFormProcessing(false);
     }
@@ -69,9 +71,9 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium text-gray-900">Subscription Management</h3>
+        <h3 className="text-lg font-medium text-gray-900">{t('subscription:title')} {t('common:management', 'Management')}</h3>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your subscription plan, billing details, and usage limits.
+          {t('common:descriptions.subscriptionManagement', 'Manage your subscription plan, billing details, and usage limits.')}
         </p>
       </div>
 
@@ -81,13 +83,13 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
         <div className="card-orange">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div>
-              <h3 className="text-xl font-bold text-gradient-orange">{currentPlanDetails?.name || 'Free'} Plan</h3>
+              <h3 className="text-xl font-bold text-gradient-orange">{currentPlanDetails?.name || t('subscription:plans.free')} {t('common:plan', 'Plan')}</h3>
               <p className="text-sm text-gray-500 mt-1">
-                {isCurrentPlanFree ? 'Free forever' : `${currentPlanDetails?.price.annually}/year`}
+                {isCurrentPlanFree ? t('common:freeForever', 'Free forever') : `${currentPlanDetails?.price.annually}/${t('common:year', 'year')}`}
               </p>
               {!isCurrentPlanFree && planEndsAt && (
                 <p className="text-sm text-gray-500 mt-1">
-                  Current period ends on <span className="font-medium">{planEndsAt.toLocaleDateString()}</span>
+                  {t('subscription:billing.currentPeriodEnds', 'Current period ends on')} <span className="font-medium">{planEndsAt.toLocaleDateString()}</span>
                 </p>
               )}
             </div>
@@ -96,7 +98,7 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
                 onClick={handleManageSubscription}
                 className="btn-orange shadow-orange"
               >
-                Manage Subscription
+                {t('common:actions.manageSubscription', 'Manage Subscription')}
               </button>
             </div>
           </div>
@@ -117,7 +119,7 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
                 {plan.highlighted && !isCurrentPlan && (
                   <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                     <span className="bg-gradient-to-r from-green-500 to-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      Popular
+                      {t('common:popular', 'Popular')}
                     </span>
                   </div>
                 )}
@@ -129,7 +131,7 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
                   </div>
                   {isCurrentPlan && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      Current
+                      {t('common:current', 'Current')}
                     </span>
                   )}
                 </div>
@@ -144,7 +146,7 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
                   ))}
                   {plan.features.length > 3 && (
                     <div className="text-xs text-gray-500">
-                      +{plan.features.length - 3} more features
+                      +{plan.features.length - 3} {t('common:moreFeatures', 'more features')}
                     </div>
                   )}
                 </div>
@@ -159,7 +161,7 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
                         : 'btn-orange shadow-orange hover:shadow-orange-lg transform hover:scale-105'
                     } ${formProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Upgrade
+                    {t('subscription:upgrade')}
                   </button>
                 )}
               </div>
@@ -176,9 +178,9 @@ const SubscriptionContent = ({ setError, setSuccess }) => {
               </svg>
             </div>
             <div className="ml-3">
-              <h4 className="text-sm font-medium text-orange-800">Need Help?</h4>
+              <h4 className="text-sm font-medium text-orange-800">{t('common:needHelp', 'Need Help?')}</h4>
               <p className="mt-1 text-sm text-orange-700">
-                Visit our <a href="/subscription" className="underline hover:text-orange-600 font-medium">subscription page</a> for detailed plan comparisons and billing management.
+                {t('common:descriptions.subscriptionHelp', 'Visit our')} <a href="/subscription" className="underline hover:text-orange-600 font-medium">{t('common:subscriptionPage', 'subscription page')}</a> {t('common:descriptions.subscriptionHelpDetails', 'for detailed plan comparisons and billing management.')}.
               </p>
             </div>
           </div>

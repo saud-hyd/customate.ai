@@ -3,10 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import authService from '../../services/authService';
 import Logo from '../common/Logo';
 
 const RegisterForm = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
   const location = useLocation();
   const [formData, setFormData] = useState({
@@ -31,15 +33,15 @@ const RegisterForm = () => {
   }, [location]);
 
   const industryOptions = [
-    { value: '', label: 'Select your industry' },
-    { value: 'ecommerce', label: 'E-commerce' },
-    { value: 'saas', label: 'SaaS' },
-    { value: 'healthcare', label: 'Healthcare' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'education', label: 'Education' },
-    { value: 'consulting', label: 'Consulting' },
-    { value: 'realestate', label: 'Real Estate' },
-    { value: 'other', label: 'Other' }
+    { value: '', label: t('auth:register.selectIndustry') },
+    { value: 'ecommerce', label: t('auth:industries.ecommerce') },
+    { value: 'saas', label: t('auth:industries.saas') },
+    { value: 'healthcare', label: t('auth:industries.healthcare') },
+    { value: 'finance', label: t('auth:industries.finance') },
+    { value: 'education', label: t('auth:industries.education') },
+    { value: 'consulting', label: t('auth:industries.consulting') },
+    { value: 'realestate', label: t('auth:industries.realestate') },
+    { value: 'other', label: t('auth:industries.other') }
   ];
 
   const handleChange = (e) => {
@@ -55,22 +57,22 @@ const RegisterForm = () => {
     
     // Validation
     if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
-      setError('Name, email, and password are required');
+      setError(t('auth:register.requiredFields'));
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth:errors.passwordsDoNotMatch'));
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError(t('auth:register.passwordRequirement'));
       return;
     }
 
     if (!formData.agreeToTerms) {
-      setError('You must agree to the Terms of Service and Privacy Policy');
+      setError(t('auth:register.agreeTerms'));
       return;
     }
     
@@ -99,12 +101,12 @@ const RegisterForm = () => {
       } else {
         // Redirect to login with success message
         navigate('/login', {
-          state: { message: 'Account created successfully! Please sign in.' }
+          state: { message: t('auth:register.accountCreatedSuccess') }
         });
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      setError(err.response?.data?.detail || t('auth:errors.registrationFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -120,15 +122,15 @@ const RegisterForm = () => {
           </div>
           
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            {t('auth:register.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            {t('auth:register.or')}{' '}
             <Link
               to="/login"
               className="font-medium text-orange-600 hover:text-orange-500"
             >
-              sign in to your existing account
+              {t('auth:register.signInExisting')}
             </Link>
           </p>
         </div>
@@ -145,7 +147,7 @@ const RegisterForm = () => {
             {/* Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
+                {t('auth:register.fullName')}
               </label>
               <input
                 id="name"
@@ -153,7 +155,7 @@ const RegisterForm = () => {
                 type="text"
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Enter your full name"
+                placeholder={t('auth:register.fullNamePlaceholder')}
                 value={formData.name}
                 onChange={handleChange}
               />
@@ -162,7 +164,7 @@ const RegisterForm = () => {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
+                {t('auth:register.emailAddress')}
               </label>
               <input
                 id="email"
@@ -171,7 +173,7 @@ const RegisterForm = () => {
                 autoComplete="email"
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Enter your email address"
+                placeholder={t('auth:register.emailPlaceholder')}
                 value={formData.email}
                 onChange={handleChange}
               />
@@ -180,7 +182,7 @@ const RegisterForm = () => {
             {/* Industry */}
             <div>
               <label htmlFor="industry" className="block text-sm font-medium text-gray-700">
-                Industry (Optional)
+                {t('auth:register.industryOptional')}
               </label>
               <select
                 id="industry"
@@ -200,14 +202,14 @@ const RegisterForm = () => {
             {/* Website */}
             <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700">
-                Website URL (Optional)
+                {t('auth:register.websiteOptional')}
               </label>
               <input
                 id="website"
                 name="website"
                 type="url"
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="https://yourwebsite.com"
+                placeholder={t('auth:register.websitePlaceholder')}
                 value={formData.website}
                 onChange={handleChange}
               />
@@ -216,7 +218,7 @@ const RegisterForm = () => {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                {t('auth:register.password')}
               </label>
               <input
                 id="password"
@@ -225,19 +227,19 @@ const RegisterForm = () => {
                 autoComplete="new-password"
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Enter your password"
+                placeholder={t('auth:register.passwordPlaceholder')}
                 value={formData.password}
                 onChange={handleChange}
               />
               <p className="mt-1 text-xs text-gray-500">
-                Password must be at least 8 characters long
+                {t('auth:register.passwordHint')}
               </p>
             </div>
 
             {/* Confirm Password */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
+                {t('auth:register.confirmPassword')}
               </label>
               <input
                 id="confirmPassword"
@@ -246,7 +248,7 @@ const RegisterForm = () => {
                 autoComplete="new-password"
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Confirm your password"
+                placeholder={t('auth:register.confirmPasswordPlaceholder')}
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />
@@ -263,13 +265,13 @@ const RegisterForm = () => {
                 onChange={handleChange}
               />
               <label htmlFor="agreeToTerms" className="ml-2 block text-sm text-gray-900">
-                I agree to the{' '}
+                {t('auth:register.agreeToThe')}{' '}
                 <Link to="/terms" className="text-orange-600 hover:text-orange-500">
-                  Terms of Service
+                  {t('auth:register.termsOfService')}
                 </Link>{' '}
-                and{' '}
+                {t('auth:register.and')}{' '}
                 <Link to="/privacy" className="text-orange-600 hover:text-orange-500">
-                  Privacy Policy
+                  {t('auth:register.privacyPolicy')}
                 </Link>
               </label>
             </div>
@@ -284,10 +286,10 @@ const RegisterForm = () => {
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                  Creating account...
+                  {t('auth:register.creatingAccount')}
                 </div>
               ) : (
-                'Create account'
+                t('auth:register.createAccount')
               )}
             </button>
           </div>
@@ -299,7 +301,7 @@ const RegisterForm = () => {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">Or register with</span>
+                <span className="px-2 bg-gray-50 text-gray-500">{t('auth:register.orRegisterWith')}</span>
               </div>
             </div>
 

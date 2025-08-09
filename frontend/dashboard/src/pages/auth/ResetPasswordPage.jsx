@@ -1,10 +1,12 @@
 // Path: frontend/dashboard/src/pages/auth/ResetPasswordPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api'; // Add this import for direct API calls
 import { useToast } from '../../context/ToastContext';
 
 const ResetPasswordPage = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isResetting, setIsResetting] = useState(false);
@@ -26,12 +28,12 @@ const ResetPasswordPage = () => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t('auth:errors.passwordsDoNotMatch'));
       return;
     }
     
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+      toast.error(t('auth:errors.weakPassword'));
       return;
     }
     
@@ -68,7 +70,7 @@ const ResetPasswordPage = () => {
         console.log('Stored authentication data from response');
       }
       
-      toast.success('Password reset successful! Redirecting to dashboard...');
+      toast.success(t('auth:resetPassword.passwordResetSuccess'));
       
       // Redirect after a short delay
       setTimeout(() => {
@@ -99,7 +101,7 @@ const ResetPasswordPage = () => {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
-          <h2 className="text-2xl font-bold mb-6">Invalid or Expired Link</h2>
+          <h2 className="text-2xl font-bold mb-6">{t('auth:errors.invalidLink')}</h2>
           <p className="mb-6 text-gray-600">
             The password reset link is invalid or has expired. Please request a new password reset link.
           </p>
@@ -107,7 +109,7 @@ const ResetPasswordPage = () => {
             onClick={() => navigate('/forgot-password')}
             className="bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
           >
-            Request New Link
+            {t('auth:forgotPassword.sendInstructions')}
           </button>
         </div>
       </div>
@@ -123,7 +125,7 @@ const ResetPasswordPage = () => {
             alt="Customate.ai"
             className="h-8 mx-auto mb-2"
           />
-          <h1 className="text-2xl font-bold text-center">Set New Password</h1>
+          <h1 className="text-2xl font-bold text-center">{t('auth:resetPassword.title')}</h1>
           <p className="mt-2 text-center text-gray-600">
             Please create a new password for your account.
           </p>
@@ -132,7 +134,7 @@ const ResetPasswordPage = () => {
         <form onSubmit={handleResetPassword} className="space-y-6">
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              New Password
+              {t('auth:resetPassword.password')}
             </label>
             <input
               type="password"
@@ -148,7 +150,7 @@ const ResetPasswordPage = () => {
           
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm New Password
+              {t('auth:resetPassword.confirmPassword')}
             </label>
             <input
               type="password"
@@ -167,7 +169,7 @@ const ResetPasswordPage = () => {
             className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             disabled={isResetting}
           >
-            {isResetting ? 'Resetting Password...' : 'Reset Password'}
+            {isResetting ? 'Resetting Password...' : t('auth:resetPassword.resetPassword')}
           </button>
         </form>
       </div>

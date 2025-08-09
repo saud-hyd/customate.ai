@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 import subscriptionService from '../../services/subscriptionService';
 import TeamMembersSection from '../../components/settings/TeamMembersSection';
@@ -14,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const SettingsPage = () => {
+  const { t } = useTranslation(['settings', 'common']);
   const { currentUser, updateSettings } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [error, setError] = useState(null);
@@ -71,7 +73,7 @@ const SettingsPage = () => {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
             >
               <UserIcon className="h-5 w-5 mr-2" />
-              Profile
+              {t('settings:tabs.profile')}
             </button>
             <button
               onClick={() => setActiveTab('billing')}
@@ -82,7 +84,7 @@ const SettingsPage = () => {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
             >
               <CreditCardIcon className="h-5 w-5 mr-2" />
-              Billing
+              {t('settings:tabs.billing')}
             </button>
             <button
               onClick={() => setActiveTab('team')}
@@ -93,7 +95,7 @@ const SettingsPage = () => {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
             >
               <UsersIcon className="h-5 w-5 mr-2" />
-              Team Members
+              {t('settings:tabs.team')}
             </button>
             <button
               onClick={() => setActiveTab('support')}
@@ -104,7 +106,7 @@ const SettingsPage = () => {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
             >
               <QuestionMarkCircleIcon className="h-5 w-5 mr-2" />
-              Support
+              {t('settings:tabs.support')}
             </button>
           </nav>
         </div>
@@ -159,6 +161,7 @@ const SettingsPage = () => {
               setSuccess={setSuccess}
             />
           )}
+
 
           {/* Support tab */}
           {activeTab === 'support' && (

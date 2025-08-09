@@ -1,0 +1,45 @@
+{
+  "title": "Chat",
+  "startNewChat": "Start New Chat",
+  "conversations": "Conversations",
+  "messages": "Messages",
+  "typeMessage": "Type your message...",
+  "send": "Send",
+  "typing": "Typing...",
+  "online": "Online",
+  "offline": "Offline",
+  "searchConversations": "Search conversations...",
+  "noConversations": "No conversations yet",
+  "newConversation": "New Conversation",
+  "suggestions": {
+    "title": "Suggested Questions",
+    "noSuggestions": "No suggestions available"
+  },
+  "errors": {
+    "sendFailed": "Failed to send message",
+    "loadFailed": "Failed to load conversations"
+  },
+  "conversationsPage": {
+    "title": "Conversation History",
+    "tableHeaders": {
+      "sessionId": "Session ID",
+      "dateTime": "Date & Time", 
+      "messages": "Messages",
+      "duration": "Duration",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "loadingConversations": "Loading conversations...",
+    "pagination": {
+      "show": "Show",
+      "ariaLabel": "Pagination",
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "chatPage": {
+    "conversations": "Conversations",
+    "loadingConversations": "Loading conversations...",
+    "noConversationsYet": "No conversations yet"
+  }
+}

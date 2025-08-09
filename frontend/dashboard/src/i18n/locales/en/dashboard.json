@@ -1,0 +1,55 @@
+{
+  "title": "Dashboard",
+  "overview": "Overview",
+  "metrics": {
+    "totalMessages": "Total Messages",
+    "activeChats": "Active Chats",
+    "knowledgeItems": "Knowledge Items",
+    "integrations": "Integrations",
+    "monthlyUsage": "Monthly Usage",
+    "storageUsed": "Storage Used"
+  },
+  "charts": {
+    "messagesOverTime": "Messages Over Time",
+    "topIntegrations": "Top Integrations",
+    "userEngagement": "User Engagement",
+    "knowledgeUsage": "Knowledge Usage"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "startChat": "Start New Chat",
+    "uploadDocument": "Upload Document",
+    "createIntegration": "Create Integration",
+    "viewAnalytics": "View Analytics",
+    "upgradeplan": "Upgrade Plan"
+  },
+  "recentActivity": {
+    "title": "Recent Activity",
+    "noActivity": "No recent activity"
+  },
+  "status": {
+    "lastUpdated": "Last updated",
+    "refreshing": "Refreshing...",
+    "refreshData": "Refresh Data",
+    "version": "Version 2.1.0",
+    "subscriptionActive": "Your subscription is active",
+    "subscriptionNeedsAttention": "Your subscription needs attention"
+  },
+  "usage": {
+    "totalConversations": "Total Conversations",
+    "vsPreviousDay": "vs. previous day",
+    "assistantMessages": "Assistant Messages (API Usage)",
+    "storage": "Storage",
+    "documents": "Documents",
+    "knowledgeBase": "Knowledge Base",
+    "crawledContent": "Crawled Content",
+    "freePlan": "Free Plan"
+  },
+  "warnings": {
+    "approachingLimits": "You're approaching your plan limits",
+    "upgradePrompt": "Consider upgrading your plan to avoid service interruptions.",
+    "messagesWarning": "You've used {{percentage}}% of your monthly message limit ({{current}} of {{limit}})",
+    "storageWarning": "You've used {{percentage}}% of your storage limit ({{current}} of {{limit}})",
+    "upgradeNow": "Upgrade Now"
+  }
+}

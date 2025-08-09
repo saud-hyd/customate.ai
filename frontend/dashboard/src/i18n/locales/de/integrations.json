@@ -1,0 +1,36 @@
+{
+  "title": "Integrationen",
+  "available": "Verfügbare Integrationen",
+  "connected": "Verbunden",
+  "connect": "Verbinden",
+  "disconnect": "Trennen",
+  "configure": "Konfigurieren",
+  "status": "Status",
+  "lastSync": "Letzte Synchronisation",
+  "noIntegrations": "Keine Integrationen konfiguriert",
+  "platforms": {
+    "salesforce": "Salesforce",
+    "shopify": "Shopify",
+    "zendesk": "Zendesk",
+    "slack": "Slack",
+    "hubspot": "HubSpot"
+  },
+  "setup": {
+    "title": "Integration einrichten",
+    "credentials": "Anmeldedaten",
+    "testConnection": "Verbindung testen",
+    "connectionSuccess": "Verbindung erfolgreich",
+    "connectionFailed": "Verbindung fehlgeschlagen",
+    "save": "Integration speichern"
+  },
+  "errors": {
+    "connectionFailed": "Verbindung zum Service fehlgeschlagen",
+    "invalidCredentials": "Ungültige Anmeldedaten angegeben",
+    "syncFailed": "Synchronisation fehlgeschlagen"
+  },
+  "pages": {
+    "integrationsTitle": "Integrationen",
+    "connectedIntegrations": "Verbundene Integrationen",
+    "noIntegrationsAvailable": "Keine Integrationen verfügbar"
+  }
+}

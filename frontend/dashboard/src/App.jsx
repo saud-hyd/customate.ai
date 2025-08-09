@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { ToastProvider } from './context/ToastContext'; // ✅ Import ToastProvider
+import { ToastProvider } from './context/ToastContext';
+import { LanguageProvider } from './context/LanguageContext';
 import AppRoutes from './Routes';
 import UsageAlertNotification from './components/notifications/UsageAlertNotification';
+import './i18n';
 import './styles/global.css';
 
 function App() {
@@ -25,14 +27,22 @@ function App() {
   
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider> {/* ✅ Wrap the app with ToastProvider */}
-          <div className="app">
-            <AppRoutes />
-            <UsageAlertNotification />
-          </div>
-        </ToastProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-screen">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-orange-600"></div>
+              </div>
+            }>
+              <div className="app">
+                <AppRoutes />
+                <UsageAlertNotification />
+              </div>
+            </Suspense>
+          </ToastProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

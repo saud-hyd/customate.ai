@@ -1,0 +1,85 @@
+{
+  "title": "Configuración",
+  "tabs": {
+    "profile": "Perfil",
+    "billing": "Facturación",
+    "team": "Miembros del Equipo",
+    "support": "Soporte",
+    "language": "Idioma"
+  },
+  "profile": {
+    "title": "Configuración del Perfil",
+    "description": "Gestiona la información de tu cuenta y preferencias",
+    "name": "Nombre",
+    "email": "Correo Electrónico",
+    "company": "Empresa",
+    "companyName": "Nombre de la Empresa",
+    "companyNamePlaceholder": "Ingresa el nombre de tu empresa",
+    "emailAddress": "Dirección de Correo Electrónico",
+    "emailPlaceholder": "Ingresa tu dirección de correo electrónico",
+    "website": "Sitio Web",
+    "websitePlaceholder": "https://tuempresa.com",
+    "phoneNumber": "Número de Teléfono",
+    "phonePlaceholder": "+1 (555) 123-4567",
+    "industry": "Industria",
+    "industryPlaceholder": "Selecciona una industria",
+    "industryOptions": {
+      "saas": "SaaS",
+      "ecommerce": "Comercio Electrónico",
+      "healthcare": "Atención Médica",
+      "education": "Educación",
+      "finance": "Finanzas",
+      "realestate": "Bienes Raíces",
+      "consulting": "Consultoría",
+      "other": "Otro"
+    },
+    "notProvided": "No proporcionado",
+    "notSelected": "No seleccionado",
+    "chatbotNamePlaceholder": "Asistente de IA",
+    "greetingPlaceholder": "¡Hola! ¿Cómo puedo ayudarte hoy?",
+    "updatePassword": "Actualizar Contraseña",
+    "currentPassword": "Contraseña Actual",
+    "newPassword": "Nueva Contraseña",
+    "confirmPassword": "Confirmar Nueva Contraseña",
+    "profileUpdated": "Perfil actualizado exitosamente",
+    "passwordUpdated": "Contraseña actualizada exitosamente",
+    "profileUpdateFailed": "Error al actualizar el perfil",
+    "manageSubscription": "Gestionar Suscripción",
+    "logOut": "Cerrar Sesión"
+  },
+  "billing": {
+    "title": "Facturación y Suscripción",
+    "currentPlan": "Plan Actual",
+    "usage": "Uso",
+    "paymentMethods": "Métodos de Pago",
+    "billingHistory": "Historial de Facturación",
+    "nextBilling": "Próxima fecha de facturación",
+    "upgradeplan": "Actualizar Plan",
+    "manageBilling": "Gestionar Facturación"
+  },
+  "team": {
+    "title": "Miembros del Equipo",
+    "inviteMembers": "Invitar Miembros",
+    "memberName": "Nombre",
+    "memberEmail": "Correo Electrónico", 
+    "memberRole": "Rol",
+    "memberStatus": "Estado",
+    "invitationSent": "Invitación enviada exitosamente",
+    "memberRemoved": "Miembro eliminado exitosamente"
+  },
+  "support": {
+    "title": "Soporte",
+    "contactUs": "Contáctanos",
+    "documentation": "Documentación",
+    "apiDocs": "Documentación de API",
+    "helpCenter": "Centro de Ayuda",
+    "reportIssue": "Reportar un Problema"
+  },
+  "language": {
+    "title": "Configuración de Idioma",
+    "selectLanguage": "Seleccionar Idioma",
+    "currentLanguage": "Idioma Actual",
+    "languageUpdated": "Idioma actualizado exitosamente",
+    "description": "Elige tu idioma preferido para la interfaz del panel."
+  }
+}

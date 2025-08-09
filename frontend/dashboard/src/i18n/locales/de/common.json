@@ -1,0 +1,186 @@
+{
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "create": "Erstellen",
+    "update": "Aktualisieren",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "upload": "Hochladen",
+    "download": "Herunterladen",
+    "view": "Anzeigen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "submit": "Übermitteln",
+    "reset": "Zurücksetzen",
+    "refresh": "Aktualisieren",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "back": "Zurück",
+    "continue": "Fortfahren",
+    "select": "Auswählen",
+    "clear": "Löschen",
+    "or": "Oder",
+    "loading": "Lädt...",
+    "saving": "Speichert...",
+    "refreshing": "Aktualisiert...",
+    "noDataAvailable": "Keine Daten verfügbar",
+    "comingSoon": "Demnächst",
+    "inDevelopment": "In Entwicklung",
+    "saveChanges": "Änderungen Speichern",
+    "noChanges": "Keine Änderungen",
+    "refreshData": "Daten Aktualisieren",
+    "today": "Heute",
+    "last7Days": "Letzte 7 Tage",
+    "last30Days": "Letzte 30 Tage", 
+    "last90Days": "Letzte 90 Tage",
+    "customRange": "Benutzerdefinierter Zeitraum",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "applyCustomRange": "Benutzerdefinierten Zeitraum Anwenden"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "pending": "Ausstehend",
+    "completed": "Abgeschlossen",
+    "failed": "Fehlgeschlagen",
+    "success": "Erfolgreich",
+    "error": "Fehler",
+    "loading": "Lädt",
+    "processing": "Verarbeitung"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "chat": "Chat",
+    "knowledge": "Wissensbasis",
+    "analytics": "Analytics",
+    "integrations": "Integrationen",
+    "channels": "Kanäle",
+    "settings": "Einstellungen",
+    "subscription": "Abonnement",
+    "testChatbot": "Chatbot Testen"
+  },
+  "messages": {
+    "success": "Vorgang erfolgreich abgeschlossen",
+    "error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "noData": "Keine Daten verfügbar",
+    "loading": "Daten werden geladen...",
+    "unauthorized": "Sie sind nicht berechtigt, diese Aktion auszuführen",
+    "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "validationError": "Bitte überprüfen Sie die Formulardaten"
+  },
+  "time": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "thisWeek": "Diese Woche",
+    "lastWeek": "Letzte Woche",
+    "thisMonth": "Dieser Monat",
+    "lastMonth": "Letzter Monat",
+    "seconds": "Sekunden",
+    "minutes": "Minuten",
+    "hours": "Stunden",
+    "days": "Tage",
+    "weeks": "Wochen",
+    "months": "Monate",
+    "lastUpdated": "Zuletzt aktualisiert"
+  },
+  "forms": {
+    "enterEmail": "E-Mail eingeben",
+    "searchConversations": "Gespräche suchen...",
+    "typeMessage": "Nachricht eingeben...",
+    "collectionName": "Sammlungsname",
+    "urlPlaceholder": "https://beispiel.com",
+    "searchPlaceholder": "Suchen...",
+    "emailPlaceholder": "E-Mail-Adresse eingeben",
+    "namePlaceholder": "Namen eingeben"
+  },
+  "errors": {
+    "failedToLoad": "Laden fehlgeschlagen",
+    "somethingWrong": "Etwas ist schief gelaufen",
+    "connectionFailed": "Verbindung fehlgeschlagen", 
+    "invalidCredentials": "Ungültige Anmeldedaten",
+    "tryAgain": "Bitte versuchen Sie es erneut",
+    "loadingError": "Fehler beim Laden der Daten",
+    "updateError": "Aktualisierung fehlgeschlagen"
+  },
+  "buttons": {
+    "getStarted": "Loslegen",
+    "learnMore": "Mehr Erfahren",
+    "viewAll": "Alle Anzeigen",
+    "showMore": "Mehr Anzeigen",
+    "showLess": "Weniger Anzeigen",
+    "copyCode": "Code Kopieren",
+    "copied": "Kopiert!",
+    "close": "Schließen",
+    "retry": "Wiederholen"
+  },
+  "error": {
+    "title": "Fehler",
+    "dismiss": "Schließen"
+  },
+  "header": {
+    "viewNotifications": "Benachrichtigungen anzeigen",
+    "openUserMenu": "Benutzermenü öffnen",
+    "defaultUser": "Benutzer",
+    "defaultEmail": "benutzer@beispiel.com",
+    "freePlan": "Kostenloser Tarif",
+    "accountSettings": "Kontoeinstellungen",
+    "manageSubscription": "Abonnement Verwalten",
+    "helpSupport": "Hilfe & Support",
+    "signOut": "Abmelden"
+  },
+  "modal": {
+    "close": "Schließen"
+  },
+  "sidebar": {
+    "upgradeToPro": "Auf Pro Upgraden",
+    "upgradeNow": "Jetzt Upgraden"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "viewNotifications": "Benachrichtigungen anzeigen",
+    "markAllAsRead": "Alle als gelesen markieren",
+    "markAsRead": "Als gelesen markieren",
+    "loading": "Benachrichtigungen werden geladen...",
+    "noNew": "Keine neuen Benachrichtigungen",
+    "viewAll": "Alle Benachrichtigungen anzeigen",
+    "close": "Schließen",
+    "subscriptionLimitReached": "Abonnement-Limit Erreicht"
+  },
+  "layout": {
+    "footer": {
+      "help": "Hilfe",
+      "privacy": "Datenschutz", 
+      "terms": "Bedingungen"
+    }
+  },
+  "errors": {
+    "somethingWentWrong": "Etwas ist schief gelaufen"
+  },
+  "search": {
+    "searchDocuments": "Dokumente durchsuchen...",
+    "searchConversations": "Unterhaltungen durchsuchen..."
+  },
+  "filters": {
+    "allStatus": "Alle Status",
+    "processed": "Verarbeitet",
+    "processing": "Wird verarbeitet",
+    "failed": "Fehlgeschlagen"
+  },
+  "sorting": {
+    "nameAZ": "Name (A-Z)",
+    "nameZA": "Name (Z-A)"
+  },
+  "support": {
+    "faqs": "Häufig gestellte Fragen",
+    "sendMessage": "Senden Sie uns eine Nachricht",
+    "issuePlaceholder": "Womit können wir Ihnen helfen?",
+    "detailsPlaceholder": "Beschreiben Sie Ihr Problem oder Ihre Frage im Detail"
+  }
+}

@@ -3,11 +3,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BellIcon, UserCircleIcon, Cog6ToothIcon, CreditCardIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import clientService from '../../services/clientService';
 
 const Header = () => {
+  const { t } = useTranslation(['common', 'dashboard']);
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [clientInfo, setClientInfo] = useState(null);
@@ -54,7 +56,7 @@ const Header = () => {
             type="button"
             className="ml-auto flex-shrink-0 bg-white p-2 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
           >
-            <span className="sr-only">View notifications</span>
+            <span className="sr-only">{t('common:header.viewNotifications')}</span>
             <BellIcon className="h-6 w-6" aria-hidden="true" />
           </button>
           
@@ -68,7 +70,7 @@ const Header = () => {
                 aria-expanded={dropdownOpen}
                 aria-haspopup="true"
               >
-                <span className="sr-only">Open user menu</span>
+                <span className="sr-only">{t('common:header.openUserMenu')}</span>
                 <div className="h-8 w-8 rounded-full bg-orange-600 flex items-center justify-center text-white uppercase font-medium text-sm">
                   {user?.name?.charAt(0) || clientInfo?.name?.charAt(0) || 'U'}
                 </div>
@@ -93,13 +95,13 @@ const Header = () => {
                   ) : (
                     <>
                       <p className="text-sm font-medium text-gray-900">
-                        {clientInfo?.name || user?.name || 'User'}
+                        {clientInfo?.name || user?.name || t('common:header.defaultUser')}
                       </p>
                       <p className="text-sm font-light text-gray-500 truncate">
-                        {clientInfo?.email || user?.email || 'user@example.com'}
+                        {clientInfo?.email || user?.email || t('common:header.defaultEmail')}
                       </p>
                       <p className="text-xs font-light text-orange-600 mt-1">
-                        {clientInfo?.plan_type || 'Free Plan'}
+                        {clientInfo?.plan_type || t('common:header.freePlan')}
                       </p>
                     </>
                   )}
@@ -113,7 +115,7 @@ const Header = () => {
                   role="menuitem"
                 >
                   <Cog6ToothIcon className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-                  Account Settings
+                  {t('common:header.accountSettings')}
                 </a>
                 
                 <a
@@ -122,7 +124,7 @@ const Header = () => {
                   role="menuitem"
                 >
                   <CreditCardIcon className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-                  Manage Subscription
+                  {t('common:header.manageSubscription')}
                 </a>
                 
                 <a
@@ -131,7 +133,7 @@ const Header = () => {
                   role="menuitem"
                 >
                   <QuestionMarkCircleIcon className="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-                  Help & Support
+                  {t('common:header.helpSupport')}
                 </a>
                 
                 <div className="border-t border-gray-100 mt-1"></div>
@@ -141,7 +143,7 @@ const Header = () => {
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   role="menuitem"
                 >
-                  Sign out
+                  {t('common:header.signOut')}
                 </button>
               </div>
             )}

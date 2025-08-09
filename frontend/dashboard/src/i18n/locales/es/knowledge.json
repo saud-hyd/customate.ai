@@ -1,0 +1,112 @@
+{
+  "title": "Base de Conocimiento",
+  "documents": "Documentos",
+  "collections": "Colecciones",
+  "uploadDocument": "Subir Documento",
+  "createCollection": "Crear Colección",
+  "searchDocuments": "Buscar documentos...",
+  "documentName": "Nombre del Documento",
+  "documentType": "Tipo",
+  "documentSize": "Tamaño",
+  "uploadDate": "Fecha de Subida",
+  "noDocuments": "No se encontraron documentos",
+  "processing": "Procesando documento...",
+  "processed": "Documento procesado exitosamente",
+  "failed": "Error al procesar el documento",
+  "webCrawler": {
+    "title": "Rastreador Web",
+    "url": "URL del Sitio Web",
+    "crawl": "Iniciar Rastreo",
+    "crawling": "Rastreando...",
+    "completed": "Rastreo completado",
+    "failed": "Rastreo fallido"
+  },
+  "storage": {
+    "used": "Almacenamiento Utilizado",
+    "available": "Disponible",
+    "limit": "Límite de Almacenamiento",
+    "warning": "Se está acercando al límite de almacenamiento"
+  },
+  "upload": {
+    "selectFile": "Por favor seleccione un archivo para subir",
+    "selectCollection": "Por favor seleccione una colección",
+    "chooseCollection": "Seleccionar una colección",
+    "uploadFailed": "Error al subir el documento. Por favor inténtelo de nuevo.",
+    "uploadSuccess": "Documento subido exitosamente",
+    "uploadProcessing": "El documento \"{{filename}}\" ha sido subido y se está procesando.",
+    "dropZoneText": "Arrastra y suelta tu archivo aquí o haz clic para explorar",
+    "supportedFormats": "Formatos soportados: PDF, DOCX, DOC, TXT",
+    "uploading": "Subiendo documento...",
+    "uploadDocument": "Subir Documento"
+  },
+  "pages": {
+    "knowledgeBaseTitle": "Base de Conocimiento",
+    "loadingStorage": "Cargando almacenamiento...",
+    "storageError": "Almacenamiento: {{error}}",
+    "documentsLabel": "Documentos:",
+    "crawledLabel": "Rastreados:",
+    "knowledgeLabel": "Conocimiento:",
+    "searchPlaceholder": "Buscar documentos y sitios web...",
+    "loadingKnowledgeBase": "Cargando base de conocimiento...",
+    "noContentYet": "Aún no hay contenido",
+    "uploadDocumentAction": "Subir Documento",
+    "uploadDescription": "Archivos PDF, DOCX, DOC, o TXT",
+    "crawlWebsiteAction": "Rastrear Sitio Web",
+    "crawlDescription": "Extraer contenido de páginas web",
+    "defaultCollection": "Colección Predeterminada",
+    "fileSizeLimit": "PDF, DOCX, DOC, TXT hasta 10MB"
+  },
+  "enhanced": {
+    "collectionsTitle": "Colecciones",
+    "loadingCollections": "Cargando colecciones...",
+    "noCollectionsYet": "Aún no hay colecciones",
+    "searchItemsPlaceholder": "Buscar elementos...",
+    "loadingItems": "Cargando elementos...",
+    "selectCollectionToView": "Seleccione una colección para ver los elementos",
+    "noItemsInCollection": "No hay elementos en esta colección",
+    "updatedLabel": "Actualizado: {{date}}",
+    "uploadedDocuments": "Documentos Subidos",
+    "loadingDocuments": "Cargando documentos...",
+    "noDocumentsYet": "Aún no se han subido documentos",
+    "tableHeaders": {
+      "document": "Documento",
+      "status": "Estado",
+      "size": "Tamaño",
+      "uploaded": "Subido",
+      "actions": "Acciones"
+    },
+    "createCollectionModal": {
+      "title": "Crear Nueva Colección",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Nombre de la colección",
+      "descriptionLabel": "Descripción (Opcional)",
+      "descriptionPlaceholder": "Descripción de la colección",
+      "typeLabel": "Tipo",
+      "types": {
+        "general": "General",
+        "faqs": "Preguntas Frecuentes",
+        "policies": "Políticas",
+        "products": "Productos",
+        "procedures": "Procedimientos"
+      }
+    },
+    "deleteCollectionModal": {
+      "title": "Eliminar Colección"
+    },
+    "addKnowledgeItemModal": {
+      "title": "Agregar Elemento de Conocimiento",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Título del elemento",
+      "contentLabel": "Contenido",
+      "contentPlaceholder": "Contenido del elemento"
+    }
+  },
+  "webCrawlerPage": {
+    "intelligentWebCrawler": "Rastreador Web Inteligente",
+    "storageUsage": "Uso de Almacenamiento",
+    "siteAnalysis": "Análisis de Sitio",
+    "smartPrioritization": "Priorización Inteligente",
+    "storageOptimization": "Optimización de Almacenamiento",
+    "realTimeProgress": "Progreso en Tiempo Real"
+  }
+}

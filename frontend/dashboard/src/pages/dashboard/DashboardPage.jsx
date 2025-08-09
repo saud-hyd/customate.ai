@@ -1,5 +1,6 @@
 // frontend/dashboard/src/pages/dashboard/DashboardPage.jsx
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import analyticsService from '../../services/analyticsService';
 import subscriptionService from '../../services/subscriptionService';
 import clientService from '../../services/clientService';
@@ -8,6 +9,7 @@ import { ArrowUpIcon, ArrowDownIcon, ArrowPathIcon } from '@heroicons/react/24/s
 import { ExclamationTriangleIcon, CreditCardIcon, DocumentTextIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 
 const DashboardPage = () => {
+  const { t } = useTranslation(['dashboard', 'common']);
   const [dashboardData, setDashboardData] = useState({
     today: {
       sessions: 0,
@@ -64,11 +66,11 @@ const DashboardPage = () => {
         setRefreshing(true);
         try {
           await analyticsService.refreshAllData();
-          setSuccess("Data refreshed successfully");
+          setSuccess(t('common:messages.dataRefreshed', 'Data refreshed successfully'));
           setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
           console.error('Error refreshing data:', err);
-          setError('Failed to refresh data. Using cached data instead.');
+          setError(t('common:errors.refreshFailed', 'Failed to refresh data. Using cached data instead.'));
         } finally {
           setRefreshing(false);
         }
@@ -92,7 +94,7 @@ const DashboardPage = () => {
       
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(`Failed to load dashboard data: ${err.message}`);
+      setError(t('common:errors.loadFailed', 'Failed to load dashboard data: {{error}}', { error: err.message }));
     } finally {
       setLoading(false);
     }
@@ -139,7 +141,7 @@ const DashboardPage = () => {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-3 text-gray-700">Loading dashboard data...</p>
+          <p className="mt-3 text-gray-700">{t('common:messages.loading')}</p>
         </div>
       </div>
     );
@@ -151,13 +153,13 @@ const DashboardPage = () => {
       <div className="bg-white shadow-sm p-4 sm:p-6 sm:rounded-lg">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('dashboard:title')}</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Overview of your chatbot performance and subscription status.
+              {t('dashboard:overview')}
             </p>
             {lastRefresh && (
               <p className="mt-2 text-xs text-gray-500">
-                Last updated: {lastRefresh.toLocaleTimeString()}
+{t('dashboard:status.lastUpdated')}: {lastRefresh.toLocaleTimeString()}
               </p>
             )}
           </div>
@@ -169,12 +171,12 @@ const DashboardPage = () => {
             {refreshing ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Refreshing...
+{t('dashboard:status.refreshing')}
               </>
             ) : (
               <>
                 <ArrowPathIcon className="h-4 w-4 mr-2" />
-                Refresh Data
+{t('dashboard:status.refreshData')}
               </>
             )}
           </button>
@@ -219,9 +221,9 @@ const DashboardPage = () => {
               <CreditCardIcon className="h-6 w-6" />
             </div>
             <div className="ml-3">
-              <p className="text-lg font-semibold">{subscriptionData.plan_type.charAt(0).toUpperCase() + subscriptionData.plan_type.slice(1)} Plan</p>
+              <p className="text-lg font-semibold">{subscriptionData.plan_type.charAt(0).toUpperCase() + subscriptionData.plan_type.slice(1)} {t('common:plan', 'Plan')}</p>
               <p className="text-sm text-gray-600">
-                {subscriptionData.status === 'active' ? 'Your subscription is active' : 'Your subscription needs attention'}
+                {subscriptionData.status === 'active' ? t('dashboard:status.subscriptionActive') : t('dashboard:status.subscriptionNeedsAttention')}
               </p>
             </div>
           </div>
@@ -235,7 +237,7 @@ const DashboardPage = () => {
                 'bg-purple-600 hover:bg-purple-700'
               }`}
             >
-              Upgrade Plan
+{t('dashboard:quickActions.upgradeplan', 'Upgrade Plan')}
             </button>
           )}
         </div>
@@ -245,10 +247,13 @@ const DashboardPage = () => {
           <div className="mt-3 flex items-start p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-yellow-800">You're approaching your plan limits</p>
+              <p className="text-sm font-medium text-yellow-800">{t('dashboard:warnings.approachingLimits')}</p>
               <p className="text-sm text-yellow-700 mt-1">
-                You've used over {formatPercentage(subscriptionData.usage.messages.percentage)} of your message limit.
-                Consider upgrading your plan to avoid service interruptions.
+                {t('dashboard:warnings.messagesWarning', {
+                  percentage: formatPercentage(subscriptionData.usage.messages.percentage),
+                  current: subscriptionData.usage.messages.used,
+                  limit: subscriptionData.usage.messages.limit
+                })}. {t('dashboard:warnings.upgradePrompt')}
               </p>
             </div>
           </div>
@@ -259,8 +264,8 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white shadow-sm rounded-lg p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-500">Total Conversations</h2>
-            <div className="text-xs font-medium text-gray-400">vs. previous day</div>
+            <h2 className="text-sm font-medium text-gray-500">{t('dashboard:usage.totalConversations')}</h2>
+            <div className="text-xs font-medium text-gray-400">{t('dashboard:usage.vsPreviousDay')}</div>
           </div>
           <div className="mt-2 flex items-baseline">
             <p className="text-3xl font-bold text-gray-900">{formatNumber(dashboardData.today?.sessions || 0)}</p>
@@ -275,8 +280,8 @@ const DashboardPage = () => {
         
         <div className="bg-white shadow-sm rounded-lg p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-500">Total Messages (Chatbot Responses)</h2>
-            <div className="text-xs font-medium text-gray-400">vs. previous day</div>
+            <h2 className="text-sm font-medium text-gray-500">{t('dashboard:metrics.totalMessages')}</h2>
+            <div className="text-xs font-medium text-gray-400">{t('dashboard:usage.vsPreviousDay')}</div>
           </div>
           <div className="mt-2 flex items-baseline">
             <p className="text-3xl font-bold text-gray-900">{formatNumber(dashboardData.today?.messages || 0)}</p>
@@ -292,13 +297,13 @@ const DashboardPage = () => {
 
       {/* Subscription usage section - Now shows Message usage and Storage */}
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Monthly Usage</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">{t('dashboard:usage.monthlyUsage', 'Monthly Usage')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Messages usage */}
           <div className="space-y-2">
             <div className="flex justify-between">
               <h3 className="text-sm font-medium text-gray-500">
-                Assistant Messages (API Usage)
+                {t('dashboard:usage.assistantMessages')}
               </h3>
               <span className="text-sm text-gray-500">
                 {formatNumber(subscriptionData.usage?.messages?.used || 0)} / {formatNumber(subscriptionData.usage?.messages?.limit || 100)}
@@ -312,11 +317,21 @@ const DashboardPage = () => {
             </div>
             <p className="text-xs text-gray-500">
               {subscriptionData.usage?.messages?.percentage >= 90 ? (
-                <span className="text-red-600 font-medium">Critical: Only {formatNumber((subscriptionData.usage?.messages?.limit || 100) - (subscriptionData.usage?.messages?.used || 0))} messages left!</span>
+                <span className="text-red-600 font-medium">
+                  {t('common:warnings.criticalUsage', 'Critical: Only {{remaining}} messages left!', {
+                    remaining: formatNumber((subscriptionData.usage?.messages?.limit || 100) - (subscriptionData.usage?.messages?.used || 0))
+                  })}
+                </span>
               ) : subscriptionData.usage?.messages?.percentage >= 80 ? (
-                <span className="text-orange-600">Warning: {formatPercentage(subscriptionData.usage?.messages?.percentage)} of your limit used</span>
+                <span className="text-orange-600">
+                  {t('common:warnings.highUsage', 'Warning: {{percentage}} of your limit used', {
+                    percentage: formatPercentage(subscriptionData.usage?.messages?.percentage)
+                  })}
+                </span>
               ) : (
-                `${formatPercentage(subscriptionData.usage?.messages?.percentage)} of your monthly message limit used`
+                t('common:usage.monthlyUsage', '{{percentage}} of your monthly message limit used', {
+                  percentage: formatPercentage(subscriptionData.usage?.messages?.percentage)
+                })
               )}
             </p>
           </div>
@@ -324,7 +339,7 @@ const DashboardPage = () => {
           {/* Storage usage - Enhanced UI */}
           <div className="space-y-2">
             <div className="flex justify-between">
-              <h3 className="text-sm font-medium text-gray-500">Storage</h3>
+              <h3 className="text-sm font-medium text-gray-500">{t('dashboard:usage.storage')}</h3>
               <span className="text-sm text-gray-500">
                 {formatBytes(storageStats.total_bytes || 0)} / {formatBytes(storageStats.limit_bytes || 0)}
               </span>
@@ -341,7 +356,7 @@ const DashboardPage = () => {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-500 flex items-center">
                   <DocumentTextIcon className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                  Documents
+                  {t('dashboard:usage.documents')}
                 </span>
                 <span className="font-medium text-gray-700">
                   {formatBytes(storageStats.document_bytes || 0)}
@@ -350,7 +365,7 @@ const DashboardPage = () => {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-500 flex items-center">
                   <BookOpenIcon className="h-3.5 w-3.5 mr-1 text-gray-400" />
-                  Knowledge Base
+                  {t('dashboard:usage.knowledgeBase')}
                 </span>
                 <span className="font-medium text-gray-700">
                   {formatBytes(storageStats.knowledge_bytes || 0)}
@@ -361,7 +376,7 @@ const DashboardPage = () => {
                   <svg className="h-3.5 w-3.5 mr-1 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
                   </svg>
-                  Crawled Content
+                  {t('dashboard:usage.crawledContent')}
                 </span>
                 <span className="font-medium text-gray-700">
                   {formatBytes(storageStats.crawled_content_bytes || 0)}
@@ -371,11 +386,21 @@ const DashboardPage = () => {
             
             <p className="text-xs text-gray-500 mt-2">
               {storageStats.percentage >= 90 ? (
-                <span className="text-red-600 font-medium">Critical: Only {formatBytes(storageStats.limit_bytes - storageStats.total_bytes)} left!</span>
+                <span className="text-red-600 font-medium">
+                  {t('common:warnings.criticalStorage', 'Critical: Only {{remaining}} left!', {
+                    remaining: formatBytes(storageStats.limit_bytes - storageStats.total_bytes)
+                  })}
+                </span>
               ) : storageStats.percentage >= 80 ? (
-                <span className="text-orange-600">Warning: {formatPercentage(storageStats.percentage)} of your storage limit used</span>
+                <span className="text-orange-600">
+                  {t('common:warnings.highStorage', 'Warning: {{percentage}} of your storage limit used', {
+                    percentage: formatPercentage(storageStats.percentage)
+                  })}
+                </span>
               ) : (
-                `${formatPercentage(storageStats.percentage)} of your storage limit used`
+                t('common:usage.storageUsage', '{{percentage}} of your storage limit used', {
+                  percentage: formatPercentage(storageStats.percentage)
+                })
               )}
             </p>
           </div>
@@ -384,21 +409,21 @@ const DashboardPage = () => {
 
       {/* Quick Actions */}
       <div className="bg-white shadow-sm rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">{t('dashboard:quickActions.title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <a href="/knowledge" className="block p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition duration-150">
-            <h3 className="font-medium text-gray-900">Manage Knowledge Base</h3>
-            <p className="mt-1 text-sm text-gray-500">Upload documents, add FAQs, and organize your knowledge base.</p>
+            <h3 className="font-medium text-gray-900">{t('common:actions.manageKnowledge', 'Manage Knowledge Base')}</h3>
+            <p className="mt-1 text-sm text-gray-500">{t('common:descriptions.knowledgeManagement', 'Upload documents, add FAQs, and organize your knowledge base.')}</p>
           </a>
           
           <a href="/conversations" className="block p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition duration-150">
-            <h3 className="font-medium text-gray-900">View Conversations</h3>
-            <p className="mt-1 text-sm text-gray-500">Browse chat history and analyze user interactions.</p>
+            <h3 className="font-medium text-gray-900">{t('common:actions.viewConversations', 'View Conversations')}</h3>
+            <p className="mt-1 text-sm text-gray-500">{t('common:descriptions.conversationManagement', 'Browse chat history and analyze user interactions.')}</p>
           </a>
           
           <a href="/test" className="block p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition duration-150">
-            <h3 className="font-medium text-gray-900">Test Your Chatbot</h3>
-            <p className="mt-1 text-sm text-gray-500">Try out your chatbot and see how it responds to queries.</p>
+            <h3 className="font-medium text-gray-900">{t('common:actions.testChatbot', 'Test Your Chatbot')}</h3>
+            <p className="mt-1 text-sm text-gray-500">{t('common:descriptions.chatbotTesting', 'Try out your chatbot and see how it responds to queries.')}</p>
           </a>
         </div>
       </div>

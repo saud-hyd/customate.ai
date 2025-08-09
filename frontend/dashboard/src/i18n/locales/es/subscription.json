@@ -1,0 +1,112 @@
+{
+  "title": "Suscripción",
+  "currentPlan": "Plan Actual",
+  "usage": "Uso",
+  "upgrade": "Actualizar Plan",
+  "downgrade": "Degradar Plan",
+  "billingCycle": "Ciclo de Facturación",
+  "monthly": "Mensual",
+  "yearly": "Anual",
+  "plans": {
+    "free": "Gratuito",
+    "starter": "Iniciador",
+    "professional": "Profesional",
+    "enterprise": "Empresarial"
+  },
+  "features": {
+    "messages": "Mensajes por mes",
+    "storage": "Almacenamiento",
+    "integrations": "Integraciones",
+    "support": "Soporte",
+    "customBranding": "Marca Personalizada",
+    "analytics": "Analíticas Avanzadas"
+  },
+  "usage": {
+    "messages": "Mensajes Utilizados",
+    "storage": "Almacenamiento Utilizado",
+    "apiCalls": "Llamadas API",
+    "resetDate": "El uso se restablece el"
+  },
+  "billing": {
+    "nextPayment": "Próximo Pago",
+    "paymentMethod": "Método de Pago",
+    "billingHistory": "Historial de Facturación",
+    "updatePayment": "Actualizar Método de Pago"
+  },
+  "storage": {
+    "loadingInfo": "Cargando información de almacenamiento...",
+    "unableToFetch": "No se puede obtener información de almacenamiento",
+    "refreshInfo": "Actualizar información de almacenamiento",
+    "availableSpace": "Espacio disponible",
+    "units": {
+      "bytes": "Bytes",
+      "kb": "KB", 
+      "mb": "MB",
+      "gb": "GB"
+    }
+  },
+  "planComparison": {
+    "messagesPerMonth": "Mensajes por Mes",
+    "storageLimit": "Límite de Almacenamiento",
+    "chatbotFeatures": "Características del Chatbot",
+    "basicCustomization": "Personalización básica",
+    "advancedCustomization": "Personalización avanzada",
+    "fullCustomization": "Personalización completa",
+    "support": {
+      "community": "Comunidad",
+      "email": "Soporte por email",
+      "priority": "Soporte prioritario por email",
+      "phone": "Soporte telefónico y por email"
+    },
+    "analytics": "Analíticas",
+    "advancedAnalytics": "Analíticas Avanzadas",
+    "apiAccess": "Acceso a API",
+    "processing": "Procesando...",
+    "upgrade": "Actualizar"
+  },
+  "paymentForm": {
+    "validation": {
+      "cardNumberRequired": "El número de tarjeta es obligatorio",
+      "invalidCardNumber": "Por favor ingresa un número de tarjeta válido",
+      "expiryRequired": "La fecha de vencimiento es obligatoria",
+      "invalidExpiry": "Por favor ingresa una fecha de vencimiento válida (MM/AA)",
+      "cvcRequired": "El CVC es obligatorio",
+      "invalidCvc": "Por favor ingresa un CVC válido",
+      "nameRequired": "El nombre del titular de la tarjeta es obligatorio"
+    },
+    "cardholderPlaceholder": "María García",
+    "expiryPlaceholder": "MM/AA",
+    "processing": "Procesando...",
+    "addPaymentMethod": "Agregar Método de Pago"
+  },
+  "usageChart": {
+    "usageHistory": "Historial de Uso",
+    "messagesLabel": "Mensajes",
+    "storageLabel": "Almacenamiento (MB)",
+    "messagesUsed": "Mensajes Utilizados",
+    "storageUsed": "Almacenamiento Utilizado (MB)"
+  },
+  "pages": {
+    "billedAnnually": "Facturación anual",
+    "customPlanContact": "¿Necesita un plan personalizado? Contacte a nuestro equipo de ventas para soluciones empresariales."
+  },
+  "teams": {
+    "teamMembers": "Miembros del Equipo",
+    "admin": "Administrador",
+    "viewer": "Visualizador",
+    "adminDescription": "Administrador: Acceso completo a todas las funciones y configuraciones",
+    "viewerDescription": "Visualizador: Acceso de solo lectura a analíticas y conversaciones"
+  },
+  "billing": {
+    "billingPayment": "Facturación y Pago",
+    "currentSubscription": "Suscripción Actual",
+    "paymentMethods": "Métodos de Pago",
+    "noPaymentMethods": "No se encontraron métodos de pago.",
+    "addPaymentMethodPrompt": "Agregue un método de pago para suscribirse a un plan de pago.",
+    "cardBrands": {
+      "visa": "VISA",
+      "mastercard": "MC",
+      "amex": "AMEX"
+    }
+  }
+}

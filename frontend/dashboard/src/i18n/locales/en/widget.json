@@ -1,0 +1,64 @@
+{
+  "styling": "Widget Styling",
+  "customizeAppearance": "Customize your chatbot appearance", 
+  "colors": "Colors",
+  "primaryColor": "Primary Color",
+  "headerColor": "Header Color",
+  "backgroundColor": "Background Color",
+  "textColor": "Text Color",
+  "content": "Content",
+  "chatbotName": "Chatbot Name",
+  "chatbotNamePlaceholder": "AI Assistant",
+  "greetingMessage": "Greeting Message",
+  "greetingPlaceholder": "Hello! How can I help you today?",
+  "borderRadius": "Border Radius (px)",
+  "fontFamily": "Font Family",
+  "fontOptions": {
+    "inter": "Inter",
+    "roboto": "Roboto",
+    "openSans": "Open Sans",
+    "montserrat": "Montserrat",
+    "poppins": "Poppins"
+  },
+  "testChatbot": "Test Your Chatbot",
+  "testWidget": "Test Widget",
+  "loading": "Loading widget...",
+  "integrationCode": "Integration Code",
+  "howToIntegrate": "How to integrate:",
+  "copyCode": "Copy the code above",
+  "pasteInstructions": "Paste it before the closing </body> tag",
+  "saveRefresh": "Save and refresh - widget appears automatically!",
+  "compatiblePlatforms": "Compatible with all platforms:",
+  "oneLineEveryWebsite": "🚀 One Line. Every Website.",
+  "status": {
+    "ready": "✅ Ready",
+    "error": "❌ Error", 
+    "loading": "🔄 Loading"
+  },
+  "setup": {
+    "checkingBackend": "Checking backend connection and fetching API key...",
+    "backendTip": "Tip: Make sure the backend is running on http://localhost:8000",
+    "step1": "Copy the code above",
+    "step2": "Paste it before the closing </body> tag",
+    "step3": "Save and refresh - widget appears automatically!"
+  },
+  "platforms": {
+    "wordpress": "WordPress",
+    "shopify": "Shopify",
+    "webflow": "Webflow",
+    "squarespace": "Squarespace",
+    "wix": "Wix",
+    "customHtml": "Custom HTML"
+  },
+  "chat": {
+    "defaultGreeting": "Hello! How can I help you today?",
+    "errorMessage": "I'm sorry, I couldn't process your message. Please try again later.",
+    "sendError": "Failed to send message",
+    "openChat": "Open chat",
+    "chatWithUs": "Chat with us",
+    "typeMessage": "Type your message...",
+    "sendMessage": "Send message",
+    "minimizeChat": "Minimize chat",
+    "closeChat": "Close chat"
+  }
+}

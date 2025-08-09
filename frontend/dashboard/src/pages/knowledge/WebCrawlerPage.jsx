@@ -1,5 +1,6 @@
 // frontend/dashboard/src/pages/knowledge/WebCrawlerPage.jsx
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   SparklesIcon, 
   GlobeAltIcon, 
@@ -13,6 +14,7 @@ import CrawlJobsList from '../../components/knowledge/CrawlJobsList';
 import knowledgeService from '../../services/knowledgeService';
 
 const WebCrawlerPage = () => {
+  const { t } = useTranslation(['knowledge', 'common']);
   const [collections, setCollections] = useState([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [storageStats, setStorageStats] = useState(null);
@@ -75,7 +77,7 @@ const WebCrawlerPage = () => {
           <div>
             <div className="flex items-center space-x-3 mb-2">
               <SparklesIcon className="h-8 w-8 text-orange-500" />
-              <h1 className="text-2xl font-bold text-gray-900">Intelligent Web Crawler</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{t('knowledge:webCrawlerPage.intelligentWebCrawler')}</h1>
             </div>
             <p className="text-gray-600 max-w-2xl">
               Automatically discover and crawl the most important pages from any website. 
@@ -86,7 +88,7 @@ const WebCrawlerPage = () => {
           
           {storageStats && (
             <div className="text-right">
-              <div className="text-sm text-gray-500 mb-1">Storage Usage</div>
+              <div className="text-sm text-gray-500 mb-1">{t('knowledge:webCrawlerPage.storageUsage')}</div>
               <div className="flex items-center space-x-2">
                 <div className="w-32 bg-gray-200 rounded-full h-2">
                   <div 
@@ -148,7 +150,7 @@ const WebCrawlerPage = () => {
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex items-center mb-2">
               <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center text-blue-600 font-bold">1</div>
-              <h3 className="font-medium ml-2">Site Analysis</h3>
+              <h3 className="font-medium ml-2">{t('knowledge:webCrawlerPage.siteAnalysis')}</h3>
             </div>
             <p className="text-sm text-gray-600">
               We analyze your website's structure, sitemap, and robots.txt to understand the site layout and discover important pages.
@@ -158,7 +160,7 @@ const WebCrawlerPage = () => {
           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
             <div className="flex items-center mb-2">
               <div className="bg-green-100 rounded-full w-8 h-8 flex items-center justify-center text-green-600 font-bold">2</div>
-              <h3 className="font-medium ml-2">Smart Prioritization</h3>
+              <h3 className="font-medium ml-2">{t('knowledge:webCrawlerPage.smartPrioritization')}</h3>
             </div>
             <p className="text-sm text-gray-600">
               Pages are prioritized based on importance: homepage, main content sections, and valuable resources are crawled first.
@@ -168,7 +170,7 @@ const WebCrawlerPage = () => {
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
             <div className="flex items-center mb-2">
               <div className="bg-purple-100 rounded-full w-8 h-8 flex items-center justify-center text-purple-600 font-bold">3</div>
-              <h3 className="font-medium ml-2">Storage Optimization</h3>
+              <h3 className="font-medium ml-2">{t('knowledge:webCrawlerPage.storageOptimization')}</h3>
             </div>
             <p className="text-sm text-gray-600">
               Crawling automatically adjusts to your available storage, ensuring you get the most valuable content within your limits.
@@ -178,7 +180,7 @@ const WebCrawlerPage = () => {
           <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
             <div className="flex items-center mb-2">
               <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center text-orange-600 font-bold">4</div>
-              <h3 className="font-medium ml-2">Real-time Progress</h3>
+              <h3 className="font-medium ml-2">{t('knowledge:webCrawlerPage.realTimeProgress')}</h3>
             </div>
             <p className="text-sm text-gray-600">
               Track crawling progress in real-time with detailed insights into discovered pages and extraction status.

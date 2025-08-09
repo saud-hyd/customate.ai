@@ -1,6 +1,7 @@
 // frontend/dashboard/src/pages/channels/ChannelsPage.jsx
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { HiPlus, HiOutlineRefresh } from 'react-icons/hi';
 import ChannelList from '../../components/channels/ChannelList';
 import ChannelDetailView from '../../components/channels/ChannelDetailView';
@@ -10,6 +11,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorAlert from '../../components/common/ErrorAlert';
 
 const ChannelsPage = () => {
+  const { t } = useTranslation(['channels', 'common']);
   const [channels, setChannels] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +67,7 @@ const ChannelsPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Messaging Channels</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('channels:pages.messagingChannels')}</h1>
             <p className="mt-1 text-sm text-gray-500">
               Connect with customers across multiple messaging platforms
             </p>
@@ -78,14 +80,14 @@ const ChannelsPage = () => {
                   className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                 >
                   <HiOutlineRefresh className="h-4 w-4 mr-2" />
-                  Refresh
+                  {t('common:actions.refresh')}
                 </button>
                 <button
                   onClick={handleConnectClick}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                 >
                   <HiPlus className="h-4 w-4 mr-2" />
-                  Connect Channel
+                  {t('channels:connect')} {t('channels:title')}
                 </button>
               </>
             )}
@@ -94,7 +96,7 @@ const ChannelsPage = () => {
                 onClick={handleBackToList}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
               >
-                ← Back to Channels
+                ← {t('common:actions.back')} to {t('channels:title')}
               </button>
             )}
           </div>

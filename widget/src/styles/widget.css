@@ -20,7 +20,7 @@
     overflow: hidden;
     background-color: var(--customate-background, #ffffff);
     box-shadow: var(--customate-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
     max-width: var(--customate-widget-max-width, 420px);
     width: var(--customate-widget-width, 350px);
     display: flex;
@@ -394,13 +394,13 @@
     .customate-widget {
       width: calc(100% - 32px) !important;
       max-width: calc(100% - 32px) !important;
-      height: calc(100% - 120px) !important;
+      height: calc(100% - 80px) !important;
       max-height: 500px;
     }
     
     .customate-widget[data-position="bottom-right"],
     .customate-widget[data-position="bottom-left"] {
-      bottom: 80px;
+      bottom: 40px;
       right: 16px;
       left: 16px;
     }

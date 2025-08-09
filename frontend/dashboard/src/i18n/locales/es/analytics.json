@@ -1,0 +1,80 @@
+{
+  "title": "Analíticas",
+  "overview": "Resumen de Analíticas",
+  "loadingData": "Cargando datos de analíticas...",
+  "messageStatistics": "Estadísticas de Mensajes",
+  "assistantMessages": "Mensajes del Asistente",
+  "storageUsed": "Almacenamiento Utilizado",
+  "usage": "Uso",
+  "nearLimit": "Cerca del límite - considere actualizar",
+  "currentPlan": "Plan Actual:",
+  "messages": "Mensajes",
+  "storage": "Almacenamiento",
+  "storageBreakdown": "Desglose de Almacenamiento",
+  "documents": "Documentos",
+  "knowledgeBase": "Base de Conocimiento",
+  "crawledContent": "Contenido Rastreado",
+  "engagementAnalytics": "Analíticas de Participación",
+  "engagementDescription": "Análisis detallados de conversaciones y métricas de participación de usuarios próximamente.",
+  "knowledgeAnalytics": "Analíticas de Conocimiento",
+  "volume": "Volumen",
+  "responseTime": "Tiempo de Respuesta",
+  "knowledgeUsage": "Uso de Conocimiento",
+  "totalSessions": "Sesiones Totales",
+  "averageResponseTime": "Tiempo de Respuesta Promedio",
+  "knowledgeUsageRatio": "Ratio de Uso de Conocimiento",
+  "noMessageStats": "No hay estadísticas de mensajes disponibles",
+  "knowledgePercentage": "Porcentaje de respuestas usando base de conocimiento",
+  "selectDateRange": "Seleccionar Rango de Fechas",
+  "dateRange": "Rango de Fechas",
+  "last7Days": "Últimos 7 días",
+  "last30Days": "Últimos 30 días",
+  "last90Days": "Últimos 90 días",
+  "customRange": "Rango personalizado",
+  "metrics": {
+    "totalMessages": "Total de Mensajes",
+    "uniqueUsers": "Usuarios Únicos",
+    "avgResponseTime": "Tiempo de Respuesta Promedio",
+    "satisfactionRate": "Tasa de Satisfacción",
+    "apiCalls": "Llamadas API",
+    "knowledgeQueries": "Consultas de Conocimiento"
+  },
+  "charts": {
+    "messageVolume": "Volumen de Mensajes",
+    "userEngagement": "Participación de Usuarios",
+    "responseTime": "Tiempo de Respuesta",
+    "topQuestions": "Preguntas Principales",
+    "integrationUsage": "Uso de Integraciones"
+  },
+  "export": {
+    "title": "Exportar Datos",
+    "csv": "Exportar como CSV",
+    "pdf": "Exportar como PDF",
+    "json": "Exportar como JSON"
+  },
+  "comingSoon": "Próximamente",
+  "apiUsage": {
+    "title": "Analíticas de Uso de API",
+    "description": "Estamos trabajando en analíticas detalladas de uso de API para ayudarte a monitorear y optimizar tu consumo de API."
+  },
+  "engagement": {
+    "title": "Analíticas de Participación",
+    "description": "Rastrea patrones de participación de usuarios y calidad de conversaciones para mejorar el rendimiento de tu chatbot."
+  },
+  "knowledge": {
+    "title": "Analíticas de Conocimiento",
+    "description": "Descubre información sobre el rendimiento de tu base de conocimientos y la efectividad del contenido."
+  },
+  "timeRanges": {
+    "day": "Día",
+    "week": "Semana",
+    "month": "Mes"
+  },
+  "knowledgeInsights": {
+    "performanceInsights": "Información sobre el rendimiento de la base de conocimientos y recomendaciones de optimización."
+  },
+  "messageStats": {
+    "responseTime": "Tiempo de Respuesta",
+    "knowledgeUsage": "Uso de Conocimiento"
+  }
+}

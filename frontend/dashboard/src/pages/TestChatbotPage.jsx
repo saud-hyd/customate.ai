@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import { 
   CodeBracketIcon, 
   ArrowPathIcon,
@@ -15,6 +16,8 @@ import LoadingState from '../components/common/LoadingState';
 import Modal from '../components/common/Modal';
 
 const TestChatbotPage = () => {
+  const { t } = useTranslation(['widget', 'common']);
+  
   // State management
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +100,7 @@ const TestChatbotPage = () => {
       } catch (error) {
         console.error('❌ Initialization error:', error);
         setWidgetError(`Initialization failed: ${error.message}`);
-        toast.error('Failed to initialize. Please check your backend connection.');
+        toast.error(t('common:errors.connectionFailed'));
       } finally {
         setIsLoading(false);
       }
@@ -126,7 +129,7 @@ const TestChatbotPage = () => {
       }
     } catch (err) {
       console.error('❌ Error fetching client API key:', err);
-      toast.error('Failed to fetch API key.');
+      toast.error(t('common:errors.failedToLoad'));
       throw err; // Re-throw to be caught by initialization
     }
   };
@@ -208,7 +211,7 @@ const TestChatbotPage = () => {
     setHasUnsavedChanges(false);
     
     // No need to reload widget - it's already showing the current preview
-    toast.success('Changes saved! Your widget is now using these settings.');
+    toast.success(t('common:messages.success'));
   };
 
   // Get universal embed code with customizations
@@ -233,11 +236,11 @@ const TestChatbotPage = () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      toast.success('Embed code copied to clipboard!');
+      toast.success(t('common:buttons.copied'));
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy: ', err);
-      toast.error('Failed to copy embed code');
+      toast.error(t('common:errors.updateError'));
     }
   };
 
@@ -246,21 +249,21 @@ const TestChatbotPage = () => {
     console.log('✅ Widget iframe loaded successfully');
     setWidgetLoaded(true);
     setWidgetError(null);
-    toast.success('Widget loaded successfully!');
+    toast.success(t('common:messages.success'));
   };
 
   const handleIframeError = (error) => {
     console.error('❌ Widget iframe load error:', error);
     setWidgetLoaded(false);
     setWidgetError('Failed to load widget');
-    toast.error('Failed to load widget');
+    toast.error(t('common:errors.loadingError'));
   };
 
   const reloadWidget = () => {
     setWidgetLoaded(false);
     setWidgetError(null);
     setIframeKey(prev => prev + 1);
-    toast.info('Reloading widget...');
+    toast.info(t('common:actions.refreshing'));
   };
 
   // Widget URL updates with preview changes for real-time preview
@@ -269,7 +272,7 @@ const TestChatbotPage = () => {
   const embedCode = getUniversalEmbedCode();
 
   if (isLoading) {
-    return <LoadingState message="Loading chatbot..." />;
+    return <LoadingState message={t('widget:loading')} />;
   }
 
   return (
@@ -280,9 +283,9 @@ const TestChatbotPage = () => {
         <div className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200 p-4">
           <div className="flex items-center">
             <PaintBrushIcon className="h-5 w-5 text-orange-600 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-900">Widget Styling</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('widget:styling')}</h2>
           </div>
-          <p className="text-sm text-gray-600 mt-1">Customize your chatbot appearance</p>
+          <p className="text-sm text-gray-600 mt-1">{t('widget:customizeAppearance')}</p>
         </div>
         
         {/* Customization Options */}
@@ -291,12 +294,12 @@ const TestChatbotPage = () => {
           <div className="space-y-4">
             <div className="flex items-center">
               <SwatchIcon className="h-4 w-4 text-gray-500 mr-2" />
-              <h3 className="text-sm font-medium text-gray-900">Colors</h3>
+              <h3 className="text-sm font-medium text-gray-900">{t('widget:colors')}</h3>
             </div>
             
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Primary Color</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:primaryColor')}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -315,7 +318,7 @@ const TestChatbotPage = () => {
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Header Color</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:headerColor')}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -334,7 +337,7 @@ const TestChatbotPage = () => {
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Background Color</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:backgroundColor')}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -353,7 +356,7 @@ const TestChatbotPage = () => {
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:textColor')}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -377,29 +380,29 @@ const TestChatbotPage = () => {
           <div className="space-y-4">
             <div className="flex items-center">
               <ChatBubbleOvalLeftEllipsisIcon className="h-4 w-4 text-gray-500 mr-2" />
-              <h3 className="text-sm font-medium text-gray-900">Content</h3>
+              <h3 className="text-sm font-medium text-gray-900">{t('widget:content')}</h3>
             </div>
             
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Chatbot Name</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:chatbotName')}</label>
                 <input
                   type="text"
                   value={previewCustomizations.chatbotName}
                   onChange={(e) => updateCustomization('chatbotName', e.target.value)}
                   className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
-                  placeholder="AI Assistant"
+                  placeholder={t('widget:chatbotNamePlaceholder')}
                 />
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Greeting Message</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:greetingMessage')}</label>
                 <textarea
                   value={previewCustomizations.greetingMessage}
                   onChange={(e) => updateCustomization('greetingMessage', e.target.value)}
                   className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
                   rows="2"
-                  placeholder="Hello! How can I help you today?"
+                  placeholder={t('widget:greetingPlaceholder')}
                 />
               </div>
             </div>
@@ -407,11 +410,11 @@ const TestChatbotPage = () => {
           
           {/* Styling Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900">Styling</h3>
+            <h3 className="text-sm font-medium text-gray-900">{t('widget:styling')}</h3>
             
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Border Radius (px)</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:borderRadius')}</label>
                 <input
                   type="range"
                   min="0"
@@ -428,18 +431,18 @@ const TestChatbotPage = () => {
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Font Family</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t('widget:fontFamily')}</label>
                 <select
                   value={previewCustomizations.fontFamily}
                   onChange={(e) => updateCustomization('fontFamily', e.target.value)}
                   className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="system-ui">System UI</option>
-                  <option value="Inter">Inter</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Open Sans">Open Sans</option>
-                  <option value="Montserrat">Montserrat</option>
-                  <option value="Poppins">Poppins</option>
+                  <option value="Inter">{t('widget:fontOptions.inter')}</option>
+                  <option value="Roboto">{t('widget:fontOptions.roboto')}</option>
+                  <option value="Open Sans">{t('widget:fontOptions.openSans')}</option>
+                  <option value="Montserrat">{t('widget:fontOptions.montserrat')}</option>
+                  <option value="Poppins">{t('widget:fontOptions.poppins')}</option>
                 </select>
               </div>
             </div>
@@ -455,7 +458,7 @@ const TestChatbotPage = () => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
               <ChatBubbleLeftRightIcon className="h-6 w-6 text-orange-600 mr-2" />
-              <h1 className="text-xl font-semibold text-gray-900">Test Your Chatbot</h1>
+              <h1 className="text-xl font-semibold text-gray-900">{t('widget:testChatbot')}</h1>
             </div>
             
             <div className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -463,7 +466,7 @@ const TestChatbotPage = () => {
               widgetError ? 'bg-red-100 text-red-800' : 
               'bg-yellow-100 text-yellow-800'
             }`}>
-              {widgetLoaded ? '✅ Ready' : widgetError ? '❌ Error' : '🔄 Loading'}
+              {widgetLoaded ? t('widget:status.ready') : widgetError ? t('widget:status.error') : t('widget:status.loading')}
             </div>
           </div>
           
@@ -473,7 +476,7 @@ const TestChatbotPage = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
             >
               <ArrowPathIcon className="w-4 h-4" />
-              Reload Widget
+              {t('common:actions.refresh')}
             </button>
             
             <button
@@ -486,7 +489,7 @@ const TestChatbotPage = () => {
               }`}
             >
               <CheckIcon className="w-4 h-4" />
-              {hasUnsavedChanges ? 'Save Changes' : 'No Changes'}
+              {hasUnsavedChanges ? t('common:actions.saveChanges') : t('common:actions.noChanges')}
             </button>
             
             <button
@@ -494,7 +497,7 @@ const TestChatbotPage = () => {
               className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
             >
               <CodeBracketIcon className="w-5 h-5" />
-              Get Embed Code
+              {t('widget:integrationCode')}
             </button>
           </div>
         </div>
@@ -504,14 +507,14 @@ const TestChatbotPage = () => {
           <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 160px)', maxHeight: '700px' }}>
             {!widgetUrl || !apiKey ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                <div className="text-gray-500 mb-4">Loading widget...</div>
+                <div className="text-gray-500 mb-4">{t('widget:loading')}</div>
                 {widgetError && (
                   <div className="text-red-500 text-sm mb-4">
                     Error: {widgetError}
                   </div>
                 )}
                 <div className="text-xs text-gray-400">
-                  Checking backend connection and fetching API key...
+                  {t('widget:setup.checkingBackend')}
                 </div>
               </div>
             ) : widgetError && !widgetUrl ? (
@@ -521,10 +524,10 @@ const TestChatbotPage = () => {
                   onClick={reloadWidget}
                   className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
                 >
-                  Try Again
+                  {t('common:buttons.retry')}
                 </button>
                 <div className="text-xs text-gray-400 mt-4">
-                  Tip: Make sure the backend is running on http://localhost:8000
+                  {t('widget:setup.backendTip')}
                 </div>
               </div>
             ) : (
@@ -551,17 +554,17 @@ const TestChatbotPage = () => {
       <Modal
         isOpen={isCodeModalOpen}
         onClose={() => setIsCodeModalOpen(false)}
-        title="Widget Embed Code"
+        title={t('widget:integrationCode')}
         size="lg"
       >
         <div className="space-y-6">
           {/* Hero Section */}
           <div className="text-center py-6 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              🚀 One Line. Every Website.
+              {t('widget:oneLineEveryWebsite')}
             </h2>
             <p className="text-gray-600">
-              Copy this code and paste it into any website
+              {t('widget:setup.step1')}
             </p>
           </div>
 
@@ -569,7 +572,7 @@ const TestChatbotPage = () => {
           <div className="bg-gray-900 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">
-                Universal Embed Code
+                {t('widget:integrationCode')}
               </h3>
               <button
                 onClick={() => copyToClipboard(embedCode)}
@@ -582,12 +585,12 @@ const TestChatbotPage = () => {
                 {copied ? (
                   <span className="flex items-center gap-2">
                     <CheckIcon className="w-4 h-4" />
-                    Copied!
+                    {t('common:buttons.copied')}
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
                     <DocumentDuplicateIcon className="w-4 h-4" />
-                    Copy Code
+                    {t('common:buttons.copyCode')}
                   </span>
                 )}
               </button>
@@ -601,20 +604,20 @@ const TestChatbotPage = () => {
           {/* Simple Instructions */}
           <div className="bg-blue-50 rounded-lg p-6">
             <h3 className="font-semibold text-blue-900 mb-3">
-              📋 How to Install
+              📋 {t('widget:howToIntegrate')}
             </h3>
             <ol className="space-y-2 text-blue-800">
               <li className="flex items-start gap-2">
                 <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
-                <span>Copy the code above</span>
+                <span>{t('widget:setup.step1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
-                <span>Paste it before the closing <code className="bg-blue-200 px-1 rounded">&lt;/body&gt;</code> tag</span>
+                <span>{t('widget:setup.step2')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">3</span>
-                <span>Save and refresh - widget appears automatically! 🎉</span>
+                <span>{t('widget:setup.step3')}</span>
               </li>
             </ol>
           </div>
@@ -622,7 +625,7 @@ const TestChatbotPage = () => {
           {/* Works Everywhere */}
           <div className="bg-green-50 rounded-lg p-6">
             <h3 className="font-semibold text-green-900 mb-4">
-              ✅ Works on Every Platform
+              ✅ {t('widget:compatiblePlatforms')}
             </h3>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -632,8 +635,8 @@ const TestChatbotPage = () => {
                 { name: 'Vue.js', icon: '💚' },
                 { name: 'Angular', icon: '🅰️' },
                 { name: 'Next.js', icon: '▲' },
-                { name: 'WordPress', icon: '📝' },
-                { name: 'Shopify', icon: '🛒' },
+                { name: t('widget:platforms.wordpress'), icon: '📝' },
+                { name: t('widget:platforms.shopify'), icon: '🛒' },
                 { name: 'Any Site', icon: '🚀' }
               ].map((platform) => (
                 <div key={platform.name} className="flex items-center gap-2 p-2 bg-white rounded border">
@@ -651,7 +654,7 @@ const TestChatbotPage = () => {
               className="flex items-center gap-2 px-8 py-3 bg-orange-600 text-white rounded-lg text-lg font-medium hover:bg-orange-700 transition-colors shadow-lg"
             >
               <DocumentDuplicateIcon className="w-5 h-5" />
-              Copy Embed Code
+              {t('common:buttons.copyCode')}
             </button>
           </div>
         </div>

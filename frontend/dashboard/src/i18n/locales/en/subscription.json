@@ -1,0 +1,112 @@
+{
+  "title": "Subscription",
+  "currentPlan": "Current Plan",
+  "usage": "Usage",
+  "upgrade": "Upgrade Plan",
+  "downgrade": "Downgrade Plan",
+  "billingCycle": "Billing Cycle",
+  "monthly": "Monthly",
+  "yearly": "Yearly",
+  "plans": {
+    "free": "Free",
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "features": {
+    "messages": "Messages per month",
+    "storage": "Storage",
+    "integrations": "Integrations",
+    "support": "Support",
+    "customBranding": "Custom Branding",
+    "analytics": "Advanced Analytics"
+  },
+  "usage": {
+    "messages": "Messages Used",
+    "storage": "Storage Used",
+    "apiCalls": "API Calls",
+    "resetDate": "Usage resets on"
+  },
+  "billing": {
+    "nextPayment": "Next Payment",
+    "paymentMethod": "Payment Method",
+    "billingHistory": "Billing History",
+    "updatePayment": "Update Payment Method"
+  },
+  "storage": {
+    "loadingInfo": "Loading storage info...",
+    "unableToFetch": "Unable to fetch storage information",
+    "refreshInfo": "Refresh storage info",
+    "availableSpace": "Available space",
+    "units": {
+      "bytes": "Bytes",
+      "kb": "KB", 
+      "mb": "MB",
+      "gb": "GB"
+    }
+  },
+  "planComparison": {
+    "messagesPerMonth": "Messages per Month",
+    "storageLimit": "Storage Limit",
+    "chatbotFeatures": "Chatbot Features",
+    "basicCustomization": "Basic customization",
+    "advancedCustomization": "Advanced customization",
+    "fullCustomization": "Full customization",
+    "support": {
+      "community": "Community",
+      "email": "Email support",
+      "priority": "Priority email support",
+      "phone": "Phone & email support"
+    },
+    "analytics": "Analytics",
+    "advancedAnalytics": "Advanced Analytics",
+    "apiAccess": "API Access",
+    "processing": "Processing...",
+    "upgrade": "Upgrade"
+  },
+  "paymentForm": {
+    "validation": {
+      "cardNumberRequired": "Card number is required",
+      "invalidCardNumber": "Please enter a valid card number",
+      "expiryRequired": "Expiry date is required",
+      "invalidExpiry": "Please enter a valid expiry date (MM/YY)",
+      "cvcRequired": "CVC is required",
+      "invalidCvc": "Please enter a valid CVC",
+      "nameRequired": "Cardholder name is required"
+    },
+    "cardholderPlaceholder": "Jane Smith",
+    "expiryPlaceholder": "MM/YY",
+    "processing": "Processing...",
+    "addPaymentMethod": "Add Payment Method"
+  },
+  "usageChart": {
+    "usageHistory": "Usage History",
+    "messagesLabel": "Messages",
+    "storageLabel": "Storage (MB)",
+    "messagesUsed": "Messages Used",
+    "storageUsed": "Storage Used (MB)"
+  },
+  "pages": {
+    "billedAnnually": "Billed annually",
+    "customPlanContact": "Need a custom plan? Contact our sales team for enterprise solutions."
+  },
+  "teams": {
+    "teamMembers": "Team Members",
+    "admin": "Admin",
+    "viewer": "Viewer",
+    "adminDescription": "Admin: Full access to all features and settings",
+    "viewerDescription": "Viewer: Read-only access to analytics and conversations"
+  },
+  "billing": {
+    "billingPayment": "Billing & Payment",
+    "currentSubscription": "Current Subscription",
+    "paymentMethods": "Payment Methods",
+    "noPaymentMethods": "No payment methods found.",
+    "addPaymentMethodPrompt": "Add a payment method to subscribe to a paid plan.",
+    "cardBrands": {
+      "visa": "VISA",
+      "mastercard": "MC",
+      "amex": "AMEX"
+    }
+  }
+}

@@ -3,11 +3,13 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../context/ToastContext';
 import useAuth from '../../hooks/useAuth';
 import GoogleOAuthButton from '../../components/auth/GoogleOAuthButton';
 
 const RegisterPage = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -30,7 +32,7 @@ const RegisterPage = () => {
   };
 
   const validatePassword = (password) => {
-    if (password.length < 8) return 'Password must be at least 8 characters long';
+    if (password.length < 8) return t('auth:errors.weakPassword');
     if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter';
     if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter';
     if (!/[\W_]/.test(password)) return 'Password must contain at least one special character';
@@ -42,14 +44,14 @@ const RegisterPage = () => {
     
     // Validation
     if (!formData.email.trim() || !formData.password.trim()) {
-      toast.error('Email and password are required');
+      toast.error(t('auth:errors.emailPasswordRequired'));
       return;
     }
 
     // Email format validation
     const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
     if (!emailRegex.test(formData.email)) {
-      toast.error('Please enter a valid email address');
+      toast.error(t('auth:errors.invalidEmail'));
       return;
     }
 
@@ -62,7 +64,7 @@ const RegisterPage = () => {
 
     // Confirm password validation
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t('auth:errors.passwordsDoNotMatch'));
       return;
     }
 
@@ -83,7 +85,7 @@ const RegisterPage = () => {
       // Show verification screen
       setRegisteredEmail(formData.email);
       setShowVerificationScreen(true);
-      toast.success('Registration successful! Please check your email for verification.');
+      toast.success(t('auth:register.accountCreatedSuccess'));
       
     } catch (error) {
       console.error('Registration error:', error);
@@ -111,7 +113,7 @@ const RegisterPage = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-4">Check Your Email</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('auth:errors.checkEmail')}</h2>
           <p className="text-gray-600 mb-6">
             We've sent a verification link to <strong>{registeredEmail}</strong>. 
             Please click the link in your email to activate your account.
@@ -120,7 +122,7 @@ const RegisterPage = () => {
             to="/login"
             className="bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 inline-block"
           >
-            Go to Login
+            {t('auth:register.signIn')}
           </Link>
         </div>
       </div>
@@ -146,7 +148,7 @@ return (
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold mb-4 text-center">Create Account</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">{t('auth:register.title')}</h2>
         
         {/* Google OAuth Button First */}
         <div className="mb-4">
@@ -158,14 +160,14 @@ return (
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or register with email</span>
+            <span className="px-2 bg-white text-gray-500">{t('auth:register.orRegisterWith')}</span>
           </div>
         </div>
         
         <form onSubmit={handleRegister} className="space-y-3">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address *
+              {t('auth:register.emailAddress')} *
             </label>
             <input
               type="email"
@@ -174,14 +176,14 @@ return (
               value={formData.email}
               onChange={handleChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
-              placeholder="Enter your email"
+              placeholder={t('auth:register.emailPlaceholder')}
               required
             />
           </div>
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password *
+              {t('auth:register.password')} *
             </label>
             <input
               type="password"
@@ -195,13 +197,13 @@ return (
               minLength={8}
             />
             <p className="text-xs text-gray-500 mt-1">
-              Must be 8+ characters with uppercase, lowercase, and special character
+              {t('auth:register.passwordHint')}
             </p>
           </div>
           
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password *
+              {t('auth:register.confirmPassword')} *
             </label>
             <input
               type="password"
@@ -221,24 +223,24 @@ return (
             className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 font-medium"
             disabled={isLoading}
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? t('auth:register.creatingAccount') : t('auth:register.createAccount')}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{' '}
+          {t('auth:register.haveAccount')}{' '}
           <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500">
-            Sign in
+            {t('auth:register.signIn')}
           </Link>
         </p>
         
         <p className="mt-3 text-center text-xs text-gray-500">
-          By continuing, you agree to our{' '}
+          {t('auth:register.agreeToTerms')}{' '}
           <Link to="https://www.customate.ai/terms" className="text-orange-600 hover:text-orange-500 underline">
-            Terms of Service
+            {t('auth:register.termsOfService')}
           </Link>
-          {' '}and{' '}
+          {' '}{t('auth:register.and')}{' '}
           <Link to="https://www.customate.ai/privacy" className="text-orange-600 hover:text-orange-500 underline">
-            Privacy Policy
+            {t('auth:register.privacyPolicy')}
           </Link>
           .
         </p>

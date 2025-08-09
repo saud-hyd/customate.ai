@@ -1,0 +1,186 @@
+{
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "create": "Crear",
+    "update": "Actualizar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "upload": "Subir",
+    "download": "Descargar",
+    "view": "Ver",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "submit": "Enviar",
+    "reset": "Restablecer",
+    "refresh": "Actualizar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "select": "Seleccionar",
+    "clear": "Limpiar",
+    "or": "O",
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "refreshing": "Actualizando...",
+    "noDataAvailable": "No hay datos disponibles",
+    "comingSoon": "Próximamente",
+    "inDevelopment": "En Desarrollo",
+    "saveChanges": "Guardar Cambios",
+    "noChanges": "Sin Cambios",
+    "refreshData": "Actualizar Datos",
+    "today": "Hoy",
+    "last7Days": "Últimos 7 Días",
+    "last30Days": "Últimos 30 Días", 
+    "last90Days": "Últimos 90 Días",
+    "customRange": "Rango Personalizado",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "applyCustomRange": "Aplicar Rango Personalizado"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "failed": "Fallido",
+    "success": "Éxito",
+    "error": "Error",
+    "loading": "Cargando",
+    "processing": "Procesando"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "chat": "Chat",
+    "knowledge": "Conocimiento",
+    "analytics": "Analíticas",
+    "integrations": "Integraciones",
+    "channels": "Canales",
+    "settings": "Configuración",
+    "subscription": "Suscripción",
+    "testChatbot": "Probar Chatbot"
+  },
+  "messages": {
+    "success": "Operación completada exitosamente",
+    "error": "Ocurrió un error. Por favor, inténtalo de nuevo.",
+    "noData": "No hay datos disponibles",
+    "loading": "Cargando datos...",
+    "unauthorized": "No tienes autorización para realizar esta acción",
+    "networkError": "Error de red. Por favor, verifica tu conexión.",
+    "validationError": "Por favor, verifica los datos del formulario"
+  },
+  "time": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "thisWeek": "Esta semana",
+    "lastWeek": "Semana pasada",
+    "thisMonth": "Este mes",
+    "lastMonth": "Mes pasado",
+    "seconds": "segundos",
+    "minutes": "minutos",
+    "hours": "horas",
+    "days": "días",
+    "weeks": "semanas",
+    "months": "meses",
+    "lastUpdated": "Última actualización"
+  },
+  "forms": {
+    "enterEmail": "Ingresa tu email",
+    "searchConversations": "Buscar conversaciones...",
+    "typeMessage": "Escribe tu mensaje...",
+    "collectionName": "Nombre de la colección",
+    "urlPlaceholder": "https://ejemplo.com",
+    "searchPlaceholder": "Buscar...",
+    "emailPlaceholder": "Ingresa tu dirección de email",
+    "namePlaceholder": "Ingresa tu nombre"
+  },
+  "errors": {
+    "failedToLoad": "Error al cargar",
+    "somethingWrong": "Algo salió mal",
+    "connectionFailed": "Conexión fallida", 
+    "invalidCredentials": "Credenciales inválidas",
+    "tryAgain": "Por favor intenta de nuevo",
+    "loadingError": "Error al cargar datos",
+    "updateError": "Error al actualizar"
+  },
+  "buttons": {
+    "getStarted": "Comenzar",
+    "learnMore": "Saber Más",
+    "viewAll": "Ver Todo",
+    "showMore": "Mostrar Más",
+    "showLess": "Mostrar Menos",
+    "copyCode": "Copiar Código",
+    "copied": "¡Copiado!",
+    "close": "Cerrar",
+    "retry": "Reintentar"
+  },
+  "error": {
+    "title": "Error",
+    "dismiss": "Descartar"
+  },
+  "header": {
+    "viewNotifications": "Ver notificaciones",
+    "openUserMenu": "Abrir menú de usuario",
+    "defaultUser": "Usuario",
+    "defaultEmail": "usuario@ejemplo.com",
+    "freePlan": "Plan Gratuito",
+    "accountSettings": "Configuración de Cuenta",
+    "manageSubscription": "Administrar Suscripción",
+    "helpSupport": "Ayuda y Soporte",
+    "signOut": "Cerrar sesión"
+  },
+  "modal": {
+    "close": "Cerrar"
+  },
+  "sidebar": {
+    "upgradeToPro": "Actualizar a Pro",
+    "upgradeNow": "Actualizar Ahora"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "viewNotifications": "Ver notificaciones",
+    "markAllAsRead": "Marcar todas como leídas",
+    "markAsRead": "Marcar como leída",
+    "loading": "Cargando notificaciones...",
+    "noNew": "No hay nuevas notificaciones",
+    "viewAll": "Ver todas las notificaciones",
+    "close": "Cerrar",
+    "subscriptionLimitReached": "Límite de Suscripción Alcanzado"
+  },
+  "layout": {
+    "footer": {
+      "help": "Ayuda",
+      "privacy": "Privacidad", 
+      "terms": "Términos"
+    }
+  },
+  "errors": {
+    "somethingWentWrong": "Algo salió mal"
+  },
+  "search": {
+    "searchDocuments": "Buscar documentos...",
+    "searchConversations": "Buscar conversaciones..."
+  },
+  "filters": {
+    "allStatus": "Todos los Estados",
+    "processed": "Procesado",
+    "processing": "Procesando",
+    "failed": "Fallido"
+  },
+  "sorting": {
+    "nameAZ": "Nombre (A-Z)",
+    "nameZA": "Nombre (Z-A)"
+  },
+  "support": {
+    "faqs": "Preguntas Frecuentes",
+    "sendMessage": "Envíanos un mensaje",
+    "issuePlaceholder": "¿En qué podemos ayudarte?",
+    "detailsPlaceholder": "Describe tu problema o pregunta en detalle"
+  }
+}

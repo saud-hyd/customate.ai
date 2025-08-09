@@ -67,8 +67,16 @@ const TermsPage = () => {
               <p className="text-gray-700 mb-4">
                 Customer may pay for the service using the following payment methods: credit cards (with a 2% increase in price) and direct bank account transfers. Payments must be made in advance, unless otherwise stated in the contract.
               </p>
-              <p className="text-gray-700 mb-6">
+              <p className="text-gray-700 mb-4">
                 If Customer is purchasing the Services via credit card, debit card or any other recurring payment method accepted by Customate, Recurring Billing is authorized, Customer pays any foreign transaction fees, and is responsible for any change in the payment method information.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">3.3 Pricing Changes and Feature Updates</h3>
+              <p className="text-gray-700 mb-4">
+                Customate reserves the right to modify subscription pricing when introducing new features, enhanced functionalities, or improved service capabilities to the platform. Pricing adjustments may occur to reflect the added value and expanded functionality provided to users.
+              </p>
+              <p className="text-gray-700 mb-6">
+                Any pricing changes will be communicated to Customers at least 30 days in advance via email notification to the account holder's registered email address. Customers may choose to cancel their subscription before the new pricing takes effect if they do not wish to accept the updated terms. Continued use of the service after the effective date of pricing changes constitutes acceptance of the new pricing structure.
               </p>
             </section>
 
@@ -91,42 +99,67 @@ const TermsPage = () => {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Liability and Warranties</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Brand Usage and Marketing</h2>
               
-              <h3 className="text-xl font-medium text-gray-800 mb-3">5.1 Service Guarantees and Limitations</h3>
+              <h3 className="text-xl font-medium text-gray-800 mb-3">5.1 Use of Customer Brand in Marketing Materials</h3>
+              <p className="text-gray-700 mb-4">
+                By using Customate's services, Customer grants Customate a limited, non-exclusive license to use Customer's company name, logo, and brand elements in Customate's marketing materials, case studies, testimonials, website content, and promotional activities. This usage is solely for the purpose of demonstrating Customate's client base and service capabilities.
+              </p>
+              <p className="text-gray-700 mb-4">
+                Customate will use Customer's brand elements in a professional manner that does not misrepresent the nature of the business relationship or imply endorsement beyond the use of Customate's services. Customer may request removal of their brand from marketing materials by contacting Customate in writing, and such removal will be implemented within 30 days of the request.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">5.2 Customate Branding in Chat Widget</h3>
+              <p className="text-gray-700 mb-4">
+                The chat widget and chatbot interface provided by Customate may display Customate's branding elements, including but not limited to the "Powered by Customate" attribution, logo, or other brand identifiers. This branding serves to identify the technology provider and is a standard practice in software-as-a-service offerings.
+              </p>
+              <p className="text-gray-700 mb-4">
+                For Customers requiring complete white-label solutions without Customate branding, enterprise-level subscriptions with custom branding options may be available. Please contact <a href="mailto:admin@customate.ai" className="text-orange-600 hover:text-orange-700">admin@customate.ai</a> to discuss white-label service options and associated pricing.
+              </p>
+
+              <h3 className="text-xl font-medium text-gray-800 mb-3">5.3 Intellectual Property Respect</h3>
+              <p className="text-gray-700 mb-6">
+                Both parties agree to respect each other's intellectual property rights. Customer retains all rights to their proprietary content, data, and brand elements, while Customate retains all rights to its platform, technology, and service methodologies. Neither party may use the other's intellectual property in ways not explicitly authorized by this agreement.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Liability and Warranties</h2>
+              
+              <h3 className="text-xl font-medium text-gray-800 mb-3">6.1 Service Guarantees and Limitations</h3>
               <p className="text-gray-700 mb-4">
                 The service is provided on an "as-is" and "as-available" basis. While the provider strives for high availability and reliability, no guarantees are made regarding uninterrupted or error-free operation. The provider does not warrant that the service will meet all specific requirements or function without disruptions, bugs, or vulnerabilities.
               </p>
 
-              <h3 className="text-xl font-medium text-gray-800 mb-3">5.2 Liability Limitations</h3>
+              <h3 className="text-xl font-medium text-gray-800 mb-3">6.2 Liability Limitations</h3>
               <p className="text-gray-700 mb-6">
                 The provider is only liable for damages caused by gross negligence or willful misconduct, as permitted by applicable law. Liability for indirect, incidental, or consequential damages—such as lost profits, data loss, or business interruptions—is excluded.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Termination and Cancellation</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Termination and Cancellation</h2>
               
-              <h3 className="text-xl font-medium text-gray-800 mb-3">6.1 Cancellation by the User</h3>
+              <h3 className="text-xl font-medium text-gray-800 mb-3">7.1 Cancellation by the User</h3>
               <p className="text-gray-700 mb-4">
                 The Customer may cancel their subscription or account at any time by following the cancellation procedures provided in the service platform. Cancellation will take effect at the end of the current billing period, unless otherwise stated.
               </p>
 
-              <h3 className="text-xl font-medium text-gray-800 mb-3">6.2 Termination by the Provider</h3>
+              <h3 className="text-xl font-medium text-gray-800 mb-3">7.2 Termination by the Provider</h3>
               <p className="text-gray-700 mb-6">
                 The provider reserves the right to terminate or suspend the User's access to the service in the event of a breach of these Terms and Conditions, including but not limited to unauthorized usage, failure to make timely payments, or violation of applicable laws.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Governing Law</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Governing Law</h2>
               <p className="text-gray-700 mb-4">
                 These Terms and Conditions are governed by and construed in accordance with the laws of Germany, without regard to its conflict of law provisions. Any disputes that cannot be resolved through informal communication will be subject to the exclusive jurisdiction of the competent courts in Germany.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Contact Information</h2>
               <p className="text-gray-700 mb-4">
                 For any questions, concerns, or support requests regarding these Terms and Conditions, please contact us at:
               </p>

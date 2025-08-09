@@ -88,7 +88,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
   position: relative;
   z-index: 1000001;
 }
@@ -533,7 +533,7 @@
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   position: relative;
   overflow: hidden;
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.15s ease-out;
 }
 
 /* Tab content area */
@@ -543,7 +543,7 @@
   flex-direction: column;
   min-height: 0;
   position: relative;
-  animation: slideIn 0.2s ease-out;
+  animation: slideIn 0.1s ease-out;
   gap: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -613,7 +613,7 @@
   border-radius: 24px !important;
   padding: 2px 2px 2px 4px !important;
   margin: 0 !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.15s ease !important;
   backdrop-filter: blur(10px) !important;
   min-height: auto !important;
   max-height: none !important;
@@ -665,7 +665,7 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.15s ease !important;
   flex-shrink: 0 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
   margin: 0 !important;

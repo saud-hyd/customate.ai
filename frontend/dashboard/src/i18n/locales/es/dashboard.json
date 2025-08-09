@@ -1,0 +1,55 @@
+{
+  "title": "Panel de Control",
+  "overview": "Resumen",
+  "metrics": {
+    "totalMessages": "Total de Mensajes",
+    "activeChats": "Chats Activos",
+    "knowledgeItems": "Elementos de Conocimiento",
+    "integrations": "Integraciones",
+    "monthlyUsage": "Uso Mensual",
+    "storageUsed": "Almacenamiento Utilizado"
+  },
+  "charts": {
+    "messagesOverTime": "Mensajes en el Tiempo",
+    "topIntegrations": "Principales Integraciones",
+    "userEngagement": "Participación de Usuarios",
+    "knowledgeUsage": "Uso de Conocimiento"
+  },
+  "quickActions": {
+    "title": "Acciones Rápidas",
+    "startChat": "Iniciar Nuevo Chat",
+    "uploadDocument": "Subir Documento",
+    "createIntegration": "Crear Integración",
+    "viewAnalytics": "Ver Analíticas",
+    "upgradeplan": "Actualizar Plan"
+  },
+  "recentActivity": {
+    "title": "Actividad Reciente",
+    "noActivity": "No hay actividad reciente"
+  },
+  "status": {
+    "lastUpdated": "Última actualización",
+    "refreshing": "Actualizando...",
+    "refreshData": "Actualizar Datos",
+    "version": "Versión 2.1.0",
+    "subscriptionActive": "Tu suscripción está activa",
+    "subscriptionNeedsAttention": "Tu suscripción necesita atención"
+  },
+  "usage": {
+    "totalConversations": "Conversaciones Totales",
+    "vsPreviousDay": "vs. día anterior",
+    "assistantMessages": "Mensajes del Asistente (Uso de API)",
+    "storage": "Almacenamiento",
+    "documents": "Documentos",
+    "knowledgeBase": "Base de Conocimientos",
+    "crawledContent": "Contenido Rastreado",
+    "freePlan": "Plan Gratuito"
+  },
+  "warnings": {
+    "approachingLimits": "Te estás acercando a los límites de tu plan",
+    "upgradePrompt": "Considera actualizar tu plan para evitar interrupciones del servicio.",
+    "messagesWarning": "Has usado {{percentage}}% de tu límite mensual de mensajes ({{current}} de {{limit}})",
+    "storageWarning": "Has usado {{percentage}}% de tu límite de almacenamiento ({{current}} de {{limit}})",
+    "upgradeNow": "Actualizar Ahora"
+  }
+}

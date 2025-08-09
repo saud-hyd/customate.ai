@@ -1,0 +1,64 @@
+{
+  "styling": "Estilo del Widget",
+  "customizeAppearance": "Personaliza la apariencia de tu chatbot", 
+  "colors": "Colores",
+  "primaryColor": "Color Primario",
+  "headerColor": "Color del Encabezado",
+  "backgroundColor": "Color de Fondo",
+  "textColor": "Color del Texto",
+  "content": "Contenido",
+  "chatbotName": "Nombre del Chatbot",
+  "chatbotNamePlaceholder": "Asistente de IA",
+  "greetingMessage": "Mensaje de Saludo",
+  "greetingPlaceholder": "¡Hola! ¿Cómo puedo ayudarte hoy?",
+  "borderRadius": "Radio del Borde (px)",
+  "fontFamily": "Familia de Fuente",
+  "fontOptions": {
+    "inter": "Inter",
+    "roboto": "Roboto",
+    "openSans": "Open Sans",
+    "montserrat": "Montserrat",
+    "poppins": "Poppins"
+  },
+  "testChatbot": "Prueba Tu Chatbot",
+  "testWidget": "Probar Widget",
+  "loading": "Cargando widget...",
+  "integrationCode": "Código de Integración",
+  "howToIntegrate": "Cómo integrar:",
+  "copyCode": "Copia el código de arriba",
+  "pasteInstructions": "Pégalo antes de la etiqueta de cierre </body>",
+  "saveRefresh": "¡Guarda y actualiza - el widget aparece automáticamente!",
+  "compatiblePlatforms": "Compatible con todas las plataformas:",
+  "oneLineEveryWebsite": "🚀 Una Línea. Cada Sitio Web.",
+  "status": {
+    "ready": "✅ Listo",
+    "error": "❌ Error", 
+    "loading": "🔄 Cargando"
+  },
+  "setup": {
+    "checkingBackend": "Verificando conexión del backend y obteniendo clave API...",
+    "backendTip": "Consejo: Asegúrate de que el backend esté ejecutándose en http://localhost:8000",
+    "step1": "Copia el código de arriba",
+    "step2": "Pégalo antes de la etiqueta de cierre </body>",
+    "step3": "¡Guarda y actualiza - el widget aparece automáticamente!"
+  },
+  "platforms": {
+    "wordpress": "WordPress",
+    "shopify": "Shopify",
+    "webflow": "Webflow",
+    "squarespace": "Squarespace",
+    "wix": "Wix",
+    "customHtml": "HTML Personalizado"
+  },
+  "chat": {
+    "defaultGreeting": "¡Hola! ¿Cómo puedo ayudarte hoy?",
+    "errorMessage": "Lo siento, no pude procesar tu mensaje. Por favor inténtalo de nuevo más tarde.",
+    "sendError": "Error al enviar mensaje",
+    "openChat": "Abrir chat",
+    "chatWithUs": "Chatea con nosotros",
+    "typeMessage": "Escribe tu mensaje...",
+    "sendMessage": "Enviar mensaje",
+    "minimizeChat": "Minimizar chat",
+    "closeChat": "Cerrar chat"
+  }
+}

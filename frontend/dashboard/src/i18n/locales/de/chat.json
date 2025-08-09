@@ -1,0 +1,45 @@
+{
+  "title": "Chat",
+  "startNewChat": "Neuen Chat starten",
+  "conversations": "Unterhaltungen",
+  "messages": "Nachrichten",
+  "typeMessage": "Nachricht eingeben...",
+  "send": "Senden",
+  "typing": "Tippt...",
+  "online": "Online",
+  "offline": "Offline",
+  "searchConversations": "Unterhaltungen durchsuchen...",
+  "noConversations": "Noch keine Unterhaltungen",
+  "newConversation": "Neue Unterhaltung",
+  "suggestions": {
+    "title": "Vorgeschlagene Fragen",
+    "noSuggestions": "Keine Vorschläge verfügbar"
+  },
+  "errors": {
+    "sendFailed": "Nachricht konnte nicht gesendet werden",
+    "loadFailed": "Unterhaltungen konnten nicht geladen werden"
+  },
+  "conversationsPage": {
+    "title": "Unterhaltungsverlauf",
+    "tableHeaders": {
+      "sessionId": "Sitzungs-ID",
+      "dateTime": "Datum & Uhrzeit", 
+      "messages": "Nachrichten",
+      "duration": "Dauer",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "loadingConversations": "Unterhaltungen werden geladen...",
+    "pagination": {
+      "show": "Anzeigen",
+      "ariaLabel": "Paginierung",
+      "previous": "Vorherige",
+      "next": "Nächste"
+    }
+  },
+  "chatPage": {
+    "conversations": "Unterhaltungen",
+    "loadingConversations": "Unterhaltungen werden geladen...",
+    "noConversationsYet": "Noch keine Unterhaltungen"
+  }
+}

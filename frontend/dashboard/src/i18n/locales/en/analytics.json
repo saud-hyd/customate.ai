@@ -1,0 +1,80 @@
+{
+  "title": "Analytics",
+  "overview": "Analytics Overview",
+  "loadingData": "Loading analytics data...",
+  "messageStatistics": "Message Statistics",
+  "assistantMessages": "Assistant Messages",
+  "storageUsed": "Storage Used",
+  "usage": "Usage",
+  "nearLimit": "Near limit - consider upgrading",
+  "currentPlan": "Current Plan:",
+  "messages": "Messages",
+  "storage": "Storage",
+  "storageBreakdown": "Storage Breakdown",
+  "documents": "Documents",
+  "knowledgeBase": "Knowledge Base",
+  "crawledContent": "Crawled Content",
+  "engagementAnalytics": "Engagement Analytics",
+  "engagementDescription": "Detailed conversation analytics and user engagement metrics coming soon.",
+  "knowledgeAnalytics": "Knowledge Analytics",
+  "volume": "Volume",
+  "responseTime": "Response Time",
+  "knowledgeUsage": "Knowledge Usage",
+  "totalSessions": "Total Sessions",
+  "averageResponseTime": "Average Response Time",
+  "knowledgeUsageRatio": "Knowledge Usage Ratio",
+  "noMessageStats": "No message statistics available",
+  "knowledgePercentage": "Percentage of responses using knowledge base",
+  "selectDateRange": "Select Date Range",
+  "dateRange": "Date Range",
+  "last7Days": "Last 7 days",
+  "last30Days": "Last 30 days",
+  "last90Days": "Last 90 days",
+  "customRange": "Custom range",
+  "metrics": {
+    "totalMessages": "Total Messages",
+    "uniqueUsers": "Unique Users",
+    "avgResponseTime": "Avg Response Time",
+    "satisfactionRate": "Satisfaction Rate",
+    "apiCalls": "API Calls",
+    "knowledgeQueries": "Knowledge Queries"
+  },
+  "charts": {
+    "messageVolume": "Message Volume",
+    "userEngagement": "User Engagement",
+    "responseTime": "Response Time",
+    "topQuestions": "Top Questions",
+    "integrationUsage": "Integration Usage"
+  },
+  "export": {
+    "title": "Export Data",
+    "csv": "Export as CSV",
+    "pdf": "Export as PDF",
+    "json": "Export as JSON"
+  },
+  "comingSoon": "Coming Soon",
+  "apiUsage": {
+    "title": "API Usage Analytics",
+    "description": "We're working on detailed API usage analytics to help you monitor and optimize your API consumption."
+  },
+  "engagement": {
+    "title": "Engagement Analytics",
+    "description": "Track user engagement patterns and conversation quality to improve your chatbot's performance."
+  },
+  "knowledge": {
+    "title": "Knowledge Analytics",
+    "description": "Discover insights about your knowledge base performance and content effectiveness."
+  },
+  "timeRanges": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month"
+  },
+  "knowledgeInsights": {
+    "performanceInsights": "Knowledge base performance insights and optimization recommendations."
+  },
+  "messageStats": {
+    "responseTime": "Response Time",
+    "knowledgeUsage": "Knowledge Usage"
+  }
+}

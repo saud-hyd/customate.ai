@@ -1,0 +1,112 @@
+{
+  "title": "Wissensbasis",
+  "documents": "Dokumente",
+  "collections": "Sammlungen",
+  "uploadDocument": "Dokument hochladen",
+  "createCollection": "Sammlung erstellen",
+  "searchDocuments": "Dokumente durchsuchen...",
+  "documentName": "Dokumentname",
+  "documentType": "Typ",
+  "documentSize": "Größe",
+  "uploadDate": "Upload-Datum",
+  "noDocuments": "Keine Dokumente gefunden",
+  "processing": "Dokument wird verarbeitet...",
+  "processed": "Dokument erfolgreich verarbeitet",
+  "failed": "Dokumentverarbeitung fehlgeschlagen",
+  "webCrawler": {
+    "title": "Web-Crawler",
+    "url": "Website-URL",
+    "crawl": "Crawling starten",
+    "crawling": "Crawlt...",
+    "completed": "Crawling abgeschlossen",
+    "failed": "Crawling fehlgeschlagen"
+  },
+  "storage": {
+    "used": "Genutzter Speicher",
+    "available": "Verfügbar",
+    "limit": "Speicherlimit",
+    "warning": "Speicherlimit wird erreicht"
+  },
+  "upload": {
+    "selectFile": "Bitte wählen Sie eine Datei zum Hochladen aus",
+    "selectCollection": "Bitte wählen Sie eine Sammlung aus",
+    "chooseCollection": "Sammlung auswählen",
+    "uploadFailed": "Fehler beim Hochladen des Dokuments. Bitte versuchen Sie es erneut.",
+    "uploadSuccess": "Dokument erfolgreich hochgeladen",
+    "uploadProcessing": "Das Dokument \"{{filename}}\" wurde hochgeladen und wird verarbeitet.",
+    "dropZoneText": "Datei hierhin ziehen und ablegen oder klicken zum Durchsuchen",
+    "supportedFormats": "Unterstützte Formate: PDF, DOCX, DOC, TXT",
+    "uploading": "Dokument wird hochgeladen...",
+    "uploadDocument": "Dokument hochladen"
+  },
+  "pages": {
+    "knowledgeBaseTitle": "Wissensbasis",
+    "loadingStorage": "Speicher wird geladen...",
+    "storageError": "Speicher: {{error}}",
+    "documentsLabel": "Dokumente:",
+    "crawledLabel": "Gecrawlt:",
+    "knowledgeLabel": "Wissen:",
+    "searchPlaceholder": "Dokumente und Websites durchsuchen...",
+    "loadingKnowledgeBase": "Wissensbasis wird geladen...",
+    "noContentYet": "Noch kein Inhalt",
+    "uploadDocumentAction": "Dokument hochladen",
+    "uploadDescription": "PDF-, DOCX-, DOC- oder TXT-Dateien",
+    "crawlWebsiteAction": "Website crawlen",
+    "crawlDescription": "Inhalte von Webseiten extrahieren",
+    "defaultCollection": "Standardsammlung",
+    "fileSizeLimit": "PDF, DOCX, DOC, TXT bis zu 10MB"
+  },
+  "enhanced": {
+    "collectionsTitle": "Sammlungen",
+    "loadingCollections": "Sammlungen werden geladen...",
+    "noCollectionsYet": "Noch keine Sammlungen",
+    "searchItemsPlaceholder": "Elemente durchsuchen...",
+    "loadingItems": "Elemente werden geladen...",
+    "selectCollectionToView": "Wählen Sie eine Sammlung aus, um Elemente anzuzeigen",
+    "noItemsInCollection": "Keine Elemente in dieser Sammlung",
+    "updatedLabel": "Aktualisiert: {{date}}",
+    "uploadedDocuments": "Hochgeladene Dokumente",
+    "loadingDocuments": "Dokumente werden geladen...",
+    "noDocumentsYet": "Noch keine Dokumente hochgeladen",
+    "tableHeaders": {
+      "document": "Dokument",
+      "status": "Status",
+      "size": "Größe",
+      "uploaded": "Hochgeladen",
+      "actions": "Aktionen"
+    },
+    "createCollectionModal": {
+      "title": "Neue Sammlung erstellen",
+      "nameLabel": "Name",
+      "namePlaceholder": "Sammlungsname",
+      "descriptionLabel": "Beschreibung (Optional)",
+      "descriptionPlaceholder": "Sammlungsbeschreibung",
+      "typeLabel": "Typ",
+      "types": {
+        "general": "Allgemein",
+        "faqs": "FAQs",
+        "policies": "Richtlinien",
+        "products": "Produkte",
+        "procedures": "Verfahren"
+      }
+    },
+    "deleteCollectionModal": {
+      "title": "Sammlung löschen"
+    },
+    "addKnowledgeItemModal": {
+      "title": "Wissenselement hinzufügen",
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Elementtitel",
+      "contentLabel": "Inhalt",
+      "contentPlaceholder": "Elementinhalt"
+    }
+  },
+  "webCrawlerPage": {
+    "intelligentWebCrawler": "Intelligenter Web-Crawler",
+    "storageUsage": "Speichernutzung",
+    "siteAnalysis": "Site-Analyse",
+    "smartPrioritization": "Intelligente Priorisierung",
+    "storageOptimization": "Speicheroptimierung",
+    "realTimeProgress": "Echtzeitfortschritt"
+  }
+}

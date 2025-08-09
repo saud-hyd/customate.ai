@@ -1,0 +1,83 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "profile": "Profile",
+    "billing": "Billing",
+    "team": "Team Members",
+    "support": "Support",
+    "language": "Language"
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "description": "Manage your account information and preferences",
+    "name": "Name",
+    "email": "Email",
+    "company": "Company",
+    "companyName": "Company Name",
+    "companyNamePlaceholder": "Enter your company name",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "Enter your email address",
+    "website": "Website",
+    "websitePlaceholder": "https://yourcompany.com",
+    "phoneNumber": "Phone Number",
+    "phonePlaceholder": "+1 (555) 123-4567",
+    "industry": "Industry",
+    "industryPlaceholder": "Select an industry",
+    "industryOptions": {
+      "saas": "SaaS",
+      "ecommerce": "E-commerce",
+      "healthcare": "Healthcare",
+      "education": "Education",
+      "finance": "Finance",
+      "realestate": "Real Estate",
+      "consulting": "Consulting",
+      "other": "Other"
+    },
+    "notProvided": "Not provided",
+    "notSelected": "Not selected",
+    "updatePassword": "Update Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "profileUpdated": "Profile updated successfully",
+    "profileUpdateFailed": "Failed to update profile",
+    "passwordUpdated": "Password updated successfully",
+    "manageSubscription": "Manage Subscription",
+    "logOut": "Log Out"
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "currentPlan": "Current Plan",
+    "usage": "Usage",
+    "paymentMethods": "Payment Methods",
+    "billingHistory": "Billing History",
+    "nextBilling": "Next billing date",
+    "upgradeplan": "Upgrade Plan",
+    "manageBilling": "Manage Billing"
+  },
+  "team": {
+    "title": "Team Members",
+    "inviteMembers": "Invite Members",
+    "memberName": "Name",
+    "memberEmail": "Email", 
+    "memberRole": "Role",
+    "memberStatus": "Status",
+    "invitationSent": "Invitation sent successfully",
+    "memberRemoved": "Member removed successfully"
+  },
+  "support": {
+    "title": "Support",
+    "contactUs": "Contact Us",
+    "documentation": "Documentation",
+    "apiDocs": "API Documentation",
+    "helpCenter": "Help Center",
+    "reportIssue": "Report an Issue"
+  },
+  "language": {
+    "title": "Language Settings",
+    "selectLanguage": "Select Language",
+    "currentLanguage": "Current Language",
+    "languageUpdated": "Language updated successfully",
+    "description": "Choose your preferred language for the dashboard interface."
+  }
+}

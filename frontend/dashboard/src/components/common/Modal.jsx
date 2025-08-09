@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Modal component for displaying dialogs and popups
@@ -18,6 +19,7 @@ const Modal = ({
   showCloseButton = true,
   className = '',
 }) => {
+  const { t } = useTranslation('common');
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -91,7 +93,7 @@ const Modal = ({
                 <button
                   onClick={onClose}
                   className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-                  aria-label="Close"
+                  aria-label={t('modal.close')}
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>

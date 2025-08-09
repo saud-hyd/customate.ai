@@ -1,0 +1,47 @@
+{
+  "title": "Channels",
+  "connected": "Connected Channels",
+  "available": "Available Channels",
+  "connect": "Connect Channel",
+  "disconnect": "Disconnect",
+  "configure": "Configure",
+  "status": "Status",
+  "conversations": "Conversations",
+  "platforms": {
+    "whatsapp": "WhatsApp",
+    "facebook": "Facebook Messenger",
+    "instagram": "Instagram",
+    "twitter": "Twitter",
+    "telegram": "Telegram",
+    "email": "Email"
+  },
+  "setup": {
+    "title": "Channel Setup",
+    "webhookUrl": "Webhook URL",
+    "accessToken": "Access Token",
+    "verifyToken": "Verify Token",
+    "testConnection": "Test Connection",
+    "connectionSuccess": "Channel connected successfully",
+    "connectionFailed": "Failed to connect channel"
+  },
+  "conversations": {
+    "title": "Channel Conversations",
+    "noConversations": "No conversations found",
+    "lastMessage": "Last Message",
+    "unread": "Unread",
+    "markRead": "Mark as Read",
+    "searchPlaceholder": "Search conversations..."
+  },
+  "pages": {
+    "messagingChannels": "Messaging Channels"
+  },
+  "whatsapp": {
+    "setup": {
+      "step1": "Go to Meta Developer Console → Your App → Webhooks",
+      "step2": "Click \"Edit\" for WhatsApp webhook subscription",
+      "step3": "Paste the Webhook URL in \"Callback URL\" field",
+      "step4": "Subscribe to the required webhook events listed above",
+      "step5": "Click \"Verify and Save\" to test the connection"
+    }
+  }
+}

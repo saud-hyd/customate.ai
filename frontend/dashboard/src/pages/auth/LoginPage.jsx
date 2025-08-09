@@ -3,11 +3,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../context/ToastContext';
 import useAuth from '../../hooks/useAuth';
 import GoogleOAuthButton from '../../components/auth/GoogleOAuthButton';
 
 const LoginPage = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +49,7 @@ const LoginPage = () => {
     e.preventDefault();
     
     if (!email.trim() || !password.trim()) {
-      toast.error('Email and password are required');
+      toast.error(t('auth:errors.emailPasswordRequired'));
       return;
     }
     
@@ -57,7 +59,7 @@ const LoginPage = () => {
       console.log('Attempting password login for:', email);
       await loginWithEmailPassword(email, password);
       console.log('Login successful, redirecting to dashboard');
-      toast.success('Login successful!');
+      toast.success(t('auth:errors.loggedInSuccess'));
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -95,7 +97,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <h2 className="text-3xl font-bold mb-6 text-center">Welcome Back</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center">{t('auth:login.welcomeBack')}</h2>
         
         {/* Google OAuth Button First */}
         <div className="mb-6">
@@ -107,14 +109,14 @@ const LoginPage = () => {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            <span className="px-2 bg-white text-gray-500">{t('auth:login.continueWith')}</span>
           </div>
         </div>
         
         <form onSubmit={handlePasswordLogin} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address
+              {t('auth:login.emailAddress')}
             </label>
             <input
               type="email"
@@ -122,14 +124,14 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
-              placeholder="Enter your email"
+              placeholder={t('auth:login.emailPlaceholder')}
               required
             />
           </div>
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              {t('auth:login.password')}
             </label>
             <input
               type="password"
@@ -137,7 +139,7 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
-              placeholder="Enter your password"
+              placeholder={t('auth:login.passwordPlaceholder')}
               required
             />
           </div>
@@ -151,7 +153,7 @@ const LoginPage = () => {
                 to="/forgot-password"
                 className="font-medium text-orange-600 hover:text-orange-500"
               >
-                Forgot password?
+{t('auth:login.forgotPassword')}
               </Link>
             </div>
           </div>
@@ -161,23 +163,23 @@ const LoginPage = () => {
             className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 font-medium"
             disabled={isLoading}
           >
-            {isLoading ? 'Signing In...' : 'Sign In'}
+{isLoading ? t('auth:login.signingIn') : t('auth:login.signIn')}
           </button>
         </form>
            <p className="mt-6 text-center text-sm text-gray-600">
-                  Don't have an account?{' '}
+                  {t('auth:login.noAccount')}{' '}
                   <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
-                    Create account
+                    {t('auth:login.createNewAccount')}
                   </Link>
                 </p> 
                 <p className="mt-4 text-center text-xs text-gray-500">
-                  By continuing, you agree to our{' '}
+                  {t('auth:register.agreeToTerms')}{' '}
                   <Link to="https://www.customate.ai/terms" className="text-orange-600 hover:text-orange-500 underline">
-                    Terms of Service
+                    {t('auth:register.termsOfService')}
                   </Link>
-                  {' '}and{' '}
+                  {' '}{t('auth:register.and')}{' '}
                   <Link to="https://www.customate.ai/privacy" className="text-orange-600 hover:text-orange-500 underline">
-                    Privacy Policy
+                    {t('auth:register.privacyPolicy')}
                   </Link>
                   .
                 </p>

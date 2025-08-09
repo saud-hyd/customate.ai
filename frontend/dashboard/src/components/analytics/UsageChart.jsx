@@ -1,6 +1,7 @@
 // src/components/analytics/UsageChart.jsx
 import React, { useState } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import Card from '../common/Card';
 import Button from '../common/Button';
 
@@ -9,6 +10,7 @@ import Button from '../common/Button';
  * Displays user engagement and platform usage metrics
  */
 const UsageChart = ({ data, title, subtitle, type = 'line', dataKeys = [], colors = [], className = '' }) => {
+  const { t } = useTranslation('analytics');
   const [timeRange, setTimeRange] = useState('month'); // month, week, day
   
   const renderChart = () => {
@@ -68,21 +70,21 @@ const UsageChart = ({ data, title, subtitle, type = 'line', dataKeys = [], color
               variant={timeRange === 'day' ? 'primary' : 'outline'}
               onClick={() => setTimeRange('day')}
             >
-              Day
+              {t('timeRanges.day')}
             </Button>
             <Button
               size="sm"
               variant={timeRange === 'week' ? 'primary' : 'outline'}
               onClick={() => setTimeRange('week')}
             >
-              Week
+              {t('timeRanges.week')}
             </Button>
             <Button
               size="sm"
               variant={timeRange === 'month' ? 'primary' : 'outline'}
               onClick={() => setTimeRange('month')}
             >
-              Month
+              {t('timeRanges.month')}
             </Button>
           </div>
         </div>

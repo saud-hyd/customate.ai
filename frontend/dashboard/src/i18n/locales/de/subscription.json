@@ -1,0 +1,112 @@
+{
+  "title": "Abonnement",
+  "currentPlan": "Aktueller Tarif",
+  "usage": "Nutzung",
+  "upgrade": "Tarif upgraden",
+  "downgrade": "Tarif downgraden",
+  "billingCycle": "Abrechnungszyklus",
+  "monthly": "Monatlich",
+  "yearly": "Jährlich",
+  "plans": {
+    "free": "Kostenlos",
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "features": {
+    "messages": "Nachrichten pro Monat",
+    "storage": "Speicher",
+    "integrations": "Integrationen",
+    "support": "Support",
+    "customBranding": "Custom Branding",
+    "analytics": "Erweiterte Analytics"
+  },
+  "usage": {
+    "messages": "Verwendete Nachrichten",
+    "storage": "Verwendeter Speicher",
+    "apiCalls": "API-Aufrufe",
+    "resetDate": "Nutzung wird zurückgesetzt am"
+  },
+  "billing": {
+    "nextPayment": "Nächste Zahlung",
+    "paymentMethod": "Zahlungsmethode",
+    "billingHistory": "Abrechnungshistorie",
+    "updatePayment": "Zahlungsmethode aktualisieren"
+  },
+  "storage": {
+    "loadingInfo": "Speicherinformationen werden geladen...",
+    "unableToFetch": "Speicherinformationen konnten nicht abgerufen werden",
+    "refreshInfo": "Speicherinformationen aktualisieren",
+    "availableSpace": "Verfügbarer Speicher",
+    "units": {
+      "bytes": "Bytes",
+      "kb": "KB", 
+      "mb": "MB",
+      "gb": "GB"
+    }
+  },
+  "planComparison": {
+    "messagesPerMonth": "Nachrichten pro Monat",
+    "storageLimit": "Speicherlimit",
+    "chatbotFeatures": "Chatbot-Funktionen",
+    "basicCustomization": "Grundlegende Anpassung",
+    "advancedCustomization": "Erweiterte Anpassung",
+    "fullCustomization": "Vollständige Anpassung",
+    "support": {
+      "community": "Community",
+      "email": "E-Mail-Support",
+      "priority": "Prioritäts-E-Mail-Support",
+      "phone": "Telefon- & E-Mail-Support"
+    },
+    "analytics": "Analytics",
+    "advancedAnalytics": "Erweiterte Analytics",
+    "apiAccess": "API-Zugang",
+    "processing": "Wird verarbeitet...",
+    "upgrade": "Upgraden"
+  },
+  "paymentForm": {
+    "validation": {
+      "cardNumberRequired": "Kartennummer ist erforderlich",
+      "invalidCardNumber": "Bitte geben Sie eine gültige Kartennummer ein",
+      "expiryRequired": "Ablaufdatum ist erforderlich",
+      "invalidExpiry": "Bitte geben Sie ein gültiges Ablaufdatum ein (MM/JJ)",
+      "cvcRequired": "CVC ist erforderlich",
+      "invalidCvc": "Bitte geben Sie einen gültigen CVC ein",
+      "nameRequired": "Name des Karteninhabers ist erforderlich"
+    },
+    "cardholderPlaceholder": "Max Mustermann",
+    "expiryPlaceholder": "MM/JJ",
+    "processing": "Wird verarbeitet...",
+    "addPaymentMethod": "Zahlungsmethode hinzufügen"
+  },
+  "usageChart": {
+    "usageHistory": "Nutzungsverlauf",
+    "messagesLabel": "Nachrichten",
+    "storageLabel": "Speicher (MB)",
+    "messagesUsed": "Verwendete Nachrichten",
+    "storageUsed": "Verwendeter Speicher (MB)"
+  },
+  "pages": {
+    "billedAnnually": "Jährliche Abrechnung",
+    "customPlanContact": "Benötigen Sie einen benutzerdefinierten Tarif? Kontaktieren Sie unser Vertriebsteam für Unternehmenslösungen."
+  },
+  "teams": {
+    "teamMembers": "Teammitglieder",
+    "admin": "Administrator",
+    "viewer": "Betrachter",
+    "adminDescription": "Administrator: Vollzugriff auf alle Funktionen und Einstellungen",
+    "viewerDescription": "Betrachter: Nur-Lese-Zugriff auf Analytics und Unterhaltungen"
+  },
+  "billing": {
+    "billingPayment": "Abrechnung & Zahlung",
+    "currentSubscription": "Aktuelles Abonnement",
+    "paymentMethods": "Zahlungsmethoden",
+    "noPaymentMethods": "Keine Zahlungsmethoden gefunden.",
+    "addPaymentMethodPrompt": "Fügen Sie eine Zahlungsmethode hinzu, um sich für einen kostenpflichtigen Tarif anzumelden.",
+    "cardBrands": {
+      "visa": "VISA",
+      "mastercard": "MC",
+      "amex": "AMEX"
+    }
+  }
+}

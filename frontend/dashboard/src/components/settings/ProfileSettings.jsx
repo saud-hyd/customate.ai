@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../context/LanguageContext';
 import useAuth from '../../hooks/useAuth';
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { t } = useTranslation(['settings', 'common']);
+  const { currentLanguage, changeLanguage, languages } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
   
   const [profileData, setProfileData] = useState({
     name: '',
@@ -42,7 +45,6 @@ const ProfileSettings = () => {
 
         setProfileData(mockUser);
         setEditData(mockUser);
-        setSelectedLanguage(mockUser.language || 'en');
         
       } catch (error) {
         console.error('Error fetching profile data:', error);
@@ -73,11 +75,11 @@ const ProfileSettings = () => {
       
       setProfileData({ ...editData });
       setIsEditing(false);
-      alert('Profile updated successfully!');
+      alert(t('settings:profile.profileUpdated'));
       
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Failed to update profile');
+      alert(t('settings:profile.profileUpdateFailed'));
     } finally {
       setSaving(false);
     }
@@ -92,11 +94,11 @@ const ProfileSettings = () => {
 
   const handleLanguageChange = async (e) => {
     const newLanguage = e.target.value;
-    setSelectedLanguage(newLanguage);
     
     try {
-      // This would call: await userService.updateLanguage(newLanguage);
-      console.log('Would save language to backend:', newLanguage);
+      await changeLanguage(newLanguage);
+      // TODO: Save language preference to backend
+      // await userService.updateLanguage(newLanguage);
     } catch (error) {
       console.error('Error updating language:', error);
     }
@@ -139,8 +141,8 @@ const ProfileSettings = () => {
         <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Profile Settings</h1>
-              <p className="text-sm text-gray-500">Manage your account information and preferences</p>
+              <h1 className="text-xl font-semibold text-gray-900">{t('settings:profile.title')}</h1>
+              <p className="text-sm text-gray-500">{t('settings:profile.description', 'Manage your account information and preferences')}</p>
             </div>
             
             {!isEditing ? (
@@ -151,7 +153,7 @@ const ProfileSettings = () => {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit
+{t('common:actions.edit')}
               </button>
             ) : (
               <div className="flex space-x-2">
@@ -159,14 +161,14 @@ const ProfileSettings = () => {
                   onClick={handleCancel}
                   className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  Cancel
+{t('common:actions.cancel')}
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving}
                   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : 'Save'}
+{saving ? t('common:status.processing') : t('common:actions.save')}
                 </button>
               </div>
             )}
@@ -180,7 +182,7 @@ const ProfileSettings = () => {
             {/* Company Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Name
+                {t('settings:profile.companyName')}
               </label>
               {isEditing ? (
                 <input
@@ -188,12 +190,12 @@ const ProfileSettings = () => {
                   name="name"
                   value={editData.name}
                   onChange={handleInputChange}
-                  placeholder="Enter your company name"
+                  placeholder={t('settings:profile.companyNamePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 />
               ) : (
                 <p className="text-gray-900 py-2">
-                  {profileData.name || 'Not provided'}
+                  {profileData.name || t('settings:profile.notProvided')}
                 </p>
               )}
             </div>
@@ -201,7 +203,7 @@ const ProfileSettings = () => {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
+                {t('settings:profile.emailAddress')}
               </label>
               {isEditing ? (
                 <input
@@ -209,12 +211,12 @@ const ProfileSettings = () => {
                   name="email"
                   value={editData.email}
                   onChange={handleInputChange}
-                  placeholder="Enter your email address"
+                  placeholder={t('settings:profile.emailPlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 />
               ) : (
                 <p className="text-gray-900 py-2">
-                  {profileData.email || 'Not provided'}
+                  {profileData.email || t('settings:profile.notProvided')}
                 </p>
               )}
             </div>
@@ -222,7 +224,7 @@ const ProfileSettings = () => {
             {/* Website */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Website
+                {t('settings:profile.website')}
               </label>
               {isEditing ? (
                 <input
@@ -230,7 +232,7 @@ const ProfileSettings = () => {
                   name="website"
                   value={editData.website}
                   onChange={handleInputChange}
-                  placeholder="https://yourcompany.com"
+                  placeholder={t('settings:profile.websitePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 />
               ) : (
@@ -240,7 +242,7 @@ const ProfileSettings = () => {
                       {profileData.website}
                     </a>
                   ) : (
-                    'Not provided'
+                    t('settings:profile.notProvided')
                   )}
                 </p>
               )}
@@ -249,7 +251,7 @@ const ProfileSettings = () => {
             {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
+                {t('settings:profile.phoneNumber')}
               </label>
               {isEditing ? (
                 <input
@@ -257,12 +259,12 @@ const ProfileSettings = () => {
                   name="phone"
                   value={editData.phone}
                   onChange={handleInputChange}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder={t('settings:profile.phonePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 />
               ) : (
                 <p className="text-gray-900 py-2">
-                  {profileData.phone || 'Not provided'}
+                  {profileData.phone || t('settings:profile.notProvided')}
                 </p>
               )}
             </div>
@@ -270,7 +272,7 @@ const ProfileSettings = () => {
             {/* Industry */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Industry
+                {t('settings:profile.industry')}
               </label>
               {isEditing ? (
                 <select
@@ -279,21 +281,21 @@ const ProfileSettings = () => {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="">Select an industry</option>
-                  <option value="saas">SaaS</option>
-                  <option value="ecommerce">E-commerce</option>
-                  <option value="healthcare">Healthcare</option>
-                  <option value="finance">Finance</option>
-                  <option value="education">Education</option>
-                  <option value="consulting">Consulting</option>
-                  <option value="realestate">Real Estate</option>
-                  <option value="other">Other</option>
+                  <option value="">{t('settings:profile.industryPlaceholder')}</option>
+                  <option value="saas">{t('settings:profile.industryOptions.saas')}</option>
+                  <option value="ecommerce">{t('settings:profile.industryOptions.ecommerce')}</option>
+                  <option value="healthcare">{t('settings:profile.industryOptions.healthcare')}</option>
+                  <option value="finance">{t('settings:profile.industryOptions.finance')}</option>
+                  <option value="education">{t('settings:profile.industryOptions.education')}</option>
+                  <option value="consulting">{t('settings:profile.industryOptions.consulting')}</option>
+                  <option value="realestate">{t('settings:profile.industryOptions.realestate')}</option>
+                  <option value="other">{t('settings:profile.industryOptions.other')}</option>
                 </select>
               ) : (
                 <p className="text-gray-900 py-2">
                   {profileData.industry ? 
                     profileData.industry.charAt(0).toUpperCase() + profileData.industry.slice(1) : 
-                    'Not selected'
+                    t('settings:profile.notSelected')
                   }
                 </p>
               )}
@@ -308,19 +310,18 @@ const ProfileSettings = () => {
             {/* Language Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Language
+                {t('settings:language.selectLanguage')}
               </label>
               <select
-                value={selectedLanguage}
+                value={currentLanguage}
                 onChange={handleLanguageChange}
                 className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               >
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-                <option value="it">Italiano</option>
-                <option value="pt">Português</option>
+                {languages.map((language) => (
+                  <option key={language.code} value={language.code}>
+                    {language.flag} {language.nativeName}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -333,7 +334,7 @@ const ProfileSettings = () => {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
-                Manage Subscription
+                {t('settings:profile.manageSubscription')}
               </button>
               
               <button
@@ -343,7 +344,7 @@ const ProfileSettings = () => {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Log Out
+                {t('settings:profile.logOut')}
               </button>
             </div>
           </div>

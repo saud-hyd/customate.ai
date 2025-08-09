@@ -156,6 +156,21 @@ const CompetitiveAdvantageBlogPost = () => {
                       Messages per month: 2,000
                     </td>
                   </tr>
+                  <tr>
+                    <td className="border border-gray-300 px-4 py-2"><strong>ZenDesk</strong></td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      Price: 50 $<br/>
+                      Messages per month: 3,000
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      Price: 125 $<br/>
+                      Messages per month: 10,000
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      Price: 375 $<br/>
+                      Messages per month: 50,000
+                    </td>
+                  </tr>
                   <tr className="bg-orange-50">
                     <td className="border border-gray-300 px-4 py-2"><strong>Customate</strong></td>
                     <td className="border border-gray-300 px-4 py-2">

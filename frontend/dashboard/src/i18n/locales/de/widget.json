@@ -1,0 +1,64 @@
+{
+  "styling": "Widget-Styling",
+  "customizeAppearance": "Passen Sie das Erscheinungsbild Ihres Chatbots an", 
+  "colors": "Farben",
+  "primaryColor": "Primärfarbe",
+  "headerColor": "Kopfzeilenfarbe",
+  "backgroundColor": "Hintergrundfarbe",
+  "textColor": "Textfarbe",
+  "content": "Inhalt",
+  "chatbotName": "Chatbot-Name",
+  "chatbotNamePlaceholder": "KI-Assistent",
+  "greetingMessage": "Begrüßungsnachricht",
+  "greetingPlaceholder": "Hallo! Wie kann ich Ihnen heute helfen?",
+  "borderRadius": "Randradius (px)",
+  "fontFamily": "Schriftfamilie",
+  "fontOptions": {
+    "inter": "Inter",
+    "roboto": "Roboto",
+    "openSans": "Open Sans",
+    "montserrat": "Montserrat",
+    "poppins": "Poppins"
+  },
+  "testChatbot": "Testen Sie Ihren Chatbot",
+  "testWidget": "Widget testen",
+  "loading": "Lade Widget...",
+  "integrationCode": "Integrationscode",
+  "howToIntegrate": "So integrieren Sie:",
+  "copyCode": "Kopieren Sie den obigen Code",
+  "pasteInstructions": "Fügen Sie ihn vor dem schließenden </body>-Tag ein",
+  "saveRefresh": "Speichern und aktualisieren - Widget erscheint automatisch!",
+  "compatiblePlatforms": "Kompatibel mit allen Plattformen:",
+  "oneLineEveryWebsite": "🚀 Eine Zeile. Jede Website.",
+  "status": {
+    "ready": "✅ Bereit",
+    "error": "❌ Fehler", 
+    "loading": "🔄 Lädt"
+  },
+  "setup": {
+    "checkingBackend": "Backend-Verbindung prüfen und API-Schlüssel abrufen...",
+    "backendTip": "Tipp: Stellen Sie sicher, dass das Backend auf http://localhost:8000 läuft",
+    "step1": "Kopieren Sie den obigen Code",
+    "step2": "Fügen Sie ihn vor dem schließenden </body>-Tag ein",
+    "step3": "Speichern und aktualisieren - Widget erscheint automatisch!"
+  },
+  "platforms": {
+    "wordpress": "WordPress",
+    "shopify": "Shopify",
+    "webflow": "Webflow",
+    "squarespace": "Squarespace",
+    "wix": "Wix",
+    "customHtml": "Benutzerdefiniertes HTML"
+  },
+  "chat": {
+    "defaultGreeting": "Hallo! Wie kann ich Ihnen heute helfen?",
+    "errorMessage": "Es tut mir leid, ich konnte Ihre Nachricht nicht verarbeiten. Bitte versuchen Sie es später erneut.",
+    "sendError": "Nachricht konnte nicht gesendet werden",
+    "openChat": "Chat öffnen",
+    "chatWithUs": "Chatten Sie mit uns",
+    "typeMessage": "Geben Sie Ihre Nachricht ein...",
+    "sendMessage": "Nachricht senden",
+    "minimizeChat": "Chat minimieren",
+    "closeChat": "Chat schließen"
+  }
+}

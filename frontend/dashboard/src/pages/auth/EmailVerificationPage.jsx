@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 import { useToast } from '../../context/ToastContext';
 
 const EmailVerificationPage = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { verifyEmail } = useAuth();
@@ -118,12 +120,12 @@ const EmailVerificationPage = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-6">Email Verification</h2>
+          <h2 className="text-2xl font-bold mb-6">{t('auth:verification.title')}</h2>
           
           {verificationStatus === 'verifying' && (
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mb-4"></div>
-              <p className="text-gray-600">Verifying your email address...</p>
+              <p className="text-gray-600">{t('auth:errors.verifyingEmail')}</p>
             </div>
           )}
           
@@ -141,7 +143,7 @@ const EmailVerificationPage = () => {
                   onClick={handleGoToLogin}
                   className="w-full bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                 >
-                  Go to Login
+                  {t('auth:register.signIn')}
                 </button>
                 
                 <p className="text-sm text-gray-500">
@@ -172,7 +174,7 @@ const EmailVerificationPage = () => {
                   to="/register"
                   className="block w-full text-center text-orange-600 py-2 px-4 border border-orange-600 rounded-md hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                 >
-                  Register New Account
+                  {t('auth:register.createAccount')}
                 </Link>
               </div>
             </div>

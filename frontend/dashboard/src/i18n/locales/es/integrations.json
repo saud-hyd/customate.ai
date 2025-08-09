@@ -1,0 +1,36 @@
+{
+  "title": "Integraciones",
+  "available": "Integraciones Disponibles",
+  "connected": "Conectado",
+  "connect": "Conectar",
+  "disconnect": "Desconectar",
+  "configure": "Configurar",
+  "status": "Estado",
+  "lastSync": "Última Sincronización",
+  "noIntegrations": "No hay integraciones configuradas",
+  "platforms": {
+    "salesforce": "Salesforce",
+    "shopify": "Shopify",
+    "zendesk": "Zendesk",
+    "slack": "Slack",
+    "hubspot": "HubSpot"
+  },
+  "setup": {
+    "title": "Configurar Integración",
+    "credentials": "Credenciales",
+    "testConnection": "Probar Conexión",
+    "connectionSuccess": "Conexión exitosa",
+    "connectionFailed": "Conexión fallida",
+    "save": "Guardar Integración"
+  },
+  "errors": {
+    "connectionFailed": "Error al conectar con el servicio",
+    "invalidCredentials": "Credenciales inválidas proporcionadas",
+    "syncFailed": "Error en la sincronización"
+  },
+  "pages": {
+    "integrationsTitle": "Integraciones",
+    "connectedIntegrations": "Integraciones Conectadas",
+    "noIntegrationsAvailable": "No hay integraciones disponibles"
+  }
+}
