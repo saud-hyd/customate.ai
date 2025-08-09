@@ -296,7 +296,7 @@ async def root():
     return {
         "status": "healthy", 
         "app_name": settings.APP_NAME, 
-        "version": settings.API_VERSION,
+        "version": f"{settings.API_VERSION}-widget-fix",
         "environment": "production" if IS_PRODUCTION else "development",
         "backend_url": BACKEND_URL,
         "features": [
