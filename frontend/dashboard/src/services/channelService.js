@@ -40,6 +40,27 @@ const channelService = {
     return api.delete(`/channel/${channelId}`);
   },
 
+  // Gmail OAuth methods
+  initiateGmailOAuth: async (oauthConfig) => {
+    return api.post('/channel/gmail/oauth/authorize', oauthConfig);
+  },
+
+  exchangeGmailToken: async (code, state) => {
+    return api.post('/channel/gmail/oauth/callback', { code, state });
+  },
+
+  createGmailChannel: async (channelData) => {
+    return api.post('/channel/gmail/create', channelData);
+  },
+
+  refreshGmailTokens: async (channelId) => {
+    return api.post(`/channel/gmail/${channelId}/refresh-tokens`);
+  },
+
+  searchGmailEmails: async (channelId, searchData) => {
+    return api.post(`/channel/gmail/${channelId}/search`, searchData);
+  },
+
   // Get conversations for a channel
   getConversations: async (channelId, skip = 0, limit = 50) => {
     return api.get(`/channel/${channelId}/conversations`, {

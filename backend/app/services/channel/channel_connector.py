@@ -130,5 +130,9 @@ class ChannelConnectorFactory:
             from app.services.channel.platforms.twitter_connector import TwitterConnector
             return TwitterConnector(db, channel)
         
+        elif channel.platform == "gmail":
+            from app.services.channel.platforms.gmail_connector import GmailConnector
+            return GmailConnector(db, channel)
+        
         logger.warning(f"Unsupported platform: {channel.platform}")
         return None

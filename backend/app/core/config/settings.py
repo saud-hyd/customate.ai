@@ -89,6 +89,11 @@ class Settings(BaseSettings):
     STRIPE_PROFESSIONAL_MONTHLY_PLAN_ID: str = Field(default="price_professional_monthly")
     STRIPE_PROFESSIONAL_ANNUAL_PLAN_ID: str = Field(default="price_professional_annual")
     
+    # Google Cloud Pub/Sub settings for Gmail integration
+    GOOGLE_CLOUD_PROJECT_ID: Optional[str] = Field(default=None)
+    GMAIL_PUBSUB_TOPIC: str = Field(default="gmail-notifications")
+    GOOGLE_SERVICE_ACCOUNT_JSON: Optional[str] = Field(default=None)
+    
     @computed_field
     @property
     def DATABASE_URL(self) -> str:
@@ -108,6 +113,10 @@ class Settings(BaseSettings):
         """Check if Stripe is properly configured."""
         return bool(self.STRIPE_SECRET_KEY and 
                    not self.STRIPE_SECRET_KEY.startswith("sk_test_dummy"))
+    
+    def is_google_cloud_configured(self) -> bool:
+        """Check if Google Cloud Pub/Sub is properly configured."""
+        return bool(self.GOOGLE_CLOUD_PROJECT_ID and self.GMAIL_PUBSUB_TOPIC)
 
 # Create settings instance
 settings = Settings()
@@ -117,3 +126,4 @@ if not IS_PRODUCTION:
     print(f"Email configured: {settings.is_email_configured()}")
     print(f"OAuth configured: {settings.is_oauth_configured()}")
     print(f"Stripe configured: {settings.is_stripe_configured()}")
+    print(f"Google Cloud configured: {settings.is_google_cloud_configured()}")

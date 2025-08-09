@@ -31,6 +31,8 @@ from app.api.integration import routes as integration_routes
 from app.api.client import subscription_routes
 from app.api.channel.routes import router as channel_router
 from app.api.channel.webhook_routes import router as webhook_router
+from app.api.channel.gmail_routes import router as gmail_router
+from app.api.channel.gmail_webhook_routes import router as gmail_webhook_router
 from app.api.notifications import router as notifications_router
 from app.api.admin.routes import router as admin_router
 from app.api.demo import routes as demo_routes
@@ -204,6 +206,8 @@ app.include_router(crawl_router, prefix="/api/knowledge")
 app.include_router(enhanced_router, prefix="/api/knowledge")
 app.include_router(channel_router, prefix="/api")
 app.include_router(webhook_router, prefix="/api")
+app.include_router(gmail_router, prefix="/api")
+app.include_router(gmail_webhook_router, prefix="/api")
 app.include_router(demo_routes.router, prefix="/api/demo")
 
 logger.info("✅ All routes registered successfully")

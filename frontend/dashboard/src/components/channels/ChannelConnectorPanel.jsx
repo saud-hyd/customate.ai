@@ -7,6 +7,41 @@ import LoadingSpinner from '../common/LoadingSpinner';
 
 const platforms = [
   {
+    id: 'gmail',
+    name: 'Gmail',
+    description: 'Connect with customers through Gmail email integration',
+    color: 'bg-red-500',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"/>
+      </svg>
+    ),
+    fields: [
+      { 
+        name: 'email_address', 
+        label: 'Gmail Email Address', 
+        required: true,
+        type: 'email',
+        helpText: 'The Gmail address you want to connect for AI-powered email responses'
+      },
+      { 
+        name: 'client_id', 
+        label: 'Google OAuth Client ID', 
+        required: true,
+        helpText: 'Get this from Google Developers Console → Credentials → OAuth 2.0 Client IDs'
+      },
+      { 
+        name: 'client_secret', 
+        label: 'Google OAuth Client Secret', 
+        required: true, 
+        type: 'password',
+        helpText: 'OAuth client secret from Google Developers Console'
+      }
+    ],
+    setupNote: 'Gmail integration requires OAuth 2.0 setup through Google Developers Console. You\'ll be redirected to Google for authorization after entering your credentials.',
+    oauth: true
+  },
+  {
     id: 'whatsapp',
     name: 'WhatsApp Business',
     description: 'Connect with customers through WhatsApp Business API',
@@ -137,6 +172,22 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
       selectedPlatform.fields.forEach(field => {
         credentials[field.name] = formData[field.name] || field.defaultValue;
       });
+      
+      // Handle Gmail OAuth flow separately
+      if (selectedPlatform.id === 'gmail') {
+        // For Gmail, start OAuth flow instead of creating channel directly
+        const oauthConfig = {
+          client_id: formData.client_id,
+          client_secret: formData.client_secret,
+          redirect_uri: window.location.origin + '/gmail/callback'
+        };
+
+        const response = await channelService.initiateGmailOAuth(oauthConfig);
+        
+        // Redirect to Google OAuth
+        window.location.href = response.data.authorization_url;
+        return;
+      }
       
       // Get the platform identifier field name
       let platformIdentifierField;

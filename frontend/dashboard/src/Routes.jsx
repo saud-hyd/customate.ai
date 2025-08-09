@@ -24,6 +24,7 @@ import ConversationsPage from './pages/chat/ConversationsPage';
 import IntegrationsPage from './pages/integrations/IntegrationsPage';
 import SubscriptionPage from './pages/subscription/SubscriptionPage';
 import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
+import GmailCallbackPage from './pages/GmailCallbackPage';
 import ChannelsPage from './pages/channels/ChannelsPage';
 import KnowledgeListPage from './pages/knowledge/KnowledgeListPage';
 
@@ -119,6 +120,7 @@ const AppRoutes = () => {
       
       {/* OAuth callback - May need to handle both authenticated and unauthenticated states */}
       <Route path="/auth/callback" element={<OAuthCallbackPage />} />
+      <Route path="/gmail/callback" element={<GmailCallbackPage />} />
       
       {/* PROTECTED DASHBOARD ROUTES - Authentication required */}
       <Route 
