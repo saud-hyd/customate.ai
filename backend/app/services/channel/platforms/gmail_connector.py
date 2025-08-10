@@ -366,6 +366,13 @@ class GmailConnector(ChannelConnector):
                 }
             )
             
+            # Get client for the channel - the channel already has client_id
+            from app.domain.client.entities import Client
+            client = self.db.query(Client).filter(Client.client_id == self.channel.client_id).first()
+            if not client:
+                logger.error(f"Client not found for channel {self.channel.channel_id}")
+                return
+            
             # Process with chatbot (this integrates with existing RAG/OpenAI pipeline)
             from app.services.chat.enhanced_chat_service import EnhancedChatService
             from app.services.knowledge.enhanced_search_service import EnhancedSearchService
@@ -375,13 +382,6 @@ class GmailConnector(ChannelConnector):
             llm_service = LLMFactory.create_llm_service(self.db, client.client_id)
             search_service = EnhancedSearchService(llm_service)
             chat_service = EnhancedChatService(self.db, search_service, llm_service)
-            
-            # Get client for the channel - the channel already has client_id
-            from app.domain.client.entities import Client
-            client = self.db.query(Client).filter(Client.client_id == self.channel.client_id).first()
-            if not client:
-                logger.error(f"Client not found for channel {self.channel.channel_id}")
-                return
             
             # Generate AI response using existing pipeline (collect stream for email)
             response_parts = []
