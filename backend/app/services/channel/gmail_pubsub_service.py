@@ -326,9 +326,11 @@ class GmailPubSubService:
             updated_config = current_config.copy()
             updated_config['last_history_id'] = history_id
             
-            await channel_service.update_channel_config(
+            # Use the correct method name and pass config in update_data
+            channel_service.update_channel(
+                channel.client_id,
                 channel.channel_id,
-                updated_config
+                {"config": updated_config}
             )
             
             logger.info(f"Updated last history ID to {history_id} for channel {channel.channel_id}")
