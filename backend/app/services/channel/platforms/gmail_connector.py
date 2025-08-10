@@ -202,7 +202,13 @@ class GmailConnector(ChannelConnector):
             to_email = metadata.get('to_email')
             thread_id = metadata.get('thread_id')
             
+            logger.info(f"Send message called with conversation_id: {conversation_id}")
+            logger.info(f"Send message full metadata: {json.dumps(metadata, indent=2)}")
+            logger.info(f"To email extracted: '{to_email}', Subject: '{subject}', Thread ID: '{thread_id}'")
+            
             if not to_email:
+                logger.error("Recipient email address is missing from metadata!")
+                logger.error(f"Available metadata keys: {list(metadata.keys())}")
                 raise Exception("Recipient email address required")
             
             # Create email message
@@ -237,14 +243,16 @@ class GmailConnector(ChannelConnector):
             
             logger.info(f"Email sent successfully: {result['id']}")
             return {
+                "success": True,
                 "status": "success",
                 "message_id": result['id'],
+                "platform_message_id": result['id'],
                 "thread_id": result.get('threadId')
             }
             
         except Exception as e:
             logger.error(f"Gmail send error: {e}")
-            return {"status": "error", "error": str(e)}
+            return {"success": False, "status": "error", "error": str(e)}
     
     async def get_user_profile(self, platform_user_id: str) -> Dict[str, Any]:
         """Get email sender profile information."""
@@ -397,7 +405,7 @@ class GmailConnector(ChannelConnector):
             
             # Send reply email
             await self.send_message(
-                conversation_id=conversation.platform_conversation_id,
+                conversation_id=conversation.conversation_id,
                 message_type="text",
                 content=ai_response,
                 metadata={

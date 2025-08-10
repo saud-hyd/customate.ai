@@ -8,7 +8,7 @@ from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.repositories.channel_repository import ChannelRepository, ChannelConversationRepository, ChannelMessageRepository
-from app.domain.channel.entities import ChannelMessage
+from app.domain.channel.entities import ChannelMessage, ChannelConversation
 from app.services.channel.channel_service import ChannelService
 from app.core import logger
 
@@ -562,13 +562,20 @@ async def send_message_to_channel(
                 detail=f"Unsupported platform: {channel.platform}"
             )
         
+        # For Gmail channels, we need to extract recipient email from conversation
+        send_metadata = message_data.metadata or {}
+        if channel.platform == "gmail":
+            # Extract recipient email from platform_user_id (which is the email)
+            send_metadata["to_email"] = conversation.platform_user_id
+            send_metadata["subject"] = send_metadata.get("subject", "Message from your AI assistant")
+        
         # Send message
         result = await connector.send_message(
             conversation_id=conversation.conversation_id,
             message_type=message_data.message_type,
             content=message_data.content,
             media_url=message_data.media_url,
-            metadata=message_data.metadata
+            metadata=send_metadata
         )
         
         if not result.get("success"):
