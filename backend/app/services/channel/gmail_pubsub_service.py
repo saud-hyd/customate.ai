@@ -244,11 +244,28 @@ class GmailPubSubService:
         try:
             from app.domain.channel.entities import Channel
             
+            logger.info(f"Looking for Gmail channel with email: {email_address}")
+            
+            # Get all Gmail channels for debugging
+            all_gmail_channels = self.db.query(Channel).filter(
+                Channel.platform == "gmail",
+                Channel.active == True
+            ).all()
+            
+            logger.info(f"Found {len(all_gmail_channels)} active Gmail channels")
+            for ch in all_gmail_channels:
+                logger.info(f"Channel {ch.channel_id}: platform_identifier='{ch.platform_identifier}', active={ch.active}")
+            
             channel = self.db.query(Channel).filter(
                 Channel.platform == "gmail",
                 Channel.platform_identifier == email_address,
                 Channel.active == True
             ).first()
+            
+            if channel:
+                logger.info(f"Found matching channel: {channel.channel_id}")
+            else:
+                logger.warning(f"No matching channel found for email: {email_address}")
             
             return channel
             

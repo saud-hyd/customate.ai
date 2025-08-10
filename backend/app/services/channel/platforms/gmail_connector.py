@@ -121,40 +121,21 @@ class GmailConnector(ChannelConnector):
         For Gmail push notifications via Cloud Pub/Sub.
         """
         try:
-            # Google Cloud Pub/Sub sends requests with specific headers
-            # Check for Pub/Sub specific headers
-            user_agent = headers.get('user-agent', '').lower()
-            content_type = headers.get('content-type', '').lower()
+            # Simplified validation - be permissive to avoid blocking legitimate requests
+            logger.info(f"Validating webhook request with headers: {dict(headers)}")
             
-            # Pub/Sub requests typically have these characteristics:
-            # 1. User-Agent contains "Google"
-            # 2. Content-Type is application/json
-            # 3. Body contains message structure
-            
-            if 'google' not in user_agent and 'gcloud' not in user_agent:
-                # Also check for authorization header as backup
-                authorization = headers.get('authorization', '')
-                if not authorization.startswith('Bearer '):
-                    logger.warning(f"Suspicious webhook request - User-Agent: {user_agent}, No proper authorization")
-                    # For now, allow requests to debug the issue
-                    # In production, you might want to be stricter
-                    pass
-            
-            if 'application/json' not in content_type:
-                logger.warning(f"Unexpected content type for Pub/Sub webhook: {content_type}")
-            
-            # Validate that the body contains Pub/Sub message structure
+            # Check if body contains valid JSON with message structure
             try:
                 import json
                 payload = json.loads(body.decode('utf-8'))
                 if 'message' not in payload:
-                    logger.warning("Pub/Sub webhook missing 'message' field")
+                    logger.warning("Webhook missing 'message' field - might not be a Pub/Sub request")
                     return False
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                logger.error("Invalid JSON in Pub/Sub webhook body")
+                logger.info("Webhook validation successful - contains Pub/Sub message structure")
+                return True
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                logger.error(f"Invalid JSON in webhook body: {e}")
                 return False
-            
-            return True
             
         except Exception as e:
             logger.error(f"Gmail webhook validation error: {e}")
