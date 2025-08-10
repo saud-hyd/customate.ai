@@ -127,6 +127,11 @@ class GmailPubSubService:
             email_address = notification.get('emailAddress')
             history_id = notification.get('historyId')
             
+            # CRITICAL DEBUG: Log all Gmail notification details
+            logger.error(f"🔍 GMAIL DEBUG - Raw notification data: {notification}")
+            logger.error(f"🔍 GMAIL DEBUG - Email from notification: '{email_address}'")
+            logger.error(f"🔍 GMAIL DEBUG - History ID: '{history_id}'")
+            
             if not email_address or not history_id:
                 logger.warning("Missing email address or history ID in notification")
                 return {"status": "invalid_notification"}
@@ -135,7 +140,15 @@ class GmailPubSubService:
             channel = self._find_channel_by_email(email_address)
             if not channel:
                 logger.warning(f"No channel found for email address: {email_address}")
-                return {"status": "channel_not_found", "email": email_address}
+                
+                # FALLBACK: Try to find ANY active Gmail channel as a temporary workaround
+                logger.error(f"🔍 GMAIL DEBUG - Attempting fallback channel lookup...")
+                fallback_channel = self._find_any_gmail_channel()
+                if fallback_channel:
+                    logger.error(f"🔍 GMAIL DEBUG - Using fallback channel: {fallback_channel.channel_id} ({fallback_channel.platform_identifier})")
+                    channel = fallback_channel
+                else:
+                    return {"status": "channel_not_found", "email": email_address}
             
             # Process new messages
             processed_count = await self._process_channel_changes(channel, history_id)
@@ -271,6 +284,22 @@ class GmailPubSubService:
             
         except Exception as e:
             logger.error(f"Error finding channel by email: {e}")
+            return None
+    
+    def _find_any_gmail_channel(self):
+        """Find ANY active Gmail channel as a fallback."""
+        try:
+            from app.domain.channel.entities import Channel
+            
+            channel = self.db.query(Channel).filter(
+                Channel.platform == "gmail",
+                Channel.active == True
+            ).first()
+            
+            return channel
+            
+        except Exception as e:
+            logger.error(f"Error finding fallback Gmail channel: {e}")
             return None
     
     def _get_channel_credentials(self, channel) -> Optional[Credentials]:
