@@ -6,6 +6,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import authService from '../../services/authService';
 import Logo from '../common/Logo';
+import LoadingScreen from '../common/LoadingScreen';
 
 const RegisterForm = () => {
   const { t } = useTranslation(['auth', 'common']);
@@ -111,6 +112,15 @@ const RegisterForm = () => {
       setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <LoadingScreen 
+        message={t('auth:register.creatingAccount')}
+        fullScreen={true}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -283,14 +293,7 @@ const RegisterForm = () => {
               disabled={isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                  {t('auth:register.creatingAccount')}
-                </div>
-              ) : (
-                t('auth:register.createAccount')
-              )}
+              {t('auth:register.createAccount')}
             </button>
           </div>
 

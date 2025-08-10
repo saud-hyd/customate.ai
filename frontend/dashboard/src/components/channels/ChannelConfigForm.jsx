@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Switch } from '@headlessui/react';
 import { HiCheck, HiExclamation } from 'react-icons/hi';
 import channelService from '../../services/channelService';
-import LoadingSpinner from '../common/LoadingSpinner';
+import LoadingScreen from '../common/LoadingScreen';
 
 const ChannelConfigForm = ({ channel, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -58,13 +58,11 @@ const ChannelConfigForm = ({ channel, onSuccess }) => {
 
   if (loading) {
     return (
-      <div className="bg-white overflow-hidden shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <div className="flex justify-center">
-            <LoadingSpinner />
-          </div>
-        </div>
-      </div>
+      <LoadingScreen 
+        message="Updating channel settings..."
+        fullScreen={false}
+        className="bg-white overflow-hidden shadow rounded-lg min-h-[300px]"
+      />
     );
   }
 

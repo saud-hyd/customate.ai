@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import knowledgeService from '../../services/knowledgeService';
+import LoadingScreen from '../common/LoadingScreen';
 
 const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
   const { t } = useTranslation(['knowledge', 'common']);
@@ -83,6 +84,16 @@ const DocumentUploader = ({ collections, onUploadComplete, onCancel }) => {
       setUploadProgress(0);
     }
   };
+
+  if (uploading && uploadProgress < 10) {
+    return (
+      <LoadingScreen 
+        message={t('knowledge:upload.preparingUpload')}
+        fullScreen={false}
+        className="min-h-[400px]"
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
