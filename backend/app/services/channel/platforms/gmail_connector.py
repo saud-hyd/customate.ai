@@ -189,8 +189,11 @@ class GmailConnector(ChannelConnector):
     ) -> Dict[str, Any]:
         """Send email reply via Gmail API."""
         
+        # Initialize Gmail service if not already done
         if not self.service:
-            raise Exception("Gmail service not initialized")
+            initialized = await self.initialize()
+            if not initialized:
+                raise Exception("Failed to initialize Gmail service for sending")
         
         try:
             # Use conversation_id directly - no need to look it up again
