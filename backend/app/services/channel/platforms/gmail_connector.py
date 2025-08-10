@@ -193,14 +193,7 @@ class GmailConnector(ChannelConnector):
             raise Exception("Gmail service not initialized")
         
         try:
-            # Get conversation details
-            conversation = await self.channel_service.get_conversation_by_platform_id(
-                self.channel.channel_id, conversation_id
-            )
-            
-            if not conversation:
-                raise Exception(f"Conversation not found: {conversation_id}")
-            
+            # Use conversation_id directly - no need to look it up again
             metadata = metadata or {}
             subject = metadata.get('subject', 'Re: Automated Response')
             to_email = metadata.get('to_email')
@@ -224,9 +217,9 @@ class GmailConnector(ChannelConnector):
                 ).execute()
             )
             
-            # Store outbound message
+            # Store outbound message using the conversation_id parameter
             await self.channel_service.store_message(
-                conversation_id=conversation.conversation_id,
+                conversation_id=conversation_id,
                 platform_message_id=result['id'],
                 direction="outbound",
                 message_type="text",
