@@ -24,14 +24,20 @@ async def gmail_pubsub_webhook(
     and triggers the AI response processing.
     """
     try:
+        # Log request details for debugging
+        headers = dict(request.headers)
+        logger.info(f"Gmail Pub/Sub webhook received - Headers: {headers}")
+        
         # Get request body
         body = await request.body()
+        logger.info(f"Gmail Pub/Sub webhook body length: {len(body)} bytes")
         
         # Parse JSON
         try:
             payload = json.loads(body.decode('utf-8'))
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in Pub/Sub webhook: {e}")
+            logger.error(f"Raw body: {body[:500]}...")  # Log first 500 chars
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid JSON payload"

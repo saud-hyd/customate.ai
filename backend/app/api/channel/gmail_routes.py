@@ -470,6 +470,88 @@ async def setup_gmail_watch(
             detail=f"Gmail watch setup error: {str(e)}"
         )
 
+@router.get("/{channel_id}/status")
+async def get_gmail_channel_status(
+    channel_id: str,
+    client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Get status of Gmail channel including watch configuration."""
+    try:
+        # Get channel
+        channel_repo = ChannelRepository()
+        channel = channel_repo.get_by_channel_id(db, channel_id)
+        
+        if not channel or channel.client_id != client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        if channel.platform != "gmail":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Channel is not a Gmail channel"
+            )
+        
+        # Create Gmail connector to check status
+        from app.services.channel.channel_connector import ChannelConnectorFactory
+        connector = ChannelConnectorFactory.create_connector(db, channel)
+        
+        status_info = {
+            "channel_id": channel_id,
+            "platform_identifier": channel.platform_identifier,
+            "active": channel.active,
+            "credentials_available": bool(channel.credentials),
+            "config": channel.config or {},
+            "pubsub_config": {
+                "project_id": settings.GOOGLE_CLOUD_PROJECT_ID,
+                "topic": settings.GMAIL_PUBSUB_TOPIC,
+                "webhook_url": "https://customate-ai-1.onrender.com/api/channel/gmail/webhook/pubsub",
+                "full_topic_name": f"projects/{settings.GOOGLE_CLOUD_PROJECT_ID}/topics/{settings.GMAIL_PUBSUB_TOPIC}"
+            }
+        }
+        
+        if connector:
+            # Test connector initialization
+            try:
+                initialized = await connector.initialize()
+                status_info["connector_initialized"] = initialized
+                
+                if initialized and connector.service:
+                    # Get current profile to verify API access
+                    import asyncio
+                    profile = await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        lambda: connector.service.users().getProfile(userId='me').execute()
+                    )
+                    status_info["api_access"] = True
+                    status_info["email_address"] = profile.get('emailAddress')
+                    status_info["messages_total"] = profile.get('messagesTotal', 0)
+                    status_info["threads_total"] = profile.get('threadsTotal', 0)
+                else:
+                    status_info["api_access"] = False
+                    status_info["error"] = "Failed to initialize Gmail service"
+                    
+            except Exception as e:
+                status_info["connector_initialized"] = False
+                status_info["api_access"] = False
+                status_info["error"] = str(e)
+        else:
+            status_info["connector_initialized"] = False
+            status_info["error"] = "Failed to create Gmail connector"
+        
+        return status_info
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting Gmail channel status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting channel status: {str(e)}"
+        )
+
 @router.post("/{channel_id}/process-emails")
 async def manually_process_emails(
     channel_id: str,
