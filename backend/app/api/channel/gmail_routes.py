@@ -432,15 +432,19 @@ async def setup_gmail_watch(
         try:
             topic_name = f"projects/{settings.GOOGLE_CLOUD_PROJECT_ID}/topics/{settings.GMAIL_PUBSUB_TOPIC}"
             
-            # Call Gmail API watch
+            # Call Gmail API watch with proper push configuration
             import asyncio
+            
+            logger.info(f"Setting up Gmail watch with topic: {topic_name}")
+            
             watch_result = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: connector.service.users().watch(
                     userId='me',
                     body={
                         'topicName': topic_name,
-                        'labelIds': ['INBOX']
+                        'labelIds': ['INBOX'],
+                        'labelFilterAction': 'include'
                     }
                 ).execute()
             )

@@ -153,6 +153,9 @@ class GmailPubSubService:
             # Process new messages
             processed_count = await self._process_channel_changes(channel, history_id)
             
+            # Update the last processed history ID in channel config
+            await self._update_last_history_id(channel, history_id)
+            
             logger.info(f"Processed {processed_count} messages for channel {channel.channel_id}")
             
             return {
@@ -230,10 +233,21 @@ class GmailPubSubService:
                 logger.error("Gmail service not initialized")
                 return []
             
-            # Get history since the given history ID
+            # Get the last processed history ID from channel config
+            last_processed_history_id = channel.config.get('last_history_id') if channel.config else None
+            
+            logger.error(f"🔍 HISTORY DEBUG - Current notification history ID: {history_id}")
+            logger.error(f"🔍 HISTORY DEBUG - Last processed history ID: {last_processed_history_id}")
+            
+            # If we have a last processed ID, use it as the starting point
+            start_history_id = last_processed_history_id if last_processed_history_id else str(int(history_id) - 100)
+            
+            logger.error(f"🔍 HISTORY DEBUG - Using start history ID: {start_history_id}")
+            
+            # Get history since the last processed history ID
             history_response = connector.service.users().history().list(
                 userId='me',
-                startHistoryId=history_id,
+                startHistoryId=start_history_id,
                 historyTypes=['messageAdded']
             ).execute()
             
