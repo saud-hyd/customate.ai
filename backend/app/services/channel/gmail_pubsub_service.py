@@ -193,7 +193,7 @@ class GmailPubSubService:
                 return 0
             
             # Get new messages from history
-            new_message_ids = await self._get_new_messages_from_history(connector, history_id)
+            new_message_ids = await self._get_new_messages_from_history(connector, channel, history_id)
             
             if not new_message_ids:
                 logger.debug(f"No new messages found for channel {channel.channel_id}")
@@ -217,7 +217,7 @@ class GmailPubSubService:
             logger.error(f"Error processing channel changes: {e}")
             return 0
     
-    async def _get_new_messages_from_history(self, connector, history_id: str) -> list:
+    async def _get_new_messages_from_history(self, connector, channel, history_id: str) -> list:
         """
         Get new message IDs from Gmail history.
         
@@ -315,6 +315,26 @@ class GmailPubSubService:
         except Exception as e:
             logger.error(f"Error finding fallback Gmail channel: {e}")
             return None
+    
+    async def _update_last_history_id(self, channel, history_id: str):
+        """Update the last processed history ID in channel config."""
+        try:
+            from app.services.channel.channel_service import ChannelService
+            
+            channel_service = ChannelService(self.db)
+            current_config = channel.config or {}
+            updated_config = current_config.copy()
+            updated_config['last_history_id'] = history_id
+            
+            await channel_service.update_channel_config(
+                channel.channel_id,
+                updated_config
+            )
+            
+            logger.info(f"Updated last history ID to {history_id} for channel {channel.channel_id}")
+            
+        except Exception as e:
+            logger.error(f"Error updating last history ID: {e}")
     
     def _get_channel_credentials(self, channel) -> Optional[Credentials]:
         """Get Google API credentials for a channel."""
