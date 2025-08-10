@@ -42,7 +42,7 @@ async def create_demo_session(
         
         # Generate demo session
         demo_id = str(uuid.uuid4())
-        expires_at = datetime.utcnow() + timedelta(minutes=30)
+        expires_at = datetime.utcnow() + timedelta(days=7)
         temp_api_key = f"demo_{demo_id}"
         
         logger.info(f"Creating demo session {demo_id} for URL: {url}")
@@ -691,7 +691,7 @@ async def recover_demo_session(demo_id: str, db: Session = Depends(get_db)):
             "demo_id": demo_id,
             "api_key": f"demo_{demo_id}",
             "target_url": "https://recovered-demo.com",
-            "expires_at": datetime.utcnow() + timedelta(hours=24),
+            "expires_at": datetime.utcnow() + timedelta(days=7),
             "status": "ready",
             "knowledge_collection_id": collection_id,
             "message_count": 0,
