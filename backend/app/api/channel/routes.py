@@ -440,10 +440,12 @@ async def get_channel_stats(
         from sqlalchemy import text, func
         from datetime import datetime, timedelta
         
-        # Total conversations
-        total_conversations = db.query(func.count(ChannelConversation.id)).filter(
-            ChannelConversation.channel_id == channel_id
-        ).scalar() or 0
+        # Total conversations - using direct SQL to avoid import issues
+        total_conversations = db.execute(text("""
+            SELECT COUNT(*) 
+            FROM channel_conversations
+            WHERE channel_id = :channel_id
+        """), {"channel_id": channel_id}).scalar() or 0
         
         # Total messages
         total_messages = db.execute(text("""
@@ -453,12 +455,14 @@ async def get_channel_stats(
             WHERE cc.channel_id = :channel_id
         """), {"channel_id": channel_id}).scalar() or 0
         
-        # Active conversations today
+        # Active conversations today - using direct SQL to avoid import issues
         today = datetime.utcnow().date()
-        active_today = db.query(func.count(ChannelConversation.id)).filter(
-            ChannelConversation.channel_id == channel_id,
-            func.date(ChannelConversation.last_message_at) == today
-        ).scalar() or 0
+        active_today = db.execute(text("""
+            SELECT COUNT(*) 
+            FROM channel_conversations
+            WHERE channel_id = :channel_id 
+            AND DATE(last_message_at) = :today
+        """), {"channel_id": channel_id, "today": today}).scalar() or 0
         
         # Response rate calculation (outbound messages / inbound messages)
         inbound_count = db.execute(text("""
