@@ -369,11 +369,11 @@ class GmailConnector(ChannelConnector):
             # Process with chatbot (this integrates with existing RAG/OpenAI pipeline)
             from app.services.chat.enhanced_chat_service import EnhancedChatService
             from app.services.knowledge.enhanced_search_service import EnhancedSearchService
-            from app.services.llm.llm_service import LLMService
+            from app.services.llm.llm_factory import LLMFactory
             
-            # Create required services for chat
-            search_service = EnhancedSearchService(self.db)
-            llm_service = LLMService(self.db)
+            # Create required services for chat using proper factory
+            llm_service = LLMFactory.create_llm_service(self.db, client.client_id)
+            search_service = EnhancedSearchService(llm_service)
             chat_service = EnhancedChatService(self.db, search_service, llm_service)
             
             # Get client for the channel - the channel already has client_id
