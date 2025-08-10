@@ -10,6 +10,7 @@ from app.api.auth.dependencies import get_current_client
 from app.domain.client.entities import Client
 from app.services.auth.gmail_auth_service import GmailAuthService
 from app.services.channel.channel_service import ChannelService
+from app.repositories.channel_repository import ChannelRepository
 from app.core import logger
 from app.core.config.settings import settings
 
@@ -383,6 +384,90 @@ async def revoke_gmail_access(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Access revocation failed: {str(e)}"
+        )
+
+@router.post("/{channel_id}/setup-watch")
+async def setup_gmail_watch(
+    channel_id: str,
+    client: Client = Depends(get_current_client),
+    db: Session = Depends(get_db)
+):
+    """Set up Gmail push notifications via Google Cloud Pub/Sub."""
+    try:
+        # Get channel
+        channel_repo = ChannelRepository()
+        channel = channel_repo.get_by_channel_id(db, channel_id)
+        
+        if not channel or channel.client_id != client.client_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Channel not found"
+            )
+        
+        if channel.platform != "gmail":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Channel is not a Gmail channel"
+            )
+        
+        # Create Gmail connector
+        from app.services.channel.channel_connector import ChannelConnectorFactory
+        connector = ChannelConnectorFactory.create_connector(db, channel)
+        
+        if not connector:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create Gmail connector"
+            )
+        
+        # Initialize connector
+        initialized = await connector.initialize()
+        if not initialized:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to initialize Gmail connector - check credentials"
+            )
+        
+        # Set up Gmail watch using the service
+        try:
+            topic_name = f"projects/{settings.GOOGLE_CLOUD_PROJECT_ID}/topics/{settings.GMAIL_PUBSUB_TOPIC}"
+            
+            # Call Gmail API watch
+            import asyncio
+            watch_result = await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: connector.service.users().watch(
+                    userId='me',
+                    body={
+                        'topicName': topic_name,
+                        'labelIds': ['INBOX']
+                    }
+                ).execute()
+            )
+            
+            logger.info(f"Gmail watch setup successful: {watch_result}")
+            
+            return {
+                "status": "success",
+                "watch_result": watch_result,
+                "topic": topic_name,
+                "webhook_url": "https://customate-ai-1.onrender.com/api/channel/gmail/webhook/pubsub"
+            }
+            
+        except Exception as e:
+            logger.error(f"Gmail watch setup failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to setup Gmail watch: {str(e)}"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in Gmail watch setup: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gmail watch setup error: {str(e)}"
         )
 
 @router.post("/{channel_id}/process-emails")
