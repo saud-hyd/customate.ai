@@ -420,7 +420,16 @@ class GmailConnector(ChannelConnector):
             if not relevance_analysis['should_reply']:
                 logger.info(f"🚫 Skipping auto-reply to {sender_email} - insufficient knowledge base coverage")
                 
-                # Store metadata about why we didn't reply
+                # Store metadata about why we didn't reply (serialize enum to string)
+                serializable_analysis = {
+                    "should_reply": relevance_analysis['should_reply'],
+                    "relevance_level": relevance_analysis['relevance_level'].value,  # Convert enum to string
+                    "confidence_score": relevance_analysis['confidence_score'],
+                    "reasoning": relevance_analysis['reasoning'],
+                    "knowledge_items_found": relevance_analysis['knowledge_items_found'],
+                    "average_similarity": relevance_analysis['average_similarity']
+                }
+                
                 await self.channel_service.store_message(
                     conversation_id=conversation.conversation_id,
                     platform_message_id=f"skip_{message_id}",
@@ -428,7 +437,7 @@ class GmailConnector(ChannelConnector):
                     message_type="filter_decision",
                     content=f"Auto-reply skipped: {relevance_analysis['reasoning']}",
                     metadata={
-                        "relevance_analysis": relevance_analysis,
+                        "relevance_analysis": serializable_analysis,
                         "filter_decision": "skipped",
                         "timestamp": message_details['timestamp']
                     }
@@ -472,7 +481,16 @@ class GmailConnector(ChannelConnector):
             if relevance_analysis['confidence_score'] < 0.8:
                 ai_response += f"\n\n---\nThis response was generated based on our knowledge base (confidence: {relevance_analysis['confidence_score']:.0%}). If you need further assistance, please don't hesitate to contact our support team directly."
             
-            # Send reply email with enhanced metadata
+            # Send reply email with enhanced metadata (serialize enum to string)
+            serializable_analysis = {
+                "should_reply": relevance_analysis['should_reply'],
+                "relevance_level": relevance_analysis['relevance_level'].value,  # Convert enum to string
+                "confidence_score": relevance_analysis['confidence_score'],
+                "reasoning": relevance_analysis['reasoning'],
+                "knowledge_items_found": relevance_analysis['knowledge_items_found'],
+                "average_similarity": relevance_analysis['average_similarity']
+            }
+            
             await self.send_message(
                 conversation_id=conversation.conversation_id,
                 message_type="text",
@@ -481,7 +499,7 @@ class GmailConnector(ChannelConnector):
                     "subject": f"Re: {subject}",
                     "to_email": sender_email,
                     "thread_id": thread_id,
-                    "relevance_analysis": relevance_analysis,
+                    "relevance_analysis": serializable_analysis,
                     "knowledge_used": knowledge_used,
                     "filter_passed": True
                 }
