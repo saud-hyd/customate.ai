@@ -386,33 +386,93 @@ class GmailConnector(ChannelConnector):
                 logger.error(f"Client not found for channel {self.channel.channel_id}")
                 return
             
-            # Process with chatbot (this integrates with existing RAG/OpenAI pipeline)
+            # CRITICAL: Check if we should reply to this email using knowledge base relevance
             from app.services.chat.enhanced_chat_service import EnhancedChatService
             from app.services.knowledge.enhanced_search_service import EnhancedSearchService
             from app.services.llm.llm_factory import LLMFactory
+            from app.services.channel.email_relevance_filter import EmailRelevanceFilter
             
             # Create required services for chat using proper factory
             llm_service = LLMFactory.create_llm_service(self.db, client.client_id)
             search_service = EnhancedSearchService(llm_service)
+            
+            # 🔍 ANALYZE EMAIL RELEVANCE BEFORE RESPONDING
+            relevance_filter = EmailRelevanceFilter(search_service, llm_service)
+            relevance_analysis = await relevance_filter.analyze_email_relevance(
+                client_id=client.client_id,
+                email_content=content,
+                email_subject=subject,
+                sender_email=sender_email,
+                additional_context={
+                    "thread_id": thread_id,
+                    "channel_id": self.channel.channel_id
+                }
+            )
+            
+            # 📊 Log relevance decision
+            logger.info(f"📧 Email relevance analysis for {sender_email}:")
+            logger.info(f"  Decision: {'✅ REPLY' if relevance_analysis['should_reply'] else '❌ NO REPLY'}")
+            logger.info(f"  Confidence: {relevance_analysis['confidence_score']:.3f}")
+            logger.info(f"  Knowledge items: {relevance_analysis['knowledge_items_found']}")
+            logger.info(f"  Reasoning: {relevance_analysis['reasoning']}")
+            
+            # 🚫 SKIP EMAILS WITHOUT SUFFICIENT KNOWLEDGE BASE COVERAGE
+            if not relevance_analysis['should_reply']:
+                logger.info(f"🚫 Skipping auto-reply to {sender_email} - insufficient knowledge base coverage")
+                
+                # Store metadata about why we didn't reply
+                await self.channel_service.store_message(
+                    conversation_id=conversation.conversation_id,
+                    platform_message_id=f"skip_{message_id}",
+                    direction="system",
+                    message_type="filter_decision",
+                    content=f"Auto-reply skipped: {relevance_analysis['reasoning']}",
+                    metadata={
+                        "relevance_analysis": relevance_analysis,
+                        "filter_decision": "skipped",
+                        "timestamp": message_details['timestamp']
+                    }
+                )
+                return  # Exit without sending reply
+            
+            # ✅ PROCEED WITH AI RESPONSE - we have good knowledge coverage
+            logger.info(f"✅ Proceeding with AI response to {sender_email} - good knowledge coverage")
+            
             chat_service = EnhancedChatService(self.db, search_service, llm_service)
             
             # Generate AI response using existing pipeline (collect stream for email)
             response_parts = []
+            knowledge_used = False
+            
             async for chunk in chat_service.process_message_stream(
                 client_id=client.client_id,
                 user_message=content,
                 session_id=conversation.conversation_id
             ):
+                # Track if knowledge was used
+                if chunk.get('type') == 'info' and chunk.get('knowledge_used'):
+                    knowledge_used = True
+                    
                 # Collect content from streaming chunks
-                if chunk.get('type') == 'content' and chunk.get('content'):
+                if chunk.get('type') == 'chunk' and chunk.get('content'):
                     response_parts.append(chunk['content'])
-                elif chunk.get('content'):  # Fallback for different chunk formats
-                    response_parts.append(chunk['content'])
+                elif chunk.get('type') == 'done' and chunk.get('message', {}).get('content'):
+                    # Get final content from done message
+                    response_parts = [chunk['message']['content']]
+                    break
             
             # Combine all streaming chunks into complete response
-            ai_response = ''.join(response_parts)
+            ai_response = ''.join(response_parts).strip()
             
-            # Send reply email
+            if not ai_response:
+                logger.error(f"Empty AI response generated for {sender_email}")
+                return
+            
+            # Add knowledge confidence footer if configured
+            if relevance_analysis['confidence_score'] < 0.8:
+                ai_response += f"\n\n---\nThis response was generated based on our knowledge base (confidence: {relevance_analysis['confidence_score']:.0%}). If you need further assistance, please don't hesitate to contact our support team directly."
+            
+            # Send reply email with enhanced metadata
             await self.send_message(
                 conversation_id=conversation.conversation_id,
                 message_type="text",
@@ -420,7 +480,10 @@ class GmailConnector(ChannelConnector):
                 metadata={
                     "subject": f"Re: {subject}",
                     "to_email": sender_email,
-                    "thread_id": thread_id
+                    "thread_id": thread_id,
+                    "relevance_analysis": relevance_analysis,
+                    "knowledge_used": knowledge_used,
+                    "filter_passed": True
                 }
             )
             

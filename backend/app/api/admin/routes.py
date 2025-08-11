@@ -17,8 +17,13 @@ from app.core import logger
 from app.api.admin.schemas import AdminUserResponse, ClientListResponse, ClientDetailResponse
 from app.services.subscription.stripe_admin_service import StripeAdminService
 
+# Import email filter routes
+from app.api.admin.email_filter_routes import router as email_filter_router
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+# Include email filter routes
+router.include_router(email_filter_router)
 
 # Initialize services
 stripe_service = StripeAdminService()

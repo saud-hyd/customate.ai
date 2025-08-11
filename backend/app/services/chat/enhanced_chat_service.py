@@ -117,27 +117,76 @@ class EnhancedChatService:
         context = self.context_manager.get_context(self.db, session_id)
         conversation_history = self.context_manager.format_history(context, self.db, session_id)
         
-        # Simple knowledge search
+        # Enhanced knowledge search with better parameters
         knowledge_context = []
         knowledge_used = False
         
         try:
+            # Enhanced query preparation with conversation context
+            enhanced_query = user_message
+            query_context = ""
+            
+            # Use recent conversation context to enhance search query
+            if conversation_history:
+                recent_messages = conversation_history[-4:]  # Last 2 exchanges
+                context_parts = []
+                for msg in recent_messages:
+                    if msg["role"] == "user":
+                        context_parts.append(msg["content"])
+                
+                if context_parts:
+                    query_context = " ".join(context_parts[-2:])  # Last 2 user messages
+                    enhanced_query = f"{user_message} {query_context}"
+                    logger.info(f"Enhanced search query with conversation context")
+            
+            # Try enhanced search first with more results and lower threshold
             search_results = await self.search_service.hybrid_search(
                 client_id=client_id,
-                query_text=user_message,
-                limit=5                
+                query_text=enhanced_query,
+                limit=12,  # Increased from 5 to get more relevant content
+                vector_threshold=0.3,  # Lowered from 0.7 to include more relevant results
+                hybrid_ratio=0.6  # Balance between vector and keyword search
             )
             
             if search_results.get("results"):
                 knowledge_used = True
+                # Enhanced knowledge formatting with relevance scores and sources
                 knowledge_context = [
                     {
                         "title": item["title"],
                         "content": item["content"], 
-                        "source": item.get("collection_name", "Knowledge Base")
+                        "source": item.get("collection_name", "Knowledge Base"),
+                        "similarity_score": round(item.get("similarity", 0), 3),
+                        "search_type": item.get("search_type", "hybrid")
                     }
                     for item in search_results["results"]
                 ]
+                
+                logger.info(f"Found {len(knowledge_context)} knowledge items with avg similarity: {sum(k['similarity_score'] for k in knowledge_context) / len(knowledge_context):.3f}")
+            else:
+                # Fallback search with even lower threshold if no results found
+                logger.warning("No results from initial search, trying fallback with lower threshold")
+                fallback_results = await self.search_service.hybrid_search(
+                    client_id=client_id,
+                    query_text=user_message,  # Use original query for fallback
+                    limit=8,
+                    vector_threshold=0.1,  # Very low threshold for fallback
+                    hybrid_ratio=0.4  # More keyword-focused for fallback
+                )
+                
+                if fallback_results.get("results"):
+                    knowledge_used = True
+                    knowledge_context = [
+                        {
+                            "title": item["title"],
+                            "content": item["content"], 
+                            "source": item.get("collection_name", "Knowledge Base"),
+                            "similarity_score": round(item.get("similarity", 0), 3),
+                            "search_type": "fallback_" + item.get("search_type", "hybrid")
+                        }
+                        for item in fallback_results["results"]
+                    ]
+                    logger.info(f"Fallback search found {len(knowledge_context)} items")
                 
         except Exception as e:
             logger.error(f"Knowledge search error: {str(e)}")

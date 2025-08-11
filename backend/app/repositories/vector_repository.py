@@ -213,15 +213,19 @@ class VectorRepository:
             else:
                 similarity = 1.0 - float(row.distance)
             
-            # Apply threshold filter
-            # For cosine similarity, allow negative similarities when threshold is reasonable
+            # Apply threshold filter with improved logic
+            # For cosine similarity, adjust threshold based on search context
             effective_threshold = threshold
-            if distance_method == "cosine" and threshold >= 0.5:
-                # For high thresholds, lower the bar to include reasonable negative similarities
-                effective_threshold = -0.5  # Allow moderately negative similarities
-            elif distance_method == "cosine" and threshold >= 0.0:
-                # For low/zero thresholds, allow very negative similarities
-                effective_threshold = -1.0  # Allow very negative similarities
+            if distance_method == "cosine":
+                if threshold >= 0.5:
+                    # High threshold: be more selective but allow some negative similarities
+                    effective_threshold = max(-0.2, threshold - 0.3)
+                elif threshold >= 0.3:
+                    # Medium threshold: balanced approach
+                    effective_threshold = max(-0.5, threshold - 0.2)
+                else:
+                    # Low threshold: more permissive for better recall
+                    effective_threshold = -0.8
             
             if similarity >= effective_threshold:
                 # Get document information

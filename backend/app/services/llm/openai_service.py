@@ -134,25 +134,60 @@ class OpenAIService(LLMService):
         knowledge_context: Optional[List[Dict[str, Any]]],
         industry_context: Optional[Dict[str, Any]]
     ) -> str:
-        base_prompt = """You are a helpful customer support representative for this company.
+        base_prompt = """You are a knowledgeable customer support representative for this company.
 
-    IMPORTANT GUIDELINES:
-    - For business and knowledge base questions: Use the company information and knowledge base provided to give detailed, helpful answers  
-    - For general, personal, sensitive, off-topic questions: redirect to business topics politiely within concise sentences, dont give answers to such questions. 
+CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
+1. **PRIORITIZE KNOWLEDGE BASE**: Always use the provided company information as your PRIMARY source
+2. **KNOWLEDGE FIRST**: If the knowledge base contains relevant information, use it BEFORE any general knowledge
+3. **BE COMPREHENSIVE**: When knowledge base information is available, provide detailed, complete answers
+4. **SOURCE ATTRIBUTION**: Reference the knowledge base when using specific company information
+5. **REDIRECT OFF-TOPIC**: For personal, general, or off-topic questions, politely redirect to business topics
 
-
-    CONVERSATION STYLE:
-    - Be friendly and conversational-but treat this as a continuous conversation without repeating greetings
-    - Don't be robotic 
-    FOCUS: Try to fix the customer issues efficiently and following with them untill the issue is fixed."""
+RESPONSE STRATEGY:
+- Search the knowledge base information thoroughly for relevant details
+- Combine multiple knowledge base sources if they relate to the user's question
+- Provide step-by-step guidance when procedures are available
+- Be conversational but informative - treat this as an ongoing conversation
+- Follow up to ensure issues are fully resolved"""
         
         if knowledge_context:
-            knowledge_text = "\n\nHere's information about our company that you can use to answer questions:\n" + "\n".join([
-                f"- {item['title']}: {item['content']}" 
-                for item in knowledge_context
-            ])
+            # Enhanced knowledge formatting with relevance indicators
+            knowledge_sections = []
+            high_relevance = []
+            medium_relevance = []
+            low_relevance = []
+            
+            for item in knowledge_context:
+                similarity = item.get('similarity_score', 0)
+                source = item.get('source', 'Knowledge Base')
+                search_type = item.get('search_type', 'hybrid')
+                
+                formatted_item = f"**{item['title']}** (from {source}, relevance: {similarity}, found via: {search_type}):\n{item['content']}"
+                
+                if similarity >= 0.6:
+                    high_relevance.append(formatted_item)
+                elif similarity >= 0.3:
+                    medium_relevance.append(formatted_item)
+                else:
+                    low_relevance.append(formatted_item)
+            
+            knowledge_text = "\n\n=== COMPANY KNOWLEDGE BASE (USE THIS INFORMATION FIRST) ==="
+            
+            if high_relevance:
+                knowledge_text += "\n\n--- HIGH RELEVANCE INFORMATION ---\n" + "\n\n".join(high_relevance)
+            
+            if medium_relevance:
+                knowledge_text += "\n\n--- MEDIUM RELEVANCE INFORMATION ---\n" + "\n\n".join(medium_relevance)
+                
+            if low_relevance:
+                knowledge_text += "\n\n--- ADDITIONAL CONTEXT ---\n" + "\n\n".join(low_relevance)
+            
+            knowledge_text += f"\n\n=== END KNOWLEDGE BASE ({len(knowledge_context)} sources) ==="
+            
             base_prompt += knowledge_text
-            base_prompt += "\n\nUse this information to answer business-related questions. For anything else, politely redirect to our services."
+            base_prompt += f"\n\nIMPORTANT: You have {len(knowledge_context)} knowledge sources above. Use these as your PRIMARY information source. Only use general knowledge if the knowledge base doesn't contain relevant information."
+        else:
+            base_prompt += "\n\nNOTE: No specific company knowledge base information was found for this query. Provide general assistance and suggest the user ask about specific company topics."
         
         return base_prompt
     

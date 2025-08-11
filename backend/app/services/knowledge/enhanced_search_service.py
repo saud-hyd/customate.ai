@@ -56,9 +56,9 @@ class EnhancedSearchService:
         # Adjust hybrid ratio to valid range
         hybrid_ratio = max(0.0, min(1.0, hybrid_ratio))
         
-        # Calculate limits for vector and keyword search
-        vector_limit = max(3, int(limit * 1.5))
-        keyword_limit = max(3, int(limit * 1.5))
+        # Calculate limits for vector and keyword search - get more results for better selection
+        vector_limit = max(5, int(limit * 2.0))  # Increased multiplier for more results
+        keyword_limit = max(5, int(limit * 1.5))
         
         # Get database session
         with get_db_session() as db:
@@ -70,7 +70,7 @@ class EnhancedSearchService:
                     db, query_text, client_id
                 )
                 
-                logger.info(f"Performing multilingual search with {len(multilingual_queries)} translated queries")
+                logger.info(f"Performing multilingual search with {len(multilingual_queries)} queries")
                 
                 # Search with each translated query
                 for query_data in multilingual_queries:

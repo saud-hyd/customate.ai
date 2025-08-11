@@ -11,10 +11,10 @@ class ContextManager:
     Just retrieves message history without artificial limits or complex tracking.
     """
     
-    def __init__(self, max_history_length: int = 20):
+    def __init__(self, max_history_length: int = 30):
         """
-        Initialize with reasonable history length for OpenAI context window.
-        20 messages = 10 exchanges is plenty for most conversations.
+        Initialize with expanded history length for better context understanding.
+        30 messages = 15 exchanges provides better context for knowledge base queries.
         """
         self.max_history_length = max_history_length
         self.message_repo = ChatMessageRepository()
@@ -47,7 +47,7 @@ class ContextManager:
                     "content": msg.content
                 })
             
-            logger.debug(f"Retrieved {len(formatted_messages)} messages for session {session_id}")
+            logger.info(f"Retrieved {len(formatted_messages)} messages for session {session_id}")
             return formatted_messages
             
         except Exception as e:
@@ -75,5 +75,5 @@ class ContextManager:
         """
         # Messages are already saved by the chat service
         # No complex context tracking needed - OpenAI handles this naturally
-        logger.debug(f"Context update for session {session_id} - messages already saved")
+        logger.info(f"Context updated for session {session_id}")
         return {"session_id": session_id}
