@@ -212,7 +212,20 @@ class GmailConnector(ChannelConnector):
             thread_id = metadata.get('thread_id')
             
             logger.info(f"Send message called with conversation_id: {conversation_id}")
-            logger.info(f"Send message full metadata: {json.dumps(metadata, indent=2)}")
+            
+            # Create a serializable copy of metadata for logging
+            def make_serializable(obj):
+                if hasattr(obj, 'value'):  # Handle enum objects
+                    return obj.value
+                elif isinstance(obj, dict):
+                    return {k: make_serializable(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [make_serializable(item) for item in obj]
+                else:
+                    return obj
+            
+            serializable_metadata = make_serializable(metadata)
+            logger.info(f"Send message full metadata: {json.dumps(serializable_metadata, indent=2)}")
             logger.info(f"To email extracted: '{to_email}', Subject: '{subject}', Thread ID: '{thread_id}'")
             
             if not to_email:
