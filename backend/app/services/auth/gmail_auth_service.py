@@ -6,6 +6,9 @@ import secrets
 import json
 import base64
 from urllib.parse import urlencode
+import asyncio
+import time
+import threading
 
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
@@ -17,63 +20,59 @@ from app.core.config.settings import settings
 
 class GmailAuthService:
     """
-    Service for handling Gmail OAuth 2.0 authentication flow.
+    Service for handling Gmail OAuth 2.0 authentication flow using platform credentials.
     """
+    
+    # Class-level cache to track used authorization codes with timestamps
+    _used_codes = {}
+    
+    # Thread-safe lock for protecting code operations
+    _global_lock = threading.RLock()
+    
+    # Set to track codes currently being processed
+    _processing_codes = set()
     
     def __init__(self, db: Session):
         self.db = db
         
-        # OAuth 2.0 configuration
+        # OAuth 2.0 configuration - Include OpenID Connect scopes that Google automatically adds
         self.scopes = [
             'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/gmail.send',
-            'https://www.googleapis.com/auth/gmail.modify'
+            'https://www.googleapis.com/auth/gmail.send', 
+            'https://www.googleapis.com/auth/gmail.modify',
+            'openid',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
         ]
         
-        # OAuth states will be encoded in the state parameter itself
-        pass
+        # Validate platform OAuth configuration
+        if not settings.is_gmail_oauth_configured():
+            raise ValueError(
+                "Gmail OAuth not configured. Please set GMAIL_OAUTH_CLIENT_ID and GMAIL_OAUTH_CLIENT_SECRET environment variables."
+            )
     
-    def create_oauth_config(
-        self, 
-        client_id: str, 
-        client_secret: str,
-        redirect_uri: str
-    ) -> Dict[str, str]:
+    def create_oauth_config(self) -> Dict[str, str]:
         """
-        Create OAuth client configuration for Google API.
-        
-        Args:
-            client_id: Google OAuth client ID
-            client_secret: Google OAuth client secret
-            redirect_uri: OAuth redirect URI
+        Create OAuth client configuration for Google API using platform credentials.
             
         Returns:
             OAuth configuration dictionary
         """
         return {
             "web": {
-                "client_id": client_id,
-                "client_secret": client_secret,
+                "client_id": settings.GMAIL_OAUTH_CLIENT_ID,
+                "client_secret": settings.GMAIL_OAUTH_CLIENT_SECRET,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [redirect_uri]
+                "redirect_uris": [settings.GMAIL_OAUTH_REDIRECT_URI]
             }
         }
     
-    def get_authorization_url(
-        self, 
-        client_id: str, 
-        client_secret: str,
-        redirect_uri: str,
-        user_id: str
-    ) -> Dict[str, str]:
+    def get_authorization_url(self, user_id: str) -> Dict[str, str]:
         """
-        Generate Gmail OAuth 2.0 authorization URL.
+        Generate Gmail OAuth 2.0 authorization URL using platform credentials.
         
         Args:
-            client_id: Google OAuth client ID
-            client_secret: Google OAuth client secret
-            redirect_uri: OAuth redirect URI
             user_id: User identifier for state tracking
             
         Returns:
@@ -81,22 +80,19 @@ class GmailAuthService:
         """
         
         try:
-            # Create OAuth config
-            oauth_config = self.create_oauth_config(client_id, client_secret, redirect_uri)
+            # Create OAuth config using platform credentials
+            oauth_config = self.create_oauth_config()
             
             # Create flow
             flow = Flow.from_client_config(
                 oauth_config,
                 scopes=self.scopes,
-                redirect_uri=redirect_uri
+                redirect_uri=settings.GMAIL_OAUTH_REDIRECT_URI
             )
             
-            # Create state with encoded data for CSRF protection
+            # Create simplified state with encoded data for CSRF protection
             state_data = {
                 "user_id": user_id,
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "redirect_uri": redirect_uri,
                 "nonce": secrets.token_urlsafe(16)  # Random nonce for security
             }
             
@@ -123,13 +119,38 @@ class GmailAuthService:
             logger.error(f"Error generating Gmail OAuth URL: {e}")
             raise Exception(f"Failed to generate authorization URL: {e}")
     
-    def exchange_code_for_tokens(
-        self, 
-        code: str, 
-        state: str
-    ) -> Dict[str, Any]:
+    async def exchange_code_for_tokens_async(self, code: str, state: str) -> Dict[str, Any]:
         """
-        Exchange OAuth authorization code for access and refresh tokens.
+        Async version of token exchange with thread-safe locking to prevent duplicates.
+        """
+        # Use thread-safe locking for immediate protection
+        with self._global_lock:
+            # Check if code is already being processed
+            if code in self._processing_codes:
+                logger.warning(f"Code already being processed by another request: {code[:10]}...")
+                raise Exception("This authorization code is already being processed. Please wait.")
+            
+            # Check if code was already used
+            if code in self._used_codes:
+                logger.warning(f"Code already used: {code[:10]}...")
+                raise Exception("This authorization code has already been used. Please try connecting again.")
+            
+            # Mark as being processed
+            self._processing_codes.add(code)
+            logger.info(f"Starting token exchange for code: {code[:10]}...")
+        
+        try:
+            # Call the synchronous version outside the lock (but with processing flag set)
+            result = self.exchange_code_for_tokens(code, state)
+            return result
+        finally:
+            # Always clean up processing flag
+            with self._global_lock:
+                self._processing_codes.discard(code)
+    
+    def exchange_code_for_tokens(self, code: str, state: str) -> Dict[str, Any]:
+        """
+        Exchange OAuth authorization code for access and refresh tokens using platform credentials.
         
         Args:
             code: OAuth authorization code
@@ -140,13 +161,27 @@ class GmailAuthService:
         """
         
         try:
+            # Mark code as used with timestamp (cleanup happens in async version)
+            import time
+            current_time = time.time()
+            
+            with self._global_lock:
+                self._used_codes[code] = current_time
+                
+                # Clean up old codes to prevent memory leak (keep only last 100)
+                if len(self._used_codes) > 100:
+                    # Remove oldest codes
+                    oldest_codes = sorted(self._used_codes.items(), key=lambda x: x[1])[:50]
+                    for old_code, _ in oldest_codes:
+                        self._used_codes.pop(old_code, None)
+            
             # Decode and validate state
             try:
                 state_json = base64.urlsafe_b64decode(state.encode()).decode()
                 state_data = json.loads(state_json)
                 
-                # Validate required fields
-                required_fields = ["user_id", "client_id", "client_secret", "redirect_uri", "nonce"]
+                # Validate required fields (simplified since we don't store credentials in state)
+                required_fields = ["user_id", "nonce"]
                 if not all(field in state_data for field in required_fields):
                     raise Exception("Invalid state data structure")
                     
@@ -154,18 +189,14 @@ class GmailAuthService:
                 logger.error(f"Failed to decode OAuth state: {e}")
                 raise Exception("Invalid or expired OAuth state")
             
-            # Create OAuth config
-            oauth_config = self.create_oauth_config(
-                state_data["client_id"],
-                state_data["client_secret"],
-                state_data["redirect_uri"]
-            )
+            # Create OAuth config using platform credentials
+            oauth_config = self.create_oauth_config()
             
             # Create flow
             flow = Flow.from_client_config(
                 oauth_config,
                 scopes=self.scopes,
-                redirect_uri=state_data["redirect_uri"],
+                redirect_uri=settings.GMAIL_OAUTH_REDIRECT_URI,
                 state=state
             )
             
@@ -180,14 +211,12 @@ class GmailAuthService:
             service = build('gmail', 'v1', credentials=credentials)
             profile = service.users().getProfile(userId='me').execute()
             
-            # State is stateless, no cleanup needed
-            
             result = {
                 "access_token": credentials.token,
                 "refresh_token": credentials.refresh_token,
                 "token_uri": credentials.token_uri,
-                "client_id": credentials.client_id,
-                "client_secret": credentials.client_secret,
+                "client_id": credentials.client_id,  # Platform client ID
+                "client_secret": credentials.client_secret,  # Platform client secret
                 "scopes": credentials.scopes,
                 "user_info": {
                     "email": profile.get("emailAddress"),
@@ -208,32 +237,25 @@ class GmailAuthService:
             logger.error(f"Error exchanging OAuth code: {e}")
             raise Exception(f"Token exchange failed: {e}")
     
-    def refresh_access_token(
-        self,
-        refresh_token: str,
-        client_id: str,
-        client_secret: str
-    ) -> Dict[str, str]:
+    def refresh_access_token(self, refresh_token: str) -> Dict[str, str]:
         """
-        Refresh Gmail API access token using refresh token.
+        Refresh Gmail API access token using refresh token and platform credentials.
         
         Args:
             refresh_token: OAuth refresh token
-            client_id: Google OAuth client ID
-            client_secret: Google OAuth client secret
             
         Returns:
             Dictionary containing new access token
         """
         
         try:
-            # Create credentials object
+            # Create credentials object using platform credentials
             credentials = Credentials(
                 token=None,
                 refresh_token=refresh_token,
                 token_uri="https://oauth2.googleapis.com/token",
-                client_id=client_id,
-                client_secret=client_secret
+                client_id=settings.GMAIL_OAUTH_CLIENT_ID,
+                client_secret=settings.GMAIL_OAUTH_CLIENT_SECRET
             )
             
             # Refresh token
@@ -255,34 +277,26 @@ class GmailAuthService:
             logger.error(f"Error refreshing Gmail token: {e}")
             raise Exception(f"Token refresh error: {e}")
     
-    def validate_credentials(
-        self,
-        access_token: str,
-        refresh_token: str,
-        client_id: str,
-        client_secret: str
-    ) -> bool:
+    def validate_credentials(self, access_token: str, refresh_token: str) -> bool:
         """
-        Validate Gmail API credentials.
+        Validate Gmail API credentials using platform OAuth configuration.
         
         Args:
             access_token: OAuth access token
             refresh_token: OAuth refresh token
-            client_id: Google OAuth client ID
-            client_secret: Google OAuth client secret
             
         Returns:
             True if credentials are valid, False otherwise
         """
         
         try:
-            # Create credentials object
+            # Create credentials object using platform credentials
             credentials = Credentials(
                 token=access_token,
                 refresh_token=refresh_token,
                 token_uri="https://oauth2.googleapis.com/token",
-                client_id=client_id,
-                client_secret=client_secret
+                client_id=settings.GMAIL_OAUTH_CLIENT_ID,
+                client_secret=settings.GMAIL_OAUTH_CLIENT_SECRET
             )
             
             # Test API access
@@ -329,10 +343,14 @@ class GmailAuthService:
             return False
     
     def get_oauth_state_data(self, state: str) -> Optional[Dict[str, Any]]:
-        """Get OAuth state data for validation."""
+        """Get OAuth state data for validation (simplified for platform credentials)."""
         try:
             state_json = base64.urlsafe_b64decode(state.encode()).decode()
-            return json.loads(state_json)
+            state_data = json.loads(state_json)
+            # Validate that required fields exist
+            if "user_id" in state_data and "nonce" in state_data:
+                return state_data
+            return None
         except (json.JSONDecodeError, ValueError):
             return None
     

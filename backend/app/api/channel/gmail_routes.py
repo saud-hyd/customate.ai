@@ -14,13 +14,12 @@ from app.repositories.channel_repository import ChannelRepository
 from app.core import logger
 from app.core.config.settings import settings
 
-router = APIRouter(prefix="/channel/gmail", tags=["gmail"])
+router = APIRouter(prefix="/gmail", tags=["gmail"])
 
 # Schema classes
 class GmailOAuthRequest(BaseModel):
-    client_id: str = Field(..., description="Google OAuth client ID")
-    client_secret: str = Field(..., description="Google OAuth client secret")
-    redirect_uri: str = Field(..., description="OAuth redirect URI")
+    """Simplified Gmail OAuth request - no client credentials needed."""
+    pass  # No fields needed - using platform credentials
 
 class GmailOAuthResponse(BaseModel):
     authorization_url: str = Field(..., description="Gmail OAuth authorization URL")
@@ -35,8 +34,6 @@ class GmailChannelCreate(BaseModel):
     email_address: EmailStr = Field(..., description="Gmail email address")
     access_token: str = Field(..., description="OAuth access token")
     refresh_token: str = Field(..., description="OAuth refresh token")
-    client_id: str = Field(..., description="Google OAuth client ID")
-    client_secret: str = Field(..., description="Google OAuth client secret")
     config: Optional[Dict[str, Any]] = Field(
         default_factory=lambda: {
             "auto_reply": True,
@@ -59,18 +56,20 @@ async def initiate_gmail_oauth(
     db: Session = Depends(get_db)
 ):
     """
-    Initiate Gmail OAuth 2.0 authorization flow.
+    Initiate Gmail OAuth 2.0 authorization flow using platform credentials.
     Returns authorization URL for user to grant Gmail access.
     """
     try:
+        # Check if Gmail OAuth is configured
+        if not settings.is_gmail_oauth_configured():
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gmail OAuth is not configured. Please contact support."
+            )
+        
         gmail_auth = GmailAuthService(db)
         
-        result = gmail_auth.get_authorization_url(
-            client_id=oauth_request.client_id,
-            client_secret=oauth_request.client_secret,
-            redirect_uri=oauth_request.redirect_uri,
-            user_id=client.client_id
-        )
+        result = gmail_auth.get_authorization_url(user_id=client.client_id)
         
         logger.info(f"Gmail OAuth initiated for client {client.client_id}")
         
@@ -79,6 +78,12 @@ async def initiate_gmail_oauth(
             state=result["state"]
         )
         
+    except ValueError as e:
+        logger.error(f"Gmail OAuth configuration error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Gmail OAuth is not properly configured. Please contact support."
+        )
     except Exception as e:
         logger.error(f"Gmail OAuth initiation failed: {e}")
         raise HTTPException(
@@ -86,21 +91,33 @@ async def initiate_gmail_oauth(
             detail=f"Failed to initiate Gmail authorization: {str(e)}"
         )
 
+# B2B OAuth Callback - No longer needed with direct redirect approach
+# Google now redirects directly to frontend /gmail/callback route
+# This simplifies the flow and eliminates popup coordination issues
+
 @router.post("/oauth/callback")
 async def handle_gmail_oauth_callback(
     token_exchange: GmailTokenExchange,
     client: Client = Depends(get_current_client),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    request: Request = None
 ):
     """
     Handle Gmail OAuth callback and exchange code for tokens.
     Returns user info and tokens for channel creation.
     """
     try:
+        # Enhanced debugging to understand request sources
+        client_ip = request.client.host if request and request.client else "unknown"
+        user_agent = request.headers.get("user-agent", "unknown") if request else "unknown"
+        request_id = id(request) if request else "unknown"
+        
+        logger.info(f"OAuth callback request - Code: {token_exchange.code[:10]}... IP: {client_ip} Agent: {user_agent[:50]}... RequestID: {request_id}")
+        
         gmail_auth = GmailAuthService(db)
         
-        # Exchange code for tokens
-        result = gmail_auth.exchange_code_for_tokens(
+        # Exchange code for tokens using async version with locking
+        result = await gmail_auth.exchange_code_for_tokens_async(
             code=token_exchange.code,
             state=token_exchange.state
         )
@@ -139,12 +156,10 @@ async def create_gmail_channel(
         channel_service = ChannelService(db)
         gmail_auth = GmailAuthService(db)
         
-        # Validate credentials
+        # Validate credentials using platform OAuth configuration
         is_valid = gmail_auth.validate_credentials(
             access_token=channel_data.access_token,
-            refresh_token=channel_data.refresh_token,
-            client_id=channel_data.client_id,
-            client_secret=channel_data.client_secret
+            refresh_token=channel_data.refresh_token
         )
         
         if not is_valid:
@@ -153,12 +168,12 @@ async def create_gmail_channel(
                 detail="Invalid Gmail credentials"
             )
         
-        # Create channel
+        # Create channel with platform credentials
         credentials = {
             "access_token": channel_data.access_token,
             "refresh_token": channel_data.refresh_token,
-            "client_id": channel_data.client_id,
-            "client_secret": channel_data.client_secret,
+            "client_id": settings.GMAIL_OAUTH_CLIENT_ID,  # Platform credential
+            "client_secret": settings.GMAIL_OAUTH_CLIENT_SECRET,  # Platform credential
             "type": "oauth2"
         }
         
@@ -176,7 +191,6 @@ async def create_gmail_channel(
         # Set up Gmail watch for push notifications using Google Cloud Pub/Sub
         try:
             from app.services.channel.gmail_pubsub_service import GmailPubSubService
-            from app.core.config.settings import settings
             
             if settings.is_google_cloud_configured():
                 pubsub_service = GmailPubSubService(db)
@@ -306,11 +320,9 @@ async def refresh_gmail_tokens(
         
         credentials = channel.credentials or {}
         
-        # Refresh tokens
+        # Refresh tokens using platform credentials
         result = gmail_auth.refresh_access_token(
-            refresh_token=credentials.get("refresh_token"),
-            client_id=credentials.get("client_id"),
-            client_secret=credentials.get("client_secret")
+            refresh_token=credentials.get("refresh_token")
         )
         
         # Update channel credentials

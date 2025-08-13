@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { HiCheck, HiOutlineExclamation } from 'react-icons/hi';
 import channelService from '../../services/channelService';
 import LoadingSpinner from '../common/LoadingSpinner';
+// OAuth manager no longer needed with direct redirect approach
 
 const platforms = [
   {
@@ -16,30 +17,10 @@ const platforms = [
         <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"/>
       </svg>
     ),
-    fields: [
-      { 
-        name: 'email_address', 
-        label: 'Gmail Email Address', 
-        required: true,
-        type: 'email',
-        helpText: 'The Gmail address you want to connect for AI-powered email responses'
-      },
-      { 
-        name: 'client_id', 
-        label: 'Google OAuth Client ID', 
-        required: true,
-        helpText: 'Get this from Google Developers Console → Credentials → OAuth 2.0 Client IDs'
-      },
-      { 
-        name: 'client_secret', 
-        label: 'Google OAuth Client Secret', 
-        required: true, 
-        type: 'password',
-        helpText: 'OAuth client secret from Google Developers Console'
-      }
-    ],
-    setupNote: 'Gmail integration requires OAuth 2.0 setup through Google Developers Console. You\'ll be redirected to Google for authorization after entering your credentials.',
-    oauth: true
+    fields: [], // No fields needed - simplified OAuth flow
+    setupNote: 'Click Connect to authorize Gmail access. No additional setup required.',
+    oauth: true,
+    simplified: true // Flag to indicate simplified flow
   },
   {
     id: 'whatsapp',
@@ -173,19 +154,19 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
         credentials[field.name] = formData[field.name] || field.defaultValue;
       });
       
-      // Handle Gmail OAuth flow separately
+      // Handle Gmail OAuth flow with B2B standard direct redirect
       if (selectedPlatform.id === 'gmail') {
-        // For Gmail, start OAuth flow instead of creating channel directly
-        const oauthConfig = {
-          client_id: formData.client_id,
-          client_secret: formData.client_secret,
-          redirect_uri: window.location.origin + '/gmail/callback'
-        };
-
-        const response = await channelService.initiateGmailOAuth(oauthConfig);
+        console.log('[Channel Connector] Starting B2B OAuth flow with direct redirect');
         
-        // Redirect to Google OAuth
+        // For Gmail, start simplified OAuth flow
+        const response = await channelService.initiateGmailOAuth({});
+        
+        console.log('[Channel Connector] Redirecting to Gmail OAuth:', response.data.authorization_url);
+        
+        // B2B Standard: Direct redirect to OAuth provider
+        // This approach is used by Slack, Zoom, Salesforce, and other enterprise platforms
         window.location.href = response.data.authorization_url;
+        
         return;
       }
       
@@ -248,6 +229,45 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
         errorMessage = 'Server error. Please try again later.';
       } else if (err.message?.includes('Network Error')) {
         errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGmailChannelCreation = async (tokens, userInfo) => {
+    try {
+      const channelData = {
+        name: formData.name || `Gmail - ${userInfo.email}`,
+        email_address: userInfo.email,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        config: {
+          auto_reply: true,
+          signature: '',
+          label_ids: ['INBOX'],
+          watch_labels: ['UNREAD']
+        }
+      };
+
+      const response = await channelService.createGmailChannel(channelData);
+      
+      console.log('Gmail channel created successfully:', response.data);
+      setStep(3);
+      
+      // Call the callback with the new channel
+      if (onChannelCreated && response.data.channel) {
+        onChannelCreated(response.data.channel);
+      }
+      
+    } catch (err) {
+      console.error('Error creating Gmail channel:', err);
+      
+      let errorMessage = 'Failed to create Gmail channel. Please try again.';
+      if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
       }
       
       setError(errorMessage);
@@ -359,29 +379,49 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
           
           {/* Platform-specific fields */}
           <div className="space-y-4">
-            {selectedPlatform.fields.map((field) => (
-              <div key={field.name}>
-                <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
-                  {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                {field.helpText && (
-                  <p className="mt-1 text-xs text-gray-500">{field.helpText}</p>
-                )}
-                <div className="mt-1">
-                  <input
-                    type={field.type || "text"}
-                    name={field.name}
-                    id={field.name}
-                    value={formData[field.name] || field.defaultValue || ''}
-                    onChange={handleInputChange}
-                    required={field.required}
-                    className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    placeholder={field.placeholder || `Enter your ${field.label.toLowerCase()}`}
-                  />
+            {selectedPlatform.simplified ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Simplified Setup
+                    </h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>{selectedPlatform.setupNote}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
+            ) : (
+              selectedPlatform.fields.map((field) => (
+                <div key={field.name}>
+                  <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  {field.helpText && (
+                    <p className="mt-1 text-xs text-gray-500">{field.helpText}</p>
+                  )}
+                  <div className="mt-1">
+                    <input
+                      type={field.type || "text"}
+                      name={field.name}
+                      id={field.name}
+                      value={formData[field.name] || field.defaultValue || ''}
+                      onChange={handleInputChange}
+                      required={field.required}
+                      className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      placeholder={field.placeholder || `Enter your ${field.label.toLowerCase()}`}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           
           {/* Validation Note for WhatsApp */}
@@ -428,7 +468,7 @@ const ChannelConnectorPanel = ({ onChannelCreated, onCancel }) => {
                     Validating Credentials...
                   </span>
                 ) : (
-                  'Connect Channel'
+                  selectedPlatform.simplified ? 'Connect Gmail' : 'Connect Channel'
                 )}
               </button>
             </div>

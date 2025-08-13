@@ -62,6 +62,14 @@ class Settings(BaseSettings):
         else "http://localhost:8000/api/auth/oauth/callback"
     )
     
+    # Gmail OAuth settings - Platform-wide credentials for Gmail integration
+    GMAIL_OAUTH_CLIENT_ID: str = Field(default="")
+    GMAIL_OAUTH_CLIENT_SECRET: str = Field(default="")
+    GMAIL_OAUTH_REDIRECT_URI: str = Field(
+        default="https://customate.vercel.app/gmail/callback" if IS_PRODUCTION
+        else "http://localhost:3000/gmail/callback"
+    )
+    
     # LLM settings - Optional
     DEEPSEEK_API_KEY: Optional[str] = Field(default=None)
     OPENAI_API_KEY: Optional[str] = Field(default=None)
@@ -117,6 +125,10 @@ class Settings(BaseSettings):
     def is_google_cloud_configured(self) -> bool:
         """Check if Google Cloud Pub/Sub is properly configured."""
         return bool(self.GOOGLE_CLOUD_PROJECT_ID and self.GMAIL_PUBSUB_TOPIC)
+    
+    def is_gmail_oauth_configured(self) -> bool:
+        """Check if Gmail OAuth is properly configured."""
+        return bool(self.GMAIL_OAUTH_CLIENT_ID and self.GMAIL_OAUTH_CLIENT_SECRET)
 
 # Create settings instance
 settings = Settings()
@@ -125,5 +137,6 @@ settings = Settings()
 if not IS_PRODUCTION:
     print(f"Email configured: {settings.is_email_configured()}")
     print(f"OAuth configured: {settings.is_oauth_configured()}")
+    print(f"Gmail OAuth configured: {settings.is_gmail_oauth_configured()}")
     print(f"Stripe configured: {settings.is_stripe_configured()}")
     print(f"Google Cloud configured: {settings.is_google_cloud_configured()}")

@@ -14,6 +14,7 @@ import {
 import LoadingSpinner from '../common/LoadingSpinner';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
+// OAuth manager no longer needed with direct redirect approach
 
 const GmailChannelSettings = ({ channel, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -30,13 +31,8 @@ const GmailChannelSettings = ({ channel, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [showOAuthModal, setShowOAuthModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [oauthConfig, setOauthConfig] = useState({
-    client_id: '',
-    client_secret: '',
-    redirect_uri: window.location.origin + '/gmail/callback'
-  });
+  const [connectingGmail, setConnectingGmail] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -113,40 +109,82 @@ const GmailChannelSettings = ({ channel, onSuccess }) => {
     }
   };
 
-  const handleOAuthSetup = async () => {
-    if (!oauthConfig.client_id || !oauthConfig.client_secret) {
-      setError('Please provide Google OAuth Client ID and Client Secret');
-      return;
-    }
-
-    setLoading(true);
+  const handleGmailConnect = async () => {
+    setConnectingGmail(true);
     setError(null);
 
     try {
+      console.log('[Gmail Settings] Starting B2B OAuth flow with direct redirect');
+      
       const response = await fetch('/api/channel/gmail/oauth/authorize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(oauthConfig)
+        body: JSON.stringify({}) // Empty body - no client credentials needed
       });
 
       if (!response.ok) {
-        throw new Error('Failed to initiate OAuth');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to initiate Gmail OAuth');
       }
 
       const result = await response.json();
       
-      // Redirect to Google OAuth
+      console.log('[Gmail Settings] Redirecting to Gmail OAuth:', result.authorization_url);
+      
+      // B2B Standard: Direct redirect to OAuth provider
+      // This approach is used by Slack, Zoom, Salesforce, and other enterprise platforms
       window.location.href = result.authorization_url;
       
     } catch (err) {
       setError(err.message || 'Failed to start Gmail authorization');
       console.error('Error starting OAuth:', err);
+      setConnectingGmail(false);
+    }
+  };
+
+  const handleCreateChannel = async (tokens, userInfo) => {
+    try {
+      const channelData = {
+        name: formData.name || `Gmail - ${userInfo.email}`,
+        email_address: userInfo.email,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        config: formData.config
+      };
+
+      const response = await fetch('/api/channel/gmail/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(channelData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to create Gmail channel');
+      }
+
+      const result = await response.json();
+      setSuccess(true);
+      
+      if (onSuccess) {
+        onSuccess(result.channel);
+      }
+      
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
+      
+    } catch (err) {
+      setError(err.message || 'Failed to create Gmail channel');
+      console.error('Error creating Gmail channel:', err);
     } finally {
-      setLoading(false);
-      setShowOAuthModal(false);
+      setConnectingGmail(false);
     }
   };
 
@@ -448,28 +486,21 @@ const GmailChannelSettings = ({ channel, onSuccess }) => {
             </div>
           </div>
 
-          {/* OAuth Setup */}
+          {/* Gmail Connection */}
           {!channel && (
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-4">Google OAuth Setup</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-4">Connect Gmail</h4>
               <p className="text-sm text-gray-600 mb-4">
-                To connect Gmail, you'll need to set up Google OAuth credentials. 
-                <a 
-                  href="https://console.developers.google.com/apis/credentials" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="ml-1 text-indigo-600 hover:text-indigo-500"
-                >
-                  Get credentials here <HiExternalLink className="inline h-4 w-4" />
-                </a>
+                Connect your Gmail account to start receiving and responding to emails through your AI chatbot.
               </p>
               <Button
                 type="button"
-                onClick={() => setShowOAuthModal(true)}
-                variant="outline"
-                className="w-full"
+                onClick={handleGmailConnect}
+                disabled={connectingGmail}
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
               >
-                Setup Gmail OAuth
+                <HiMail className="mr-2 h-5 w-5" />
+                {connectingGmail ? 'Connecting...' : 'Connect Gmail Account'}
               </Button>
             </div>
           )}
@@ -484,86 +515,6 @@ const GmailChannelSettings = ({ channel, onSuccess }) => {
         )}
       </form>
 
-      {/* OAuth Setup Modal */}
-      <Modal
-        isOpen={showOAuthModal}
-        onClose={() => setShowOAuthModal(false)}
-        title="Setup Gmail OAuth"
-        size="lg"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Enter your Google OAuth credentials to connect Gmail. You can get these from the 
-            <a 
-              href="https://console.developers.google.com/apis/credentials" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="ml-1 text-indigo-600 hover:text-indigo-500"
-            >
-              Google Developers Console <HiExternalLink className="inline h-4 w-4" />
-            </a>
-          </p>
-          
-          <div>
-            <label htmlFor="oauth_client_id" className="block text-sm font-medium text-gray-700">
-              Google Client ID
-            </label>
-            <input
-              type="text"
-              id="oauth_client_id"
-              value={oauthConfig.client_id}
-              onChange={(e) => setOauthConfig({ ...oauthConfig, client_id: e.target.value })}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="Enter Google OAuth Client ID"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="oauth_client_secret" className="block text-sm font-medium text-gray-700">
-              Google Client Secret
-            </label>
-            <input
-              type="password"
-              id="oauth_client_secret"
-              value={oauthConfig.client_secret}
-              onChange={(e) => setOauthConfig({ ...oauthConfig, client_secret: e.target.value })}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="Enter Google OAuth Client Secret"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="oauth_redirect_uri" className="block text-sm font-medium text-gray-700">
-              Redirect URI
-            </label>
-            <input
-              type="text"
-              id="oauth_redirect_uri"
-              value={oauthConfig.redirect_uri}
-              onChange={(e) => setOauthConfig({ ...oauthConfig, redirect_uri: e.target.value })}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Add this URI to your Google OAuth app's authorized redirect URIs
-            </p>
-          </div>
-          
-          <div className="flex justify-end space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowOAuthModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleOAuthSetup}
-              disabled={loading}
-            >
-              {loading ? 'Connecting...' : 'Connect Gmail'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
 
       {/* Gmail Search Modal - placeholder */}
       <Modal
