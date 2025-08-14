@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, EmailStr
+import json
 
 from app.core.database.dependencies import get_db
 from app.api.auth.dependencies import get_current_client
@@ -222,7 +223,7 @@ async def create_gmail_channel(
                 "name": channel.name,
                 "platform": channel.platform,
                 "email_address": channel.platform_identifier,
-                "webhook_url": f"/api/channel/gmail/webhook/pubsub",
+                "webhook_url": f"/api/gmail/pubsub",
                 "active": channel.active
             }
         }
@@ -467,7 +468,7 @@ async def setup_gmail_watch(
                 "status": "success",
                 "watch_result": watch_result,
                 "topic": topic_name,
-                "webhook_url": "https://customate-ai-1.onrender.com/api/channel/gmail/webhook/pubsub"
+                "webhook_url": "https://customate-backend.onrender.com/api/gmail/pubsub"
             }
             
         except Exception as e:
@@ -485,6 +486,70 @@ async def setup_gmail_watch(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gmail watch setup error: {str(e)}"
         )
+
+@router.post("/pubsub")
+async def gmail_pubsub_webhook_direct(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Direct Gmail push notification webhook from Google Cloud Pub/Sub.
+    This is the endpoint configured in Gmail Watch: /api/gmail/pubsub
+    """
+    try:
+        # Get request body
+        body = await request.body()
+        
+        # Parse JSON quickly
+        try:
+            payload = json.loads(body.decode('utf-8'))
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in Gmail webhook: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid JSON payload"
+            )
+        
+        # IMMEDIATE ACKNOWLEDGMENT - Return 200 within seconds to prevent Google retries
+        import asyncio
+        
+        # Extract message ID for deduplication
+        message = payload.get('message', {})
+        message_id = message.get('messageId', 'unknown')
+        publish_time = message.get('publishTime', 'unknown')
+        
+        logger.info(f"📨 Gmail webhook (direct) - MessageID: {message_id} PublishTime: {publish_time}")
+        
+        # Schedule background processing (fire-and-forget)
+        from app.services.channel.gmail_pubsub_service import GmailPubSubService
+        
+        async def process_background():
+            try:
+                pubsub_service = GmailPubSubService(db)
+                result = await pubsub_service.process_pubsub_notification(payload)
+                if result.get("status") == "success":
+                    logger.info(f"✅ Gmail notification processed: {message_id}")
+                else:
+                    logger.warning(f"⚠️ Gmail processing result: {result}")
+            except Exception as e:
+                logger.error(f"❌ Gmail background processing failed: {e}")
+        
+        asyncio.create_task(process_background())
+        
+        # IMMEDIATE RESPONSE to Google within 2-3 seconds
+        return {
+            "status": "acknowledged", 
+            "message_id": message_id,
+            "processing": "background"
+        }
+    
+    except HTTPException:
+        raise
+        
+    except Exception as e:
+        logger.error(f"Error in Gmail webhook (direct): {e}")
+        # Always return 200 to avoid Google retries
+        return {"status": "error", "error": str(e)}
 
 @router.get("/{channel_id}/status")
 async def get_gmail_channel_status(
@@ -523,7 +588,7 @@ async def get_gmail_channel_status(
             "pubsub_config": {
                 "project_id": settings.GOOGLE_CLOUD_PROJECT_ID,
                 "topic": settings.GMAIL_PUBSUB_TOPIC,
-                "webhook_url": "https://customate-ai-1.onrender.com/api/channel/gmail/webhook/pubsub",
+                "webhook_url": "https://customate-backend.onrender.com/api/gmail/pubsub",
                 "full_topic_name": f"projects/{settings.GOOGLE_CLOUD_PROJECT_ID}/topics/{settings.GMAIL_PUBSUB_TOPIC}"
             }
         }

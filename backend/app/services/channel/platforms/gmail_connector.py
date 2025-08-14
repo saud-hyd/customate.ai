@@ -210,6 +210,7 @@ class GmailConnector(ChannelConnector):
             subject = metadata.get('subject', 'Re: Automated Response')
             to_email = metadata.get('to_email')
             thread_id = metadata.get('thread_id')
+            original_message_id = metadata.get('original_message_id')
             
             logger.info(f"Send message called with conversation_id: {conversation_id}")
             
@@ -235,16 +236,25 @@ class GmailConnector(ChannelConnector):
             
             # Create email message
             if message_type == "text":
-                email_msg = self._create_text_email(to_email, subject, content, thread_id)
+                email_msg = self._create_text_email(to_email, subject, content, thread_id, original_message_id)
             else:
                 raise Exception(f"Unsupported message type: {message_type}")
             
-            # Send email
+            # Send email with proper threading for replies
+            send_body = {'raw': email_msg}
+            
+            # CRITICAL: Include threadId to make this a proper reply, not a new email
+            if thread_id:
+                send_body['threadId'] = thread_id
+                logger.info(f"Sending reply in Gmail thread: {thread_id}")
+            else:
+                logger.info("Sending new Gmail email (no thread)")
+            
             result = await asyncio.get_event_loop().run_in_executor(
                 self.executor,
                 lambda: self.service.users().messages().send(
                     userId='me',
-                    body={'raw': email_msg}
+                    body=send_body
                 ).execute()
             )
             
@@ -382,6 +392,7 @@ class GmailConnector(ChannelConnector):
             subject = message_details['subject']
             content = message_details['content']
             thread_id = message_details['thread_id']
+            original_message_id = message_details['message_id']  # For proper email threading
             
             logger.info(f"📧 Processing email from {sender_email} - Subject: {subject[:50]}...")
             
@@ -532,6 +543,7 @@ class GmailConnector(ChannelConnector):
                     "subject": f"Re: {subject}",
                     "to_email": sender_email,
                     "thread_id": thread_id,
+                    "original_message_id": original_message_id,  # For proper email threading headers
                     "relevance_analysis": serializable_analysis,
                     "knowledge_used": knowledge_used,
                     "filter_passed": True
@@ -568,6 +580,7 @@ class GmailConnector(ChannelConnector):
             return {
                 'id': message_id,
                 'thread_id': message['threadId'],
+                'message_id': headers.get('message-id', ''),  # For proper email threading
                 'from': headers.get('from', ''),
                 'to': headers.get('to', ''),
                 'subject': headers.get('subject', ''),
@@ -614,9 +627,10 @@ class GmailConnector(ChannelConnector):
         to_email: str, 
         subject: str, 
         content: str, 
-        thread_id: Optional[str] = None
+        thread_id: Optional[str] = None,
+        original_message_id: Optional[str] = None
     ) -> str:
-        """Create a text email message in Gmail API format."""
+        """Create a text email message in Gmail API format with proper threading."""
         
         message = MIMEText(content)
         message['to'] = to_email
@@ -627,10 +641,17 @@ class GmailConnector(ChannelConnector):
         if signature:
             message.set_payload(content + '\n\n' + signature)
         
-        # Add threading headers if replying
-        if thread_id:
+        # Add proper email threading headers for replies
+        if original_message_id:
+            # Use the original message's Message-ID for proper email threading
+            message['In-Reply-To'] = original_message_id
+            message['References'] = original_message_id
+            logger.info(f"Adding email threading headers for reply to: {original_message_id}")
+        elif thread_id:
+            # Fallback to thread_id if original_message_id not available
             message['In-Reply-To'] = thread_id
             message['References'] = thread_id
+            logger.info(f"Using Gmail thread ID for email headers: {thread_id}")
         
         return base64.urlsafe_b64encode(message.as_bytes()).decode()
     
