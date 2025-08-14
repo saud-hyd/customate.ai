@@ -39,7 +39,7 @@ async def reset_gmail_channels():
         
         for channel in gmail_channels:
             try:
-                print(f"\n🔄 Resetting channel {channel.channel_id} ({channel.platform_identifier})")
+                print(f"\nResetting channel {channel.channel_id} ({channel.platform_identifier})")
                 
                 # Create Gmail connector to get current profile
                 connector = ChannelConnectorFactory.create_connector(db, channel)
@@ -63,7 +63,7 @@ async def reset_gmail_channels():
                     
                     current_history_id = profile.get('historyId')
                     if current_history_id:
-                        print(f"📧 Current history ID: {current_history_id}")
+                        print(f"Current history ID: {current_history_id}")
                         
                         # Update channel config with current history ID as baseline
                         from app.services.channel.channel_service import ChannelService
@@ -79,30 +79,30 @@ async def reset_gmail_channels():
                             {"config": updated_config}
                         )
                         
-                        print(f"✅ Channel {channel.channel_id} reset with baseline history ID {current_history_id}")
-                        print("✅ Only emails received AFTER this reset will be processed")
+                        print(f"SUCCESS: Channel {channel.channel_id} reset with baseline history ID {current_history_id}")
+                        print("SUCCESS: Only emails received AFTER this reset will be processed")
                     else:
-                        print(f"⚠️ Could not get current history ID for channel {channel.channel_id}")
+                        print(f"WARNING: Could not get current history ID for channel {channel.channel_id}")
                         
                 except Exception as e:
-                    print(f"❌ Error getting profile for channel {channel.channel_id}: {e}")
+                    print(f"ERROR: Error getting profile for channel {channel.channel_id}: {e}")
                     continue
                     
             except Exception as e:
-                print(f"❌ Error resetting channel {channel.channel_id}: {e}")
+                print(f"ERROR: Error resetting channel {channel.channel_id}: {e}")
                 continue
         
-        print(f"\n✅ Gmail channel reset complete!")
-        print("📧 All Gmail channels are now configured to only process NEW emails")
-        print("🚫 Historical emails will be ignored to prevent auto-reply spam")
+        print(f"\nSUCCESS: Gmail channel reset complete!")
+        print("All Gmail channels are now configured to only process NEW emails")
+        print("Historical emails will be ignored to prevent auto-reply spam")
         
     except Exception as e:
-        print(f"❌ Error during Gmail channel reset: {e}")
+        print(f"ERROR: Error during Gmail channel reset: {e}")
     finally:
         db.close()
 
 if __name__ == "__main__":
-    print("🔄 Starting Gmail channel reset to prevent historical email processing...")
+    print("Starting Gmail channel reset to prevent historical email processing...")
     print("This will update all Gmail channels to only process emails received after this reset.")
     
     confirmation = input("\nProceed with Gmail channel reset? (y/N): ")

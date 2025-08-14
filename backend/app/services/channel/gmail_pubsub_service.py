@@ -4,6 +4,7 @@ import json
 import base64
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from google.cloud import pubsub_v1
 from googleapiclient.discovery import build
@@ -262,7 +263,23 @@ class GmailPubSubService:
             logger.info(f"📧 Channel created at: {channel.created_at}")
             logger.info(f"📧 Last processed history ID: {last_processed_history_id}")
             
-            # CRITICAL FIX: For new channels, use current history ID to avoid processing historical emails
+            # CRITICAL FIX: For new channels or reset channels, avoid processing historical emails
+            channel_config = channel.config or {}
+            
+            # Check if this channel was reset to ignore historical emails
+            if channel_config.get('reset_at') or channel_config.get('skip_historical'):
+                reset_timestamp = float(channel_config.get('reset_at', 0))
+                current_timestamp = datetime.utcnow().timestamp()
+                
+                logger.info(f"🚫 RESET CHANNEL DETECTED - Channel reset at: {reset_timestamp}")
+                logger.info("🚫 Skipping historical emails to prevent auto-reply spam")
+                
+                # Store current history ID as the baseline to start fresh
+                await self._update_last_history_id(channel, history_id)
+                
+                # Return empty list - don't process any historical messages
+                return []
+            
             if not last_processed_history_id:
                 logger.info(f"🚫 NEW CHANNEL DETECTED - Only processing emails from current history ID: {history_id}")
                 logger.info("🚫 Skipping historical emails to prevent auto-reply spam")
