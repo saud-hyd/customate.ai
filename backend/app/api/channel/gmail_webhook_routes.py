@@ -20,56 +20,111 @@ async def gmail_pubsub_webhook(
     """
     Handle Gmail push notifications from Google Cloud Pub/Sub.
     
-    This endpoint receives real-time notifications when emails arrive
-    and triggers the AI response processing.
+    CRITICAL: Immediately acknowledge to prevent Google's duplicate retries.
+    Process emails in background to avoid timeout issues.
     """
     try:
-        # Log request details for debugging
-        headers = dict(request.headers)
-        logger.info(f"Gmail Pub/Sub webhook received - Headers: {headers}")
-        
         # Get request body
         body = await request.body()
-        logger.info(f"Gmail Pub/Sub webhook body length: {len(body)} bytes")
         
-        # Parse JSON
+        # Parse JSON quickly
         try:
             payload = json.loads(body.decode('utf-8'))
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in Pub/Sub webhook: {e}")
-            logger.error(f"Raw body: {body[:500]}...")  # Log first 500 chars
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid JSON payload"
             )
         
-        logger.info(f"Received Gmail Pub/Sub notification: {payload}")
+        # IMMEDIATE ACKNOWLEDGMENT - Return 200 within seconds to prevent Google retries
+        import asyncio
         
-        # Process the notification
-        pubsub_service = GmailPubSubService(db)
-        result = await pubsub_service.process_pubsub_notification(payload)
+        # Extract message ID for deduplication
+        message = payload.get('message', {})
+        message_id = message.get('messageId', 'unknown')
+        publish_time = message.get('publishTime', 'unknown')
         
-        if result.get("status") == "success":
-            logger.info(f"Successfully processed Gmail notification: {result}")
-            return {"status": "success", "processed": True}
-            
-        elif result.get("status") == "no_data":
-            # This is normal - sometimes we get empty notifications
-            logger.debug("Received empty Pub/Sub notification")
-            return {"status": "success", "processed": False}
-            
-        else:
-            # Log the issue but still return 200 to avoid Pub/Sub retries
-            logger.warning(f"Gmail notification processing issue: {result}")
-            return {"status": "warning", "result": result}
+        logger.info(f"📨 Gmail webhook received - MessageID: {message_id} PublishTime: {publish_time}")
+        
+        # Schedule background processing (fire-and-forget)
+        asyncio.create_task(
+            process_gmail_notification_background(payload, message_id, publish_time)
+        )
+        
+        # IMMEDIATE RESPONSE to Google within 2-3 seconds
+        return {
+            "status": "acknowledged", 
+            "message_id": message_id,
+            "processing": "background"
+        }
     
     except HTTPException:
         raise
         
     except Exception as e:
-        logger.error(f"Error processing Gmail Pub/Sub webhook: {e}")
-        # Return 200 to avoid Pub/Sub retries for application errors
+        logger.error(f"Error in Gmail Pub/Sub webhook: {e}")
+        # Always return 200 to avoid Google retries
         return {"status": "error", "error": str(e)}
+
+
+# Global set to track processed message IDs and prevent duplicates
+_processed_messages = set()
+_processing_messages = set()
+
+async def process_gmail_notification_background(
+    payload: dict, 
+    message_id: str, 
+    publish_time: str
+):
+    """
+    Background processing of Gmail notifications with duplicate prevention.
+    """
+    from app.core.database.dependencies import get_db_session
+    
+    # Prevent duplicate processing
+    global _processed_messages, _processing_messages
+    
+    if message_id in _processed_messages:
+        logger.info(f"⚠️ Skipping already processed message: {message_id}")
+        return
+    
+    if message_id in _processing_messages:
+        logger.info(f"⚠️ Message already being processed: {message_id}")
+        return
+    
+    _processing_messages.add(message_id)
+    
+    try:
+        logger.info(f"🔄 Background processing Gmail notification: {message_id}")
+        
+        # Get database session for background processing
+        async with get_db_session() as db:
+            pubsub_service = GmailPubSubService(db)
+            result = await pubsub_service.process_pubsub_notification(payload)
+            
+            if result.get("status") == "success":
+                logger.info(f"✅ Successfully processed Gmail notification: {message_id}")
+                _processed_messages.add(message_id)
+                
+                # Cleanup old processed messages to prevent memory leak (keep last 1000)
+                if len(_processed_messages) > 1000:
+                    old_messages = list(_processed_messages)[:500]
+                    for old_msg in old_messages:
+                        _processed_messages.remove(old_msg)
+                        
+            elif result.get("status") == "no_data":
+                logger.debug(f"📭 Empty Gmail notification: {message_id}")
+                _processed_messages.add(message_id)
+                
+            else:
+                logger.warning(f"⚠️ Gmail notification processing issue for {message_id}: {result}")
+    
+    except Exception as e:
+        logger.error(f"❌ Error in background Gmail processing for {message_id}: {e}")
+        
+    finally:
+        _processing_messages.discard(message_id)
 
 @router.get("/pubsub")
 async def gmail_pubsub_verification(request: Request):

@@ -353,12 +353,29 @@ class GmailConnector(ChannelConnector):
             logger.error(f"Error getting new messages: {e}")
             return []
     
+    # Class-level set to track processed message IDs to prevent duplicate processing
+    _processed_message_ids = set()
+    
     async def _process_email_message(self, message_id: str) -> None:
-        """Process a single email message for chatbot response."""
+        """Process a single email message for chatbot response with duplicate prevention."""
+        
+        # Prevent duplicate processing of the same message ID
+        if message_id in self._processed_message_ids:
+            logger.info(f"🚫 Skipping already processed email message: {message_id}")
+            return
+            
+        self._processed_message_ids.add(message_id)
+        
+        # Clean up old processed IDs to prevent memory leak (keep last 1000)
+        if len(self._processed_message_ids) > 1000:
+            old_ids = list(self._processed_message_ids)[:500]
+            for old_id in old_ids:
+                self._processed_message_ids.remove(old_id)
         
         try:
             message_details = await self._get_message_details(message_id)
             if not message_details:
+                logger.warning(f"📭 No message details found for {message_id}")
                 return
             
             sender_email = message_details['from']
@@ -366,8 +383,11 @@ class GmailConnector(ChannelConnector):
             content = message_details['content']
             thread_id = message_details['thread_id']
             
+            logger.info(f"📧 Processing email from {sender_email} - Subject: {subject[:50]}...")
+            
             # Check if this is an inbound message (not sent by us)
             if sender_email == self.channel.platform_identifier:
+                logger.info(f"🚫 Skipping our own message from {sender_email}")
                 return  # Skip our own messages
             
             # Get or create conversation

@@ -77,13 +77,13 @@ def create_api_router() -> APIRouter:
             prefix="/demo",
             tags=["demo"]
         )
-        print("✅ Demo routes registered")
+        print("OK Demo routes registered")
     else:
-        print("⚠️ Demo routes not available")
+        print("Warning: Demo routes not available")
     
     # Widget routes (enhanced with streaming support)
     if WIDGET_AVAILABLE:
-        print("✅ Registering widget routes...")
+        print("OK Registering widget routes...")
         
         # Main widget API routes
         api_router.include_router(
@@ -99,9 +99,9 @@ def create_api_router() -> APIRouter:
             tags=["widget-static"]
         )
         
-        print("✅ Widget routes registered successfully")
+        print("OK Widget routes registered successfully")
     else:
-        print("⚠️ Widget routes not available - widget functionality will be limited")
+        print("Warning: Widget routes not available - widget functionality will be limited")
     
     # Integration routes (if available)
     if INTEGRATIONS_AVAILABLE:
@@ -110,7 +110,7 @@ def create_api_router() -> APIRouter:
             prefix="/integrations",
             tags=["integrations"]
         )
-        print("✅ Integration routes registered")
+        print("OK Integration routes registered")
     
     return api_router
 
@@ -145,7 +145,7 @@ def setup_widget_cors(app):
         expose_headers=["Content-Type"],
     )
     
-    print("✅ Widget CORS middleware configured")
+    print("OK Widget CORS middleware configured")
 
 # Create the main API router instance
 api_router = create_api_router()
@@ -179,6 +179,6 @@ if WIDGET_AVAILABLE:
             }
         }
 
-print(f"✅ API Router configured with {len(api_router.routes)} total routes")
+print(f"OK API Router configured with {len(api_router.routes)} total routes")
 print(f"   - Widget routes: {'Available' if WIDGET_AVAILABLE else 'Not Available'}")
 print(f"   - Integration routes: {'Available' if INTEGRATIONS_AVAILABLE else 'Not Available'}")

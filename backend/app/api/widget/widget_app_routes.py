@@ -38,7 +38,7 @@ def find_widget_dist_path():
         try:
             resolved_path = path.resolve()
             if resolved_path.exists() and (resolved_path / "index.html").exists():
-                logger.info(f"✅ Found widget files at: {resolved_path}")
+                logger.info(f"OK Found widget files at: {resolved_path}")
                 return resolved_path
         except Exception as e:
             logger.debug(f"Failed to resolve path {path}: {e}")

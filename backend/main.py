@@ -45,20 +45,20 @@ from app.api.knowledge import (
 try:
     from app.api.widget import router as widget_router
     WIDGET_ROUTES_AVAILABLE = True
-    logger.info("✅ Widget router imported successfully")
+    logger.info("OK Widget router imported successfully")
 except ImportError as e:
     WIDGET_ROUTES_AVAILABLE = False
-    logger.error(f"❌ Failed to import widget router: {e}")
+    logger.error(f"ERROR Failed to import widget router: {e}")
 
 
 # Import widget services for initialization
 try:
     from app.services.widget.widget_chat_service import WidgetChatService
     WIDGET_SERVICE_AVAILABLE = True
-    logger.info("✅ Widget chat service imported successfully")
+    logger.info("OK Widget chat service imported successfully")
 except ImportError as e:
     WIDGET_SERVICE_AVAILABLE = False
-    logger.warning(f"⚠️ Widget chat service not available: {e}")
+    logger.warning(f"WARNING Widget chat service not available: {e}")
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -115,21 +115,21 @@ def get_allowed_origins():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Run before the application starts
-    logger.info(f"🚀 Starting application in {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'} mode")
-    logger.info(f"📡 Backend URL: {BACKEND_URL}")
+    logger.info(f"Starting application in {'PRODUCTION' if IS_PRODUCTION else 'DEVELOPMENT'} mode")
+    logger.info(f"Antenna Backend URL: {BACKEND_URL}")
     
     # Initialize widget services
     if WIDGET_SERVICE_AVAILABLE:
-        logger.info("🚀 Widget chat service available for streaming responses")
+        logger.info("Starting Widget chat service available for streaming responses")
     else:
-        logger.warning("⚠️ Widget chat service not available - using basic widget functionality")
+        logger.warning("WARNING Widget chat service not available - using basic widget functionality")
     
     
     crawler_task = asyncio.create_task(run_crawler_worker())
-    logger.info("🕷️ Started crawler worker in background")
+    logger.info("Spider Started crawler worker in background")
     yield
     # Shutdown: Run when the application is shutting down
-    logger.info("🛑 Shutting down crawler worker")
+    logger.info("STOP Shutting down crawler worker")
     crawler_task.cancel()
     try:
         await crawler_task
@@ -163,7 +163,7 @@ app.add_middleware(SubscriptionLimitMiddleware)
 app.add_middleware(AnalyticsMiddleware)
 
 # Include routes with proper error handling
-logger.info("📚 Registering API routes...")
+logger.info("Books Registering API routes...")
 
 app.include_router(auth_routes.router, prefix="/api")
 app.include_router(client_routes.router, prefix="/api")
@@ -180,12 +180,12 @@ app.include_router(integration_routes.router, prefix="/api")
 if WIDGET_ROUTES_AVAILABLE:
     try:
         app.include_router(widget_router, prefix="/api/widget", tags=["widget"])
-        logger.info("✅ Widget routes registered successfully at /api/widget/*")
+        logger.info("OK Widget routes registered successfully at /api/widget/*")
     except Exception as e:
-        logger.error(f"❌ Failed to register widget routes: {e}")
+        logger.error(f"ERROR Failed to register widget routes: {e}")
         WIDGET_ROUTES_AVAILABLE = False
 else:
-    logger.error("❌ Widget routes not available - widget functionality will be limited")
+    logger.error("ERROR Widget routes not available - widget functionality will be limited")
     
     # Create fallback widget health endpoint
     @app.get("/api/widget/health")
@@ -204,13 +204,33 @@ app.include_router(document_router, prefix="/api/knowledge/documents")
 app.include_router(collection_router, prefix="/api/knowledge") 
 app.include_router(crawl_router, prefix="/api/knowledge")
 app.include_router(enhanced_router, prefix="/api/knowledge")
+
+# Gmail routes with error handling - Register BEFORE general channel routes to avoid conflicts
+try:
+    logger.info(f"DEBUG About to register Gmail router with {len(gmail_router.routes)} routes")
+    app.include_router(gmail_router, prefix="/api")
+    logger.info("OK Gmail routes registered successfully")
+    
+    # Verify routes were actually added
+    gmail_routes_found = [route for route in app.routes if hasattr(route, 'path') and 'gmail' in route.path]
+    logger.info(f"DEBUG Found {len(gmail_routes_found)} Gmail routes in app after registration")
+    
+except Exception as e:
+    logger.error(f"ERROR Failed to register Gmail routes: {e}")
+    import traceback
+    logger.error(f"ERROR Traceback: {traceback.format_exc()}")
+
+try:
+    app.include_router(gmail_webhook_router, prefix="/api")
+    logger.info("OK Gmail webhook routes registered successfully")
+except Exception as e:
+    logger.error(f"ERROR Failed to register Gmail webhook routes: {e}")
+
 app.include_router(channel_router, prefix="/api")
 app.include_router(webhook_router, prefix="/api")
-app.include_router(gmail_router, prefix="/api")
-app.include_router(gmail_webhook_router, prefix="/api")
 app.include_router(demo_routes.router, prefix="/api/demo")
 
-logger.info("✅ All routes registered successfully")
+logger.info("OK All routes registered successfully")
 
 # Enhanced debugging endpoints
 @app.get("/debug/routes")
@@ -278,7 +298,7 @@ async def log_requests(request: Request, call_next):
         
         logger.log(
             getattr(logging, log_level),
-            f"🔧 Widget Request: {request.method} {request.url.path} "
+            f"Tools Widget Request: {request.method} {request.url.path} "
             f"- Status: {response.status_code} "
             f"- Process Time: {process_time:.4f}s "
             f"- Origin: {request.headers.get('origin', 'N/A')} "
@@ -287,7 +307,7 @@ async def log_requests(request: Request, call_next):
     else:
         # Standard request logging
         logger.debug(
-            f"📡 Request: {request.method} {request.url.path} "
+            f"Antenna Request: {request.method} {request.url.path} "
             f"- Status: {response.status_code} "
             f"- Process Time: {process_time:.4f}s"
         )
@@ -373,10 +393,10 @@ if __name__ == "__main__":
     import uvicorn
     
     # Log startup information
-    logger.info("🚀 Starting Customate.ai Backend Server")
-    logger.info(f"📡 Environment: {os.environ.get('ENVIRONMENT', 'development')}")
-    logger.info(f"🔗 Backend URL: {BACKEND_URL}")
-    logger.info(f"🔧 Widget Routes: {'Available' if WIDGET_ROUTES_AVAILABLE else 'NOT AVAILABLE'}")
-    logger.info(f"🌊 Widget Service: {'Available' if WIDGET_SERVICE_AVAILABLE else 'Limited'}")
+    logger.info("Starting Customate.ai Backend Server")
+    logger.info(f"Antenna Environment: {os.environ.get('ENVIRONMENT', 'development')}")
+    logger.info(f"Link Backend URL: {BACKEND_URL}")
+    logger.info(f"Tools Widget Routes: {'Available' if WIDGET_ROUTES_AVAILABLE else 'NOT AVAILABLE'}")
+    logger.info(f"Wave Widget Service: {'Available' if WIDGET_SERVICE_AVAILABLE else 'Limited'}")
     
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
