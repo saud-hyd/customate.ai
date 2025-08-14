@@ -42,23 +42,23 @@ const channelService = {
 
   // Gmail OAuth methods
   initiateGmailOAuth: async (oauthConfig) => {
-    return api.post('/channel/gmail/oauth/authorize', oauthConfig);
+    return api.post('/gmail/oauth/authorize', oauthConfig);
   },
 
   exchangeGmailToken: async (code, state) => {
-    return api.post('/channel/gmail/oauth/callback', { code, state });
+    return api.post('/gmail/oauth/callback', { code, state });
   },
 
   createGmailChannel: async (channelData) => {
-    return api.post('/channel/gmail/create', channelData);
+    return api.post('/gmail/create', channelData);
   },
 
   refreshGmailTokens: async (channelId) => {
-    return api.post(`/channel/gmail/${channelId}/refresh-tokens`);
+    return api.post(`/gmail/${channelId}/refresh-tokens`);
   },
 
   searchGmailEmails: async (channelId, searchData) => {
-    return api.post(`/channel/gmail/${channelId}/search`, searchData);
+    return api.post(`/gmail/${channelId}/search`, searchData);
   },
 
   // Get conversations for a channel

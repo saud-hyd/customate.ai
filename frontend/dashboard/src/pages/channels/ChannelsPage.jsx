@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiPlus, HiOutlineRefresh } from 'react-icons/hi';
+import { useSearchParams } from 'react-router-dom';
+import { HiPlus, HiOutlineRefresh, HiCheck } from 'react-icons/hi';
 import ChannelList from '../../components/channels/ChannelList';
 import ChannelDetailView from '../../components/channels/ChannelDetailView';
 import ChannelConnectorPanel from '../../components/channels/ChannelConnectorPanel';
@@ -12,14 +13,25 @@ import ErrorAlert from '../../components/common/ErrorAlert';
 
 const ChannelsPage = () => {
   const { t } = useTranslation(['channels', 'common']);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [channels, setChannels] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [view, setView] = useState('list'); // 'list', 'detail', 'connect'
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showGmailSuccess, setShowGmailSuccess] = useState(false);
 
   useEffect(() => {
+    // Check for Gmail success parameter
+    if (searchParams.get('gmail') === 'connected') {
+      setShowGmailSuccess(true);
+      // Remove the parameter from URL
+      setSearchParams({});
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowGmailSuccess(false), 5000);
+    }
+    
     const fetchChannels = async () => {
       try {
         setIsLoading(true);
@@ -101,6 +113,25 @@ const ChannelsPage = () => {
             )}
           </div>
         </div>
+
+        {/* Gmail Success Notification */}
+        {showGmailSuccess && (
+          <div className="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <HiCheck className="h-5 w-5 text-green-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">
+                  Gmail Connected Successfully!
+                </h3>
+                <div className="mt-2 text-sm text-green-700">
+                  <p>Your Gmail account has been connected and is ready to receive and respond to emails through your AI chatbot.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">

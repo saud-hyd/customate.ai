@@ -64,6 +64,27 @@ class GmailPubSubService:
             logger.info(f"Gmail watch set up for channel {channel.channel_id}")
             logger.info(f"Watch response: {watch_response}")
             
+            # CRITICAL: Set initial history ID baseline to prevent processing historical emails
+            current_history_id = watch_response.get('historyId')
+            if current_history_id:
+                logger.info(f"🔄 Setting baseline history ID {current_history_id} for new channel {channel.channel_id}")
+                
+                # Update channel config with current history ID as baseline
+                from app.services.channel.channel_service import ChannelService
+                channel_service = ChannelService(self.db)
+                current_config = channel.config or {}
+                updated_config = current_config.copy()
+                updated_config['last_history_id'] = current_history_id
+                updated_config['watch_setup_at'] = watch_response.get('expiration', '')
+                
+                channel_service.update_channel(
+                    channel.client_id,
+                    channel.channel_id,
+                    {"config": updated_config}
+                )
+                
+                logger.info(f"✅ Baseline history ID saved - future emails will be processed from ID {current_history_id}")
+            
             return watch_response
             
         except Exception as e:
@@ -219,14 +240,15 @@ class GmailPubSubService:
     
     async def _get_new_messages_from_history(self, connector, channel, history_id: str) -> list:
         """
-        Get new message IDs from Gmail history.
+        Get new message IDs from Gmail history, only processing emails received AFTER channel creation.
         
         Args:
             connector: Gmail connector instance
+            channel: Channel entity with created_at timestamp
             history_id: Starting history ID
             
         Returns:
-            List of new message IDs
+            List of new message IDs (only emails received after channel connection)
         """
         try:
             if not connector.service:
@@ -236,13 +258,24 @@ class GmailPubSubService:
             # Get the last processed history ID from channel config
             last_processed_history_id = channel.config.get('last_history_id') if channel.config else None
             
-            logger.error(f"🔍 HISTORY DEBUG - Current notification history ID: {history_id}")
-            logger.error(f"🔍 HISTORY DEBUG - Last processed history ID: {last_processed_history_id}")
+            logger.info(f"📧 Processing Gmail history - Current ID: {history_id}")
+            logger.info(f"📧 Channel created at: {channel.created_at}")
+            logger.info(f"📧 Last processed history ID: {last_processed_history_id}")
             
-            # If we have a last processed ID, use it as the starting point
-            start_history_id = last_processed_history_id if last_processed_history_id else str(int(history_id) - 100)
+            # CRITICAL FIX: For new channels, use current history ID to avoid processing historical emails
+            if not last_processed_history_id:
+                logger.info(f"🚫 NEW CHANNEL DETECTED - Only processing emails from current history ID: {history_id}")
+                logger.info("🚫 Skipping historical emails to prevent auto-reply spam")
+                
+                # Store current history ID as the baseline to start fresh
+                await self._update_last_history_id(channel, history_id)
+                
+                # Return empty list - don't process any historical messages
+                return []
             
-            logger.error(f"🔍 HISTORY DEBUG - Using start history ID: {start_history_id}")
+            # For existing channels, process messages since last processed ID
+            start_history_id = last_processed_history_id
+            logger.info(f"📧 Existing channel - Processing from history ID: {start_history_id}")
             
             # Get history since the last processed history ID
             history_response = connector.service.users().history().list(
@@ -252,14 +285,37 @@ class GmailPubSubService:
             ).execute()
             
             message_ids = []
+            channel_creation_timestamp = int(channel.created_at.timestamp() * 1000)  # Convert to milliseconds
+            
             for history_record in history_response.get('history', []):
                 for message_added in history_record.get('messagesAdded', []):
                     message = message_added.get('message', {})
                     message_id = message.get('id')
+                    
                     if message_id:
-                        message_ids.append(message_id)
+                        # Double-check: Get message timestamp to ensure it's after channel creation
+                        try:
+                            message_details = connector.service.users().messages().get(
+                                userId='me', 
+                                id=message_id,
+                                format='minimal'
+                            ).execute()
+                            
+                            message_timestamp = int(message_details.get('internalDate', 0))
+                            
+                            # Only process emails received AFTER channel was created
+                            if message_timestamp > channel_creation_timestamp:
+                                message_ids.append(message_id)
+                                logger.info(f"✅ Including message {message_id} (received after channel creation)")
+                            else:
+                                logger.info(f"🚫 Skipping historical message {message_id} (received before channel creation)")
+                                
+                        except Exception as e:
+                            logger.warning(f"Could not verify timestamp for message {message_id}: {e}")
+                            # If we can't verify timestamp, err on the side of caution and skip
+                            continue
             
-            logger.debug(f"Found {len(message_ids)} new messages from history")
+            logger.info(f"📧 Found {len(message_ids)} new messages from history (post-channel-creation only)")
             return message_ids
             
         except Exception as e:

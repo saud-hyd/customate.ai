@@ -24,13 +24,39 @@ const GmailCallbackPage = () => {
 
       // Check for OAuth errors
       if (error) {
-        setError(`OAuth error: ${error}`);
+        const errorMessage = `OAuth error: ${error}`;
+        
+        // Handle errors for popup flow
+        if (window.opener) {
+          const errorData = {
+            status: 'error',
+            error: errorMessage
+          };
+          window.opener.postMessage(errorData, window.location.origin);
+          window.close();
+          return;
+        }
+        
+        setError(errorMessage);
         setLoading(false);
         return;
       }
 
       if (!code || !state) {
-        setError('Missing authorization code or state parameter');
+        const errorMessage = 'Missing authorization code or state parameter';
+        
+        // Handle errors for popup flow
+        if (window.opener) {
+          const errorData = {
+            status: 'error',
+            error: errorMessage
+          };
+          window.opener.postMessage(errorData, window.location.origin);
+          window.close();
+          return;
+        }
+        
+        setError(errorMessage);
         setLoading(false);
         return;
       }
@@ -41,14 +67,29 @@ const GmailCallbackPage = () => {
         
         setUserInfo(result.data.user_info);
         
-        // Create Gmail channel
+        // Check if this is a popup OAuth flow
+        if (window.opener) {
+          // Send result to parent window for popup flow
+          const messageData = {
+            status: 'success',
+            tokens: {
+              access_token: result.data.access_token,
+              refresh_token: result.data.refresh_token
+            },
+            user_info: result.data.user_info
+          };
+          
+          window.opener.postMessage(messageData, window.location.origin);
+          window.close();
+          return;
+        }
+        
+        // Traditional redirect flow - create channel directly
         const channelResult = await channelService.createGmailChannel({
           name: `Gmail - ${result.data.user_info.email}`,
           email_address: result.data.user_info.email,
-          access_token: result.data.tokens.access_token,
-          refresh_token: result.data.tokens.refresh_token,
-          client_id: result.data.tokens.client_id,
-          client_secret: result.data.tokens.client_secret,
+          access_token: result.data.access_token,
+          refresh_token: result.data.refresh_token,
           config: {
             auto_reply: true,
             signature: '',
@@ -62,6 +103,18 @@ const GmailCallbackPage = () => {
 
       } catch (err) {
         console.error('Gmail OAuth callback error:', err);
+        
+        // Handle errors for popup flow
+        if (window.opener) {
+          const errorData = {
+            status: 'error',
+            error: err.message || 'Failed to complete Gmail authorization'
+          };
+          window.opener.postMessage(errorData, window.location.origin);
+          window.close();
+          return;
+        }
+        
         setError(err.message || 'Failed to complete Gmail authorization');
       } finally {
         setLoading(false);
