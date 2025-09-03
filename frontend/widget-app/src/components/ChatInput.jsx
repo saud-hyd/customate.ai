@@ -1,48 +1,73 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const ChatInput = ({ onSendMessage, settings, disabled = false }) => {
+const ChatInput = ({ onSendMessage, settings, isTyping = false }) => {
   const [message, setMessage] = useState('');
-  const [isLocalSending, setIsLocalSending] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef(null);
   
-  // Auto-resize textarea
+  // BEST PRACTICE: Character limits with proper UX
+  const MAX_CHARACTERS = 4000; // Industry standard for chat
+  const SHOW_COUNTER_AT = 3500; // Show counter when approaching limit
+  
+  // UX PRINCIPLE: Smart height that shows context (current + previous lines)
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      const scrollHeight = Math.min(textarea.scrollHeight, 120); // Max height of ~4 lines
-      textarea.style.height = scrollHeight + 'px';
+      
+      // UX: Calculate height to show meaningful content
+      const lineHeight = 20; // Approximate line height
+      const minLines = 1; // Minimum 1 line
+      const maxLines = 4; // Show up to 4 lines before limiting
+      
+      const minHeight = minLines * lineHeight + 24; // Add padding
+      const maxHeight = maxLines * lineHeight + 24; // Add padding
+      
+      const scrollHeight = textarea.scrollHeight;
+      const contentHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+      
+      textarea.style.height = contentHeight + 'px';
+      
+      // UX PRINCIPLE: Only scroll when absolutely necessary
+      // Always keep cursor visible, but avoid showing scrollbar for small content
+      if (scrollHeight > maxHeight) {
+        textarea.scrollTop = textarea.scrollHeight;
+      }
     }
   }, [message]);
   
-  // Focus management
+  // BEST PRACTICE: Focus on mount for better UX
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [disabled]);
+    const timer = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const trimmedMessage = message.trim();
-    if (!trimmedMessage || isLocalSending) {
+    if (!trimmedMessage || isSending || trimmedMessage.length > MAX_CHARACTERS) {
       return;
     }
 
+    // Clear input immediately when user sends
+    setMessage('');
+    
     try {
-      setIsLocalSending(true);
-      setMessage(''); // Clear immediately for better UX
-      
+      setIsSending(true);
       await onSendMessage(trimmedMessage);
     } catch (error) {
       console.error('Error sending message:', error);
-      // Restore message on error
+      // On error, restore the message so user doesn't lose their text
       setMessage(trimmedMessage);
     } finally {
-      setIsLocalSending(false);
+      setIsSending(false);
       
-      // Refocus after send
+      // Refocus for next message
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
@@ -52,58 +77,85 @@ const ChatInput = ({ onSendMessage, settings, disabled = false }) => {
   };
 
   const handleKeyDown = (e) => {
+    // BEST PRACTICE: Enter to send, Shift+Enter for new line
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
 
-  const isDisabled = isLocalSending;
-  const canSend = message.trim().length > 0 && !isDisabled;
+  // Removed complex message clearing logic - let user type freely
+
+  const handleChange = (e) => {
+    setMessage(e.target.value);
+  };
+
+  // BEST PRACTICE: Only disable SEND BUTTON, never the input
+  const canSend = message.trim().length > 0 && 
+                  message.trim().length <= MAX_CHARACTERS && 
+                  !isSending;
+  
+  const isOverLimit = message.length > MAX_CHARACTERS;
+  const showCounter = message.length >= SHOW_COUNTER_AT || isOverLimit;
 
   return (
     <form onSubmit={handleSubmit} className="chat-input-container">
+      {/* BEST PRACTICE: Show character counter when needed */}
+      {showCounter && (
+        <div className={`character-counter ${isOverLimit ? 'over-limit' : ''}`}>
+          {message.length}/{MAX_CHARACTERS} characters
+        </div>
+      )}
+      
       <div className="input-wrapper">
+        {/* BEST PRACTICE: Input is NEVER disabled - users can always type */}
         <textarea
           ref={textareaRef}
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={isDisabled ? "Please wait..." : "Type your message..."}
-          disabled={isDisabled}
-          className="message-input-textarea"
+          placeholder={
+            isTyping 
+              ? "AI is responding... type your next message" 
+              : "Type your message..."
+          }
+          disabled={false} // CRITICAL: NEVER disable the input
+          className={`message-input-textarea ${isOverLimit ? 'over-limit' : ''}`}
           rows={1}
-          maxLength={2000}
+          aria-label="Type your message"
+          aria-describedby={showCounter ? "char-counter" : undefined}
         />
         
+        {/* BEST PRACTICE: Only disable send button, with clear visual feedback */}
         <button
           type="submit"
-          className="send-button-tabbed"
+          className={`send-button-tabbed ${canSend ? 'enabled' : 'disabled'}`}
           disabled={!canSend}
           title={
-            isDisabled 
-              ? "Please wait for response..." 
-              : canSend 
-                ? "Send message" 
-                : "Enter a message to send"
+            isOverLimit
+              ? `Message too long (${message.length}/${MAX_CHARACTERS} characters)`
+              : isSending 
+                ? "Sending message..." 
+                : canSend 
+                  ? "Send message (Enter)" 
+                  : message.trim().length === 0
+                    ? "Enter a message to send"
+                    : "Cannot send message"
           }
-          style={{ 
-            backgroundColor: canSend ? (settings?.primary_color || '#ea580c') : 'rgba(255, 255, 255, 0.3)',
-            cursor: canSend ? 'pointer' : 'not-allowed'
-          }}
+          aria-label={canSend ? "Send message" : "Cannot send message"}
         >
-          {isDisabled ? (
-            <div className="loading-spinner-small"></div>
+          {isSending ? (
+            <div className="loading-spinner-small" aria-label="Sending..."></div>
           ) : (
             <SendIcon />
           )}
         </button>
       </div>
       
-      {/* Character counter for long messages */}
-      {message.length > 1500 && (
-        <div className="character-counter">
-          {message.length}/2000 characters
+      {/* BEST PRACTICE: Show helpful hint when AI is responding */}
+      {isTyping && message.length === 0 && (
+        <div className="typing-hint">
+          💬 You can type while I'm responding
         </div>
       )}
     </form>

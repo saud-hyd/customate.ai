@@ -15,8 +15,8 @@ const WidgetApp = () => {
   // Refs
   const containerRef = useRef(null);
   
-  // Get settings and chat functionality
-  const { settings, error: settingsError } = useSettings();
+  // Get settings and chat functionality (delayed initialization)
+  const { settings, error: settingsError, initialize: initializeSettings } = useSettings();
   const { messages, isTyping, sendMessage, resetChat, error: chatError } = useChat(settings);
   
   // Helper function to notify parent window
@@ -83,11 +83,11 @@ const WidgetApp = () => {
     } else if (isSmallScreen && !hasTouchSupport) {
       // Small screen but no mobile UA and no touch - could be desktop browser resized
       // Check if this looks like device toolbar testing (common mobile widths)
-      const commonMobileWidths = [320, 375, 414, 360, 390, 428, 768];
+      const commonMobileWidths = [320, 375, 414, 405, 360, 390, 428, 768]; // Added 405 for Chrome dev tools
       const isCommonMobileWidth = commonMobileWidths.some(width => 
         Math.abs(screenWidth - width) <= 2
       );
-      isMobileDevice = isCommonMobileWidth; // Only if it matches common mobile widths
+      isMobileDevice = isCommonMobileWidth;
     }
     
     // Debug logging
@@ -105,8 +105,17 @@ const WidgetApp = () => {
     return isMobileDevice;
   };
   
+  // CRITICAL FIX: Set proper viewport height for mobile browsers
+  const setViewportHeight = () => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  };
+
   // Initialize widget configuration and mobile detection
   useEffect(() => {
+    // CRITICAL FIX: Set initial viewport height for mobile browsers
+    setViewportHeight();
+    
     // Detect mobile device
     const mobileDetected = detectMobile();
     setIsMobile(mobileDetected);
@@ -123,11 +132,27 @@ const WidgetApp = () => {
     
     setConfig(initialConfig);
     
-    // For floating widgets, start collapsed
+    // For floating widgets, start collapsed (except on mobile - auto-expand for better UX)
     if (floating) {
-      setIsExpanded(false);
+      setIsExpanded(mobileDetected); // Auto-expand on mobile, collapsed on desktop
+      // PERFORMANCE: Initialize settings if mobile auto-expanded
+      if (mobileDetected) {
+        initializeSettings();
+      }
     } else {
       setIsExpanded(true); // Inline widgets are always expanded
+      // PERFORMANCE: Initialize settings for inline widgets since they're immediately visible  
+      initializeSettings();
+      
+      // CRITICAL FIX: Apply mobile-fullscreen immediately for inline widgets on mobile
+      if (mobileDetected && containerRef.current) {
+        setTimeout(() => {
+          if (containerRef.current) {
+            containerRef.current.classList.add('mobile-fullscreen');
+            console.log('🔧 FIXED: Mobile fullscreen applied immediately for inline widget');
+          }
+        }, 0);
+      }
     }
   }, []);
   
@@ -138,6 +163,9 @@ const WidgetApp = () => {
     let lastStableResult = isMobile;
     
     const handleResize = () => {
+      // CRITICAL FIX: Update viewport height on every resize (important for mobile keyboard)
+      setViewportHeight();
+      
       const now = Date.now();
       const mobileDetected = detectMobile();
       
@@ -313,6 +341,28 @@ const WidgetApp = () => {
     };
   }, [config, isExpanded, resetChat]);
   
+  // CRITICAL FIX: Apply mobile-fullscreen class when mobile detection changes or widget state changes
+  useEffect(() => {
+    if (containerRef.current && config && isMobile) {
+      // Apply mobile-fullscreen class immediately if widget should be fullscreen
+      if ((config.floating && isExpanded) || !config.floating) {
+        containerRef.current.classList.add('mobile-fullscreen');
+        console.log('🔧 FIXED: Mobile fullscreen class applied via state effect');
+        
+        if (config.floating) {
+          notifyParent('MOBILE_FULLSCREEN_ENABLE', { 
+            isMobile: true,
+            fullscreen: true 
+          });
+        }
+      }
+    } else if (containerRef.current && !isMobile) {
+      // Remove mobile-fullscreen class if not mobile
+      containerRef.current.classList.remove('mobile-fullscreen');
+      // Removed mobile fullscreen class
+    }
+  }, [isMobile, isExpanded, config]);
+
   // Send status updates when expanded state changes
   useEffect(() => {
     if (config?.floating) {
@@ -332,17 +382,23 @@ const WidgetApp = () => {
       const newExpanded = !isExpanded;
       setIsExpanded(newExpanded);
       
-      // ONLY apply mobile fullscreen changes on actual mobile devices
+      // PERFORMANCE: Initialize settings only when widget opens (delayed initialization)
+      if (newExpanded) {
+        initializeSettings();
+      }
+      
+      // CRITICAL FIX: Apply mobile fullscreen changes immediately on actual mobile devices
       if (isMobile && containerRef.current) {
         console.log('Applying mobile fullscreen:', { newExpanded, isMobile, containerClasses: containerRef.current.className });
         if (newExpanded) {
+          // Apply mobile-fullscreen class immediately
           containerRef.current.classList.add('mobile-fullscreen');
           // Notify parent to make iframe fullscreen on mobile
           notifyParent('MOBILE_FULLSCREEN_ENABLE', { 
             isMobile: true,
             fullscreen: true 
           });
-          console.log('Mobile fullscreen enabled, notified parent');
+          console.log('🔧 FIXED: Mobile fullscreen enabled immediately, notified parent');
         } else {
           containerRef.current.classList.remove('mobile-fullscreen');
           // Notify parent to remove iframe fullscreen
@@ -556,8 +612,8 @@ const WidgetApp = () => {
       {/* Chat interface when expanded (or always for inline) */}
       {(isExpanded || !config?.floating) && (
         <div className="widget-chat-container">
-          {/* Header for floating mode or test mode */}
-          {(config?.floating || config?.testMode) && (
+          {/* Header - always show initially, hide only for desktop inline */}
+          {(!config || config.floating || config.testMode || isMobile) && (
             <div 
               className="widget-header"
               style={{
@@ -582,7 +638,7 @@ const WidgetApp = () => {
                   {isTyping ? 'AI is typing...' : 'We\'re here to help!'}
                 </p>
               </div>
-              {/* Controls only for floating widgets, not test mode */}
+              {/* Controls only for floating widgets */}
               {config?.floating && (
                 <div className="header-controls">
                   <button 

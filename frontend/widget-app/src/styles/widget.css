@@ -75,6 +75,7 @@
   position: relative;
 }
 
+/* FAST: Instant button response */
 .widget-toggle-button {
   width: 60px;
   height: 60px;
@@ -88,19 +89,23 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
-  transition: all 0.15s ease;
+  /* FAST: Quick response transitions */
+  transition: all 0.1s ease;
   position: relative;
   z-index: 1000001;
+  /* FAST: No loading animation - instant appearance */
 }
 
+/* CRITICAL FIX: Smoother hover and active states */
 .widget-toggle-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45);
   background: linear-gradient(135deg, #dc2626, #ea580c);
 }
 
 .widget-toggle-button:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
+  transition: all 0.1s ease;
 }
 
 /* Pulse animation */
@@ -135,6 +140,7 @@
 
 /* ===== CHAT CONTAINER STYLES ===== */
 
+/* Chat container with smooth entrance animation */
 .widget-chat-container {
   background: var(--background-color, white);
   border-radius: var(--border-radius, 12px);
@@ -148,6 +154,8 @@
   max-width: 100%;
   max-height: 100%;
   min-height: 0;
+  /* Smooth entrance animation */
+  animation: smoothEnter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* For inline mode, remove border radius and shadow */
@@ -347,10 +355,12 @@
   background: linear-gradient(135deg, #dc2626, #ea580c);
 }
 
+/* FAST: Quick message loading */
 .message {
   display: flex;
   margin-bottom: 16px;
-  animation: fadeIn 0.3s ease;
+  /* FAST: Quick animation for immediate feedback */
+  animation: fadeIn 0.1s ease-out;
 }
 
 .message.user {
@@ -525,7 +535,7 @@
 
 /* ===== TABBED CHAT WIDGET STYLES ===== */
 
-/* Main container for tabbed widget */
+/* FAST: Minimal animation for instant loading */
 .tabbed-chat-widget {
   height: 100%;
   display: flex;
@@ -533,7 +543,8 @@
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   position: relative;
   overflow: hidden;
-  animation: fadeIn 0.15s ease-out;
+  /* FAST: Quick, simple fade for immediate response */
+  animation: quickFade 0.1s ease-out;
 }
 
 /* Tab content area */
@@ -579,9 +590,9 @@
 
 /* ===== CRITICAL FIX: TABBED WIDGET INPUT STYLES ===== */
 
-/* FIXED: Force override original chat input container for tabbed widget */
+/* MINIMAL: Absolute minimum padding for maximum content */
 .tabbed-chat-widget .chat-input-wrapper-no-gap {
-  padding: 2px !important;
+  padding: 8px !important; /* MINIMAL: Just enough for functionality */
   background: rgba(255, 255, 255, 0.05) !important;
   backdrop-filter: blur(10px) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -603,19 +614,19 @@
   flex-shrink: 0 !important;
 }
 
-/* FIXED: Tabbed widget input wrapper - proper sizing */
+/* MINIMAL: Compact input wrapper for maximum content space */
 .tabbed-chat-widget .input-wrapper {
   display: flex !important;
-  align-items: center !important;
-  gap: 2px !important;
+  align-items: flex-end !important;
+  gap: 6px !important; /* MINIMAL: Reduced gap */
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 24px !important;
-  padding: 2px 2px 2px 4px !important;
+  border-radius: 20px !important;
+  padding: 6px 6px 6px 12px !important; /* MINIMAL: Reduced padding */
   margin: 0 !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.1s ease !important;
   backdrop-filter: blur(10px) !important;
-  min-height: auto !important;
+  min-height: 44px !important;
   max-height: none !important;
 }
 
@@ -625,7 +636,7 @@
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
 }
 
-/* FIXED: Textarea styling with proper height control */
+/* MINIMAL: Ultra-compact textarea for maximum content space */
 .tabbed-chat-widget .message-input-textarea {
   flex: 1 !important;
   background: none !important;
@@ -635,13 +646,27 @@
   font-size: 14px !important;
   font-family: inherit !important;
   resize: none !important;
-  line-height: 1.5 !important;
-  min-height: 16px !important;
-  max-height: 120px !important;
+  line-height: 1.25 !important;
+  /* MINIMAL: Controlled height for content display */
+  min-height: 44px !important;
+  max-height: 104px !important; /* 4 lines + padding */
   height: auto !important;
   overflow-y: auto !important;
-  padding: 0px 0 !important;
+  /* MINIMAL: Absolute minimum padding */
+  padding: 8px 0 !important; 
   margin: 0 !important;
+  vertical-align: top !important;
+  -webkit-overflow-scrolling: touch !important;
+  transition: height 0.1s ease !important;
+  /* MINIMAL: Hide scrollbar */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* UX: Hide webkit scrollbar when content fits */
+.tabbed-chat-widget .message-input-textarea::-webkit-scrollbar {
+  width: 0px !important;
+  background: transparent !important;
 }
 
 .tabbed-chat-widget .message-input-textarea::placeholder {
@@ -665,7 +690,7 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.1s ease !important;
   flex-shrink: 0 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
   margin: 0 !important;
@@ -698,13 +723,62 @@
   animation: spin 1s linear infinite !important;
 }
 
-/* Character counter */
+
+/* MINIMAL: Compact character counter */
 .character-counter {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-align: center !important;
+  margin-bottom: 4px !important; /* MINIMAL: Reduced margin */
+  padding: 2px 6px !important; /* MINIMAL: Reduced padding */
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  transition: all 0.1s ease !important;
+  width: fit-content !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* BEST PRACTICE: Character counter over limit state */
+.character-counter.over-limit {
+  color: #ff4444 !important;
+  background: rgba(255, 68, 68, 0.15) !important;
+  border: 1px solid rgba(255, 68, 68, 0.3) !important;
+  font-weight: 600 !important;
+}
+
+/* MINIMAL: Compact typing hint */
+.typing-hint {
   font-size: 11px !important;
   color: rgba(255, 255, 255, 0.6) !important;
-  text-align: right !important;
-  margin-top: 4px !important;
-  font-family: monospace !important;
+  text-align: center !important;
+  margin-top: 4px !important; /* MINIMAL: Reduced margin */
+  padding: 4px 8px !important; /* MINIMAL: Reduced padding */
+  background: rgba(34, 197, 94, 0.1) !important;
+  border: 1px solid rgba(34, 197, 94, 0.2) !important;
+  border-radius: 10px !important;
+  animation: fadeIn 0.1s ease !important;
+}
+
+/* BEST PRACTICE: Over-limit textarea styling */
+.message-input-textarea.over-limit {
+  border: 1px solid rgba(255, 68, 68, 0.4) !important;
+  background: rgba(255, 68, 68, 0.05) !important;
+}
+
+/* BEST PRACTICE: Better send button states */
+.send-button-tabbed.enabled {
+  background: var(--primary-color, #ea580c) !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+
+.send-button-tabbed.disabled {
+  background: rgba(255, 255, 255, 0.2) !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
 }
 
 /* Keep original wrapper for contact tab */
@@ -969,12 +1043,13 @@
   transform: translateY(-1px);
 }
 
-/* ===== ANIMATIONS ===== */
+/* ===== CRITICAL FIX: IMPROVED ANIMATIONS FOR SMOOTHER INTERACTIONS ===== */
 
+/* FAST: Quick animations for instant response */
 @keyframes fadeIn {
   from { 
     opacity: 0; 
-    transform: translateY(10px); 
+    transform: translateY(4px); 
   }
   to { 
     opacity: 1; 
@@ -982,14 +1057,49 @@
   }
 }
 
+/* FAST: Quick fade for instant widget loading */
+@keyframes quickFade {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+/* SMOOTH: Entrance animation for widget opening */
+@keyframes smoothEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Enhanced slide in animation */
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(10px);
+    transform: translateX(8px);
   }
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* NEW: Smooth scale animation for widget toggle */
+@keyframes smoothScale {
+  from {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -1008,6 +1118,7 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 
 /* ===== RESPONSIVE DESIGN ===== */
 
@@ -1031,25 +1142,28 @@
 /* Mobile optimizations with fullscreen behavior */
 @media (max-width: 768px) {
   /* Mobile fullscreen: Widget container takes full viewport with safe areas */
-  .widget-container.floating.mobile-fullscreen {
+  .widget-container.floating.mobile-fullscreen,
+  .widget-container.inline.mobile-fullscreen {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
-    /* Account for mobile browser UI and safe areas */
-    height: 100dvh !important; /* Dynamic viewport height - newer browsers */
+    /* CRITICAL FIX: Full viewport for complete overlay */
+    height: 100vh !important; /* Full viewport - complete overlay */
+    height: 100dvh !important; /* Dynamic viewport height for newer browsers */
     z-index: 999999 !important;
     margin: 0 !important;
     padding: 0 !important;
-    /* Ensure proper viewport sizing */
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
+    /* CRITICAL FIX: Remove min-height constraints that can cause issues */
+    min-height: 0 !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
     overflow: hidden !important;
   }
   
   /* Mobile fullscreen: Chat container fills entire screen perfectly */
-  .widget-container.floating.mobile-fullscreen .widget-chat-container {
+  .widget-container.floating.mobile-fullscreen .widget-chat-container,
+  .widget-container.inline.mobile-fullscreen .widget-chat-container {
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
@@ -1062,7 +1176,8 @@
   }
   
   /* Mobile fullscreen: Tabbed widget fills screen with proper flex layout */
-  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget {
+  .widget-container.floating.mobile-fullscreen .tabbed-chat-widget,
+  .widget-container.inline.mobile-fullscreen .tabbed-chat-widget {
     height: 100% !important;
     min-height: 100% !important;
     border-radius: 0 !important;
@@ -1070,8 +1185,9 @@
     flex-direction: column !important;
   }
   
-  /* Mobile fullscreen: Header with proper mobile spacing and safe areas */
-  .widget-container.floating.mobile-fullscreen .widget-header {
+  /* Mobile fullscreen: Header with safe area support */
+  .widget-container.floating.mobile-fullscreen .widget-header,
+  .widget-container.inline.mobile-fullscreen .widget-header {
     padding: max(16px, env(safe-area-inset-top)) 20px 16px 20px !important;
     min-height: calc(70px + env(safe-area-inset-top)) !important;
     border-radius: 0 !important;
@@ -1081,32 +1197,38 @@
   }
   
   /* Mobile fullscreen: Messages container optimization for all screen sizes */
-  .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
+  .widget-container.floating.mobile-fullscreen .messages-container-tabbed,
+  .widget-container.inline.mobile-fullscreen .messages-container-tabbed {
     flex: 1 !important;
     padding: 16px 16px 12px 16px !important;
     gap: 12px !important;
-    /* Ensure messages use full available height */
+    /* CRITICAL FIX: Constrain height to leave space for input */
     min-height: 0 !important;
+    max-height: calc(100dvh - 200px) !important; /* Leave 200px for header + input + watermark */
     overflow-y: auto !important;
     /* Account for mobile keyboard and safe areas */
     padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
   }
   
-  /* Mobile fullscreen: Input wrapper with safe area optimization */
+  /* MINIMAL: Mobile input with absolute minimum padding */
   .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
-  .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
-    padding: 16px 16px max(16px, env(safe-area-inset-bottom)) 16px !important;
+  .widget-container.floating.mobile-fullscreen .chat-input-wrapper,
+  .widget-container.inline.mobile-fullscreen .chat-input-wrapper-no-gap,
+  .widget-container.inline.mobile-fullscreen .chat-input-wrapper {
+    padding: 8px 12px 8px 12px !important; /* Balanced padding for better visual symmetry */
     flex-shrink: 0 !important;
-    /* Account for mobile keyboard space */
-    min-height: calc(60px + env(safe-area-inset-bottom)) !important;
+    min-height: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+    margin: 0 !important;
   }
   
-  /* Mobile fullscreen: Enhanced input area for better touch targets */
+  /* MINIMAL: Mobile input wrapper with minimal padding */
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
-    padding: 12px 12px 12px 16px !important;
-    gap: 12px !important;
-    border-radius: 28px !important;
-    min-height: 48px !important; /* Better touch target */
+    padding: 6px 6px 6px 12px !important;
+    gap: 6px !important;
+    border-radius: 20px !important;
+    min-height: 44px !important;
   }
   
   /* Mobile fullscreen: Larger send button for better mobile interaction */
@@ -1116,12 +1238,18 @@
     flex-shrink: 0 !important;
   }
   
-  /* Mobile fullscreen: Better textarea sizing for mobile */
+  /* MINIMAL: Mobile textarea with minimal padding */
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .message-input-textarea {
     font-size: 16px !important; /* Prevents zoom on iOS */
-    line-height: 1.4 !important;
-    min-height: 20px !important;
-    max-height: 120px !important;
+    line-height: 1.25 !important; /* Consistent with base styles */
+    min-height: 44px !important; /* Consistent with base styles */
+    max-height: 104px !important; /* Consistent with base styles */
+    padding: 8px 0 !important; /* MINIMAL: Consistent with base styles */
+    vertical-align: top !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* MINIMAL: Hide scrollbar on mobile too */
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
   
   /* Mobile fullscreen: Message bubbles optimization */
@@ -1178,7 +1306,7 @@
   
   .widget-container:not(.mobile-fullscreen) .chat-input-wrapper-no-gap,
   .widget-container:not(.mobile-fullscreen) .chat-input-wrapper {
-    padding: 10px !important;
+    padding: 6px !important; /* MINIMAL: Reduced padding */
   }
   
   .widget-container:not(.mobile-fullscreen) .tabbed-chat-widget .tab-navigation {
@@ -1193,7 +1321,8 @@
 /* Small mobile screens optimization */
 @media (max-width: 480px) {
   /* Mobile fullscreen: Compact header for small screens */
-  .widget-container.floating.mobile-fullscreen .widget-header {
+  .widget-container.floating.mobile-fullscreen .widget-header,
+  .widget-container.inline.mobile-fullscreen .widget-header {
     padding: max(12px, env(safe-area-inset-top)) 16px 12px 16px !important;
     min-height: calc(64px + env(safe-area-inset-top)) !important;
   }
@@ -1207,16 +1336,14 @@
   }
   
   /* Mobile fullscreen: Optimized messages for small screens */
-  .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
+  .widget-container.floating.mobile-fullscreen .messages-container-tabbed,
+  .widget-container.inline.mobile-fullscreen .messages-container-tabbed {
     padding: 12px 14px 10px 14px !important;
     gap: 10px !important;
+    max-height: calc(100dvh - 180px) !important; /* Smaller screens but still need space for all elements */
   }
   
-  /* Mobile fullscreen: Compact input for small screens */
-  .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
-  .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
-    padding: 12px 14px max(12px, env(safe-area-inset-bottom)) 14px !important;
-  }
+  /* UX: Compact input for small screens - consistent with main rule */
   
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
     padding: 10px 10px 10px 14px !important;
@@ -1237,6 +1364,12 @@
   
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .message-input-textarea {
     font-size: 16px !important; /* Prevents zoom on iOS */
+    line-height: 1.25 !important; /* Consistent with base styles */
+    min-height: 44px !important; /* Consistent with base styles */
+    max-height: 104px !important; /* Consistent with base styles */
+    padding: 8px 0 !important; /* MINIMAL: Consistent with base styles */
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
   
   /* Mobile fullscreen: Smaller message bubbles for readability */
@@ -1271,6 +1404,12 @@
   
   .widget-container:not(.mobile-fullscreen) .tabbed-chat-widget .message-input-textarea {
     font-size: 16px !important; /* Prevents zoom on iOS */
+    line-height: 1.25 !important; /* Consistent with base styles */
+    min-height: 44px !important; /* Consistent with base styles */
+    max-height: 104px !important; /* Consistent with base styles */
+    padding: 8px 0 !important; /* MINIMAL: Consistent with base styles */
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
   
   .widget-container:not(.mobile-fullscreen) .widget-header {
@@ -1289,7 +1428,8 @@
 /* Large mobile screens and small tablets optimization */
 @media (min-width: 481px) and (max-width: 768px) {
   /* Mobile fullscreen: Enhanced spacing for larger mobile screens */
-  .widget-container.floating.mobile-fullscreen .widget-header {
+  .widget-container.floating.mobile-fullscreen .widget-header,
+  .widget-container.inline.mobile-fullscreen .widget-header {
     padding: max(18px, env(safe-area-inset-top)) 24px 18px 24px !important;
     min-height: calc(76px + env(safe-area-inset-top)) !important;
   }
@@ -1303,16 +1443,14 @@
   }
   
   /* Mobile fullscreen: Generous spacing for messages */
-  .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
+  .widget-container.floating.mobile-fullscreen .messages-container-tabbed,
+  .widget-container.inline.mobile-fullscreen .messages-container-tabbed {
     padding: 20px 18px 16px 18px !important;
     gap: 14px !important;
+    max-height: calc(100dvh - 210px) !important; /* Larger screens with bigger headers need more space */
   }
   
-  /* Mobile fullscreen: Comfortable input area */
-  .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
-  .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
-    padding: 18px 18px max(18px, env(safe-area-inset-bottom)) 18px !important;
-  }
+  /* UX: Removed excessive padding rule - using consistent main rule */
   
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
     padding: 14px 14px 14px 18px !important;
@@ -1350,9 +1488,11 @@
 /* Very large mobile screens / phablets optimization */
 @media (min-width: 600px) and (max-width: 768px) {
   /* Mobile fullscreen: Maximum content utilization for large screens */
-  .widget-container.floating.mobile-fullscreen .messages-container-tabbed {
+  .widget-container.floating.mobile-fullscreen .messages-container-tabbed,
+  .widget-container.inline.mobile-fullscreen .messages-container-tabbed {
     padding: 24px 20px 20px 20px !important;
     gap: 16px !important;
+    max-height: calc(100dvh - 220px) !important; /* Very large screens with biggest headers need most space */
   }
   
   .widget-container.floating.mobile-fullscreen .message-bubble {
@@ -1361,11 +1501,7 @@
     line-height: 1.5 !important;
   }
   
-  .widget-container.floating.mobile-fullscreen .chat-input-wrapper-no-gap,
-  .widget-container.floating.mobile-fullscreen .chat-input-wrapper {
-    padding: 20px !important;
-    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
-  }
+  /* UX: Using consistent padding rule from main mobile styles */
   
   .widget-container.floating.mobile-fullscreen .tabbed-chat-widget .input-wrapper {
     min-height: 56px !important;
@@ -1518,22 +1654,24 @@
 
 /* ===== MOBILE RESPONSIVE UPDATES FOR WATERMARK ===== */
 @media (max-width: 768px) {
-  /* Mobile fullscreen: Enhanced watermark */
-  .widget-container.floating.mobile-fullscreen .powered-by-watermark {
-    padding: 8px 12px !important;
-    font-size: 11px !important;
+  /* MINIMAL: Mobile watermark */
+  .widget-container.floating.mobile-fullscreen .powered-by-watermark,
+  .widget-container.inline.mobile-fullscreen .powered-by-watermark {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
   }
   
-  .widget-container.floating.mobile-fullscreen .powered-by-watermark .customate-link {
+  .widget-container.floating.mobile-fullscreen .powered-by-watermark .customate-link,
+  .widget-container.inline.mobile-fullscreen .powered-by-watermark .customate-link {
     padding: 3px 6px !important;
     margin: -3px -6px !important;
     border-radius: 4px !important;
   }
   
-  /* Regular mobile styles for non-fullscreen */
+  /* MINIMAL: Regular mobile watermark */
   .widget-container:not(.mobile-fullscreen) .powered-by-watermark {
-    padding: 6px 10px !important;
-    font-size: 10px !important;
+    padding: 4px 6px !important;
+    font-size: 9px !important;
   }
   
   .widget-container:not(.mobile-fullscreen) .powered-by-watermark .customate-link {
@@ -1550,7 +1688,8 @@
 
 @media (max-width: 480px) {
   /* Mobile fullscreen: Optimal watermark for small screens */
-  .widget-container.floating.mobile-fullscreen .powered-by-watermark {
+  .widget-container.floating.mobile-fullscreen .powered-by-watermark,
+  .widget-container.inline.mobile-fullscreen .powered-by-watermark {
     padding: 6px 10px !important;
     font-size: 10px !important;
   }
@@ -1581,16 +1720,16 @@
   }
 }
 
-/* ===== POWERED BY WATERMARK ===== */
+/* MINIMAL: Ultra-compact watermark */
 .powered-by-watermark {
-  padding: 8px 12px !important;
+  padding: 4px 8px !important; /* MINIMAL: Reduced padding */
   background: rgba(0, 0, 0, 0.2) !important;
   backdrop-filter: blur(10px) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
   text-align: center !important;
   flex-shrink: 0 !important;
   margin: 0 !important;
-  font-size: 11px !important;
+  font-size: 10px !important; /* MINIMAL: Smaller font */
   color: rgba(255, 255, 255, 0.6) !important;
   font-family: inherit !important;
   line-height: 1.2 !important;
@@ -1599,7 +1738,7 @@
 .powered-by-watermark .customate-link {
   color: #ea580c !important;
   text-decoration: none !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.1s ease !important;
   cursor: pointer !important;
 }
 

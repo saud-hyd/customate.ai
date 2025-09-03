@@ -120,12 +120,12 @@ const TabbedChatWidget = ({ messages, isTyping, onSendMessage, settings, error }
             <div ref={messagesEndRef} className="scroll-anchor" />
           </div>
 
-          {/* Chat Input */}
+          {/* BEST PRACTICE: Chat Input with typing state */}
           <div className="chat-input-wrapper-no-gap">
             <ChatInput 
               onSendMessage={handleSendMessage}
               settings={settings}
-              disabled={false}
+              isTyping={isTyping} // CRITICAL: Pass typing state for better UX
             />
           </div>
 

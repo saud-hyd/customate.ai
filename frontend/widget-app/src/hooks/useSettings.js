@@ -80,9 +80,17 @@ const useSettings = () => {
     await fetchSettings();
   };
 
+  // Manual initialization - don't auto-fetch on mount for better performance 
+  const initialize = () => {
+    if (!settings && !loading) {
+      fetchSettings();
+    }
+  };
+
   // Fetch settings only once on mount - NO POLLING
   useEffect(() => {
-    fetchSettings();
+    // Don't fetch immediately - wait for user interaction for better performance
+    // fetchSettings();
     
     // Listen for messages from parent (TestChatbotPage) to refresh settings
     const handleMessage = (event) => {
@@ -105,7 +113,8 @@ const useSettings = () => {
     loading, 
     error, 
     refetch: fetchSettings,
-    refresh: refreshSettings 
+    refresh: refreshSettings,
+    initialize
   };
 };
 
