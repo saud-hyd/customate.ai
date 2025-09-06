@@ -36,6 +36,7 @@ from app.api.channel.gmail_webhook_routes import router as gmail_webhook_router
 from app.api.notifications import router as notifications_router
 from app.api.admin.routes import router as admin_router
 from app.api.demo import routes as demo_routes
+from app.api.voice import routes as voice_routes
 from app.api.knowledge import (
     knowledge_router, document_router, collection_router, 
     crawl_router, enhanced_router
@@ -175,6 +176,8 @@ app.include_router(enhanced_knowledge_routes.router, prefix="/api")
 app.include_router(analytics_routes.router, prefix="/api")
 app.include_router(collection_routes.router, prefix="/api/knowledge/knowledge")
 app.include_router(integration_routes.router, prefix="/api")
+app.include_router(voice_routes.router, prefix="/api")
+
 
 # CRITICAL: Widget router registration with error handling
 if WIDGET_ROUTES_AVAILABLE:
@@ -359,7 +362,8 @@ async def health_check():
             "widget_routes": "up" if WIDGET_ROUTES_AVAILABLE else "down",
             "widget_service": "up" if WIDGET_SERVICE_AVAILABLE else "limited",
             "streaming": "available" if WIDGET_SERVICE_AVAILABLE else "unavailable",
-            "cors": "configured"
+            "cors": "configured",
+            "voice": "available"
         },
         "widget_info": {
             "routes_available": WIDGET_ROUTES_AVAILABLE,

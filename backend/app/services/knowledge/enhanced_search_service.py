@@ -31,7 +31,8 @@ class EnhancedSearchService:
         vector_threshold: float = 0.7,
         collection_id: Optional[str] = None,
         hybrid_ratio: float = 0.7,
-        enable_multilingual: bool = True  # NEW: Toggle for multilingual search
+        enable_multilingual: bool = True,  # NEW: Toggle for multilingual search
+        user_info: Optional[Dict[str, Any]] = None  # NEW: User context for optimization
     ) -> Dict[str, Any]:
         """
         Perform hybrid search with optional multilingual support.
@@ -45,6 +46,7 @@ class EnhancedSearchService:
             collection_id: Optional collection ID to restrict search
             hybrid_ratio: Balance between vector and keyword results (0-1)
             enable_multilingual: Whether to perform cross-language search
+            user_info: User context for optimization decisions
             
         Returns:
             Dictionary with search results and metadata
@@ -52,6 +54,11 @@ class EnhancedSearchService:
         # Default filters
         if filters is None:
             filters = {}
+            
+        # VOICE OPTIMIZATION: Disable multilingual search for voice calls to reduce latency
+        if user_info and user_info.get("channel") == "voice":
+            enable_multilingual = False
+            logger.info("Voice channel detected: disabling multilingual search for performance")
             
         # Adjust hybrid ratio to valid range
         hybrid_ratio = max(0.0, min(1.0, hybrid_ratio))

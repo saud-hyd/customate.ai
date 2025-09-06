@@ -122,30 +122,14 @@ class EnhancedChatService:
         knowledge_used = False
         
         try:
-            # Enhanced query preparation with conversation context
-            enhanced_query = user_message
-            query_context = ""
-            
-            # Use recent conversation context to enhance search query
-            if conversation_history:
-                recent_messages = conversation_history[-4:]  # Last 2 exchanges
-                context_parts = []
-                for msg in recent_messages:
-                    if msg["role"] == "user":
-                        context_parts.append(msg["content"])
-                
-                if context_parts:
-                    query_context = " ".join(context_parts[-2:])  # Last 2 user messages
-                    enhanced_query = f"{user_message} {query_context}"
-                    logger.info(f"Enhanced search query with conversation context")
-            
             # Try enhanced search first with more results and lower threshold
             search_results = await self.search_service.hybrid_search(
                 client_id=client_id,
-                query_text=enhanced_query,
+                query_text=user_message,
                 limit=12,  # Increased from 5 to get more relevant content
                 vector_threshold=0.3,  # Lowered from 0.7 to include more relevant results
-                hybrid_ratio=0.6  # Balance between vector and keyword search
+                hybrid_ratio=0.6,  # Balance between vector and keyword search
+                user_info=user_info
             )
             
             if search_results.get("results"):
@@ -171,7 +155,8 @@ class EnhancedChatService:
                     query_text=user_message,  # Use original query for fallback
                     limit=8,
                     vector_threshold=0.1,  # Very low threshold for fallback
-                    hybrid_ratio=0.4  # More keyword-focused for fallback
+                    hybrid_ratio=0.4,  # More keyword-focused for fallback
+                    user_info=user_info
                 )
                 
                 if fallback_results.get("results"):

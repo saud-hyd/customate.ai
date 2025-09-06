@@ -14,6 +14,7 @@ import {
 import clientService from '../services/clientService';
 import LoadingState from '../components/common/LoadingState';
 import Modal from '../components/common/Modal';
+import VoiceChat from '../components/voice/VoiceChat';
 
 const TestChatbotPage = () => {
   const { t } = useTranslation(['widget', 'common']);
@@ -26,6 +27,7 @@ const TestChatbotPage = () => {
   const [iframeKey, setIframeKey] = useState(0);
   const [apiKey, setApiKey] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   
   // Widget customization state - separate preview and applied settings
   const [appliedCustomizations, setAppliedCustomizations] = useState({
@@ -499,12 +501,44 @@ const TestChatbotPage = () => {
               <CodeBracketIcon className="w-5 h-5" />
               {t('widget:integrationCode')}
             </button>
+            
+            <button
+              onClick={() => setIsVoiceMode(!isVoiceMode)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+                isVoiceMode 
+                  ? 'bg-orange-600 text-white hover:bg-orange-700' 
+                  : 'bg-gray-600 text-white hover:bg-gray-700'
+              }`}
+            >
+              {isVoiceMode ? (
+                <>
+                  <span>🎙️</span>
+                  Voice Mode ON
+                </>
+              ) : (
+                <>
+                  <span>🎤</span>
+                  Test Voice
+                </>
+              )}
+            </button>
           </div>
         </div>
         
         {/* Widget Testing Area */}
         <div className="flex-1 flex items-center justify-center p-6" style={{ height: 'calc(100vh - 80px)' }}>
-          <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 160px)', maxHeight: '700px' }}>
+          {isVoiceMode ? (
+            /* Voice Chat Mode */
+            <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden p-6" style={{ height: 'calc(100vh - 160px)', maxHeight: '700px' }}>
+              <VoiceChat 
+                apiKey={apiKey}
+                isActive={isVoiceMode}
+                onClose={() => setIsVoiceMode(false)}
+              />
+            </div>
+          ) : (
+            /* Chatbot Widget Mode */
+            <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 160px)', maxHeight: '700px' }}>
             {!widgetUrl || !apiKey ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <div className="text-gray-500 mb-4">{t('widget:loading')}</div>
@@ -546,7 +580,8 @@ const TestChatbotPage = () => {
                 className="w-full h-full"
               />
             )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
       
