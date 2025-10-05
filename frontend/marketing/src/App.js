@@ -1,133 +1,22 @@
-// Updated App.js - Add these changes to your existing App.js file:
+// Updated App.js - Temporary maintenance mode
+// To restore the full site, replace this file with the backup
 
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
-// i18n setup
-import './i18n'; // Import i18n configuration
-import { LanguageProvider } from './contexts/LanguageContext';
-
-// Layout components
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import CookieConsent from './components/ui/CookieConsent';
-import './landingpage.css';
-
-// Pages
-import HomePage from './pages/HomePage';
-import FeaturesPage from './pages/FeaturesPage';
-import PricingPage from './pages/PricingPage';
-import BlogPage from './pages/BlogPage';
-import ContactPage from './pages/ContactPage';
-import CheckoutPage from './pages/CheckoutPage';
-import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
-import DemoFormPage from './pages/DemoFormPage'; // ADD THIS LINE
-
-// Individual blog posts
-import SavingsBlogPost from './pages/blog/SavingsBlogPost';
-import TraditionalVsAIBlogPost from './pages/blog/TraditionalVsAIBlogPost';
-import ChooseChatbotBlogPost from './pages/blog/ChooseChatbotBlogPost';
-import BuildVsBuyBlogPost from './pages/blog/BuildVsBuyBlogPost';
-import ChatWidgetBlogPost from './pages/blog/ChatWidgetBlogPost';
-import CompetitiveAdvantageBlogPost from './pages/blog/CompetitiveAdvantageBlogPost';
-
-// Other pages
-import AboutPage from './pages/AboutPage';
-import TermsPage from './pages/TermsPage';
-import PrivacyPage from './pages/PrivacyPage';
-import CookiesPage from './pages/CookiesPage';
-import DemoPage from './pages/DemoPage';
-
-import FeedbackButton from './components/ui/FeedbackButton';
+// Coming Soon Page
+import ComingSoonPage from './pages/ComingSoonPage';
 
 // CSS
 import './App.css';
 
-// ScrollToTop component to ensure page scrolls to top on route change
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return null;
-};
-
-// Redirect component for external links
-const RedirectPage = ({ url }) => {
-  useEffect(() => {
-    window.location.href = url;
-  }, [url]);
-
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Redirecting...</p>
-      </div>
-    </div>
-  );
-};
-
 function App() {
   return (
     <HelmetProvider>
-      <LanguageProvider>
-        <Router>
-          <ScrollToTop />
-          
-          <Routes>
-            {/* Demo route - NO layout (completely separate) */}
-            <Route path="/demo/:demoId" element={<DemoPage />} />
-            
-            {/* All other routes WITH layout */}
-            <Route path="/*" element={
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <CookieConsent />
-                
-                <main className="flex-grow">
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/features" element={<FeaturesPage />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/demo" element={<DemoFormPage />} /> {/* ADD THIS LINE */}
-                    <Route path="/blog" element={<BlogPage />}/>
-                    
-                    {/* Blog post routes */}
-                    <Route path="/blog/savings-calculator" element={<SavingsBlogPost />} />
-                    <Route path="/blog/traditional-vs-ai" element={<TraditionalVsAIBlogPost />} />
-                    <Route path="/blog/choose-chatbot" element={<ChooseChatbotBlogPost />} />
-                    <Route path="/blog/build-vs-buy" element={<BuildVsBuyBlogPost />} />
-                    <Route path="/blog/chat-widget" element={<ChatWidgetBlogPost />} />
-                    <Route path="/blog/competitive-advantage" element={<CompetitiveAdvantageBlogPost />} />
-                    
-                    <Route path="/contact" element={<ContactPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-                    
-                    {/* Other pages */}
-                    <Route path="/about" element={<AboutPage />} />
-                    <Route path="/terms" element={<TermsPage />} />
-                    <Route path="/privacy" element={<PrivacyPage />} />
-                    <Route path="/cookies" element={<CookiesPage />} />
-                    
-                    {/* Redirect routes */}
-                    <Route path="/login" element={<RedirectPage url="https://app.customate.ai/login" />} />
-                    <Route path="/register" element={<RedirectPage url="https://app.customate.ai/register" />} />
-                    <Route path="/dashboard" element={<RedirectPage url="https://app.customate.ai/dashboard" />} />
-                  </Routes>
-                </main>
-                
-                <Footer />
-                <FeedbackButton />
-              </div>
-            } />
-          </Routes>
-        </Router>
-      </LanguageProvider>
+      <Router>
+        <ComingSoonPage />
+      </Router>
     </HelmetProvider>
   );
 }
