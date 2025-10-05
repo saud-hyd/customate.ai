@@ -5,7 +5,8 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Customate.ai - Automate Customer Support" />
+    <meta name="description" content="Customate.ai - Automate Customer Support
+    " />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Customate.ai - Custom AI Chatbots</title>
@@ -13,17 +14,5 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    
-    <!-- Customate.ai Widget Implementation -->
-    <script>
-      (function() {
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseUrl = isLocal ? 'http://localhost:8000' : 'https://customate-ai-1.onrender.com';
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = `${baseUrl}/api/widget/embed.js?api_key=0FPEoTPDDK-rNbMSDNL4gtEHtR6lxaMmOofVJbr9Cs4`;
-        document.body.appendChild(script);
-      })();
-    </script>
   </body>
 </html>
